@@ -8,7 +8,7 @@ target_branch: "codex/repository-extraction"
 created: 2026-07-28
 owner: nexus_ai
 human_review_required: true
-external_action: none
+external_action: private_draft_pr_created
 ---
 
 # 公益レンズ 実行カード
@@ -80,7 +80,7 @@ npm run dev
 ## GitHub Plan
 
 - [x] PR に含めるもの、含めないもの、人間レビュー項目を文書化。
-- [ ] Push/PR creation is waiting for human explicit approval
+- [x] Private repo作成・push・Draft PR #1作成を現在会話の明示承認後に実施
 - [ ] Merge is waiting for human explicit approval
 - [ ] Public release, share, Discord post, send, and repository visibility changes are external actions gated by human explicit approval
 - [ ] Computer Use requires explicit approval
@@ -98,4 +98,5 @@ vitest v4.1.10: 1 file, 6 tests passed
 vite v7.3.6: 1579 modules transformed, build passed
 npm audit: 0 vulnerabilities
 in-app browser: title=公益レンズ, table count=1, evidence filter 6 -> 5
+GitHub: nexus-ai-2045/public-interest-lens (private), Draft PR #1
 ```
