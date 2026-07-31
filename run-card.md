@@ -31,6 +31,7 @@ external_action: none
 
 - [x] Discord の指定2メッセージを既存の内部ブラウザで確認。
 - [x] 由来 URL と可視本文の要約を追跡対象外に保存。
+- [x] 個々のタスクで開く外部資料を `.local/external-materials/` に原本とmanifestで保存する仕組みを追加。
 - [ ] 実データ接続に使う公式 API と利用条件は未調査。
 
 ## Security
@@ -45,6 +46,7 @@ external_action: none
 - [x] 重み付き計算とゼロ重みの境界テストを先に作成。
 - [x] 根拠4分類の表示ラベルをテスト。
 - [x] 6テストが通過。
+- [x] 外部資料登録のURL制約、タスクID制約、原本コピー、SHA-256、manifestをテスト。
 
 ## Implementation
 
@@ -57,6 +59,9 @@ external_action: none
 - [x] `npm test`: 6 tests passed。
 - [x] `npm run build`: production build passed。
 - [x] `npm audit --audit-level=moderate`: 0 vulnerabilities。
+- [x] `python -m unittest discover -s tests -v`: 外部資料登録の6 tests passed。
+- [x] `python -m py_compile`: 登録スクリプトとテストの構文検証 passed。
+- [x] `--dry-run`: 保存予定をJSONで返し、`changed: false` を確認。
 - [x] 内部ブラウザで見出し、比較表、主体選択、根拠フィルターを確認。
 
 ## Operations
@@ -68,6 +73,7 @@ npm run dev
 ```
 
 - readiness: `http://127.0.0.1:5173` の title が `公益レンズ` で、比較表が1件表示される。
+- external-material readiness: `python -m unittest discover -s tests -v` が通り、登録先が `.local/external-materials/<task-id>/` になる。
 - rollback: 独立リポジトリの変更だけを戻す。`.local/intakes/` は非公開記録として別管理する。
 - 既知の制約: データは架空。実データの正確性、網羅性、更新性は `unknown`。
 

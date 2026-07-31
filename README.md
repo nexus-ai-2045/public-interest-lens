@@ -34,6 +34,23 @@ npm audit --audit-level=moderate
 - `run-card.md`: 実装・検証・運用の記録
 - `human-review-checklist.md`: 人間レビュー項目
 - `MIGRATION.md`: 元リポジトリからの切り出し記録
+- `docs/external-materials.md`: タスクごとの外部資料保存手順
+
+## タスクで開いた外部資料
+
+ダウンロード済みの PDF、文書、画像、データは、原本と事実来歴manifestをタスク単位で `.local/external-materials/` に保存できます。
+
+```powershell
+python scripts/register_external_material.py `
+  --input-file "C:\path\to\material.pdf" `
+  --source-url "https://example.go.jp/material.pdf" `
+  --task-id "task-001" `
+  --title "資料名" `
+  --purpose "この資料を使う目的" `
+  --dry-run
+```
+
+予定を確認後、`--dry-run` を外して登録します。原本とmanifestは非公開ローカル保存であり、Gitへは追加されません。
 
 ## 公開境界
 
