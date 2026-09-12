@@ -1,0 +1,22 @@
+# Local/editor files
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*
+!.env.example
+
+# Generated runtime artifacts
+node_modules/
+dist/
+build/
+coverage/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# Private source captures and local intake records
+.local/
