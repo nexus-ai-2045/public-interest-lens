@@ -1,57 +1,37 @@
 # 公益レンズ
 
-公益レンズは、公開された活動記録を、根拠と不確実性を保ったまま比較・探索するための判断支援アプリです。
+国会・立法の公開記録から、日本の長期停滞に関わる政策判断と国会議員個人の責任を検証し、ワーストランキングと根拠を`Web`で閲覧するプロジェクトです。目的・配置・境界の正本は [`PROJECT_SSOT.md`](PROJECT_SSOT.md) です。
 
-このリポジトリの MVP（最小実用版）は架空データだけを使用します。人物や団体の「良し悪し」を AI が決めるランキングではありません。画面では、次の4種類を分離して表示します。
+現在の画面は架空の議員・政策・証拠を用いた算定デモです。実在議員の評価、40〜50年間の全量取得、長期停滞の因果認定は未完了です。
 
-- 確認済み事実
-- 機械計算
-- AI 解釈
-- 未確認
+## できること
 
-## ローカル実行
+- 人物のワースト順位、政策別の寄与点、行動、反証、根拠を確認する。
+- 期間・分野の重みを変え、基準重みとの順位変化を見る。
+- 証拠不足は評価不能とし、未確認情報や`AI`解釈による加点を防ぐ。
+- 既存の国会会議録収集器で、公式`API`を逐次取得し、ハッシュと再開位置を非公開保管する。
 
-```powershell
-Set-Location app
-npm install
-npm run dev
-```
-
-既定のローカル URL は `http://127.0.0.1:5173` です。
-
-## 検証
+## ローカル実行と検証
 
 ```powershell
-Set-Location app
+cd app
+npm ci
 npm test
 npm run build
 npm audit --audit-level=moderate
+npm run dev
 ```
 
-## 文書
+画面は `http://127.0.0.1:5173`。`Python`検証はリポジトリ直下で `python -m unittest discover -s tests -v` を実行します。
 
-- `spec-card.md`: 目的、入力、出力、停止線
-- `run-card.md`: 実装・検証・運用の記録
-- `human-review-checklist.md`: 人間レビュー項目
-- `MIGRATION.md`: 元リポジトリからの切り出し記録
-- `docs/external-materials.md`: タスクごとの外部資料保存手順
+## 正本と運用
 
-## タスクで開いた外部資料
+- [仕様カード](spec-card.md): 入出力・算定の境界。
+- [運用手順](docs/operations.md): スモーク・再開・失敗時対応・残務。
+- [国会データの取得範囲](docs/diet-data-coverage.md): 公式ソースと取得状態。
+- [`ADR` 0002](docs/adr/0002-person-ranking-and-evidence-boundary.md): 人物ランキングへの目的修正。
+- [人間レビュー](human-review-checklist.md): 算定方法と実在データ公開の判断。
+- [外部資料保存](docs/external-materials.md): 既存登録処理を使う。取得と真偽を分離。
+- [移行記録](MIGRATION.md) / [旧実行記録](run-card.md): 過去の由来。
 
-ダウンロード済みの PDF、文書、画像、データは、原本と事実来歴manifestをタスク単位で `.local/external-materials/` に保存できます。
-
-```powershell
-python scripts/register_external_material.py `
-  --input-file "C:\path\to\material.pdf" `
-  --source-url "https://example.go.jp/material.pdf" `
-  --task-id "task-001" `
-  --title "資料名" `
-  --purpose "この資料を使う目的" `
-  --dry-run
-```
-
-予定を確認後、`--dry-run` を外して登録します。原本とmanifestは非公開ローカル保存であり、Gitへは追加されません。
-
-## 公開境界
-
-GitHub リポジトリ作成、push、プルリクエスト、公開、外部共有、実在人物データの導入は、現在会話での明示的な人間承認を別途必要とします。新規 GitHub リポジトリを作る場合は private を既定とします。
+生データは `.local/` に保存し、`Git`や`Web`配信物には含めません。非公開`PR`の検証と、人間による実在評価のレビュー・`Web`公開承認は別です。

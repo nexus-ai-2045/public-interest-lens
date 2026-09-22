@@ -13,6 +13,8 @@ external_action: private_draft_pr_created
 
 # 公益レンズ 実行カード
 
+本ファイルは旧MVPの実行履歴です。現在の目的は `PROJECT_SSOT.md`、検証・残務は `docs/operations.md` を参照してください。以下の旧ランキング制約は現在の製品方針ではありません。
+
 ## Scope
 
 公開事実、機械計算、AI 解釈、未確認を分離し、重みを利用者が調整できる架空データのローカル MVP。
