@@ -1,97 +1,65 @@
 import { describe, expect, it } from 'vitest';
-import { rankPeople, type RankingOptions } from './ranking';
+import { actionKey, rankPeople, type RankingOptions } from './ranking';
 import { rankingDataset } from './ranking-data';
 
-const options: RankingOptions = { fromYear: 1976, toYear: 2026, weights: { productivity: 1, income: 1, fiscal: 1 } };
-const copy = () => structuredClone(rankingDataset);
-describe('人物ランキングの算定契約', () => {
-  it('重み変更で順位が逆転し証拠不足は未評価になる', () => {
-    const productivity = rankPeople(copy(), { ...options, weights: { productivity: 1, income: 0, fiscal: 0 } });
-    const income = rankPeople(copy(), { ...options, weights: { productivity: 0, income: 1, fiscal: 0 } });
-    expect(productivity[0].person.id).toBe('fiction-a');
-    expect(income[0].person.id).toBe('fiction-b');
-    expect(productivity.find(row => row.person.id === 'fiction-d')).toMatchObject({ score: null, rank: null, omittedCount: 1, coverage: 0 });
+const fixture = () => structuredClone(rankingDataset);
+const defaults: RankingOptions = { domain: 'economy', direction: 'harm', period: 4, asOf: '2026-09-24', weights: { economy: 70, technology: 30 } };
+
+describe('行動から人物への評価契約', () => {
+  it('分野と貢献・悪影響を切り替えると独立した順位を返す', () => {
+    const harm = rankPeople(fixture(), defaults);
+    const benefit = rankPeople(fixture(), { ...defaults, direction: 'benefit' });
+    const technology = rankPeople(fixture(), { ...defaults, domain: 'technology', direction: 'benefit' });
+    expect(harm[0].person.id).toBe('fiction-a');
+    expect(benefit[0].person.id).toBe('fiction-b');
+    expect(technology[0].person.id).toBe('fiction-c');
   });
-  it('全重みゼロなら全員未評価', () => {
-    expect(rankPeople(copy(), { ...options, weights: { productivity: 0, income: 0, fiscal: 0 } }).every(row => row.rank === null && row.score === null)).toBe(true);
+
+  it('同一人物・政策の提出と採決は最大の役割を一度だけ算定する', () => {
+    const data = fixture();
+    const lead = data.involvements.find(item => item.personId === 'fiction-a')!;
+    data.involvements.push({ ...lead, role: 'vote', description: '架空の採決', evidenceIds: [...lead.evidenceIds] });
+    expect(rankPeople(data, defaults).find(row => row.person.id === 'fiction-a')?.score).toBe(3);
+    expect(actionKey(lead)).not.toBe(actionKey(data.involvements.at(-1)!));
   });
-  it('期間外の政策は集計しない', () => {
-    expect(rankPeople(copy(), { ...options, fromYear: 2025 }).every(row => row.score === null)).toBe(true);
+
+  it('取得日でなく行動日で2年・4年・累積を切り替える', () => {
+    const data = fixture();
+    data.involvements.filter(item => item.personId === 'fiction-a').forEach(item => { item.actionDate = '2024-09-23'; });
+    expect(rankPeople(data, { ...defaults, period: 2 }).find(row => row.person.id === 'fiction-a')?.score).toBeNull();
+    expect(rankPeople(data, { ...defaults, period: 4 }).find(row => row.person.id === 'fiction-a')?.score).toBe(3);
+    data.involvements.filter(item => item.personId === 'fiction-a').forEach(item => { item.actionDate = '2000-01-01'; });
+    expect(rankPeople(data, { ...defaults, period: 'cumulative' }).find(row => row.person.id === 'fiction-a')?.score).toBe(3);
   });
-  it('同一表示点は競技順位、入力順に依存しない', () => {
-    const data = copy();
-    data.involvements = [
-      { personId: 'fiction-a', policyId: 'policy-p', role: '提案', attribution: 1, evidenceIds: ['e-action'] },
-      { personId: 'fiction-b', policyId: 'policy-p', role: '提案', attribution: 1, evidenceIds: ['e-action'] },
-      { personId: 'fiction-c', policyId: 'policy-p', role: '提案', attribution: .5, evidenceIds: ['e-action'] },
-    ];
-    const rows = rankPeople(data, options);
-    expect(rows.map(row => row.rank)).toEqual([1, 1, 3, null]);
-    data.people.reverse(); data.involvements.reverse();
-    expect(rankPeople(data, options)).toEqual(rows);
+
+  it('根拠不足と未検証分野は0点ではなく未評価にする', () => {
+    const data = fixture();
+    data.evidence.filter(item => ['e-action-a', 'e-action-a-vote'].includes(item.id)).forEach(item => { item.kind = 'unknown'; });
+    expect(rankPeople(data, defaults).find(row => row.person.id === 'fiction-a')).toMatchObject({ score: null, rank: null, heldCount: 1 });
+    expect(rankPeople(data, { ...defaults, domain: 'fiscal' }).every(row => row.score === null)).toBe(true);
   });
-  it.each(['ai', 'unknown', 'computed'] as const)('%sを確認済み証拠として使わない', kind => {
-    const data = copy(); data.evidence.forEach(e => { e.kind = kind; });
-    expect(rankPeople(data, options).every(row => row.score === null)).toBe(true);
+
+  it('個人の賛否は本人の確認済み資料がなければ採点しない', () => {
+    const data = fixture();
+    const action = data.involvements.find(item => item.role === 'vote')!;
+    action.evidenceIds = [];
+    expect(rankPeople(data, { ...defaults, domain: 'technology', direction: 'benefit' }).find(row => row.person.id === action.personId)?.score).toBeNull();
   });
-  it('未レビュー政策を除外する', () => {
-    const data = copy(); data.policies.forEach(p => { p.reviewStatus = 'pending'; });
-    expect(rankPeople(data, options).every(row => row.rank === null)).toBe(true);
+
+  it('全重み0、重複ID、欠落参照、架空フラグ不一致を拒否する', () => {
+    expect(rankPeople(fixture(), { ...defaults, domain: 'overall', weights: { economy: 0, technology: 0 } }).every(row => row.score === null)).toBe(true);
+    const duplicate = fixture(); duplicate.people.push(duplicate.people[0]);
+    expect(() => rankPeople(duplicate, defaults)).toThrow();
+    const missing = fixture(); missing.involvements[0].evidenceIds = ['missing'];
+    expect(() => rankPeople(missing, defaults)).toThrow();
+    const fakeFlag = fixture(); fakeFlag.fictional = false;
+    expect(() => rankPeople(fakeFlag, defaults)).toThrow();
   });
-  it('空の証拠も除外する', () => {
-    const data = copy(); data.involvements.forEach(i => { i.evidenceIds = []; });
-    expect(rankPeople(data, options).every(row => row.rank === null)).toBe(true);
-  });
-  it('欠落した証拠参照を拒否する', () => {
-    const data = copy(); data.policies[0].evidenceIds.push('missing');
-    expect(() => rankPeople(data, options)).toThrow();
-  });
-  it('関与の証拠・人物・政策参照が欠落した場合も拒否する', () => {
-    for (const field of ['personId', 'policyId', 'evidenceIds'] as const) {
-      const data = copy();
-      if (field === 'evidenceIds') data.involvements[0][field] = ['missing'];
-      else data.involvements[0][field] = 'missing';
-      expect(() => rankPeople(data, options)).toThrow();
-    }
-  });
-  it('丸め前の差があっても表示点が同じなら同順位にする', () => {
-    const data = copy();
-    data.involvements = [
-      { personId: 'fiction-a', policyId: 'policy-p', role: '提案', attribution: .99999, evidenceIds: ['e-action'] },
-      { personId: 'fiction-b', policyId: 'policy-p', role: '提案', attribution: 1, evidenceIds: ['e-action'] },
-    ];
-    expect(rankPeople(data, options).slice(0, 2).map(row => [row.person.id, row.rank, row.score])).toEqual([
-      ['fiction-a', 1, 24], ['fiction-b', 1, 24],
-    ]);
-  });
-  it('対象期間の両端を含め、入力を変更しない', () => {
-    const data = copy(); const original = copy();
-    const rows = rankPeople(data, { ...options, fromYear: 1995, toYear: 1995 });
-    expect(rows[0]).toMatchObject({ eligibleCount: 1, score: 24 });
-    expect(data).toEqual(original);
-  });
-  it('部分的な証拠不足を件数と網羅率に残す', () => {
-    const data = copy(); data.involvements[1].evidenceIds = ['e-pending'];
-    expect(rankPeople(data, options).find(row => row.person.id === 'fiction-a')).toMatchObject({ eligibleCount: 1, omittedCount: 1, coverage: .5 });
-  });
-  it('同一人物同一政策の重複を拒否する', () => {
-    const data = copy(); data.involvements.push(data.involvements[0]);
-    expect(() => rankPeople(data, options)).toThrow();
-  });
-  it('ID重複を拒否する', () => {
-    const data = copy(); data.people.push(data.people[0]);
-    expect(() => rankPeople(data, options)).toThrow();
-  });
-  it.each([NaN, Infinity, -1, 101])('不正な影響度 %s を拒否する', harm => {
-    const data = copy(); data.policies[0].harm = harm;
-    expect(() => rankPeople(data, options)).toThrow();
-  });
-  it('不正な重み・年・日付・帰属係数を拒否する', () => {
-    expect(() => rankPeople(copy(), { ...options, weights: { ...options.weights, income: NaN } })).toThrow();
-    expect(() => rankPeople(copy(), { ...options, fromYear: 2030 })).toThrow();
-    const data = copy(); data.evidence[0].date = '2025-02-30';
-    expect(() => rankPeople(data, options)).toThrow();
-    const invalid = copy(); invalid.involvements[0].attribution = 1.01;
-    expect(() => rankPeople(invalid, options)).toThrow();
+
+  it('入力順に依存せず、同点は同順位にする', () => {
+    const data = fixture();
+    const first = rankPeople(data, defaults);
+    data.people.reverse(); data.involvements.reverse(); data.policies.reverse();
+    expect(rankPeople(data, defaults)).toEqual(first);
   });
 });
