@@ -1,6 +1,8 @@
-# 公益レンズ関連タスクの照合・回収
+# 国賊ランキング関連タスクの照合・回収
 
-観測日: 2026-09-20（`Asia/Tokyo`）。これは確認できた範囲の台帳であり、全履歴網羅や残務ゼロの宣言ではない。製品目的の正本は `PROJECT_SSOT.md`、実装・`PR`の状態はこの`branch`と `docs/operations.md`。
+初回観測日: 2026-09-20（`Asia/Tokyo`）。旧称「公益レンズ」を含む確認済み範囲の記録であり、全履歴網羅や残務ゼロの宣言ではない。製品目的の正本は `PROJECT_SSOT.md`、実装・`PR`の状態はこの`branch`と `docs/operations.md`。
+
+2026-09-27のタブ一覧取得では、`Chrome` 12件、`Codex`内ブラウザ1件を確認した。両ブラウザに `nexus-ai-2045/public-interest-lens` のリポジトリ画面が各1件あり、本テーマへの対応を確認した。残りのタブは別リポジトリ、記事、メール、音声ツール等で、画面を開いていた事実だけから本テーマへ吸収しない。私的なタブ`URL`や内容は本リポジトリに複製していない。タブ一覧の取得は、旧タスク本文・添付資料・`Discord`原本の取得完了を意味しない。
 
 ## 対象・境界
 
@@ -46,7 +48,7 @@
 | 実装`checkout`の正本 | 本タスク`owner` | `canonical` `checkout`と `.repos` `implementation` `clone`の`remote/HEAD/status/WIP`を実測。差分を保った専用`branch` 1本へ集約し、`PR`の`target` `checkout`を1つに定める | `dirty`/不一致/所有者不明ならコピー・`reset`しない。対象を本タスクへ返す |
 | 議員同定と実在データ | 政策評価`owner`＋ねく | 実名・在任期・役職・個人採決・政策結果・全証拠の`schema`と訂正手順、人レビューを成立後にだけ実データ版を有効化 | `fixture` `flag`だけを外す経路は止める。人間レビューへ戻す |
 | 全件同期運用 | データ運用`owner` | 公式`source`別の範囲、`rate` `limit`、容量、停止・再開・更新`watermark`、結果回収を`bounded` `job`で実地検証後に開始 | 数十時間級の全件取得・常時`runner`・通知の安全保証がない間は無制限実行しない |
-| このブランチの変更 | 実装`owner` | `tests/build/audit/E2E`、`preflight`、`PRIVATE`/非`default/fast-forward`再確認後に`commit/push/PR`。新`HEAD`の`CI`、`review`、`mergeability`を回収 | 機械検査は人レビュー・`merge/public`許可ではない。人間レビュー前で停止 |
+| このブランチの変更 | 実装`owner` | `PR` #2 の`commit/push`まで完了。新`HEAD`の`CI`は実行前停止。課金状態の回復後、実行手順のある同一`HEAD`の結果とレビューを回収する | 機械検査は人レビュー・`merge/public`許可ではない。公開・マージ前で停止 |
 
 ## 調査打ち切り条件
 
