@@ -2,17 +2,21 @@
 
 ## 対象
 
-公益レンズのアプリ、データモデル、評価ロジック、運用文書を対象とします。
+国賊ランキング（旧称・リポジトリ名は公益レンズ）のアプリ、データモデル、評価ロジック、運用文書を対象とします。
 
 ## 境界
 
-- secret、token、Discord credential、GitHub token、`.env` を commit しない。
-- 非公開の由来本文や個人情報を commit しない。
+- `secret`、`token`、`Discord` `credential`、`GitHub` `token`、`.env` を `commit` しない。
+- 非公開の由来本文や個人情報を `commit` しない。
 - 実在人物の評価データを、人間レビューなしに追加・公開しない。
-- AI 解釈を確認済み事実として表示しない。
-- GitHub リポジトリ作成、push、プルリクエスト、公開、外部共有、repository visibility の変更は、現在会話での明示承認なしに行わない。
-- 新規 GitHub リポジトリは private を既定とする。
+- `AI` 解釈を確認済み事実として表示しない。
+- `GitHub` リポジトリ作成、`push`、プルリクエスト、公開、外部共有、`repository` `visibility` の変更は、現在会話での明示承認なしに行わない。
+- 新規 `GitHub` リポジトリは `private` を既定とする。
 
 ## 報告
 
-公開前は、露出するファイル、commit history、README、license、secret scan、personal path scan、人間レビュー状況を確認します。
+脆弱性・秘密情報・非公開資料の詳細は、公開の`Issue`・プルリクエスト・コメントへ書かないでください。公開後の受付予定は [このリポジトリのセキュリティページ](https://github.com/nexus-ai-2045/public-interest-lens/security)です。非公開脆弱性報告を有効化し、`Report a vulnerability`が利用可能と確認した後、その非公開フォームへ報告してください。
+
+現在は受付設定と通知経路の確認待ちです。ボタンが表示されない間は、公開の場には詳細を含めず「非公開の報告窓口が必要」とだけ知らせてください。秘密情報を投稿してから削除する対応は避けてください。有効化・受付・通知の確認結果は [運用手順](docs/operations.md)へ記録します。
+
+公開前は、露出するファイル、`commit` `history`、`README`、`license`、`secret` `scan`、`personal` `path` `scan`、人間レビュー状況を確認します。

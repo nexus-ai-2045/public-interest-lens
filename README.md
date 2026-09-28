@@ -76,6 +76,8 @@ python -m unittest discover -s tests -v
 - [`ADR` 0002](docs/adr/0002-person-ranking-and-evidence-boundary.md): 人物ランキングへの目的修正。
 - [人間レビュー](human-review-checklist.md): 算定方法と実在データ公開の判断。
 - [外部資料保存](docs/external-materials.md): 既存登録処理を使う。取得と真偽を分離。
+- [貢献手順](CONTRIBUTING.md): 変更の範囲、テスト、資料の取扱い。
+- [公開前検査](PREFLIGHT.md) / [公開対象と未確認事項](PUBLIC_READY.md): リポジトリ公開とアプリ公開を区別。
 - [移行記録](MIGRATION.md) / [旧実行記録](run-card.md): 過去の由来。
 
 旧称「公益レンズ」はリポジトリ識別子と過去記録に残しています。[セキュリティ方針](SECURITY.md)も確認してください。

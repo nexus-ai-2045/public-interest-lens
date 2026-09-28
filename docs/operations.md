@@ -115,6 +115,31 @@ python -m scripts.run_local_mvp --output-dir .local/mvp/sangiin-bills-20260924 -
 
 `repo-preflight`のローカル正本とランタイム用コピーには版ずれがあった。今回使った`README`ゲート本体は取得済み`origin/main`と差分なし。ランタイムの配布先や設定は変更せず、共通ゲートの更新は同リポジトリの所有者へ戻す。
 
+### 公開方針と設定の準備
+
+ユーザーは既存リポジトリの`public`化を継続指定した。別の公開リポジトリは作成せず、必要な貢献手順・公開範囲・検査記録をこのリポジトリへ追加した。現在のタスク参照・再開位置は`Git`対象外のローカル記録へ保全して現行文書を整理したが、過去履歴からは除去していない。公開切替直前の確認では、この既知の露出と全履歴・`PR`参照・`Actions`履歴を含む範囲を再掲する。
+
+2026-09-28 19:21（日本時間）の設定実測は、グローバルのアカウントを変更せず、対象所有者に一致する子プロセス限定の認証で既存`configure_settings`入口を実行した。対象は `nexus-ai-2045/public-interest-lens`。結果は読取のみで、設定変更は0件。
+
+| 項目 | 読取結果 | この製品での扱い |
+|---|---|---|
+| `Actions`と既定権限 | 有効、`read`、自動レビュー承認`false` | 現状を維持する |
+| 外部`action`許可と完全`SHA`固定 | `all`、強制固定`false` | 実際の`workflow`は固定済み。`GitHub`製`action`を許可し、設定でも完全`SHA`固定する候補を別承認へ戻す |
+| マージ方式 | `squash`・`merge`・`rebase`が有効、自動マージ`false` | 自動マージは`OFF`維持。方式の制限は必須ではなく別判断 |
+| マージ後の自動ブランチ削除 | `false` | 継続作業ブランチを保つため`OFF`維持。新規の自動削除は承認しない |
+| `main`のルールセット | 取得不能 | 無効と推測しない。`public`化後に再取得し、削除・強制送信の禁止、`PR`経由、実際の`verify`検査を要求する候補を確認する |
+| 秘密情報保護・非公開脆弱性報告・静的解析 | 一部取得不能 | `public`化後の利用可能性と現在値を再測定し、機能ごとに承認・適用・結果回収する |
+
+依存更新設定は実在する`npm`の `/app` と `github-actions`の `/` の週次更新だけを準備し、同時`PR`上限を3件・2件にした。`Python`側は標準ライブラリだけで、存在しない依存定義を追加しない。設定ファイルを追加したこと、既定ブランチへの反映、`Dependabot`の有効化・実行結果は別の確認とする。
+
+公式確認先: [公開範囲変更の影響](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility)、[ワークフローの権限と完全参照固定](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository)、[公開リポジトリのルールセット](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets)、[リポジトリとユーザーの送信保護の違い](https://docs.github.com/en/code-security/concepts/secret-security/push-protection)、[非公開脆弱性報告](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/configure-vulnerability-reporting/configure-for-a-repository)。利用可能と有効化済み、設定`ON`と検査成功を混同しない。
+
+今回の公開用文書追加では、製品の`Python`テスト30件、画面単体13件、本番ビルド、依存監査で既知脆弱性0件、日本語文書検査、依存更新ファイルの構造を再検証した。ブラウザ操作試験9件は前回の結果として残し、今回の文書追加後の実行結果とはしない。
+
+必要なリポプリ改善は、一人運用で認識済みの既定ブランチルール内の`Code Owners`承認必須を見落とす判定の補修に限定した。同ツールの専用ブランチにローカルコミット `8e80319` として保全し、設定・対話テスト52件と設定入口テスト5件を本線で確認した。実際の設定入口にも助言項目が現れ、読取のみ・未承認と確認した。全382件の検査は途中停止で、全件合格とは扱わない。公開リポジトリへの送信、ランタイムへの配布・有効化、`GitHub`設定変更は未実施。
+
+設定スナップショットは非公開のローカル記録に保存し、取得時刻と本人確認を読み返した。公開後は古いスナップショットの操作文をそのまま使わず、各変更の直前に再取得して差分を確認する。同じ設定入口で複数項目を変更する場合も、先行変更を次の古い操作文で戻さないよう再生成する。
+
 | 項目 | 担当 | 次の手順・完了条件 |
 |---|---|---|
 | 今回のコード・`CI`・`PR`回収 | アカウント管理者（課金状態）／本タスクの開発担当（再実行・回収） | `PR` #2 の同一`HEAD`でジョブが実際に開始される状態を確認し、`CI`成功・未解決レビューなし・`mergeability`を再読する。実行前失敗は未完了のまま |
