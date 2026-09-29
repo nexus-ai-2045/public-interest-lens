@@ -17,6 +17,7 @@ from .register_external_material import register_local_material
 
 MAX_BYTES = 2 * 1024 * 1024
 HOST = "www.sangiin.go.jp"
+DEFAULT_STORAGE_ROOT = Path(__file__).resolve().parents[1] / ".local" / "external-materials"
 PATH_PATTERN = re.compile(
     r"^/japanese/joho1/kousei/gian/(?P<session>\d{1,3})/meisai/m\d+(?P<number>\d{3})\.htm$"
 )
@@ -123,10 +124,20 @@ def parse_bill_page(payload: bytes, url: str) -> dict:
     return result
 
 
-def _register_page(path: Path, url: str, bill_id: str, output_dir: Path, digest: str) -> Path:
-    storage = output_dir / "external-materials"
+def _observed_at_from_record(record_path: Path) -> str:
+    """登録済み record.json から観測時刻を読み取る。asOf とは別の取得時刻。"""
+    record = json.loads(record_path.read_text(encoding="utf-8"))
+    value = record.get("observed_at")
+    if not isinstance(value, str) or not value:
+        raise ValueError("registered observation time is missing")
+    return value
+
+
+def _register_page(path: Path, url: str, bill_id: str, digest: str,
+                   *, storage_root: Path = DEFAULT_STORAGE_ROOT) -> Path:
+    """原資料を規定の `.local/external-materials/<task-id>/` へ登録する。"""
     task_id = f"bill-{bill_id}"
-    for record_path in sorted((storage / task_id).glob("*/record.json")):
+    for record_path in sorted((storage_root / task_id).glob("*/record.json")):
         try:
             record = json.loads(record_path.read_text(encoding="utf-8"))
             original = record_path.parent / record["saved_filename"]
@@ -137,12 +148,13 @@ def _register_page(path: Path, url: str, bill_id: str, output_dir: Path, digest:
             continue
     return register_local_material(input_path=path, source_url=url, task_id=task_id,
                                    title="参議院議案審議情報", purpose="限定MVPの法案候補資料",
-                                   storage_root=storage)
+                                   storage_root=storage_root)
 
 
 def fetch_bill_pages(urls: list[str], output_dir: Path, *, as_of: str,
                      fetch_bytes: Callable[[str], bytes] = _default_fetch_bytes,
-                     sleep: Callable[[float], None] = time.sleep) -> dict:
+                     sleep: Callable[[float], None] = time.sleep,
+                     storage_root: Path = DEFAULT_STORAGE_ROOT) -> dict:
     """明示URLを最大3件だけ逐次取得し、得点化せずに保留する。"""
     if not 1 <= len(urls) <= 3 or len(set(urls)) != len(urls):
         raise ValueError("one to three unique bill URLs required")
@@ -177,9 +189,11 @@ def fetch_bill_pages(urls: list[str], output_dir: Path, *, as_of: str,
                 raise ValueError("cached bill page changed")
         else:
             stage.write_bytes(payload)
-        _register_page(stage, url, parsed["billId"], output_dir, digest)
+        record_path = _register_page(stage, url, parsed["billId"], digest,
+                                     storage_root=storage_root)
         held.append({**parsed, "id": parsed["billId"], "reason": "impact_unverified",
-                     "sourceUrl": url, "sha256": digest})
+                     "sourceUrl": url, "sha256": digest,
+                     "observedAt": _observed_at_from_record(record_path)})
     return {
         "schemaVersion": "ranking-dataset/v1", "fictional": False, "asOf": as_of,
         "coverage": {"scope": "事前選定の参議院法案3件以内（網羅性未確認）",
