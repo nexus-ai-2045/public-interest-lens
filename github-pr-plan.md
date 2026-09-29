@@ -1,5 +1,7 @@
 # GitHub PR 計画
 
+本書はPR #1の旧計画。PR #1は2026-09-12にmerge済み。現在の目的は `PROJECT_SSOT.md`、後続PRの検証・残務は `docs/operations.md` を参照。
+
 ## 変更の意図
 
 Discord で示された問題意識を、出典と不確実性を中心に据えたローカル MVP として検証する。

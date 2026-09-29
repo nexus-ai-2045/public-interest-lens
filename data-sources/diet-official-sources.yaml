@@ -1,0 +1,70 @@
+schema_version: public-interest-lens-source-registry/v1
+recorded_at: 2026-08-06T19:59:58+09:00
+recorded_by: codex
+observed_at: 2026-08-06T19:59:58+09:00
+scope: 国会・法令・図書館の公式データ取得候補
+event_time: unknown
+sources:
+  - id: ndl_diet_minutes_api
+    name: 国会会議録検索システム
+    actor: 国立国会図書館
+    canonical_url: https://kokkai.ndl.go.jp/api.html
+    acquisition: api
+    entities: [meeting, speech, speaker]
+    priority: P0
+    status: planned
+
+  - id: shugiin_legislation
+    name: 衆議院 立法情報
+    actor: 衆議院
+    canonical_url: https://www.shugiin.go.jp/Internet/index.nsf/html/rippo_top.htm
+    acquisition: html_pdf_incremental
+    entities: [bill, deliberation, question, answer, petition, enacted_law]
+    priority: P1
+    status: planned
+
+  - id: shugiin_meetings
+    name: 衆議院 本会議・委員会等
+    actor: 衆議院
+    canonical_url: https://www.shugiin.go.jp/Internet/index.nsf/html/honkai_top.htm
+    acquisition: html_pdf_incremental
+    entities: [committee, membership, agenda, bulletin, resolution, document]
+    priority: P2
+    status: planned
+
+  - id: sangiin_library
+    name: 参議院 ライブラリー
+    actor: 参議院
+    canonical_url: https://www.sangiin.go.jp/japanese/kaiki/index.html
+    acquisition: html_pdf_incremental
+    entities: [bill, vote, question, answer, petition, resolution, committee, document]
+    priority: P1
+    status: planned
+
+  - id: egov_law_api_v2
+    name: e-Gov法令API Version 2
+    actor: デジタル庁
+    canonical_url: https://laws.e-gov.go.jp/api/2/redoc/
+    acquisition: api
+    entities: [law, law_revision, law_text]
+    priority: P1
+    status: planned
+
+  - id: ndl_law_index
+    name: 日本法令索引
+    actor: 国立国会図書館
+    canonical_url: https://hourei.ndl.go.jp/
+    acquisition: indexed_web_incremental
+    entities: [law_index, bill_index, legislative_history]
+    priority: P2
+    status: planned
+
+  - id: ndl_search_api
+    name: 国立国会図書館サーチ
+    actor: 国立国会図書館
+    canonical_url: https://ndlsearch.ndl.go.jp/help/api
+    acquisition: api
+    protocols: [SRU, OpenSearch, OAI-PMH]
+    entities: [bibliographic_record, holding, digital_access]
+    priority: P2
+    status: planned

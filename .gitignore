@@ -20,3 +20,5 @@ vite.config.d.ts
 
 # Private source captures and local intake records
 .local/
+test-results/
+playwright-report/
