@@ -6,6 +6,20 @@ const fixture = () => structuredClone(rankingDataset);
 const defaults: RankingOptions = { domain: 'economy', direction: 'harm', period: 4, asOf: '2026-09-24', weights: { economy: 70, technology: 30 } };
 
 describe('行動から人物への評価契約', () => {
+  it('同政策・同日・同役割の別行動でも採用キーは一つで入力順に依存しない', () => {
+    const data = fixture();
+    const first = data.involvements.find(item => item.personId === 'fiction-a' && item.role === 'lead')!;
+    const second = { ...first, description: first.description + '（別の行動）' };
+    data.involvements = [first, second];
+    const row = rankPeople(data, defaults).find(item => item.person.id === first.personId)!;
+    const reversed = rankPeople({ ...data, involvements: [second, first] }, defaults).find(item => item.person.id === first.personId)!;
+    expect(row.score).toBe(3);
+    expect(row.contributions).toHaveLength(1);
+    const chosen = row.contributions[0] as typeof row.contributions[0] & { actionKey: string };
+    expect([actionKey(first), actionKey(second)]).toContain(chosen.actionKey);
+    expect([first, second].filter(action => actionKey(action) === chosen.actionKey)).toHaveLength(1);
+    expect(reversed.contributions).toEqual(row.contributions);
+  });
   it('表示条件は期間の両端を含み、未来・期間外・別方向・別分野を除く', () => {
     const data = fixture();
     const action = data.involvements.find(item => item.personId === 'fiction-a')!;
