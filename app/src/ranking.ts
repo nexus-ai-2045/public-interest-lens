@@ -11,7 +11,7 @@ export type Policy = { id: string; title: string; domain: Domain; direction: Dir
 export type Involvement = { personId: string; policyId: string; actionDate: string; role: 'lead' | 'coauthor' | 'vote' | 'context'; description: string; evidenceIds: string[] };
 export type RankingDataset = { schemaVersion: 'ranking-dataset/v1'; fictional: boolean; asOf: string; coverage: { scope: string; assessedPeople: number; targetPeople: number | null; sourceStatus: string }; people: Person[]; policies: Policy[]; involvements: Involvement[]; evidence: RankingEvidence[]; held?: { personId?: string; policyId?: string; reason: string; sourceRefs?: string[] }[] };
 export type RankingOptions = { domain: Domain | 'overall'; direction: Direction; period: Period; asOf: string; weights: { economy: number; technology: number } };
-export type RankingContribution = { policyId: string; actionDate: string; role: Involvement['role']; score: number };
+export type RankingContribution = { policyId: string; actionKey: string; actionDate: string; role: Involvement['role']; score: number };
 export type RankingRow = { person: Person; score: number | null; rank: number | null; eligibleCount: number; heldCount: number; contributions: RankingContribution[] };
 
 export const ROLE_FACTOR: Record<Involvement['role'], number> = { lead: 1, coauthor: .5, vote: .25, context: 0 };
@@ -92,10 +92,10 @@ export function rankPeople(data: RankingDataset, options: RankingOptions): Ranki
       const canScore = domainEnabled && (options.domain !== 'overall' || weightTotal > 0) && (options.domain !== 'overall' || relevantWeight > 0) && policy.reviewStatus === 'reviewed' && hasVerifiedEvidence(policy.evidenceIds);
       const eligible = canScore ? actions.filter(action => ROLE_FACTOR[action.role] > 0 && hasVerifiedEvidence(action.evidenceIds)) : [];
       if (!eligible.length) { heldCount++; continue; }
-      eligible.sort((a, b) => ROLE_FACTOR[b.role] - ROLE_FACTOR[a.role] || idCompare(a.actionDate, b.actionDate));
+      eligible.sort((a, b) => ROLE_FACTOR[b.role] - ROLE_FACTOR[a.role] || idCompare(a.actionDate, b.actionDate) || idCompare(actionKey(a), actionKey(b)));
       const action = eligible[0];
       const weight = options.domain === 'overall' ? relevantWeight / weightTotal : 1;
-      contributions.push({ policyId, actionDate: action.actionDate, role: action.role, score: policy.impact * ROLE_FACTOR[action.role] * weight });
+      contributions.push({ policyId, actionKey: actionKey(action), actionDate: action.actionDate, role: action.role, score: policy.impact * ROLE_FACTOR[action.role] * weight });
     }
     contributions.sort((a, b) => idCompare(a.policyId, b.policyId));
     const raw = contributions.reduce((sum, item) => sum + item.score, 0);

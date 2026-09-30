@@ -18,7 +18,7 @@ export function resolveView(data: RankingDataset, state: ViewState, origin: 'url
   const restoreLegacy = origin === 'url' && person?.person.id === state.selectedPersonId && explicit && !actionMatchesView(explicit.action, explicit.policy, state.options);
   const history = state.history === 'all' || restoreLegacy ? 'all' : 'view';
   const actions = getRelatedActions(data, person?.person.id ?? '', state.options, history).map(item => item.action);
-  const scoredAction = actions.find(item => person?.contributions.some(contribution => contribution.policyId === item.policyId && contribution.role === item.role && contribution.actionDate === item.actionDate));
+  const scoredAction = actions.find(item => person?.contributions.some(contribution => contribution.actionKey === actionKey(item)));
   const action = actions.find(item => actionKey(item) === state.selectedActionKey) ?? actions.find(item => item.policyId === state.selectedPolicyId) ?? scoredAction ?? actions[0];
   const policy = data.policies.find(item => item.id === action?.policyId);
   const availableEvidence = [...(action?.evidenceIds ?? []), ...(policy?.evidenceIds ?? [])];

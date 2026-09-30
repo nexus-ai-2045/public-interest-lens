@@ -43,7 +43,7 @@ function App() {
   const contribution = selected?.contributions.find(item => item.policyId === detail?.policy.id);
   const pending = pendingDomains.has(options.domain as Domain);
   const actionCanScore = useMemo(() => detail ? rankPeople({ ...data, involvements: [detail.action] }, options).some(row => row.person.id === detail.action.personId && row.score !== null) : false, [detail?.action, options]);
-  const detailScoreLabel = assessment === 'outlook' ? '公約・見込みは未評価です' : pending ? '評価準備中' : detail?.policy.reviewStatus === 'pending' ? '影響の根拠が未検証のため、評価を保留しています' : !actionCanScore ? '現在の条件では未評価です' : contribution && detail && contribution.actionDate === detail.action.actionDate && contribution.role === detail.action.role ? contribution.score.toFixed(2) : 'この行動は重複して加算しません。';
+  const detailScoreLabel = assessment === 'outlook' ? '公約・見込みは未評価です' : pending ? '評価準備中' : detail?.policy.reviewStatus === 'pending' ? '影響の根拠が未検証のため、評価を保留しています' : !actionCanScore ? '現在の条件では未評価です' : contribution && detail && contribution.actionKey === actionKey(detail.action) ? contribution.score.toFixed(2) : 'この行動は重複して加算しません。';
   const productTitle = options.direction === 'harm' ? '国賊ランキング' : '国士ランキング';
   useEffect(() => { document.title = productTitle; }, [productTitle]);
 
