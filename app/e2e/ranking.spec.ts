@@ -100,7 +100,7 @@ test('ローカルの実データJSONは収録範囲と保留だけを閲覧で�
   await expect(page.getByRole('heading', { name: 'ローカル実データの確認' })).toBeVisible();
   await expect(page.getByText('算定可能 0人')).toBeVisible();
   await expect(page.getByText('個人の賛否を確認できない')).toBeVisible();
-  await expect(page.getByText('資料取得は上限到達')).toBeVisible();
+  await expect(page.getByText('資料取得は上限に到達しています')).toBeVisible();
   await expect(page.locator('tbody tr').first()).toContainText('架空議員あおい');
   expect(external).toEqual([]);
   await page.reload();
@@ -117,7 +117,7 @@ test('公式議案3ページの限定取得結果を保留3件・算定0人と�
   };
   await page.getByLabel('ローカル評価データJSONを開く').setInputFiles({ name: 'current.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(localData)) });
   await expect(page.getByRole('heading', { name: 'ローカル実データの確認' })).toBeVisible();
-  await expect(page.getByText('指定した公式議案ページを取得、全件網羅ではない')).toBeVisible();
+  await expect(page.getByText('指定した公式議案ページを取得していますが、全件を網羅していません')).toBeVisible();
   await expect(page.getByText('算定可能 0人')).toBeVisible();
   await expect(page.getByRole('heading', { name: '保留 3件' })).toBeVisible();
   await expect(page.locator('.inspection-result li')).toHaveCount(3);

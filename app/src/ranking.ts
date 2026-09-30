@@ -29,6 +29,13 @@ function periodStart(asOf: string, period: Period): string | null {
   return date.toISOString().slice(0, 10);
 }
 
+/** 表示条件への一致だけを判定する。保留・参考行動も含み、算定資格は判定しない。 */
+export function actionMatchesView(action: Involvement, policy: Policy, options: RankingOptions): boolean {
+  const start = periodStart(options.asOf, options.period);
+  return action.actionDate <= options.asOf && (!start || action.actionDate >= start)
+    && policy.direction === options.direction && (options.domain === 'overall' || policy.domain === options.domain);
+}
+
 /** 全資料が創作である表示fixtureだけを計算する。実人物への適用は別の検証済み入口が必要。 */
 export function rankPeople(data: RankingDataset, options: RankingOptions): RankingRow[] {
   check(data.schemaVersion === 'ranking-dataset/v1' && data.fictional === true, '架空表示用データのみ算定できます');
@@ -66,15 +73,13 @@ export function rankPeople(data: RankingDataset, options: RankingOptions): Ranki
     check(validDate(action.actionDate) && Boolean(action.description?.trim()) && Object.hasOwn(ROLE_FACTOR, action.role), '行動が不正です');
     validateEvidence(action.evidenceIds);
   }
-  const start = periodStart(options.asOf, options.period);
   const domainEnabled = options.domain === 'economy' || options.domain === 'technology' || options.domain === 'overall';
   const weightTotal = options.weights.economy + options.weights.technology;
   const rows: RankingRow[] = data.people.map(person => {
     const grouped = new Map<string, Involvement[]>();
     for (const action of data.involvements) {
       const policy = policies.get(action.policyId)!;
-      if (action.personId !== person.id || action.actionDate > options.asOf || (start && action.actionDate < start)) continue;
-      if (policy.direction !== options.direction || (options.domain !== 'overall' && policy.domain !== options.domain)) continue;
+      if (action.personId !== person.id || !actionMatchesView(action, policy, options)) continue;
       const group = grouped.get(policy.id) ?? [];
       group.push(action);
       grouped.set(policy.id, group);

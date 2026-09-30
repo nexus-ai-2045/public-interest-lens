@@ -1,11 +1,32 @@
 import { describe, expect, it } from 'vitest';
-import { actionKey, rankPeople, type RankingOptions } from './ranking';
+import { actionKey, actionMatchesView, rankPeople, type RankingOptions } from './ranking';
 import { rankingDataset } from './ranking-data';
 
 const fixture = () => structuredClone(rankingDataset);
 const defaults: RankingOptions = { domain: 'economy', direction: 'harm', period: 4, asOf: '2026-09-24', weights: { economy: 70, technology: 30 } };
 
 describe('行動から人物への評価契約', () => {
+  it('表示条件は期間の両端を含み、未来・期間外・別方向・別分野を除く', () => {
+    const data = fixture();
+    const action = data.involvements.find(item => item.personId === 'fiction-a')!;
+    const policy = data.policies.find(item => item.id === action.policyId)!;
+    expect(actionMatchesView({ ...action, actionDate: '2022-09-24' }, policy, defaults)).toBe(true);
+    expect(actionMatchesView({ ...action, actionDate: defaults.asOf }, policy, defaults)).toBe(true);
+    expect(actionMatchesView({ ...action, actionDate: '2022-09-23' }, policy, defaults)).toBe(false);
+    expect(actionMatchesView({ ...action, actionDate: '2026-09-25' }, policy, defaults)).toBe(false);
+    expect(actionMatchesView(action, { ...policy, direction: 'benefit' }, defaults)).toBe(false);
+    expect(actionMatchesView(action, { ...policy, domain: 'technology' }, defaults)).toBe(false);
+    expect(actionMatchesView({ ...action, actionDate: '2000-01-01' }, policy, { ...defaults, period: 'cumulative' })).toBe(true);
+  });
+
+  it('表示条件は保留・参考行動も含み、総合では全分野を含む', () => {
+    const data = fixture();
+    const action = data.involvements.find(item => item.personId === 'fiction-a')!;
+    const policy = data.policies.find(item => item.id === action.policyId)!;
+    expect(actionMatchesView({ ...action, role: 'context', evidenceIds: [] }, { ...policy, reviewStatus: 'pending' }, defaults)).toBe(true);
+    expect(actionMatchesView(action, { ...policy, domain: 'fiscal' }, { ...defaults, domain: 'overall', weights: { economy: 0, technology: 0 } })).toBe(true);
+  });
+
   it('分野と貢献・悪影響を切り替えると独立した順位を返す', () => {
     const harm = rankPeople(fixture(), defaults);
     const benefit = rankPeople(fixture(), { ...defaults, direction: 'benefit' });
