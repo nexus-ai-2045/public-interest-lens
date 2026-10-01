@@ -19,6 +19,13 @@ export const ROLE_FACTOR: Record<Involvement['role'], number> = { lead: 1, coaut
 export const actionKey = (action: Involvement): string => JSON.stringify([action.personId, action.policyId, action.actionDate, action.role, action.description, [...action.evidenceIds].sort()]);
 const check = (valid: boolean, message: string) => { if (!valid) throw new Error(message); };
 const idCompare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
+/** 入力検証は呼出し側の契約で行い、集計だけを共通化する。 */
+export const sumRounded = (values: number[]): number | null => values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) * 100) / 100 : null;
+export function assignRanks(rows: RankingRow[]): RankingRow[] {
+  rows.sort((a, b) => (a.score === null ? b.score === null ? 0 : 1 : b.score === null ? -1 : b.score - a.score) || idCompare(a.person.id, b.person.id));
+  rows.forEach((row, index) => { row.rank = row.score === null ? null : index > 0 && row.score === rows[index - 1].score ? rows[index - 1].rank : index + 1; });
+  return rows;
+}
 const validDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 const finiteWeight = (value: number) => Number.isFinite(value) && value >= 0 && value <= 100;
 
@@ -98,10 +105,7 @@ export function rankPeople(data: RankingDataset, options: RankingOptions): Ranki
       contributions.push({ policyId, actionKey: actionKey(action), actionDate: action.actionDate, role: action.role, score: policy.impact * ROLE_FACTOR[action.role] * weight });
     }
     contributions.sort((a, b) => idCompare(a.policyId, b.policyId));
-    const raw = contributions.reduce((sum, item) => sum + item.score, 0);
-    return { person, score: contributions.length ? Math.round(raw * 100) / 100 : null, rank: null, eligibleCount: contributions.length, heldCount, contributions };
+    return { person, score: sumRounded(contributions.map(item => item.score)), rank: null, eligibleCount: contributions.length, heldCount, contributions };
   });
-  rows.sort((a, b) => (a.score === null ? b.score === null ? 0 : 1 : b.score === null ? -1 : b.score - a.score) || idCompare(a.person.id, b.person.id));
-  rows.forEach((row, index) => { if (row.score !== null) row.rank = index > 0 && row.score === rows[index - 1].score ? rows[index - 1].rank : index + 1; });
-  return rows;
+  return assignRanks(rows);
 }
