@@ -43,8 +43,8 @@ test('古い条件外行動リンクは全履歴で開き未知の行動は開�
   await expect(page.locator('.source-panel')).toContainText('fixture:action-b');
   params.set('action', 'unknown-action');
   await page.goto('/?' + params.toString());
-  await expect(page.getByRole('button', { name: '現在の条件', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByText('現在の条件に合う行動がありません。', { exact: true })).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText('指定された行動は見つかりません');
+  await expect(page.getByRole('region', { name: '政策と行動のつながり' })).toHaveCount(0);
 });
 
 test('公約・準備中・全重み0は傾向を判定しない', async ({ page }) => {

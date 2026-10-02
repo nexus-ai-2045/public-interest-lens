@@ -27,7 +27,7 @@ test('連続切替後も最後の方向・選択・URLが一致し戻ると復�
   await expect.poll(() => motion.evaluate(el => getComputedStyle(el).opacity)).toBe('1');
   await expect(page).toHaveTitle('国士ランキング');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-theme', 'light');
-  await expect(page).toHaveURL(/direction=benefit/);
+  await expect(page).toHaveURL(/view=benefit/);
   await expect(page.locator('.inspector-heading')).toContainText('架空議員べに');
   await page.reload();
   await expect(page).toHaveTitle('国士ランキング');
