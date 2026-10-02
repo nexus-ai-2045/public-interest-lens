@@ -17,6 +17,88 @@ const input = () => ({ materialRefs: [], evidenceEvaluation: { schemaVersion: 'e
 const evaluated = { mode: 'test-only', rows: [], held: [], coverage: { inputActions: 0, assessedActions: 0, readableMaterials: 0 }, publicationStatus: 'requires_human_review' };
 
 describe('非公開評価版の生成と復旧', () => {
+  it('hashを付け直した偽の検証receiptと得点も拒否します', async () => {
+    const cryptoModule = 'node:crypto';
+    const { createHash } = await import(/* @vite-ignore */ cryptoModule);
+    const canonical = (v: unknown): string => Array.isArray(v) ? `[${v.map(canonical).join(',')}]` : v && typeof v === 'object' ? `{${Object.entries(v).sort(([a], [b]) => a.localeCompare(b)).map(([k, x]) => `${JSON.stringify(k)}:${canonical(x)}`).join(',')}}` : JSON.stringify(v);
+    const real = input(); real.evidenceEvaluation.mode = 'real';
+    const body = { schemaVersion: 'evidence-release/v1', engineHash: 'a'.repeat(64), input: real,
+      publicationStatus: 'requires_human_review', result: { ...evaluated, mode: 'real', rows: [{ person: { id: 'unknown', name: '人工テスト' }, score: 1, contributions: [] }], coverage: { inputActions: 2, assessedActions: 2, readableMaterials: 0 } },
+      verification: { inputHash: 'b'.repeat(64), verifierId: 'fake', verifierVersion: '1', resolvedPersonIds: [], actionRevisions: [], assessmentRevisions: [] } };
+    const forged = { ...body, releaseId: createHash('sha256').update(canonical(body)).digest('hex') };
+    expect(() => pipeline.buildReviewPacket(forged)).toThrow();
+    body.verification.inputHash = createHash('sha256').update(canonical(real.evidenceEvaluation)).digest('hex');
+    expect(() => pipeline.buildReviewPacket({ ...body, releaseId: createHash('sha256').update(canonical(body)).digest('hex') })).toThrow();
+  });
+  it('実入力の全件保留をM2成立や公開許可へ変換しません', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'evidence-review-'));
+    try {
+      const real = input(); real.evidenceEvaluation.mode = 'real';
+      const release = await pipeline.runEvidencePipeline(real, { repoRoot: root, outputDir: join(root, '.local', 'release'), engineHash: 'a'.repeat(64), evaluate: async () => ({ ...evaluated, mode: 'real' }) });
+      const review = await pipeline.writeReviewPacket(release, { repoRoot: root, outputDir: join(root, '.local', 'review') });
+      expect(review.m2Status).toBe('not_established');
+      expect(review.publicationStatus).toBe('requires_human_review');
+      expect(review).not.toHaveProperty('materialRefs');
+      expect(JSON.parse(await readFile(join(root, '.local', 'review', `review-${release.releaseId}.json`), 'utf8')).releaseId).toBe(release.releaseId);
+      release.result.coverage.assessedActions = 100;
+      expect(() => pipeline.buildReviewPacket(release)).toThrow();
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+  it('人工入力を実公開候補へ変換しません', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'evidence-review-'));
+    try {
+      const release = await pipeline.runEvidencePipeline(input(), { repoRoot: root, outputDir: join(root, '.local', 'release'), engineHash: 'a'.repeat(64), evaluate: async () => evaluated });
+      expect(() => pipeline.buildReviewPacket(release)).toThrow();
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+  it('検証器の保留結果に紛れた非公開パスを保存・投影しません', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'evidence-review-'));
+    try {
+      const real = input(); real.evidenceEvaluation.mode = 'real';
+      await expect(pipeline.runEvidencePipeline(real, { repoRoot: root, outputDir: join(root, '.local', 'release'), engineHash: 'a'.repeat(64),
+        evaluate: async () => ({ ...evaluated, mode: 'real', held: [{ reason: '人工テスト保留', privateLogPath: 'C:/private/log.json' }] }),
+      })).rejects.toThrow();
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+  it('独立実行側の検証結果だけを入力のhashへ束縛します', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'evidence-verifier-'));
+    try {
+      const pilot = input();
+      pilot.evidenceEvaluation.people = [{ id: 'person-test' }] as never[];
+      const release = await pipeline.runEvidencePipeline(pilot, {
+        repoRoot: root, outputDir: join(root, '.local', 'release'), engineHash: 'a'.repeat(64),
+        verifyEvidence: async (_input: unknown, _materials: unknown, inputHash: string) => ({
+          inputHash, verifierId: 'test-only-verifier', verifierVersion: '1',
+          resolvedPersonIds: ['person-test'], actionRevisions: [], assessmentRevisions: [],
+        }),
+        evaluate: async (_input: unknown, trusted: { resolvedPersonIds: Set<string> }) => {
+          expect([...trusted.resolvedPersonIds]).toEqual(['person-test']);
+          return evaluated;
+        },
+      });
+      expect(release.verification.verifierId).toBe('test-only-verifier');
+      expect(release.verification.inputHash).toMatch(/^[a-f0-9]{64}$/);
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+  test.each(['wrong-hash', 'unknown-person', 'unknown-action', 'duplicate-person'])('独立検証の%sを拒否し前正常版を保持します', async kind => {
+    const root = await mkdtemp(join(tmpdir(), 'evidence-verifier-'));
+    try {
+      const out = join(root, '.local', 'release');
+      const options = { repoRoot: root, outputDir: out, engineHash: 'a'.repeat(64), evaluate: async () => evaluated };
+      await pipeline.runEvidencePipeline(input(), options);
+      const before = await readFile(join(out, 'current.json'), 'utf8');
+      const pilot = input(); pilot.evidenceEvaluation.people = [{ id: 'person-test' }] as never[];
+      await expect(pipeline.runEvidencePipeline(pilot, { ...options,
+        verifyEvidence: async (_input: unknown, _materials: unknown, inputHash: string) => ({
+          inputHash: kind === 'wrong-hash' ? 'b'.repeat(64) : inputHash,
+          verifierId: 'test-only', verifierVersion: '1',
+          resolvedPersonIds: kind === 'unknown-person' ? ['missing'] : kind === 'duplicate-person' ? ['person-test', 'person-test'] : [],
+          actionRevisions: kind === 'unknown-action' ? [{ id: 'missing', revisionId: 'c'.repeat(64) }] : [], assessmentRevisions: [],
+        }),
+      })).rejects.toThrow();
+      expect(await readFile(join(out, 'current.json'), 'utf8')).toBe(before);
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
   it('原本保存場所の移動では評価版を変えず、private pathを版へ含めない', async () => {
     const root = await mkdtemp(join(tmpdir(), 'evidence-release-'));
     try {

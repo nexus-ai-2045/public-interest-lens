@@ -28,10 +28,10 @@ export const rankingDataset: RankingDataset = {
     { id: 'policy-hold', title: '架空の影響未検証策', domain: 'economy', direction: 'harm', impact: 1, reviewStatus: 'pending', rationale: '影響根拠が不足した設定。', counterEvidence: '反証未検証。', alternativeExplanation: '代替要因未検証。', evidenceIds: ['e-unknown'] },
   ],
   involvements: [
-    { personId: 'fiction-a', policyId: 'policy-harm-e', actionDate: '2024-09-24', role: 'lead', description: '架空の法案を主導して提出', evidenceIds: ['e-action-a'] },
-    { personId: 'fiction-a', policyId: 'policy-harm-e', actionDate: '2025-01-01', role: 'vote', description: '架空の個人採決で賛成', evidenceIds: ['e-action-a-vote'] },
-    { personId: 'fiction-b', policyId: 'policy-good-e', actionDate: '2024-10-01', role: 'lead', description: '架空の政策決定に関与', evidenceIds: ['e-action-b'] },
-    { personId: 'fiction-c', policyId: 'policy-good-t', actionDate: '2025-02-01', role: 'vote', description: '架空の個人採決で賛成', evidenceIds: ['e-action-c'] },
-    { personId: 'fiction-d', policyId: 'policy-hold', actionDate: '2025-03-01', role: 'context', description: '架空の団体所属のみ', evidenceIds: ['e-unknown'] },
+    { id: 'fiction-a-bill', personId: 'fiction-a', policyId: 'policy-harm-e', actionDate: '2024-09-24', role: 'lead', description: '架空の法案を主導して提出', evidenceIds: ['e-action-a'] },
+    { id: 'fiction-a-vote', personId: 'fiction-a', policyId: 'policy-harm-e', actionDate: '2025-01-01', role: 'vote', description: '架空の個人採決で賛成', evidenceIds: ['e-action-a-vote'] },
+    { id: 'fiction-b-decision', personId: 'fiction-b', policyId: 'policy-good-e', actionDate: '2024-10-01', role: 'lead', description: '架空の政策決定に関与', evidenceIds: ['e-action-b'] },
+    { id: 'fiction-c-vote', personId: 'fiction-c', policyId: 'policy-good-t', actionDate: '2025-02-01', role: 'vote', description: '架空の個人採決で賛成', evidenceIds: ['e-action-c'] },
+    { id: 'fiction-d-membership', personId: 'fiction-d', policyId: 'policy-hold', actionDate: '2025-03-01', role: 'context', description: '架空の団体所属のみ', evidenceIds: ['e-unknown'] },
   ],
 };
