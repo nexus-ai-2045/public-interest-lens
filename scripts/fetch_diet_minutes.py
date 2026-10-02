@@ -84,6 +84,38 @@ def _validate_page(data, endpoint, start, maximum, reported, seen):
     return records, total, ids, complete
 
 
+def _valid_observation(value: str) -> str:
+    try:
+        parsed = datetime.fromisoformat(value)
+    except (TypeError, ValueError) as error:
+        raise ValueError("registered observation time is invalid") from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError("registered observation time must include timezone")
+    return value
+
+
+def _verified_material(record_path: Path, *, roots: tuple[Path, ...],
+                       url: str, digest: str, expected_bytes: int) -> dict:
+    resolved = record_path.resolve(strict=True)
+    if not any(resolved.is_relative_to(root.resolve()) for root in roots):
+        raise ValueError("registered material path escapes storage root")
+    record = json.loads(resolved.read_text(encoding="utf-8"))
+    name = record.get("saved_filename")
+    if not isinstance(name, str) or not name or Path(name).name != name:
+        raise ValueError("registered original name invalid")
+    original = (resolved.parent / name).resolve(strict=True)
+    if original.parent != resolved.parent:
+        raise ValueError("registered original escapes storage root")
+    payload = original.read_bytes()
+    if (record.get("schema_version") != "external-material/v1"
+            or record.get("source_url") != url or record.get("sha256") != digest
+            or record.get("bytes") != expected_bytes or len(payload) != expected_bytes
+            or hashlib.sha256(payload).hexdigest() != digest):
+        raise ValueError("registered material metadata mismatch")
+    _valid_observation(record.get("observed_at"))
+    return record
+
+
 def _register_page(page_path, url, start, output_dir):
     """中断後も検証済みの同一登録を再利用し、部分登録は保全する。"""
     digest = hashlib.sha256(page_path.read_bytes()).hexdigest()

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 import time
 from datetime import date, datetime
 from pathlib import Path
@@ -13,6 +14,7 @@ from urllib.parse import urlparse
 
 from .fetch_diet_minutes import _default_fetch_json, collect_pages
 from .sangiin_bills import fetch_bill_pages
+from .evidence_materials import build_readable_evidence
 
 SCHEMA_VERSION = "ranking-dataset/v1"
 SOURCE_HOST = "kokkai.ndl.go.jp"
@@ -181,24 +183,49 @@ def build_dataset(source_dir: Path, *, as_of: str, candidate_pack: Path | None =
 
 def run_local_mvp(source_dir: Path | None, output_dir: Path, *, as_of: str,
                   candidate_pack: Path | None = None,
-                  bill_urls: list[str] | None = None) -> dict:
+                  bill_urls: list[str] | None = None,
+                  readable_material_root: Path | None = None,
+                  bill_source: Path | None = None,
+                  vote_records: tuple[dict, ...] = (),
+                  evaluate: bool = False) -> dict:
     """成功版だけ切り替え、失敗時は current.json を維持する。"""
     output_dir.mkdir(parents=True, exist_ok=True)
     now = datetime.now().astimezone().isoformat(timespec="seconds")
     try:
-        if bill_urls:
+        if readable_material_root is not None:
+            if source_dir is None or bill_source is None or candidate_pack is not None or bill_urls:
+                raise ValueError('閲覧用入力と既存取得入力は混在できません')
+            pack = _read_json(bill_source)
+            candidates = pack.get('held')
+            if not isinstance(candidates, list):
+                raise ValueError('登録候補政策がありません')
+            dataset = build_readable_evidence(source_dir, readable_material_root,
+                as_of=as_of, candidates=candidates, vote_records=vote_records)
+        elif bill_urls:
             dataset = fetch_bill_pages(bill_urls, output_dir, as_of=as_of)
         else:
             if source_dir is None:
                 raise ValueError("source directory missing")
             dataset = build_dataset(source_dir, as_of=as_of, candidate_pack=candidate_pack)
+        if evaluate:
+            if readable_material_root is None:
+                raise ValueError('評価版生成は登録原本の閲覧用更新と組み合わせてください')
+            repo_root = Path(__file__).resolve().parents[1]
+            pending_input = output_dir / 'candidate-input.json'
+            _atomic_json(pending_input, dataset)
+            subprocess.run(['node', str(repo_root / 'scripts/evidence_pipeline.mjs'),
+                '--input', str(pending_input.resolve()), '--material-root', str(readable_material_root.resolve()),
+                '--output-dir', str((output_dir / 'evaluation').resolve())],
+                cwd=repo_root, check=True, timeout=90, capture_output=True,
+                encoding='utf-8')
         _atomic_json(output_dir / "current.json", dataset)
         result = {"schema_version": "local-mvp-run/v1", "status": "ready",
                   "recorded_at": now, "recorded_by": "codex", "as_of": as_of,
                   "assessed_people": dataset["coverage"]["assessedPeople"],
                   "held_count": len(dataset["held"]),
                   "source_status": dataset["coverage"]["sourceStatus"]}
-    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as error:
+    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError,
+            subprocess.SubprocessError) as error:
         result = {"schema_version": "local-mvp-run/v1", "status": "failed",
                   "recorded_at": now, "recorded_by": "codex", "as_of": as_of,
                   "source_status": "failed", "error_type": type(error).__name__, "last_good_preserved":
@@ -214,6 +241,13 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--as-of", default=date.today().isoformat())
     parser.add_argument("--candidate-pack", type=Path)
+    parser.add_argument("--material-root", type=Path,
+                        help="登録原本からのオフライン閲覧用更新を選びます")
+    parser.add_argument("--bill-source", type=Path)
+    parser.add_argument("--vote-record", action="append", default=[],
+                        help="議案ID=登録record.jsonの絶対パス（最大3件）")
+    parser.add_argument('--evaluate', action='store_true',
+                        help='非公開評価候補の検査成功後にだけ閲覧版を切り替えます')
     parser.add_argument("--session-from", type=int)
     parser.add_argument("--session-to", type=int)
     parser.add_argument("--max-pages", type=int)
@@ -221,6 +255,29 @@ def main() -> int:
     local_root = Path(__file__).resolve().parents[1] / ".local"
     if not args.output_dir.resolve().is_relative_to(local_root.resolve()):
         parser.error("--output-dir must be inside this repository's .local/")
+    if args.material_root is not None:
+        if (args.source_dir is None or args.bill_source is None or args.bill_url
+                or args.candidate_pack is not None or args.session_from is not None
+                or args.session_to is not None or args.max_pages is not None
+                or len(args.vote_record) > 3):
+            parser.error('閲覧用更新には保存済みsource-dirとbill-sourceを指定してください')
+        votes = []
+        for value in args.vote_record:
+            bill_id, separator, record_path = value.partition('=')
+            if not separator or not bill_id or not record_path:
+                parser.error('--vote-record は議案ID=原本パスで指定してください')
+            resolved = Path(record_path).resolve(strict=True)
+            if not resolved.is_relative_to(args.material_root.resolve(strict=True)):
+                parser.error('投票原本の参照が保管先外です')
+            record = _read_json(resolved)
+            votes.append({'billId': bill_id, 'recordPath': str(resolved), 'url': record['source_url']})
+        result = run_local_mvp(args.source_dir, args.output_dir, as_of=args.as_of,
+            readable_material_root=args.material_root, bill_source=args.bill_source,
+            vote_records=tuple(votes), evaluate=args.evaluate)
+        print(json.dumps(result, ensure_ascii=False))
+        return 0 if result['status'] == 'ready' else 1
+    if args.bill_source is not None or args.vote_record or args.evaluate:
+        parser.error('--bill-source と --vote-record は --material-root と組み合わせてください')
     if args.bill_url:
         if args.source_dir is not None or args.session_from is not None or args.candidate_pack is not None:
             parser.error("--bill-url cannot be combined with NDL source inputs")

@@ -36,7 +36,7 @@ export function readViewState(search: string, asOf: string): ViewState {
   };
 }
 
-/** URLSearchParamsへ直接渡せる、先頭の疑問符なしの検索文字列。 */
+/** @deprecated 旧形式の互換検査用です。画面の出力正本はview-locationのserializeViewLocationです。 */
 export function serializeViewState(state: ViewState): string {
   const params = new URLSearchParams();
   params.set('domain', state.options.domain); params.set('direction', state.options.direction); params.set('period', String(state.options.period));

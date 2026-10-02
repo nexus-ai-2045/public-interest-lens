@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpRight, BookOpen, ChevronRight, FileText, Info, Scale, Search, SlidersHorizontal } from 'lucide-react';
+import { ArrowUpRight, BookOpen, ChevronRight, FileText, Info, Search, SlidersHorizontal } from 'lucide-react';
 import { actionKey, actionMatchesView, RANKING_VERSION, ROLE_FACTOR, rankPeople, type Domain, type Period, type RankingOptions } from './ranking';
 import { rankingDataset as data } from './ranking-data';
 import { PolicyFlow } from './PolicyFlow';
 import { EvidenceMotion } from './EvidenceMotion';
 import { ExpandableControls } from './ExpandableControls';
-import { readViewState, serializeViewState, type ViewState } from './view-state';
+import { type ViewState } from './view-state';
+import { readViewLocation, serializeViewLocation, viewDataVersion } from './view-location';
+import { ProductHeader } from './ProductHeader';
 import { parseLocalInspection, type LocalInspection } from './local-inspection';
+import { ReadableEvidencePanel } from './ReadableEvidencePanel';
 import { getPersonSummaries } from './person-summary';
 import { PersonSummary } from './PersonSummary';
 import { getRelatedActions, resolveView } from './view-resolution';
+import { EvidenceDatasetRoot } from './RealEvaluationPanel';
 
 const domainLabels: Record<Domain | 'overall', string> = { economy: '経済成長', technology: '科学技術', fiscal: '財政', security: '安全保障', governance: '統治・実行力', overall: '総合' };
 const roleLabels = { lead: '主導・決定', coauthor: '共同提出・具体的修正', vote: '確認できる個人の賛否', context: '関係情報のみ' };
@@ -17,12 +21,18 @@ const pendingDomains = new Set<Domain>(['fiscal', 'security', 'governance']);
 const asOf = data.asOf;
 
 function restoreUrlView(): ViewState {
-  const search = window.location.search;
-  return resolveView(data, readViewState(search, asOf), new URLSearchParams(search).has('history') ? 'interaction' : 'url');
+  const state = readViewLocation(window.location.pathname, window.location.search, asOf, data).state;
+  const query = window.history.state?.lensUi?.query;
+  return typeof query === 'string' && query.length <= 2000 ? resolveView(data, { ...state, query }, 'url') : state;
 }
 
-function App() {
+function App({ onOpenReal }: { onOpenReal: () => void }) {
   const [view, setView] = useState(restoreUrlView);
+  const page = useRef(readViewLocation(window.location.pathname, window.location.search, asOf, data).page);
+  const explicitEvidence = useRef(new URLSearchParams(window.location.search).has('evidence'));
+  const pinnedVersion = useRef(new URLSearchParams(window.location.search).get('version') ?? undefined);
+  const [routeError, setRouteError] = useState(readViewLocation(window.location.pathname, window.location.search, asOf, data).invalid);
+  const [shareMessage, setShareMessage] = useState('');
   const viewRef = useRef(view);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [advanced, setAdvanced] = useState(false);
@@ -48,20 +58,28 @@ function App() {
   useEffect(() => { document.title = productTitle; }, [productTitle]);
 
   const saveUrl = (next: ViewState, mode: 'push' | 'replace') => {
-    const search = serializeViewState(next);
-    const url = `${window.location.pathname}${search ? `?${search}` : ''}${window.location.hash}`;
-    if (url !== `${window.location.pathname}${window.location.search}${window.location.hash}`) window.history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', url);
+    const url = `${serializeViewLocation({ ...next, selectedEvidenceId: explicitEvidence.current ? next.selectedEvidenceId : '' }, data, page.current, pinnedVersion.current)}${window.location.hash}`;
+    const changed = url !== `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    window.history[mode === 'push' && changed ? 'pushState' : 'replaceState']({ lensUi: { query: next.query } }, '', url);
   };
   const update = (patch: Partial<ViewState>, mode: 'push' | 'search' = 'push') => {
+    setRouteError(null);
+    setShareMessage('');
+    if (patch.selectedActionKey) { page.current = 'action'; explicitEvidence.current = Boolean(patch.selectedEvidenceId); }
+    else if (patch.selectedEvidenceId) { explicitEvidence.current = true; if (viewRef.current.selectedActionKey) page.current = 'action'; }
     if (searchTimer.current) clearTimeout(searchTimer.current);
     const next = resolveView(data, { ...viewRef.current, ...patch });
+    if (!next.selectedPersonId) page.current = 'ranking';
+    else if (page.current === 'action' && !next.selectedActionKey) page.current = 'person';
     viewRef.current = next;
     setView(next);
     if (mode === 'search') searchTimer.current = setTimeout(() => { saveUrl(viewRef.current, 'replace'); searchTimer.current = null; }, 250);
     else saveUrl(next, 'push');
   };
-  const change = <K extends keyof RankingOptions>(key: K, value: RankingOptions[K]) => update({ options: { ...viewRef.current.options, [key]: value }, selectedPersonId: '', selectedActionKey: '', selectedPolicyId: '' });
+  const change = <K extends keyof RankingOptions>(key: K, value: RankingOptions[K]) => { page.current = 'ranking'; explicitEvidence.current = false; update({ options: { ...viewRef.current.options, [key]: value }, selectedPersonId: '', selectedActionKey: '', selectedPolicyId: '' }); };
   const selectPerson = (id: string) => {
+    page.current = 'person';
+    explicitEvidence.current = false;
     update({ selectedPersonId: id, selectedActionKey: '', selectedPolicyId: '', tab: 'actions' });
     if (!desktop) document.getElementById('person')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   };
@@ -76,10 +94,15 @@ function App() {
     document.getElementById(`tab-${order[next]}`)?.focus();
   };
   useEffect(() => {
-    saveUrl(viewRef.current, 'replace');
+    if (!routeError) saveUrl(viewRef.current, 'replace');
     const restore = () => {
       if (searchTimer.current) { clearTimeout(searchTimer.current); searchTimer.current = null; }
+      const location = readViewLocation(window.location.pathname, window.location.search, asOf, data);
       const restored = restoreUrlView();
+      page.current = location.page;
+      explicitEvidence.current = new URLSearchParams(window.location.search).has('evidence');
+      pinnedVersion.current = new URLSearchParams(window.location.search).get('version') ?? undefined;
+      setRouteError(location.invalid);
       viewRef.current = restored;
       setView(restored);
     };
@@ -89,6 +112,13 @@ function App() {
     media.addEventListener('change', resize);
     return () => { window.removeEventListener('popstate', restore); media.removeEventListener('change', resize); if (searchTimer.current) clearTimeout(searchTimer.current); inspectionRequest.current++; };
   }, []);
+  const share = async () => {
+    const targetUrl = new URL(serializeViewLocation({ ...viewRef.current, selectedEvidenceId: explicitEvidence.current ? viewRef.current.selectedEvidenceId : '' }, data, page.current, viewDataVersion(data)), window.location.origin);
+    if (viewRef.current.query.trim()) targetUrl.searchParams.set('q', viewRef.current.query.trim());
+    const target = targetUrl.href;
+    try { await navigator.clipboard.writeText(target); setShareMessage('評価版を固定したリンクをコピーしました。'); }
+    catch { setShareMessage(`コピーできませんでした。共有リンク：${target}`); }
+  };
   const inspectFile = async (file?: File) => {
     const request = ++inspectionRequest.current;
     if (!file) return;
@@ -104,9 +134,11 @@ function App() {
   };
   const sources = <aside className="source-panel" aria-label="選択行動の根拠資料"><h3>根拠資料</h3>{evidence.map(item => <article className={`source-record ${view.tab === 'evidence' && view.selectedEvidenceId === item.id ? 'selected-source' : ''}`} data-evidence-id={item.id} key={item.id}><div className="source-heading"><FileText size={17} /><strong>{item.title}</strong></div><small>{item.date} / {item.kind === 'verified' ? '架空設定内で確認済み' : item.kind === 'computed' ? '機械計算' : item.kind === 'ai' ? 'AI解釈' : '未確認'}</small>{view.tab === 'evidence' && <><button className="source-select" aria-pressed={view.selectedEvidenceId === item.id} onClick={() => update({ selectedEvidenceId: item.id })}>この根拠を選択</button><p>{item.summary}</p></>}<code>{item.source}</code>{view.tab === 'evidence' && <dl className="source-provenance"><div><dt>観測時刻</dt><dd>未収録</dd></div><div><dt>照合値（SHA-256）</dt><dd>{item.sha256 ?? '未収録'}</dd></div></dl>}{item.url && <a href={item.url} target="_blank" rel="noreferrer">原資料を開く <ArrowUpRight size={14} /></a>}</article>)}<p className="fine-note">表示している資料はすべて架空です。実在の原資料へのリンクはありません。資料公開日・取得日・行動日は別の情報です。</p></aside>;
 
+  if (routeError) return <div className="app-shell" data-theme={options.direction === 'harm' ? 'dark' : 'light'} data-direction={options.direction}><ProductHeader title={productTitle} label="対象を確認してください" /><main><section className="lower-panel" role="alert"><h2>指定した対象を表示できません</h2><p>{routeError}</p><a href="/ranking">ランキングを開く</a></section></main></div>;
   return <div className="app-shell" data-theme={options.direction === 'harm' ? 'dark' : 'light'} data-direction={options.direction}>
-    <header className="topbar"><a className="brand" href="#top"><Scale size={23} /><h1>{productTitle}</h1><span className="prototype-label">架空データ版</span></a><nav aria-label="主要ナビゲーション"><a href="#ranking" className="nav-active">ランキング</a><a href="#method">評価方法</a></nav></header>
+    <ProductHeader title={productTitle} label="架空データ版" brandHref="#top"><nav aria-label="主要ナビゲーション"><a href="#ranking" className="nav-active">ランキング</a><a href="#method">評価方法</a><button type="button" onClick={onOpenReal}>非公開実評価を開く</button><button type="button" onClick={() => void share()}>この結果を共有</button></nav></ProductHeader>
     <main id="top">
+      {shareMessage && <p className="lower-panel" role="status" style={{ overflowWrap: 'anywhere' }}>{shareMessage}</p>}
       <section className="comparison-heading"><h2>{domainLabels[options.domain]}への{options.direction === 'harm' ? '悪影響' : '貢献'}</h2><p className="fiction-warning"><Info size={17} />全人物・政策・資料が架空です。</p></section>
       <section className="filter-bar" aria-label="比較条件">
         <label>評価分野<select aria-label="評価分野" value={options.domain} onChange={event => change('domain', event.target.value as RankingOptions['domain'])}><option value="economy">経済成長</option><option value="technology">科学技術</option><option value="fiscal">財政（準備中）</option><option value="security">安全保障（準備中）</option><option value="governance">統治・実行力（準備中）</option><option value="overall">総合（詳細設定）</option></select></label>
@@ -139,8 +171,9 @@ function App() {
       </div>
       <section id="method" className="method-panel lower-panel"><div className="lower-heading"><BookOpen size={20} /><h2>行動の事実と、影響の評価を分ける</h2></div><div className="method-columns"><p>個人の採決、法案提出・修正、政策決定を根拠付きで記録します。所属・訪問・発言だけでは得点にしません。政策ごとの本人の複数行動は最大の関与を一度だけ集計します。</p><p>貢献と悪影響は独立した順位です。影響の方向・大きさや個人の関与を判断できない政策は保留します。公約と見込み評価は実績順位へ混ぜません。</p></div><p className="method-formula">政策影響段階（1〜3） × 関与係数（主導1、共同0.5、個人賛否0.25） × 分野の重み。表示点は小数第2位に丸め、同点は同順位とします。</p><p className="fine-note">画面は架空データ専用です。対象選挙の実際の候補者名簿・資料収集・実人物の評価・自動更新・公開審査は未接続です。順位は比較条件に依存します。</p></section>
       <section className="local-inspection lower-panel" aria-label="資料の取得状況"><div><h2>取得結果をローカルで確認</h2><p>収集器が出力した current.json を、このブラウザだけで読み取ります。実人物の点数や順位は作りません。</p></div><label className="file-control">ローカル評価データJSONを開く<input type="file" accept=".json,application/json" aria-label="ローカル評価データJSONを開く" onChange={event => void inspectFile(event.target.files?.[0])} /></label>{inspectionError && <p className="inspection-error" role="alert">読み取り失敗：{inspectionError}{inspection && '。直前に読み取れた結果を保持しています。'}</p>}{inspection && <div className="inspection-result"><h3>ローカル実データの確認</h3><div className="inspection-summary"><span>基準日 {inspection.asOf}</span><span>{inspection.scope}</span><span>算定可能 {inspection.assessedPeople}人</span><span>取得記録 {inspection.sourceRecords ?? '不明'}件</span></div><p className="inspection-state">{inspection.sourceStatus === 'capped' ? '資料取得は上限に到達しています' : inspection.sourceStatus === 'pages_captured' ? '指定した公式議案ページを取得していますが、全件を網羅していません' : '指定範囲の取得が完了しています'}。国政全体の網羅を意味しません。</p><h4>保留 {inspection.held.length}件</h4>{inspection.held.length ? <ul>{inspection.held.map(item => <li key={item.id}>{item.title && <strong>{item.title}</strong>}{item.submittedAt && <small>提出日 {item.submittedAt}</small>}<span>{item.reason}</span>{item.sourceSpeechId && <small>資料ID {item.sourceSpeechId}</small>}<small>観測時刻 {item.observedAt ?? '不明'}</small><small>照合値（SHA-256）{item.sha256 ?? '不明'}</small>{item.sourceUrl && <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">公式資料を開く <ArrowUpRight size={13} /></a>}{item.voteUrl && <a href={item.voteUrl} target="_blank" rel="noopener noreferrer">採決資料を開く <ArrowUpRight size={13} /></a>}</li>)}</ul> : <p>保留記録はありません。評価可能性は収録範囲で確認してください。</p>}<p className="fine-note">ファイル内容は送信・保存せず、画面更新で消えます。上の架空ランキングはこのファイルを採点していません。</p></div>}</section>
+      {inspection?.readableEvidence && <div className="local-inspection lower-panel inspection-result"><ReadableEvidencePanel data={inspection.readableEvidence} policies={inspection.policySelection?.policies} /></div>}
     </main><footer><span>算定版 {RANKING_VERSION}</span><span>基準日 {asOf} / 算定可能 {rows.filter(row => row.score !== null).length}人 / {data.coverage.scope}</span></footer>
   </div>;
 }
 
-export default App;
+export default function DatasetApp() { return <EvidenceDatasetRoot fictional={navigate => <App onOpenReal={() => navigate({ dataset: 'real', release: '', person: '' })} />} />; }
