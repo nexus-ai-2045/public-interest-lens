@@ -5,6 +5,38 @@ const fixture = () => ({ schemaVersion: 'ranking-dataset/v1', fictional: false, 
 const parse = (value: unknown) => parseLocalInspection(JSON.stringify(value));
 
 describe('ローカル取得資料の安全な表示', () => {
+  it('内部の選定IDと提供元の議案IDが異なる入力でも正しい投票を対応付ける', () => {
+    const policySelection = { criterionVersion: 'research-digital-registered-pilot-v1',
+      inventoryCompleteness: 'registered_candidates_only', asOf: fixture().asOf,
+      scope: '限定選定', policies: [{ id: 'project-policy', billId: 'bill-1', title: '試験政策',
+        submittedAt: '2026-03-01', sourceUrl: 'https://www.sangiin.go.jp/example' }] };
+    const result = parse({ ...fixture(), policySelection, readableEvidence: readableFixture() });
+    expect(result).toHaveProperty('policySelection.policies.0.billId', 'bill-1');
+  });
+  it('既存JSONの選定政策を必要な表示項目だけへ投影する', () => {
+    const policySelection = { criterionVersion: 'research-digital-registered-pilot-v1',
+      inventoryCompleteness: 'registered_candidates_only', asOf: fixture().asOf,
+      scope: '登録済み候補集合内の限定選定', policies: [{ id: 'policy-1', title: '試験政策',
+        submittedAt: '2026-03-01', sourceUrl: 'https://www.sangiin.go.jp/example', recordPath: 'private/path' }] };
+    const result = parse({ ...fixture(), policySelection });
+    expect(result).toHaveProperty('policySelection.policies.0.id', 'policy-1');
+    expect(result).not.toHaveProperty('policySelection.policies.0.recordPath');
+  });
+  it('選定の基準日不一致・重複・上限超過・未選定投票を拒否する', () => {
+    const policySelection = { criterionVersion: 'research-digital-registered-pilot-v1',
+      inventoryCompleteness: 'registered_candidates_only', asOf: fixture().asOf,
+      scope: '限定選定', policies: [{ id: 'policy-1', title: '試験政策', submittedAt: '2026-03-01',
+        sourceUrl: 'https://www.sangiin.go.jp/example' }] };
+    for (const selection of [
+      { ...policySelection, asOf: '2026-09-25' },
+      { ...policySelection, policies: [policySelection.policies[0], policySelection.policies[0]] },
+      { ...policySelection, policies: Array(4).fill(policySelection.policies[0]) },
+      { ...policySelection, inventoryCompleteness: 'all_candidates' },
+    ]) expect(() => parse({ ...fixture(), policySelection: selection })).toThrow();
+    const readableEvidence = readableFixture();
+    expect(() => parse({ ...fixture(), policySelection, readableEvidence: { ...readableEvidence,
+      votes: [{ ...readableEvidence.votes[0], policyId: 'unselected' }] } })).toThrow();
+  });
   it('読める本文と個人投票を未検証の別資料として保持する', () => {
     const readableEvidence = readableFixture();
     expect(parse({ ...fixture(), readableEvidence })).toHaveProperty('readableEvidence', readableEvidence);

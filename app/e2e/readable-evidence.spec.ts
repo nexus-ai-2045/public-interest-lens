@@ -3,13 +3,22 @@ import { readFileSync } from 'node:fs';
 
 test('実資料の本文・投票行を検索し原資料へたどれるが架空順位へ混ぜない', async ({ page }) => {
   const evidence = { verificationState: 'unverified', selectionScope: '限定研究開発資料', speeches: [{ id: 's1', speakerName: '記載名甲', date: '2025-01-15', text: '研究開発の本文です。\n<script>alert(1)</script>', sourceUrl: 'https://kokkai.ndl.go.jp/api/speech', observedAt: '2026-10-01T00:00:00Z', sha256: 'a'.repeat(64), locator: 'speechRecord[0]' }], votes: Array.from({ length: 25 }, (_, i) => ({ id: `v${i}`, nameText: `記載名${i}`, date: '2025-01-15', position: 'not_voted', title: '研究開発議案', policyId: 'policy-1', text: '原資料の投票なし一覧です。', sourceUrl: 'https://www.sangiin.go.jp/vote', observedAt: '2026-10-01T00:00:00Z', sha256: 'b'.repeat(64), locator: `投票なし行${i}` })), counts: { savedRecords: 2, readableSpeechBodies: 1, sourceVoteRows: 25, confirmedActionEvidence: 0 } };
-  const data = { schemaVersion: 'ranking-dataset/v1', fictional: false, asOf: '2026-10-01', coverage: { scope: '限定取得', assessedPeople: 0, sourceStatus: 'pages_captured', sourceRecords: 2 }, people: [], policies: [], involvements: [], evidence: [], held: [], readableEvidence: evidence };
+  const policySelection = { criterionVersion: 'research-digital-registered-pilot-v1', inventoryCompleteness: 'registered_candidates_only',
+    asOf: '2026-10-01', scope: '登録済み候補内の有限選定', policies: [
+      { id: 'policy-1', title: '研究開発議案', submittedAt: '2025-01-01', sourceUrl: 'https://www.sangiin.go.jp/example' },
+      { id: 'policy-2', title: '未収録の試験議案', submittedAt: '2025-01-01', sourceUrl: 'https://www.sangiin.go.jp/example2' },
+    ] };
+  const data = { schemaVersion: 'ranking-dataset/v1', fictional: false, asOf: '2026-10-01', coverage: { scope: '限定取得', assessedPeople: 0, sourceStatus: 'pages_captured', sourceRecords: 2 }, people: [], policies: [], involvements: [], evidence: [], held: [], readableEvidence: evidence, policySelection };
   await page.goto('/');
   const external: string[] = [];
   page.on('request', request => { if (!request.url().startsWith('http://127.0.0.1:4179')) external.push(request.url()); });
   const input = page.getByLabel('ローカル評価データJSONを開く');
   await input.setInputFiles({ name: 'readable.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
   const panel = page.getByRole('region', { name: '読める実資料（未採点）' });
+  const policyCoverage = panel.getByRole('region', { name: '選定政策ごとの収録状況' });
+  await expect(policyCoverage).toContainText('投票行 25件・未検証');
+  await expect(policyCoverage).toContainText('このファイルには投票行がありません');
+  await expect(policyCoverage).toContainText('発言と選定政策の対応は未確認です');
   await expect(panel.locator('details')).toHaveCount(10);
   await panel.getByText('発言：記載名甲・2025-01-15', { exact: true }).click();
   await expect(panel).toContainText('<script>alert(1)</script>');

@@ -1,5 +1,6 @@
 export type LocalInspection = {
   readableEvidence?: ReadableEvidence;
+  policySelection?: PolicySelection;
   asOf: string; scope: string; assessedPeople: number; sourceRecords: number | null;
   sourceStatus: 'capped' | 'query_exhausted' | 'pages_captured';
   held: {
@@ -8,6 +9,10 @@ export type LocalInspection = {
     observedAt: string | null; sha256: string | null;
   }[];
 };
+
+export type SelectedPolicy = { id: string; billId?: string; title: string; submittedAt: string; sourceUrl: string };
+export type PolicySelection = { criterionVersion: 'research-digital-registered-pilot-v1';
+  inventoryCompleteness: 'registered_candidates_only'; asOf: string; scope: string; policies: SelectedPolicy[] };
 
 type SourceRecord = { id: string; date: string; text: string; sourceUrl: string; observedAt: string; sha256: string; locator: string };
 export type ReadableEvidence = {
@@ -36,6 +41,29 @@ function validObservedAt(value: string): boolean {
 function boundedString(value: unknown, limit: number, label: string): string {
   if (typeof value !== 'string' || !value.trim() || value.length > limit) throw new Error(`${label}が不正です`);
   return value;
+}
+function parsePolicySelection(value: unknown, asOf: string): PolicySelection {
+  if (!object(value) || value.criterionVersion !== 'research-digital-registered-pilot-v1'
+      || value.inventoryCompleteness !== 'registered_candidates_only' || value.asOf !== asOf
+      || !Array.isArray(value.policies) || value.policies.length > 3) throw new Error('政策選定の基準・期間・件数が不正です');
+  const seen = new Set<string>();
+  const sourceIds = new Set<string>();
+  const policies = value.policies.map(entry => {
+    if (!object(entry)) throw new Error('選定政策の形式が不正です');
+    const id = boundedString(entry.id, 200, '選定政策ID');
+    if (seen.has(id)) throw new Error('選定政策IDが重複しています');
+    seen.add(id);
+    const billId = entry.billId == null ? id : boundedString(entry.billId, 200, '提供元議案ID');
+    if (sourceIds.has(billId)) throw new Error('提供元の議案IDが重複しています');
+    sourceIds.add(billId);
+    if (typeof entry.submittedAt !== 'string' || !validDate(entry.submittedAt)
+        || entry.submittedAt > asOf) throw new Error('選定政策の日付が不正です');
+    const sourceUrl = officialUrl(entry.sourceUrl, true);
+    if (!sourceUrl) throw new Error('選定政策の公式資料URLが必要です');
+    return { id, billId, title: boundedString(entry.title, 1000, '選定政策名'), submittedAt: entry.submittedAt, sourceUrl };
+  });
+  return { criterionVersion: 'research-digital-registered-pilot-v1', inventoryCompleteness: 'registered_candidates_only',
+    asOf, scope: boundedString(value.scope, 1000, '政策選定範囲'), policies };
 }
 function parseReadableEvidence(value: unknown): ReadableEvidence {
   if (!object(value) || value.verificationState !== 'unverified' || !Array.isArray(value.speeches) || !Array.isArray(value.votes) || !object(value.counts)) throw new Error('読める資料の形式または未検証状態が不正です');
@@ -91,5 +119,10 @@ export function parseLocalInspection(text: string): LocalInspection {
     };
   });
   const readableEvidence = record.readableEvidence === undefined ? undefined : parseReadableEvidence(record.readableEvidence);
-  return { asOf: record.asOf, scope: coverage.scope.slice(0, 300), assessedPeople: coverage.assessedPeople as number, sourceRecords: coverage.sourceRecords as number | null ?? null, sourceStatus: coverage.sourceStatus as LocalInspection['sourceStatus'], held, ...(readableEvidence ? { readableEvidence } : {}) };
+  const policySelection = record.policySelection === undefined ? undefined : parsePolicySelection(record.policySelection, record.asOf);
+  if (policySelection && readableEvidence) {
+    const selected = new Set(policySelection.policies.map(policy => policy.billId ?? policy.id));
+    if (readableEvidence.votes.some(vote => !selected.has(vote.policyId))) throw new Error('選定政策にない投票行があります');
+  }
+  return { asOf: record.asOf, scope: coverage.scope.slice(0, 300), assessedPeople: coverage.assessedPeople as number, sourceRecords: coverage.sourceRecords as number | null ?? null, sourceStatus: coverage.sourceStatus as LocalInspection['sourceStatus'], held, ...(readableEvidence ? { readableEvidence } : {}), ...(policySelection ? { policySelection } : {}) };
 }

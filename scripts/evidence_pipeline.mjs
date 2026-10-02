@@ -104,7 +104,7 @@ export async function runEvidencePipeline(input, options) {
   } finally { await rmdir(lock); }
 }
 
-async function readOriginals(refs, repoRoot, materialRoot) {
+async function readOriginals(refs, repoRoot, materialRoot, readableEvidence) {
   return new Promise((accept, reject) => {
     const child = spawn('python', ['-m', 'scripts.read_evidence_materials', '--material-root', materialRoot], { cwd: repoRoot, env: { ...process.env, PYTHONUTF8: '1' }, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
     let stdout = '', size = 0;
@@ -115,7 +115,7 @@ async function readOriginals(refs, repoRoot, materialRoot) {
     child.on('error', error => { clearTimeout(timer); reject(error); });
     child.on('close', code => { clearTimeout(timer); if (code !== 0) reject(new Error('原本readbackに失敗しました')); else { try { accept(JSON.parse(stdout)); } catch (error) { reject(error); } } });
     child.stdin.on('error', () => {});
-    child.stdin.end(canonical(refs));
+    child.stdin.end(canonical(readableEvidence === undefined ? refs : { materialRefs: refs, readableEvidence }));
   });
 }
 
@@ -141,7 +141,7 @@ async function main() {
   if (!chunk || chunk.imports.length) throw new Error('算定コードのbundleが不正です');
   const evaluator = await import(`data:text/javascript;base64,${Buffer.from(chunk.code).toString('base64')}`);
   const release = await runEvidencePipeline(input, { repoRoot, outputDir: resolve(values['--output-dir']), engineHash: hash(chunk.code), evaluate: evaluator.evaluateEvidence,
-    readMaterials: refs => readOriginals(refs, repoRoot, resolve(values['--material-root'])) });
+    readMaterials: refs => readOriginals(refs, repoRoot, resolve(values['--material-root']), saved.readableEvidence) });
   console.log(JSON.stringify({ releaseId: release.releaseId, publicationStatus: release.publicationStatus, coverage: release.result.coverage, held: release.result.held.length }));
 }
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) main().catch(() => { console.error('ローカル評価版の生成に失敗しました。公開・送信はしていません。'); process.exitCode = 1; });
