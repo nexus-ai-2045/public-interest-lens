@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('詳細設定は収納直後から操作対象外になりフォーカスを入口へ戻す', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/ranking');
   const toggle = page.getByRole('button', { name: '詳細設定', exact: true });
   const panel = page.locator('#advanced-settings');
   await expect(panel).toHaveAttribute('inert', '');
@@ -37,7 +37,7 @@ test('連続切替後も最後の方向・選択・URLが一致し戻ると復�
 });
 
 test('動きを減らす設定は切替中にも適用されます', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/ranking');
   await page.getByRole('tab', { name: '政策', exact: true }).click();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.getByRole('tab', { name: '根拠', exact: true }).click();
