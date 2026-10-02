@@ -11,7 +11,7 @@ export type Policy = { id: string; title: string; domain: Domain; direction: Dir
 export type Involvement = { personId: string; policyId: string; actionDate: string; role: 'lead' | 'coauthor' | 'vote' | 'context'; description: string; evidenceIds: string[] };
 export type RankingDataset = { schemaVersion: 'ranking-dataset/v1'; fictional: boolean; asOf: string; coverage: { scope: string; assessedPeople: number; targetPeople: number | null; sourceStatus: string }; people: Person[]; policies: Policy[]; involvements: Involvement[]; evidence: RankingEvidence[]; held?: { personId?: string; policyId?: string; reason: string; sourceRefs?: string[] }[] };
 export type RankingOptions = { domain: Domain | 'overall'; direction: Direction; period: Period; asOf: string; weights: { economy: number; technology: number } };
-export type RankingContribution = { policyId: string; actionDate: string; role: Involvement['role']; score: number };
+export type RankingContribution = { policyId: string; actionKey: string; actionDate: string; role: Involvement['role']; score: number };
 export type RankingRow = { person: Person; score: number | null; rank: number | null; eligibleCount: number; heldCount: number; contributions: RankingContribution[] };
 
 export const ROLE_FACTOR: Record<Involvement['role'], number> = { lead: 1, coauthor: .5, vote: .25, context: 0 };
@@ -27,6 +27,13 @@ function periodStart(asOf: string, period: Period): string | null {
   const date = new Date(`${asOf}T00:00:00Z`);
   date.setUTCFullYear(date.getUTCFullYear() - period);
   return date.toISOString().slice(0, 10);
+}
+
+/** 表示条件への一致だけを判定する。保留・参考行動も含み、算定資格は判定しない。 */
+export function actionMatchesView(action: Involvement, policy: Policy, options: RankingOptions): boolean {
+  const start = periodStart(options.asOf, options.period);
+  return action.actionDate <= options.asOf && (!start || action.actionDate >= start)
+    && policy.direction === options.direction && (options.domain === 'overall' || policy.domain === options.domain);
 }
 
 /** 全資料が創作である表示fixtureだけを計算する。実人物への適用は別の検証済み入口が必要。 */
@@ -66,15 +73,13 @@ export function rankPeople(data: RankingDataset, options: RankingOptions): Ranki
     check(validDate(action.actionDate) && Boolean(action.description?.trim()) && Object.hasOwn(ROLE_FACTOR, action.role), '行動が不正です');
     validateEvidence(action.evidenceIds);
   }
-  const start = periodStart(options.asOf, options.period);
   const domainEnabled = options.domain === 'economy' || options.domain === 'technology' || options.domain === 'overall';
   const weightTotal = options.weights.economy + options.weights.technology;
   const rows: RankingRow[] = data.people.map(person => {
     const grouped = new Map<string, Involvement[]>();
     for (const action of data.involvements) {
       const policy = policies.get(action.policyId)!;
-      if (action.personId !== person.id || action.actionDate > options.asOf || (start && action.actionDate < start)) continue;
-      if (policy.direction !== options.direction || (options.domain !== 'overall' && policy.domain !== options.domain)) continue;
+      if (action.personId !== person.id || !actionMatchesView(action, policy, options)) continue;
       const group = grouped.get(policy.id) ?? [];
       group.push(action);
       grouped.set(policy.id, group);
@@ -87,10 +92,10 @@ export function rankPeople(data: RankingDataset, options: RankingOptions): Ranki
       const canScore = domainEnabled && (options.domain !== 'overall' || weightTotal > 0) && (options.domain !== 'overall' || relevantWeight > 0) && policy.reviewStatus === 'reviewed' && hasVerifiedEvidence(policy.evidenceIds);
       const eligible = canScore ? actions.filter(action => ROLE_FACTOR[action.role] > 0 && hasVerifiedEvidence(action.evidenceIds)) : [];
       if (!eligible.length) { heldCount++; continue; }
-      eligible.sort((a, b) => ROLE_FACTOR[b.role] - ROLE_FACTOR[a.role] || idCompare(a.actionDate, b.actionDate));
+      eligible.sort((a, b) => ROLE_FACTOR[b.role] - ROLE_FACTOR[a.role] || idCompare(a.actionDate, b.actionDate) || idCompare(actionKey(a), actionKey(b)));
       const action = eligible[0];
       const weight = options.domain === 'overall' ? relevantWeight / weightTotal : 1;
-      contributions.push({ policyId, actionDate: action.actionDate, role: action.role, score: policy.impact * ROLE_FACTOR[action.role] * weight });
+      contributions.push({ policyId, actionKey: actionKey(action), actionDate: action.actionDate, role: action.role, score: policy.impact * ROLE_FACTOR[action.role] * weight });
     }
     contributions.sort((a, b) => idCompare(a.policyId, b.policyId));
     const raw = contributions.reduce((sum, item) => sum + item.score, 0);
