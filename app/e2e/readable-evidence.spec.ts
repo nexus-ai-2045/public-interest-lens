@@ -9,7 +9,7 @@ test('実資料の本文・投票行を検索し原資料へたどれるが架�
       { id: 'policy-2', title: '未収録の試験議案', submittedAt: '2025-01-01', sourceUrl: 'https://www.sangiin.go.jp/example2' },
     ] };
   const data = { schemaVersion: 'ranking-dataset/v1', fictional: false, asOf: '2026-10-01', coverage: { scope: '限定取得', assessedPeople: 0, sourceStatus: 'pages_captured', sourceRecords: 2 }, people: [], policies: [], involvements: [], evidence: [], held: [], readableEvidence: evidence, policySelection };
-  await page.goto('/');
+  await page.goto('/ranking');
   const external: string[] = [];
   page.on('request', request => { if (!request.url().startsWith('http://127.0.0.1:4179')) external.push(request.url()); });
   const input = page.getByLabel('ローカル評価データJSONを開く');

@@ -13,7 +13,7 @@ test('未評価と保留を重複算入の説明と区別する', async ({ page 
 });
 
 test('詳細タブは矢印・Home・Endで選択とフォーカスが移る', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/ranking');
   const action = page.getByRole('tab', { name: '行動', exact: true });
   const policy = page.getByRole('tab', { name: '政策', exact: true });
   const evidence = page.getByRole('tab', { name: '根拠', exact: true });
@@ -39,7 +39,7 @@ test('動きを減らす設定で人物選択が即時スクロールになる',
       return original.call(this, options);
     };
   });
-  await page.goto('/');
+  await page.goto('/ranking');
   await page.getByRole('button', { name: '架空議員べに', exact: true }).click();
   const behavior = await page.evaluate(() => ((window as Window & { personScroll?: ScrollIntoViewOptions }).personScroll)?.behavior);
   expect(behavior).toBe('auto');
