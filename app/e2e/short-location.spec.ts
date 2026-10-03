@@ -35,7 +35,7 @@ test('人物ページの空検索は例外を出さず、履歴と再読込で�
 });
 
 test('短い既定URLと、存在しない版・行動の停止を維持する', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/ranking');
   await expect(page).toHaveURL(/\/ranking$/);
   await page.getByRole('button', { name: '貢献', exact: true }).click();
   await expect(page).toHaveURL(/\/ranking\?view=benefit$/);

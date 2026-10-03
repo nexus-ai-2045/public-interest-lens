@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('主操作を先に見せ、条件の変化を示し、人物詳細から順位へ戻れる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await page.goto('/ranking');
   const ranking = page.locator('#ranking');
   const localInspection = page.getByRole('region', { name: '資料の取得状況' });
   await expect(ranking).toBeVisible();
@@ -23,7 +23,7 @@ test('主操作を先に見せ、条件の変化を示し、人物詳細から�
 test('分野・方向・期間を切り替え、URLから同じ表示を復元する', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('/ranking');
   await expect(page.getByRole('heading', { name: '国賊ランキング' })).toBeVisible();
   await expect(page.getByText('全人物・政策・資料が架空です。')).toBeVisible();
   await expect(page.locator('tbody tr').first()).toContainText('架空議員あおい');
@@ -44,7 +44,7 @@ test('分野・方向・期間を切り替え、URLから同じ表示を復元�
 });
 
 test('準備中、未評価、検索、総合重みを区別する', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/ranking');
   await page.getByLabel('評価分野').selectOption('fiscal');
   await expect(page.getByRole('status').filter({ hasText: '評価準備中' })).toBeVisible();
   await page.getByLabel('評価分野').selectOption('economy');
@@ -64,7 +64,7 @@ test('準備中、未評価、検索、総合重みを区別する', async ({ pa
 });
 
 test('公約モードで行動実績の寄与点を表示しない', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/ranking');
   await page.getByRole('button', { name: '架空議員あおい' }).click();
   await page.getByRole('button', { name: /架空の設備投資制限制.*架空の法案を主導して提出/ }).click();
   await expect(page.locator('.policy-metrics')).toContainText('3.00');
@@ -75,7 +75,7 @@ test('公約モードで行動実績の寄与点を表示しない', async ({ pa
 });
 
 test('同じ政策の提出と採決を別々に選び、行動ごとの根拠を表示する', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/ranking');
   await page.getByRole('button', { name: /架空の設備投資制限制.*架空の法案を主導して提出/ }).click();
   await expect(page.locator('.evidence-detail')).toContainText('架空の法案を主導して提出');
   await expect(page.locator('.source-panel')).toContainText('fixture:action-a');
@@ -89,7 +89,7 @@ test('同じ政策の提出と採決を別々に選び、行動ごとの根拠�
 test('ローカルの実データJSONは収録範囲と保留だけを閲覧でき、採点しない', async ({ page }) => {
   const external: string[] = [];
   page.on('request', request => { if (!request.url().startsWith('http://127.0.0.1:4179')) external.push(request.url()); });
-  await page.goto('/');
+  await page.goto('/ranking');
   const localData = {
     schemaVersion: 'ranking-dataset/v1', fictional: false, asOf: '2026-09-24',
     coverage: { scope: '限定スモーク', assessedPeople: 0, targetPeople: null, sourceStatus: 'capped', sourceRecords: 1, assessedPolicies: 0, candidatePolicies: 1 },
@@ -108,7 +108,7 @@ test('ローカルの実データJSONは収録範囲と保留だけを閲覧で�
 });
 
 test('公式議案3ページの限定取得結果を保留3件・算定0人として表示する', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/ranking');
   const localData = {
     schemaVersion: 'ranking-dataset/v1', fictional: false, asOf: '2026-09-24',
     coverage: { scope: '公式議案3ページの限定取得', assessedPeople: 0, targetPeople: null, sourceStatus: 'pages_captured', sourceRecords: 3, assessedPolicies: 0, candidatePolicies: 3 },
@@ -129,7 +129,7 @@ test('公式議案3ページの限定取得結果を保留3件・算定0人と�
 });
 
 test('実データ内の非公式・非HTTPSリンクを拒否する', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/ranking');
   const base = { schemaVersion: 'ranking-dataset/v1', fictional: false, asOf: '2026-09-24', coverage: { scope: '限定取得', assessedPeople: 0, targetPeople: null, sourceStatus: 'pages_captured', sourceRecords: 1 }, people: [], policies: [], involvements: [], evidence: [] };
   for (const sourceUrl of ['javascript:alert(1)', 'https://example.com/bill', 'http://www.sangiin.go.jp/bill']) {
     await page.getByLabel('ローカル評価データJSONを開く').setInputFiles({ name: 'current.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ ...base, held: [{ id: 'bill-1', reason: 'impact_unverified', sourceUrl }] })) });
@@ -143,7 +143,7 @@ test('PC・390pxで横はみ出しがなく、架空データ版は外部通信�
   page.on('request', request => { if (!request.url().startsWith('http://127.0.0.1:4179')) external.push(request.url()); });
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto('/');
+    await page.goto('/ranking');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await expect(page.getByText('全人物・政策・資料が架空です。')).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath(`ranking-${width}.png`), fullPage: true });
