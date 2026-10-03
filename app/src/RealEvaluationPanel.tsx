@@ -3,6 +3,7 @@ import type { QuoteRef } from './evidence-evaluation';
 import { availableRealRelease, createReleaseLoader, readRealRoute, realRouteLocation, type RealRelease, type RealRoute } from './real-release-view';
 import { ProductHeader } from './ProductHeader';
 import { evaluationStage } from './evaluation-stage';
+import { RealRecordsPage } from './RealRecordsPage';
 
 const positions = { for: '賛成', against: '反対', not_voted: '投票なし', unknown: '不明' };
 function Quotes({ quotes, release }: { quotes: QuoteRef[]; release: RealRelease }) {
@@ -43,5 +44,6 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   const navigate = useMemo(() => (next: RealRoute) => { window.history.pushState(null, '', realRouteLocation(next)); setRoute(next); }, []);
   useEffect(() => { const restore = () => setRoute(readRealRoute(window.location.search, window.location.pathname)); window.addEventListener('popstate', restore); return () => window.removeEventListener('popstate', restore); }, []);
   if (route.dataset === 'real') return <RealEvaluationPanel route={route} navigate={navigate} />;
+  if (window.location.pathname === '/records' || (window.location.pathname === '/' && !window.location.search)) return <RealRecordsPage onDemo={() => navigate({ dataset: 'fiction', release: '', person: '' })} onEvaluation={() => navigate({ dataset: 'real', release: '', person: '' })} />;
   return <>{typeof fictional === 'function' ? fictional(navigate) : fictional}</>;
 }
