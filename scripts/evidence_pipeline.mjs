@@ -126,7 +126,9 @@ export function buildReviewPacket(release) {
   }
   const source = new Map(input.materials.map(m => [m.id, m]));
   const safeText = value => {
-    if (typeof value !== 'string' || /(?:[a-z]:[\\/]|file:\/\/|\\\\|\/(?:Users|home)\/|\.local[\\/])/i.test(value)) throw new Error('レビュー資料へ非公開パスを含められません');
+    // 先頭の HTTPS scheme だけを除外し、本文中の連結パスも検出する。
+    const inspect = typeof value === 'string' && value.startsWith('https://') ? value.slice(8) : value;
+    if (typeof inspect !== 'string' || /(?:[a-z]:[\\/]|file:\/\/|\\\\|\/(?:Users|home)\/|\.local[\\/])/i.test(inspect)) throw new Error('レビュー資料へ非公開パスを含められません');
     return value;
   };
   const quote = q => {

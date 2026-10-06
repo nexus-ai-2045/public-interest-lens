@@ -20,11 +20,13 @@ from .register_external_material import register_local_material
 
 MAX_BYTES = 2 * 1024 * 1024
 CANONICAL = {
+    "200-8": "https://www.sangiin.go.jp/japanese/touhyoulist/200/200-1129-v011.htm",
     "221-53": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0710-v001.htm",
     "221-41": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0713-v004.htm",
     "221-26": "https://www.sangiin.go.jp/japanese/touhyoulist/221/221-0612-v009.htm",
 }
 URL_TO_BILL = {url: bill for bill, url in CANONICAL.items()}
+EVENT_YEAR = {"200-8": 2019, "221-53": 2026, "221-41": 2026, "221-26": 2026}
 DATE_RE = re.compile(r"(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日")
 TOTAL_RE = re.compile(r"投票総数\s*(\d+).*?賛成票\s*(\d+).*?反対票\s*(\d+)", re.S)
 
@@ -127,10 +129,236 @@ class _VoteHTML(HTMLParser):
             self.stack.pop()
 
 
+class _LegacyVoteHTML(HTMLParser):
+    """2019年の表形式: pro/con/nam の3セルを一つの投票行として読む。"""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.current_party = ""
+        self.factions: list[dict] = []
+        self.rows: list[dict] = []
+        self.caption_parts: list[str] | None = None
+        self.heading_parts: list[str] | None = None
+        self.title_parts: list[str] | None = None
+        self.expect_title = False
+        self.agenda_text = ""
+        self.cell: dict | None = None
+        self.row_cells: list[dict] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        values = dict(attrs)
+        if tag == "caption" and values.get("class") == "party":
+            self.caption_parts = []
+        elif tag == "th":
+            self.heading_parts = []
+        elif tag == "tr":
+            self.row_cells = []
+        elif tag == "td" and self.expect_title:
+            self.title_parts = []
+            self.expect_title = False
+        elif tag == "td" and values.get("class") in {"pro", "con", "nam"}:
+            self.cell = {
+                "kind": values["class"],
+                "line": self.getpos()[0],
+                "parts": [],
+                "images": [],
+            }
+        elif tag == "img" and self.cell is not None:
+            self.cell["images"].append((values.get("src"), values.get("alt")))
+
+    def handle_data(self, data: str) -> None:
+        if self.caption_parts is not None:
+            self.caption_parts.append(data)
+        if self.heading_parts is not None:
+            self.heading_parts.append(data)
+        if self.title_parts is not None:
+            self.title_parts.append(data)
+        if self.cell is not None:
+            self.cell["parts"].append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "caption" and self.caption_parts is not None:
+            value = _text(self.caption_parts)
+            match = re.fullmatch(
+                r"(.+?)\(\s*(\d+)名\s*\)\s*賛成票\s*(\d+)\s*反対票\s*(\d+)",
+                value,
+            )
+            if match is None:
+                raise ValueError("legacy faction totals missing")
+            self.current_party = match[1]
+            self.factions.append(
+                {
+                    "partyText": match[1],
+                    "publishedMembers": int(match[2]),
+                    "publishedYes": int(match[3]),
+                    "publishedNo": int(match[4]),
+                }
+            )
+            self.caption_parts = None
+        elif tag == "th" and self.heading_parts is not None:
+            self.expect_title = _text(self.heading_parts) == "案件名："
+            self.heading_parts = None
+        elif tag == "td" and self.cell is not None:
+            self.row_cells.append(self.cell)
+            self.cell = None
+        elif tag == "td" and self.title_parts is not None:
+            self.agenda_text = _text(self.title_parts)
+            self.title_parts = None
+        elif tag == "tr" and self.row_cells:
+            if len(self.row_cells) % 3:
+                raise ValueError("legacy vote cells incomplete")
+            for offset in range(0, len(self.row_cells), 3):
+                pro, con, nam = self.row_cells[offset : offset + 3]
+                if [pro["kind"], con["kind"], nam["kind"]] != [
+                    "pro",
+                    "con",
+                    "nam",
+                ]:
+                    raise ValueError("legacy vote cell order mismatch")
+                name = _text(nam["parts"])
+                marks = [
+                    any(
+                        (src or "").endswith("/sansei.jpg") and alt == "票"
+                        for src, alt in pro["images"]
+                    ),
+                    any(
+                        (src or "").endswith("/hantai.jpg") and alt == "票"
+                        for src, alt in con["images"]
+                    ),
+                    any(
+                        (src or "").endswith("/spacer.gif") and alt == "投票なし"
+                        for src, alt in nam["images"]
+                    ),
+                ]
+                image_valid = (
+                    len(pro["images"]) == int(marks[0])
+                    and len(con["images"]) == int(marks[1])
+                    and len(nam["images"]) == int(marks[2])
+                    and not _text(pro["parts"])
+                    and not _text(con["parts"])
+                )
+                if not name and not any(marks) and not nam["images"] and image_valid:
+                    continue  # 3列の最終行を埋める空セル
+                if (
+                    not name
+                    or sum(marks) != 1
+                    or not image_valid
+                    or not self.current_party
+                ):
+                    raise ValueError(
+                        f"legacy member vote ambiguous at line {nam['line']} marks={marks}"
+                    )
+                vote_text = "賛成" if marks[0] else "反対" if marks[1] else "投票なし"
+                self.rows.append(
+                    {
+                        "partyText": self.current_party,
+                        "nameText": name,
+                        "voteText": vote_text,
+                        "rowText": "".join(nam["parts"]).strip(),
+                        "quoteKind": "literal-name-cell",
+                        "markerLine": (
+                            pro["line"]
+                            if marks[0]
+                            else con["line"] if marks[1] else nam["line"]
+                        ),
+                        "sourceLine": nam["line"],
+                    }
+                )
+            self.row_cells = []
+
+
+def _parse_legacy_vote_page(
+    payload: bytes, *, bill_id: str, title: str, url: str
+) -> dict:
+    raw = payload.decode("utf-8", errors="strict")
+    parser = _LegacyVoteHTML()
+    parser.feed(raw)
+    if any(row["rowText"] not in raw for row in parser.rows):
+        raise ValueError("legacy name quote not literal in original")
+    plain = _text([re.sub(r"<[^>]*>", " ", raw)])
+    session = int(bill_id.split("-", 1)[0])
+    date_match = DATE_RE.search(plain)
+    totals = TOTAL_RE.search(plain)
+    source_title = re.sub(
+        r"^日程第[0-9０-９一二三四五六七八九十百千]+\s*", "", parser.agenda_text
+    )
+    source_title = re.sub(
+        r"[（(](?:内閣|衆議院|参議院|議員|委員長)[^）)]*(?:提出|送付|発議)[）)]$",
+        "",
+        source_title,
+    ).strip()
+    if (
+        f"第{session}回国会" not in plain
+        or not isinstance(title, str)
+        or not title
+        or title != source_title
+        or date_match is None
+        or totals is None
+    ):
+        raise ValueError("legacy vote session, title, date or totals mismatch")
+    event = date(*map(int, date_match.groups())).isoformat()
+    slug = url.rsplit("/", 1)[-1]
+    if event != f"{EVENT_YEAR[bill_id]}-{slug[4:6]}-{slug[6:8]}":
+        raise ValueError("legacy vote event date mismatch")
+    total, yes, no = map(int, totals.groups())
+    names = [row["nameText"].replace(" ", "") for row in parser.rows]
+    if not parser.rows or len(names) != len(set(names)):
+        raise ValueError("legacy member names missing or duplicated")
+    yes_rows = sum(row["voteText"] == "賛成" for row in parser.rows)
+    no_rows = sum(row["voteText"] == "反対" for row in parser.rows)
+    faction_checks = []
+    for faction in parser.factions:
+        rows = [row for row in parser.rows if row["partyText"] == faction["partyText"]]
+        faction_checks.append(
+            {
+                **faction,
+                "rowsConfirmed": len(rows) == faction["publishedMembers"]
+                and sum(row["voteText"] == "賛成" for row in rows)
+                == faction["publishedYes"]
+                and sum(row["voteText"] == "反対" for row in rows)
+                == faction["publishedNo"],
+            }
+        )
+    complete = (
+        bool(parser.factions)
+        and len({faction["partyText"] for faction in parser.factions})
+        == len(parser.factions)
+        and yes_rows == yes
+        and no_rows == no
+        and yes + no == total
+        and all(faction["rowsConfirmed"] for faction in faction_checks)
+    )
+    return {
+        "billId": bill_id,
+        "title": title,
+        "eventDate": event,
+        "session": session,
+        "agendaText": title,
+        "publishedTotals": {"total": total, "yes": yes, "no": no},
+        "rowCounts": {
+            "yes": yes_rows,
+            "no": no_rows,
+            "noVote": sum(row["voteText"] == "投票なし" for row in parser.rows),
+        },
+        "factions": parser.factions,
+        "voteCountMatched": yes_rows == yes and no_rows == no,
+        "allPublishedRowsConfirmed": complete,
+        "factionChecks": faction_checks,
+        "diagnosticRows": [],
+        "available": complete,
+        "rows": parser.rows,
+        "unavailableReason": (
+            None if complete else "member_rows_missing_or_inconsistent"
+        ),
+    }
+
+
 def parse_vote_page(payload: bytes, *, bill_id: str, title: str, url: str) -> dict:
     """引用行を保持し、個別票の公表総数との整合を別状態で返す。"""
     if URL_TO_BILL.get(url) != bill_id or not payload or len(payload) > MAX_BYTES:
         raise ValueError("vote URL, bill identifier or response size mismatch")
+    if bill_id == "200-8":
+        return _parse_legacy_vote_page(payload, bill_id=bill_id, title=title, url=url)
     parser = _VoteHTML()
     parser.feed(payload.decode("utf-8", errors="strict"))
     source_title = re.sub(

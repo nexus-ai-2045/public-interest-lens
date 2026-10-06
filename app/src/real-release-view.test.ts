@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { actionRevision, type EvidenceEvaluationInput } from './evidence-evaluation';
-import { availableRealRelease, createReleaseLoader, parseRealRelease, readRealRoute, realRouteSearch, REAL_RELEASE_MAX_BYTES, type RealRelease } from './real-release-view';
+import { availableRealRelease, createReleaseLoader, parseRealRelease, readRealRoute, realRouteSearch, REAL_RELEASE_MAX_BYTES, recordedIdentityCoverage, type RealRelease } from './real-release-view';
 
 async function fixture(): Promise<RealRelease> {
   // 架空の試験記録です。mode=realは読み取り契約の試験用で、実在人物の検証成功ではありません。
@@ -83,6 +83,22 @@ describe('版と人物をURLへ束縛する入口', () => {
 });
 
 describe('非同期ファイル選択', () => {
+  it('指定された版以外を採用しません', async () => {
+    const accepted: RealRelease[] = [], errors: string[] = [];
+    const loader = createReleaseLoader(r => accepted.push(r), e => errors.push(e));
+    await loader.load({ size: 1, text: async () => JSON.stringify(await fixture()) }, 'b'.repeat(64));
+    expect(accepted).toEqual([]); expect(errors).toHaveLength(1);
+  });
+  it('保存照合記録と記載人数を分け、未知IDや重複を昇格しません', async () => {
+    const r = await fixture();
+    expect(recordedIdentityCoverage(r)).toBeNull();
+    r.verification = { resolvedPersonIds: ['p1'] };
+    expect(recordedIdentityCoverage(r)).toEqual({ matched: 1, unresolved: 1 });
+    r.verification = { resolvedPersonIds: ['p1', 'p1'] };
+    expect(recordedIdentityCoverage(r)).toBeNull();
+    r.verification = { resolvedPersonIds: ['unknown'] };
+    expect(recordedIdentityCoverage(r)).toBeNull();
+  });
   it('連続選択は最後の結果だけを採用します', async () => {
     const accepted: RealRelease[] = []; const errors: string[] = [];
     const loader = createReleaseLoader(r => accepted.push(r), e => errors.push(e));

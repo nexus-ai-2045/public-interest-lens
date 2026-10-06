@@ -87,12 +87,22 @@ export function realRouteSearch(route: RealRoute): string {
 }
 export const availableRealRelease = (route: RealRoute, release: RealRelease | null): RealRelease | null => route.dataset === 'real' && release && route.release === release.releaseId ? release : null;
 
+/** 保存された照合記録の件数です。ブラウザで再検証した件数ではありません。 */
+export function recordedIdentityCoverage(release: RealRelease): { matched: number; unresolved: number } | null {
+  const verification = release.verification;
+  if (!object(verification) || !Array.isArray(verification.resolvedPersonIds)) return null;
+  const people = new Set(release.input.evidenceEvaluation.people.map(p => p.id));
+  const ids = verification.resolvedPersonIds;
+  if (ids.some(id => typeof id !== 'string' || !people.has(id)) || new Set(ids).size !== ids.length) return null;
+  return { matched: ids.length, unresolved: people.size - ids.length };
+}
+
 /** 非同期読込の最後の選択だけを採用し、不正入力では前正常版を保ちます。 */
 export function createReleaseLoader(onValid: (release: RealRelease) => void, onError: (message: string) => void) {
   let request = 0;
-  return { cancel: () => { request++; }, load: async (file: { size: number; text: () => Promise<string> }) => {
+  return { cancel: () => { request++; }, load: async (file: { size: number; text: () => Promise<string> }, expectedRelease = '') => {
     const id = ++request;
-    try { requireValid(file.size <= REAL_RELEASE_MAX_BYTES, 'ファイルは5MB以下にしてください。'); const release = await parseRealRelease(await file.text()); if (id === request) onValid(release); }
+    try { requireValid(file.size <= REAL_RELEASE_MAX_BYTES, 'ファイルは5MB以下にしてください。'); const release = await parseRealRelease(await file.text()); requireValid(!expectedRelease || release.releaseId === expectedRelease, '指定版と一致しません。'); if (id === request) onValid(release); }
     catch { if (id === request) onError('実評価版を読み取れませんでした。形式・ハッシュ・参照を確認してください。直前の正常版は保持しています。'); }
   } };
 }

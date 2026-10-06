@@ -44,6 +44,23 @@ describe('非公開評価版の生成と復旧', () => {
       expect(() => pipeline.buildReviewPacket(release)).toThrow();
     } finally { await rm(root, { recursive: true, force: true }); }
   });
+  it('公式https URLをレビュー資料へ通し、ローカルパスは拒否します', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'evidence-review-url-'));
+    try {
+      const real = input(); real.evidenceEvaluation.mode = 'real';
+      real.evidenceEvaluation.materials = [{ id: 'official', url: 'https://www.sangiin.go.jp/japanese/touhyoulist/test.htm',
+        originalHash: 'a'.repeat(64), contentHash: 'b'.repeat(64), observedAt: '2026-10-03T00:00:00Z', publishedAt: null }] as never[];
+      const release = await pipeline.runEvidencePipeline(real, { repoRoot: root, outputDir: join(root, '.local', 'release'),
+        engineHash: 'a'.repeat(64), evaluate: async () => ({ ...evaluated, mode: 'real' }) });
+      expect(pipeline.buildReviewPacket(release).publicationStatus).toBe('requires_human_review');
+      const syntheticUserPath = join('C:', 'Users', 'test-fixture', 'record.json').replaceAll('\\', '/');
+      for (const [index, reason] of [syntheticUserPath, 'noteC:\\private\\secret.txt'].entries()) {
+        const unsafe = await pipeline.runEvidencePipeline(real, { repoRoot: root, outputDir: join(root, '.local', `unsafe-${index}`),
+          engineHash: 'a'.repeat(64), evaluate: async () => ({ ...evaluated, mode: 'real', held: [{ reason }] }) });
+        expect(() => pipeline.buildReviewPacket(unsafe)).toThrow('非公開パス');
+      }
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
   it('人工入力を実公開候補へ変換しません', async () => {
     const root = await mkdtemp(join(tmpdir(), 'evidence-review-'));
     try {

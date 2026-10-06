@@ -1,11 +1,12 @@
 import { open, realpath } from 'node:fs/promises';
-import { resolve, relative, isAbsolute } from 'node:path';
+import { resolve, relative, isAbsolute, dirname, basename } from 'node:path';
 import type { Plugin } from 'vite';
 import { parseLocalInspection } from './src/local-inspection';
+import { parseRealRelease } from './src/real-release-view';
 
 const MAX_BYTES = 5_000_000;
 /** dev serverだけの固定入口。原本保存パス・分析ログ・評価入力を返しません。 */
-export async function readLocalRecords(input: string, privateRoot: string): Promise<string> {
+async function readPrivateText(input: string, privateRoot: string): Promise<string> {
   const [root, target] = await Promise.all([realpath(privateRoot), realpath(input)]);
   const rel = relative(root, target);
   if (!rel || isAbsolute(rel) || rel === '..' || rel.startsWith('../') || rel.startsWith('..\\')) throw new Error('PrivateRootError');
@@ -20,12 +21,45 @@ export async function readLocalRecords(input: string, privateRoot: string): Prom
       size += result.bytesRead;
     }
     if (size > MAX_BYTES) throw new Error('InputSizeError');
-    const inspection = parseLocalInspection(buffer.subarray(0, size).toString('utf8'));
+    return buffer.subarray(0, size).toString('utf8');
+  } finally { await handle.close(); }
+}
+export async function readLocalRecords(input: string, privateRoot: string): Promise<string> {
+    const inspection = parseLocalInspection(await readPrivateText(input, privateRoot));
     return JSON.stringify({ schemaVersion: 'ranking-dataset/v1', fictional: false,
       asOf: inspection.asOf, coverage: { scope: inspection.scope, assessedPeople: 0, sourceRecords: inspection.sourceRecords, sourceStatus: inspection.sourceStatus },
       people: [], policies: [], involvements: [], evidence: [], held: inspection.held,
       readableEvidence: inspection.readableEvidence, policySelection: inspection.policySelection });
-  } finally { await handle.close(); }
+}
+
+function containsPrivateData(value: unknown): boolean {
+  if (typeof value === 'string') {
+    const urls = /https:\/\/[^\s"'<>]+/gi;
+    for (const match of value.matchAll(urls)) {
+      try { const url = new URL(match[0]); if (url.username || url.password) return true; }
+      catch { return true; }
+    }
+    const remainder = value.replace(urls, '');
+    return /file:|[a-z]:[\\/]|\\\\[^\\\s]+\\|\/(?:Users|home|root)\//i.test(remainder);
+  }
+  if (Array.isArray(value)) return value.some(containsPrivateData);
+  if (value && typeof value === 'object') return Object.entries(value).some(([key, item]) => ['recordpath', 'internallog'].includes(key.toLowerCase()) || containsPrivateData(item));
+  return false;
+}
+
+/** 保存版のハッシュを維持します。私的項目がある版は加工せず拒否します。 */
+export async function readLocalEvaluation(input: string, privateRoot: string, expectedRelease = ''): Promise<string> {
+  const text = await readPrivateText(input, privateRoot);
+  const release = await parseRealRelease(text);
+  // 復号後を検査します。Unicode escapeされたキーやパスも生文字列と同じ扱いにします。
+  if (containsPrivateData(release)) throw new Error('PrivateFieldError');
+  const response = JSON.stringify(release);
+  if (release.verification !== undefined) {
+    const verification = release.verification;
+    if (!verification || typeof verification !== 'object' || Array.isArray(verification) || Object.keys(verification).some(k => !['inputHash', 'verifierId', 'verifierVersion', 'resolvedPersonIds', 'actionRevisions', 'assessmentRevisions'].includes(k))) throw new Error('PrivateFieldError');
+  }
+  if (expectedRelease && release.releaseId !== expectedRelease) throw new Error('ReleaseMismatch');
+  return response;
 }
 
 export function localRequestAllowed(remoteAddress: string | undefined, host: string | undefined, origin: string | undefined, fetchSite: string | undefined): boolean {
@@ -40,8 +74,15 @@ export function localRequestAllowed(remoteAddress: string | undefined, host: str
 export function localRecordsPlugin(): Plugin {
   return { name: 'private-local-records', apply: 'serve', configureServer(server) {
     const repo = resolve(server.config.root, '..');
+    const canonicalRepo = basename(dirname(repo)) === '.worktrees' ? resolve(repo, '../..') : repo;
+    async function configuredPrivateRoot(root: string) {
+      const realRoot = await realpath(root), privateRel = relative(await realpath(canonicalRepo), realRoot);
+      if (isAbsolute(privateRel) || privateRel === '..' || privateRel.startsWith('..\\') || privateRel.startsWith('../') || !privateRel.split(/[\\/]/).includes('.local')) throw new Error('PrivateRootError');
+      return realRoot;
+    }
     server.middlewares.use(async (req, res, next) => {
-      if (req.url !== '/__local__/records') return next();
+      const evaluation = req.url === '/__local__/evaluation' || req.url?.startsWith('/__local__/evaluation?');
+      if (req.url !== '/__local__/records' && !evaluation) return next();
       res.setHeader('Cache-Control', 'no-store'); res.setHeader('X-Content-Type-Options', 'nosniff');
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       if (req.method !== 'GET' || !localRequestAllowed(req.socket.remoteAddress, req.headers.host,
@@ -50,7 +91,17 @@ export function localRecordsPlugin(): Plugin {
         res.statusCode = 403; res.end('{"error":"local_access_only"}'); return;
       }
       try {
-        res.end(await readLocalRecords(resolve(repo, '.local/m1-integration-20261002/current.json'), resolve(repo, '.local')));
+        if (evaluation) {
+          const url = new URL(req.url!, 'http://local.invalid');
+          const releaseId = url.searchParams.get('release') ?? '';
+          if ([...url.searchParams.keys()].some(k => k !== 'release') || url.searchParams.getAll('release').length > 1 || (releaseId && !/^[a-f0-9]{64}$/.test(releaseId))) throw new Error('InvalidRelease');
+          const root = process.env.LENS_EVALUATION_ROOT || resolve(repo, '.local/evaluation');
+          const realRoot = await configuredPrivateRoot(root);
+          res.end(await readLocalEvaluation(resolve(realRoot, releaseId ? `releases/${releaseId}.json` : 'current.json'), realRoot, releaseId));
+        } else {
+          const root = await configuredPrivateRoot(process.env.LENS_RECORDS_ROOT || resolve(repo, '.local/m1-integration-20261002'));
+          res.end(await readLocalRecords(resolve(root, 'current.json'), root));
+        }
       } catch {
         res.statusCode = 404; res.end('{"error":"local_records_unavailable"}');
       }
