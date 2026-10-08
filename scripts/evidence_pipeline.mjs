@@ -81,15 +81,19 @@ async function atomicJson(out, name, text) {
 function validateEvaluationResult(input, result) {
   fields(result, ['mode', 'rows', 'held', 'coverage', 'publicationStatus']);
   if (!Array.isArray(result.rows) || !Array.isArray(result.held)) throw new Error('評価結果一覧が不正です');
+  const selectedPeople = new Set(input.people.filter(person => input.options.actorGroup === 'organizations' ? person.actorType === 'organization' : person.actorType !== 'organization').map(person => person.id));
+  if ((input.options.timeBasis === 'outcome' || input.options.actorGroup !== undefined) && (new Set(result.rows.map(row => row.person?.id)).size !== selectedPeople.size || result.rows.some(row => !selectedPeople.has(row.person?.id)))) throw new Error('評価対象の集団と結果が一致しません');
   let contributions = 0;
   for (const row of result.rows) {
     fields(row, ['person', 'score', 'rank', 'eligibleCount', 'heldCount', 'contributions']);
     if (!Array.isArray(row.contributions) || row.eligibleCount !== row.contributions.length || !Number.isSafeInteger(row.heldCount) || row.heldCount < 0) throw new Error('人物の集計が不正です');
     const policies = new Set();
     for (const c of row.contributions) {
-      fields(c, ['policyId', 'actionKey', 'actionDate', 'role', 'score']);
-      if (policies.has(c.policyId) || !Number.isFinite(c.score) || c.score < 0) throw new Error('寄与点が不正または重複しています');
-      policies.add(c.policyId); contributions++;
+      fields(c, ['policyId', 'actionKey', 'actionDate', 'role', 'score', 'outcomeId']);
+      const resultKey = input.options.timeBasis === 'outcome' ? c.outcomeId : c.policyId;
+      const action = input.actions.find(a => a.actionId === c.actionKey && a.personId === row.person.id);
+      if (typeof resultKey !== 'string' || !resultKey || policies.has(resultKey) || !action || (input.options.timeBasis === 'outcome' && action.outcomeId !== c.outcomeId) || !Number.isFinite(c.score) || c.score < 0) throw new Error('寄与点が不正または重複しています');
+      policies.add(resultKey); contributions++;
     }
   }
   for (const held of result.held) fields(held, ['personId', 'policyId', 'actionId', 'reason']);
@@ -105,7 +109,7 @@ export function buildReviewPacket(release) {
   if (release.schemaVersion !== 'evidence-release/v1' || !/^[a-f0-9]{64}$/.test(releaseId) || hash(canonical(body)) !== releaseId
     || release.publicationStatus !== 'requires_human_review' || release.input?.evidenceEvaluation?.mode !== 'real' || release.result?.mode !== 'real') throw new Error('実資料評価版の整合性が不正です');
   const input = release.input.evidenceEvaluation;
-  fields(input.options, ['domain', 'direction', 'period', 'asOf', 'weights']);
+  fields(input.options, ['domain', 'direction', 'period', 'asOf', 'weights', 'timeBasis', 'dateFrom', 'dateTo', 'actorGroup']);
   fields(input.options.weights, ['economy', 'technology']);
   validateEvaluationResult(input, release.result);
   const verification = release.verification ? validateVerification(input, structuredClone(release.verification)) : null;
@@ -118,7 +122,7 @@ export function buildReviewPacket(release) {
       for (const contribution of row.contributions) {
         const action = input.actions.find(a => a.actionId === contribution.actionKey && a.personId === person.id && a.policyId === contribution.policyId);
         if (!action || !verification.actionRevisions.some(v => v.id === action.actionId && v.revisionId === action.revisionId)
-          || !input.assessments.some(a => a.policyId === action.policyId && a.policyVersion === action.policyVersion && a.position === action.position
+          || !input.assessments.some(a => a.policyId === action.policyId && a.policyVersion === action.policyVersion && a.position === action.position && (input.options.timeBasis !== 'outcome' || a.outcomeId === contribution.outcomeId)
             && a.direction === input.options.direction && (input.options.domain === 'overall' || a.domain === input.options.domain)
             && verification.assessmentRevisions.some(v => v.id === a.id && v.revisionId === hash(canonical(a))))) throw new Error('得点に行動・分析の検証参照がありません');
       }

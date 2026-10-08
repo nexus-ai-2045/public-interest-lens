@@ -12,11 +12,10 @@ export async function sha256(text: string): Promise<string> {
 export const actionIdentity = (action: ActionIdentity): Promise<string> => sha256(canonical([action.namespace, action.sourceActionId, action.sourceActorId, action.policyId]));
 export const actionRevision = (semanticContent: unknown): Promise<string> => sha256(canonical(semanticContent));
 
-/** 正規化した保存本文上のUTF-16 code unit位置、endは排他的。本文を再正規化して照合しない。 */
 export type QuoteRef = { materialId: string; start: number; end: number; text: string };
 export type Material = { id: string; url: string; originalHash: string; contentHash: string; observedAt: string; publishedAt: string | null };
-export type EvidenceAction = ActionIdentity & { actionId: string; revisionId: string; personId: string; policyVersion: string; actionDate: string; role: Involvement['role']; position: 'for' | 'against' | 'not_voted' | 'unknown'; description: string; quotes: QuoteRef[] };
-export type PositionAssessment = { id: string; policyId: string; policyVersion: string; position: 'for' | 'against'; domain: 'economy' | 'technology'; direction: Direction; impact: 1 | 2 | 3; rationale: string; counterEvidence: string; alternativeExplanation: string; criterionVersion: string; analysisVersion: string; evaluatedAt: string; quotes: QuoteRef[] };
+export type EvidenceAction = ActionIdentity & { actionId: string; revisionId: string; personId: string; policyVersion: string; actionDate: string; role: Involvement['role']; position: 'for' | 'against' | 'not_voted' | 'unknown'; description: string; quotes: QuoteRef[]; interventionId?: string; outcomeId?: string };
+export type PositionAssessment = { id: string; policyId: string; policyVersion: string; position: 'for' | 'against'; domain: 'economy' | 'technology'; direction: Direction; impact: 1 | 2 | 3; rationale: string; counterEvidence: string; alternativeExplanation: string; criterionVersion: string; analysisVersion: string; evaluatedAt: string; quotes: QuoteRef[]; outcomeId?: string; observationFrom?: string; observationTo?: string; implementationStatus?: 'implemented' | 'not_implemented'; evaluationKind?: 'observed' | 'forecast'; evidenceMethod?: 'quantitative' | 'contribution_analysis' | 'association'; scopeReason?: string; durationReason?: string; magnitudeReason?: string };
 export type EvidenceEvaluationInput = { schemaVersion: 'evidence-evaluation/v1'; mode: 'real' | 'test-only'; options: RankingOptions; people: Person[]; materials: Material[]; actions: EvidenceAction[]; assessments: PositionAssessment[] };
 export type TrustedContext = { readMaterial: (id: string) => Promise<({ text: string } & Omit<Material, 'id'>) | null>; resolvedPersonIds: ReadonlySet<string>; verifiedActionIds: ReadonlySet<string>; verifiedAssessmentIds: ReadonlySet<string>; verifiedActionRevisions: ReadonlyMap<string, string>; verifiedAssessmentRevisions: ReadonlyMap<string, string> };
 export type HeldReason = { personId?: string; policyId?: string; actionId?: string; reason: string };
@@ -43,35 +42,41 @@ function validateQuotes(quotes: QuoteRef[], materials: Map<string, Material>): v
     requireValid(materials.has(q.materialId) && Number.isSafeInteger(q.start) && Number.isSafeInteger(q.end) && q.start >= 0 && q.end > q.start && nonempty(q.text) && q.end - q.start === q.text.length, '引用の参照または範囲が不正です');
   }
 }
-/** 実資料入口。信頼状態は入力JSONではなく、独立した検証実行の文脈からだけ供給する。 */
 export async function evaluateEvidence(input: EvidenceEvaluationInput, trusted: TrustedContext): Promise<EvidenceEvaluationResult> {
   keys(input, ['schemaVersion', 'mode', 'options', 'people', 'materials', 'actions', 'assessments']);
   requireValid(input.schemaVersion === 'evidence-evaluation/v1' && ['real', 'test-only'].includes(input.mode), '評価スキーマまたはモードが不正です');
   const o = input.options;
-  keys(o, ['domain', 'direction', 'period', 'asOf', 'weights']); keys(o.weights, ['economy', 'technology']);
-  requireValid(dateValid(o.asOf) && [2, 4, 8, 'cumulative'].includes(o.period) && ['economy', 'technology', 'overall', 'fiscal', 'security', 'governance'].includes(o.domain) && ['benefit', 'harm'].includes(o.direction), '評価条件が不正です');
+  keys(o, ['domain', 'direction', 'period', 'asOf', 'weights', 'dateFrom', 'dateTo', 'timeBasis', 'actorGroup']); keys(o.weights, ['economy', 'technology']);
+  requireValid(dateValid(o.asOf) && [2, 4, 8, 30, 40, 'cumulative', 'custom'].includes(o.period) && ['economy', 'technology', 'overall', 'fiscal', 'security', 'governance'].includes(o.domain) && ['benefit', 'harm'].includes(o.direction), '評価条件が不正です');
+  requireValid(o.timeBasis === undefined || ['action', 'outcome'].includes(o.timeBasis), '評価時点が不正です');
+  requireValid(o.actorGroup === undefined || ['people', 'organizations'].includes(o.actorGroup), '評価主体が不正です');
+  if (o.period === 'custom') requireValid(typeof o.dateFrom === 'string' && typeof o.dateTo === 'string' && dateValid(o.dateFrom) && dateValid(o.dateTo) && o.dateFrom <= o.dateTo && o.dateTo <= o.asOf, '任意期間が不正です');
+  else requireValid(o.dateFrom === undefined && o.dateTo === undefined, '任意期間以外に日付範囲は指定できません');
+  const outcomeMode = o.timeBasis === 'outcome';
   requireValid(Object.values(o.weights).length === 2 && ['economy', 'technology'].every(k => { const n = o.weights[k as 'economy' | 'technology']; return typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 100; }), '重みが不正です');
   const people = unique(input.people); const materials = unique(input.materials); const assessments = unique(input.assessments);
-  for (const p of people.values()) { keys(p, ['id', 'name', 'house', 'district', 'electionIds', 'roleClass']); requireValid(nonempty(p.name), '人物名がありません'); }
+  for (const p of people.values()) { keys(p, ['id', 'name', 'house', 'district', 'electionIds', 'roleClass', 'actorType']); requireValid(nonempty(p.name) && (p.actorType === undefined || ['person', 'organization'].includes(p.actorType)), '人物名または主体分類が不正です'); }
   for (const m of materials.values()) {
     keys(m, ['id', 'url', 'originalHash', 'contentHash', 'observedAt', 'publishedAt']);
-    let validUrl = false; try { const url = new URL(m.url); validUrl = url.protocol === 'https:' && !url.username && !url.password; } catch { /* 不正URL */ }
+    let validUrl = false; try { const url = new URL(m.url); validUrl = url.protocol === 'https:' && !url.username && !url.password; } catch { validUrl = false; }
     requireValid(validUrl && hashValid(m.originalHash) && hashValid(m.contentHash) && instantValid(m.observedAt) && (m.publishedAt === null || dateValid(m.publishedAt)), '資料のURL・ハッシュ・日時が不正です');
   }
   const assessmentKeys = new Set<string>();
   for (const a of assessments.values()) {
-    keys(a, ['id', 'policyId', 'policyVersion', 'position', 'domain', 'direction', 'impact', 'rationale', 'counterEvidence', 'alternativeExplanation', 'criterionVersion', 'analysisVersion', 'evaluatedAt', 'quotes']);
+    keys(a, ['id', 'policyId', 'policyVersion', 'position', 'domain', 'direction', 'impact', 'rationale', 'counterEvidence', 'alternativeExplanation', 'criterionVersion', 'analysisVersion', 'evaluatedAt', 'quotes', 'outcomeId', 'observationFrom', 'observationTo', 'implementationStatus', 'evaluationKind', 'evidenceMethod', 'scopeReason', 'durationReason', 'magnitudeReason']);
     requireValid([a.policyId, a.policyVersion, a.rationale, a.counterEvidence, a.alternativeExplanation, a.criterionVersion, a.analysisVersion].every(nonempty) && instantValid(a.evaluatedAt) && ['for', 'against'].includes(a.position) && ['economy', 'technology'].includes(a.domain) && ['benefit', 'harm'].includes(a.direction) && [1, 2, 3].includes(a.impact), '影響分析が不正です');
     validateQuotes(a.quotes, materials);
-    const key = canonical([a.policyId, a.policyVersion, a.position, a.domain, a.direction]);
+    requireValid((a.outcomeId === undefined || nonempty(a.outcomeId)) && (a.observationFrom === undefined || dateValid(a.observationFrom)) && (a.observationTo === undefined || dateValid(a.observationTo)) && (a.implementationStatus === undefined || ['implemented', 'not_implemented'].includes(a.implementationStatus)) && (a.evaluationKind === undefined || ['observed', 'forecast'].includes(a.evaluationKind)) && (a.evidenceMethod === undefined || ['quantitative', 'contribution_analysis', 'association'].includes(a.evidenceMethod)) && [a.scopeReason, a.durationReason, a.magnitudeReason].every(value => value === undefined || typeof value === 'string'), '結果分析のフィールドが不正です');
+    const key = canonical([a.policyId, a.policyVersion, a.position, a.domain, a.direction, ...(outcomeMode ? [a.outcomeId] : [])]);
     requireValid(!assessmentKeys.has(key), '同じ分野・方向の影響分析が競合しています'); assessmentKeys.add(key);
   }
   requireValid(Array.isArray(input.actions), '行動一覧が不正です');
   const actions = new Map<string, EvidenceAction>();
   for (const a of input.actions) {
-    keys(a, ['namespace', 'sourceActionId', 'sourceActorId', 'policyId', 'actionId', 'revisionId', 'personId', 'policyVersion', 'actionDate', 'role', 'position', 'description', 'quotes']);
+    keys(a, ['namespace', 'sourceActionId', 'sourceActorId', 'policyId', 'actionId', 'revisionId', 'personId', 'policyVersion', 'actionDate', 'role', 'position', 'description', 'quotes', 'interventionId', 'outcomeId']);
     requireValid([a.namespace, a.sourceActionId, a.sourceActorId, a.policyId, a.policyVersion, a.description].every(nonempty) && people.has(a.personId) && dateValid(a.actionDate) && Object.hasOwn(ROLE_FACTOR, a.role) && ['for', 'against', 'not_voted', 'unknown'].includes(a.position), '行動が不正です');
     validateQuotes(a.quotes, materials);
+    requireValid([a.interventionId, a.outcomeId].every(value => value === undefined || nonempty(value)), '介入または結果IDが不正です');
     const { actionId, revisionId, ...semantic } = a;
     requireValid(hashValid(actionId) && hashValid(revisionId) && actionId === await actionIdentity(a) && revisionId === await actionRevision(semantic), '行動IDまたは改訂IDが不一致です');
     const old = actions.get(actionId);
@@ -80,23 +85,29 @@ export async function evaluateEvidence(input: EvidenceEvaluationInput, trusted: 
   const texts = new Map<string, string>();
   for (const m of materials.values()) {
     let stored: Awaited<ReturnType<TrustedContext['readMaterial']>> = null;
-    try { stored = await trusted.readMaterial(m.id); } catch { /* 読めない資料は保留 */ }
+    try { stored = await trusted.readMaterial(m.id); } catch { stored = null; }
     if (stored && stored.url === m.url && stored.originalHash === m.originalHash && stored.contentHash === m.contentHash && stored.observedAt === m.observedAt && stored.publishedAt === m.publishedAt && typeof stored.text === 'string' && await sha256(stored.text) === m.contentHash) texts.set(m.id, stored.text);
   }
-  const quotesMatch = (quotes: QuoteRef[]) => quotes.every(q => texts.has(q.materialId) && texts.get(q.materialId)!.slice(q.start, q.end) === q.text);
-  const startDate = new Date(`${o.asOf}T00:00:00Z`); if (o.period !== 'cumulative') startDate.setUTCFullYear(startDate.getUTCFullYear() - o.period);
-  const start = o.period === 'cumulative' ? null : startDate.toISOString().slice(0, 10);
-  const selectedActions = [...actions.values()].filter(a => a.actionDate <= o.asOf && (!start || a.actionDate >= start));
+  const quotesMatch = (quotes: QuoteRef[]) => quotes.every(q => {
+    const material = materials.get(q.materialId)!;
+    return texts.has(q.materialId) && texts.get(q.materialId)!.slice(q.start, q.end) === q.text && (!outcomeMode || (new Date(material.observedAt).toISOString().slice(0, 10) <= o.asOf && (material.publishedAt === null || material.publishedAt <= o.asOf)));
+  });
+  const startDate = new Date(`${o.asOf}T00:00:00Z`); if (typeof o.period === 'number') startDate.setUTCFullYear(startDate.getUTCFullYear() - o.period);
+  const start = o.period === 'custom' ? o.dateFrom! : o.period === 'cumulative' ? null : startDate.toISOString().slice(0, 10);
+  const end = o.period === 'custom' ? o.dateTo! : o.asOf;
+  const selectedActions = [...actions.values()].filter(a => a.actionDate <= o.asOf && (outcomeMode || (a.actionDate <= end && (!start || a.actionDate >= start))));
   const held: HeldReason[] = []; let assessedActions = 0;
   const validAssessments = new Set<string>();
   for (const a of assessments.values()) if (trusted.verifiedAssessmentIds.has(a.id) && trusted.verifiedAssessmentRevisions?.get(a.id) === await assessmentRevision(a) && quotesMatch(a.quotes)) validAssessments.add(a.id);
   const weightTotal = o.weights.economy + o.weights.technology;
-  const rows = input.people.map(person => {
+  const rows = input.people.filter(person => o.actorGroup === 'organizations' ? person.actorType === 'organization' : person.actorType !== 'organization').map(person => {
     const contributions: RankingRow['contributions'] = []; let heldCount = 0;
+    const outcomeCandidates = new Map<string, { contribution: RankingRow['contributions'][number]; analysisSignature: string }[]>();
     const grouped = new Map<string, EvidenceAction[]>();
-    for (const a of selectedActions) if (a.personId === person.id) { const group = grouped.get(a.policyId) ?? []; group.push(a); grouped.set(a.policyId, group); }
+    for (const a of selectedActions) if (a.personId === person.id) { const key = outcomeMode ? canonical([a.policyId, a.outcomeId ?? null]) : a.policyId; const group = grouped.get(key) ?? []; group.push(a); grouped.set(key, group); }
     const hold = (policyId: string, reason: string) => { heldCount++; held.push({ personId: person.id, policyId, reason }); };
-    for (const [policyId, group] of grouped) {
+    for (const group of grouped.values()) {
+      const policyId = group[0].policyId;
       if (!trusted.resolvedPersonIds.has(person.id)) { hold(policyId, '人物照合が未検証です'); continue; }
       if (new Set(group.map(a => a.position)).size !== 1 || new Set(group.map(a => a.policyVersion)).size !== 1) { hold(policyId, '同じ政策への立場または政策版が競合しています'); continue; }
       if (!['for', 'against'].includes(group[0].position)) { hold(policyId, '個人の賛否が確認できません'); continue; }
@@ -104,12 +115,33 @@ export async function evaluateEvidence(input: EvidenceEvaluationInput, trusted: 
       const eligible = group.filter(a => ROLE_FACTOR[a.role] > 0 && trusted.verifiedActionIds.has(a.actionId) && trusted.verifiedActionRevisions?.get(a.actionId) === a.revisionId && quotesMatch(a.quotes));
       if (!eligible.length) { hold(policyId, '行動または引用が未検証です'); continue; }
       eligible.sort((a, b) => ROLE_FACTOR[b.role] - ROLE_FACTOR[a.role] || a.actionDate.localeCompare(b.actionDate) || a.actionId.localeCompare(b.actionId));
-      const action = eligible[0];
-      const relevant = [...assessments.values()].filter(a => a.policyId === policyId && a.policyVersion === action.policyVersion && a.position === action.position && a.direction === o.direction && (o.domain === 'overall' || a.domain === o.domain) && (o.domain !== 'overall' || o.weights[a.domain] > 0));
+      let action = eligible[0];
+      const relevant = [...assessments.values()].filter(a => a.policyId === policyId && a.policyVersion === action.policyVersion && a.position === action.position && a.direction === o.direction && (o.domain === 'overall' || a.domain === o.domain) && (o.domain !== 'overall' || o.weights[a.domain] > 0) && (!outcomeMode || (nonempty(action.outcomeId) && a.outcomeId === action.outcomeId)));
       if (!relevant.length || relevant.some(a => !validAssessments.has(a.id))) { hold(policyId, '立場別の影響根拠が不足しています'); continue; }
+      if (outcomeMode && relevant.some(a => a.implementationStatus !== 'implemented' || a.evaluationKind !== 'observed' || !['quantitative', 'contribution_analysis'].includes(a.evidenceMethod ?? '') || ![a.scopeReason, a.durationReason, a.magnitudeReason].every(nonempty) || !a.observationFrom || !a.observationTo || a.observationFrom > a.observationTo || a.observationTo > o.asOf || new Date(a.evaluatedAt).toISOString().slice(0, 10) > o.asOf || a.observationFrom > end || (start !== null && a.observationTo < start))) { hold(policyId, '実施済みの実績・結果期間・因果寄与の根拠が不足しています'); continue; }
+      if (outcomeMode) {
+        const causalAction = eligible.find(candidate => relevant.every(a => candidate.actionDate <= a.observationTo!));
+        if (!causalAction) { hold(policyId, '結果観測後の行動は因果寄与へ結べません'); continue; }
+        action = causalAction;
+      }
       const impact = relevant.reduce((sum, a) => sum + a.impact * (o.domain === 'overall' ? o.weights[a.domain] / weightTotal : 1), 0);
-      contributions.push({ policyId, actionKey: action.actionId, actionDate: action.actionDate, role: action.role, score: impact * ROLE_FACTOR[action.role] }); assessedActions++;
+      const contribution: RankingRow['contributions'][number] = { policyId, actionKey: action.actionId, actionDate: action.actionDate, role: action.role, score: impact * ROLE_FACTOR[action.role], ...(outcomeMode ? { outcomeId: action.outcomeId } : {}) };
+      if (outcomeMode) {
+        const candidates = outcomeCandidates.get(action.outcomeId!) ?? [];
+        const analysisSignature = canonical(relevant.map(a => [a.domain, a.direction, a.impact, a.criterionVersion, a.observationFrom, a.observationTo]).sort((a, b) => canonical(a).localeCompare(canonical(b))));
+        candidates.push({ contribution, analysisSignature });
+        outcomeCandidates.set(action.outcomeId!, candidates);
+      } else contributions.push(contribution);
     }
+    for (const candidates of outcomeCandidates.values()) {
+      if (new Set(candidates.map(candidate => candidate.analysisSignature)).size !== 1) {
+        for (const candidate of candidates) hold(candidate.contribution.policyId, '同じ結果の影響尺度または観測期間が競合しています');
+        continue;
+      }
+      candidates.sort((a, b) => ROLE_FACTOR[b.contribution.role] - ROLE_FACTOR[a.contribution.role] || a.contribution.actionDate.localeCompare(b.contribution.actionDate) || a.contribution.actionKey.localeCompare(b.contribution.actionKey));
+      contributions.push(candidates[0].contribution);
+    }
+    assessedActions += contributions.length;
     contributions.sort((a, b) => a.policyId.localeCompare(b.policyId));
     return { person, score: sumRounded(contributions.map(c => c.score)), rank: null, eligibleCount: contributions.length, heldCount, contributions };
   });

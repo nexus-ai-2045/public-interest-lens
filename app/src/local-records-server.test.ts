@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 // Node専用の開発serverをブラウザappの型設定へ取り込まない既存の検査方式です。
 const serverUrl = new URL('../local-records-server.ts', import.meta.url).href;
-const { localRecordsPlugin, localRequestAllowed, readLocalRecords, readLocalEvaluation } = await import(/* @vite-ignore */ serverUrl);
+const { localRecordsPlugin, localRequestAllowed, readLocalRecords, readLocalEvaluation, readLocalPolicyContext } = await import(/* @vite-ignore */ serverUrl);
 import { actionRevision } from './evidence-evaluation';
 const fsModule = 'node:fs/promises', osModule = 'node:os', pathModule = 'node:path';
 const { mkdtemp, mkdir, writeFile, rm } = await import(/* @vite-ignore */ fsModule);
@@ -9,6 +9,15 @@ const { tmpdir, homedir } = await import(/* @vite-ignore */ osModule);
 const { join } = await import(/* @vite-ignore */ pathModule);
 
 describe('実資料の開発時限定入口', () => {
+  it('旧政策contextでも私的なパスを返しません', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'policy-context-'));
+    try {
+      const releaseId = 'a'.repeat(64);
+      const policy = { policyId: '200-8', formalTitle: '人工議案', summary: 'file:' + '/private', officialUrl: 'https://www.sangiin.go.jp/test', originalSha256: 'b'.repeat(64) };
+      await writeFile(join(root, 'current.json'), JSON.stringify({ schemaVersion: 'policy-context/v1', releaseId, policies: [policy] }));
+      await expect(readLocalPolicyContext(root, releaseId)).rejects.toThrow('PrivateFieldError');
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
   const smokePath = (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env.REAL_RELEASE_SMOKE_PATH;
   it.skipIf(!smokePath)('保存済み実評価版をローカル入口の検査で読みます', async () => {
     const path = 'node:path'; const { dirname } = await import(/* @vite-ignore */ path);

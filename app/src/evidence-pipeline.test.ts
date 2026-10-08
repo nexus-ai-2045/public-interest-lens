@@ -90,7 +90,7 @@ describe('非公開評価版の生成と復旧', () => {
         }),
         evaluate: async (_input: unknown, trusted: { resolvedPersonIds: Set<string> }) => {
           expect([...trusted.resolvedPersonIds]).toEqual(['person-test']);
-          return evaluated;
+          return { ...evaluated, rows: [{ person: { id: 'person-test' }, score: null, rank: null, eligibleCount: 0, heldCount: 0, contributions: [] }] };
         },
       });
       expect(release.verification.verifierId).toBe('test-only-verifier');

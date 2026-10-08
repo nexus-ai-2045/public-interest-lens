@@ -38,6 +38,8 @@ test('指定版がない・違う版が返る場合は自動置換しません',
 test('保存済み実評価の引用・保留・公式リンクをPCとスマホで確認します', async ({ page }, info) => {
   test.skip(!process.env.REAL_RELEASE_SMOKE_INPUT, '非公開保存版を指定した場合に実行します');
   const release = JSON.parse(await readFile(process.env.REAL_RELEASE_SMOKE_INPUT!, 'utf8'));
+  const catalog = process.env.POLICY_CATALOG_SMOKE_INPUT ? JSON.parse(await readFile(process.env.POLICY_CATALOG_SMOKE_INPUT, 'utf8')) : null;
+  if (catalog) await page.route('**/__local__/policy-context**', r => r.fulfill({ json: catalog }));
   const matched = release.verification.resolvedPersonIds[0] ?? release.input.evidenceEvaluation.people[0]?.id;
   test.skip(!matched, '人物が未収録の版は人物詳細を確認できません');
   const person = release.input.evidenceEvaluation.people.find((p: { id: string }) => p.id === matched);
@@ -55,6 +57,14 @@ test('保存済み実評価の引用・保留・公式リンクをPCとスマホ
     await detail.locator('summary').first().click();
     const action = release.input.evidenceEvaluation.actions.find((a: { personId: string }) => a.personId === person.id);
     const material = release.input.evidenceEvaluation.materials.find((m: { id: string }) => m.id === action.quotes[0].materialId);
+    if (catalog) {
+      const policy = catalog.policies.find((p: { policyId: string }) => p.policyId === action.policyId);
+      await expect(detail.locator('summary').first()).toHaveText(policy.formalTitle);
+      await expect(detail.getByText(policy.summary, { exact: true })).toBeVisible();
+      await expect(detail.getByRole('link', { name: '国会の議案説明を読む' })).toHaveAttribute('href', policy.officialUrl);
+      await expect(page.getByText(/vote-observation-/)).toHaveCount(0);
+      await expect(detail.getByText(action.description, { exact: true })).not.toBeVisible();
+    }
     await expect(detail.getByRole('link', { name: '原資料を開く' }).first()).toHaveAttribute('href', material.url);
     await expect(detail.getByRole('heading', { name: '保留理由', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

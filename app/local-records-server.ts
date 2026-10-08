@@ -1,8 +1,27 @@
 import { open, realpath } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { resolve, relative, isAbsolute, dirname, basename } from 'node:path';
 import type { Plugin } from 'vite';
 import { parseLocalInspection } from './src/local-inspection';
 import { parseRealRelease } from './src/real-release-view';
+import { parsePolicyCatalog } from './src/policy-context';
+import { parseEconomicSnapshot } from './src/economy-view';
+
+export async function readLocalPolicyContext(root: string, expectedRelease: string): Promise<string> {
+  const text = await readPrivateText(resolve(root, 'current.json'), root);
+  const current = JSON.parse(text);
+  if (current?.schemaVersion === 'policy-context/v1') {
+    const parsed = parsePolicyCatalog(text, expectedRelease);
+    if (containsPrivateData(parsed)) throw new Error('PrivateFieldError');
+    return JSON.stringify(parsed);
+  }
+  if (current?.schemaVersion !== 'policy-catalog-current/v1' || current.releaseId !== expectedRelease || !/^[a-f0-9]{64}$/.test(current.generation) || current.contextPath !== `generations/${current.generation}/context.json` || current.databasePath !== `generations/${current.generation}/catalog.sqlite3` || !/^[a-f0-9]{64}$/.test(current.contextSha256)) throw new Error('InvalidCatalogGeneration');
+  const context = await readPrivateText(resolve(root, current.contextPath), root);
+  if (createHash('sha256').update(context).digest('hex') !== current.contextSha256) throw new Error('CatalogHashMismatch');
+  const parsed = parsePolicyCatalog(context, expectedRelease);
+  if (containsPrivateData(parsed)) throw new Error('PrivateFieldError');
+  return JSON.stringify(parsed);
+}
 
 const MAX_BYTES = 5_000_000;
 /** dev serverだけの固定入口。原本保存パス・分析ログ・評価入力を返しません。 */
@@ -82,7 +101,9 @@ export function localRecordsPlugin(): Plugin {
     }
     server.middlewares.use(async (req, res, next) => {
       const evaluation = req.url === '/__local__/evaluation' || req.url?.startsWith('/__local__/evaluation?');
-      if (req.url !== '/__local__/records' && !evaluation) return next();
+      const policyContext = req.url?.startsWith('/__local__/policy-context?');
+      const economy = req.url === '/__local__/economy' || req.url?.startsWith('/__local__/economy?');
+      if (req.url !== '/__local__/records' && !evaluation && !policyContext && !economy) return next();
       res.setHeader('Cache-Control', 'no-store'); res.setHeader('X-Content-Type-Options', 'nosniff');
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       if (req.method !== 'GET' || !localRequestAllowed(req.socket.remoteAddress, req.headers.host,
@@ -91,7 +112,22 @@ export function localRecordsPlugin(): Plugin {
         res.statusCode = 403; res.end('{"error":"local_access_only"}'); return;
       }
       try {
-        if (evaluation) {
+        if (economy) {
+          const url = new URL(req.url!, 'http://local.invalid');
+          const edition = url.searchParams.get('edition') ?? '';
+          if ([...url.searchParams.keys()].some(key => key !== 'edition') || url.searchParams.getAll('edition').length > 1 || (edition && !/^[a-f0-9]{64}$/.test(edition))) throw new Error('InvalidEdition');
+          const root = await configuredPrivateRoot(resolve(repo, '.local/economy'));
+          const snapshot = parseEconomicSnapshot(await readPrivateText(resolve(root, edition ? `releases/${edition}.json` : 'current.json'), root));
+          if (edition && snapshot.snapshotId !== edition) throw new Error('EditionMismatch');
+          if (containsPrivateData(snapshot)) throw new Error('PrivateFieldError');
+          res.end(JSON.stringify(snapshot));
+        } else if (policyContext) {
+          const url = new URL(req.url!, 'http://local.invalid');
+          const releaseId = url.searchParams.get('release') ?? '';
+          if ([...url.searchParams.keys()].some(k => k !== 'release') || url.searchParams.getAll('release').length !== 1 || !/^[a-f0-9]{64}$/.test(releaseId)) throw new Error('InvalidRelease');
+          const root = await configuredPrivateRoot(resolve(repo, '.local/policy-catalog'));
+          res.end(await readLocalPolicyContext(root, releaseId));
+        } else if (evaluation) {
           const url = new URL(req.url!, 'http://local.invalid');
           const releaseId = url.searchParams.get('release') ?? '';
           if ([...url.searchParams.keys()].some(k => k !== 'release') || url.searchParams.getAll('release').length > 1 || (releaseId && !/^[a-f0-9]{64}$/.test(releaseId))) throw new Error('InvalidRelease');
