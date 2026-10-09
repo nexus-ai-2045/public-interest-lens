@@ -93,6 +93,8 @@ def robot_policy(outcome, material_root):
             robots = RobotFileParser()
             robots.parse(text.splitlines())
             robots_status = "parsed"
+        elif receipt["status"] in (404, 410):
+            robots_status = "no_rules"
         elif (
             receipt["status"] not in (200, 404, 410)
             and not 300 <= receipt["status"] < 400
@@ -105,6 +107,16 @@ def robot_policy(outcome, material_root):
         robots.parse(["User-agent: *", "Disallow: /"])
         robots_status = "unavailable_stop"
     return robots, robots_status
+
+
+def _robots_allow(robots, robots_status, url):
+    if robots_status == "no_rules":
+        return True
+    return (
+        robots_status == "parsed"
+        and robots is not None
+        and robots.can_fetch("public-interest-lens", url)
+    )
 
 
 def collect_plan(
@@ -175,10 +187,8 @@ def collect_plan(
             ):
                 robots, robots_status = robot_policy(old, material_root)
         for item in group:
-            if item.get("kind") != "robots" and (
-                robots_status != "parsed"
-                or robots is None
-                or not robots.can_fetch("public-interest-lens", item["url"])
+            if item.get("kind") != "robots" and not _robots_allow(
+                robots, robots_status, item["url"]
             ):
                 outcome = {
                     **item,

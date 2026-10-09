@@ -1,11 +1,33 @@
 import { open, realpath } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { resolve, relative, isAbsolute, dirname, basename } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
 import { parseLocalInspection } from './src/local-inspection';
 import { parseRealRelease } from './src/real-release-view';
 import { parsePolicyCatalog } from './src/policy-context';
-import { parseEconomicSnapshot } from './src/economy-view';
+import { parseEconomicSnapshot, type EconomicSnapshot } from './src/economy-view';
+
+/** 生成時と同じ Python の正規化で本文を再計算し、自己申告の版IDだけでは通しません。 */
+export function economicSnapshotDigest(text: string): string {
+  const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+  const code = 'import json,sys\nfrom scripts.build_economy_snapshot import snapshot_digest\nprint(snapshot_digest(json.load(sys.stdin)))';
+  let result = spawnSync('python3', ['-c', code], { input: text, cwd: repoRoot, encoding: 'utf8' });
+  if (result.error) result = spawnSync('python', ['-c', code], { input: text, cwd: repoRoot, encoding: 'utf8' });
+  const digest = result.stdout?.trim() ?? '';
+  if (result.status !== 0 || !/^[a-f0-9]{64}$/.test(digest)) throw new Error('EditionMismatch');
+  return digest;
+}
+
+export async function readLocalEconomy(root: string, edition = ''): Promise<string> {
+  const text = await readPrivateText(resolve(root, edition ? `releases/${edition}.json` : 'current.json'), root);
+  const snapshot = parseEconomicSnapshot(text);
+  if (containsPrivateData(snapshot)) throw new Error('PrivateFieldError');
+  const digest = economicSnapshotDigest(text);
+  if (snapshot.snapshotId !== digest || (edition && edition !== digest)) throw new Error('EditionMismatch');
+  return JSON.stringify(snapshot satisfies EconomicSnapshot);
+}
 
 export async function readLocalPolicyContext(root: string, expectedRelease: string): Promise<string> {
   const text = await readPrivateText(resolve(root, 'current.json'), root);
@@ -117,10 +139,7 @@ export function localRecordsPlugin(): Plugin {
           const edition = url.searchParams.get('edition') ?? '';
           if ([...url.searchParams.keys()].some(key => key !== 'edition') || url.searchParams.getAll('edition').length > 1 || (edition && !/^[a-f0-9]{64}$/.test(edition))) throw new Error('InvalidEdition');
           const root = await configuredPrivateRoot(resolve(repo, '.local/economy'));
-          const snapshot = parseEconomicSnapshot(await readPrivateText(resolve(root, edition ? `releases/${edition}.json` : 'current.json'), root));
-          if (edition && snapshot.snapshotId !== edition) throw new Error('EditionMismatch');
-          if (containsPrivateData(snapshot)) throw new Error('PrivateFieldError');
-          res.end(JSON.stringify(snapshot));
+          res.end(await readLocalEconomy(root, edition));
         } else if (policyContext) {
           const url = new URL(req.url!, 'http://local.invalid');
           const releaseId = url.searchParams.get('release') ?? '';

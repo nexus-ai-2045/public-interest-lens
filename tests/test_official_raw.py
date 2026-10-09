@@ -278,6 +278,24 @@ class RawTests(unittest.TestCase):
         self.assertEqual(result["document_candidates_saved"], 1)
         self.assertEqual(result["outcomes"][-1]["robots_status"], "parsed")
 
+    def test_absent_robots_allows_fixed_plan_and_html_still_stops(self):
+        for status, body, run in ((404, b"missing", "plan-404"), (410, b"gone", "plan-410")):
+            with self.subTest(status=status):
+                path = self.plan(run=run)
+                robots = self.capture(Opener([Response(body, status)]), task=f"robots-{status}", url="https://kokkai.ndl.go.jp/robots.txt")
+                document = self.capture(Opener([Response(b"{}")]), task=f"body-{status}")
+                with patch("scripts.collect_official_raw.capture_url", side_effect=[robots, document]) as fetch:
+                    result = collect_plan(path, material_root=self.material)
+                self.assertEqual(fetch.call_count, 2)
+                self.assertEqual(result["outcomes"][0]["robots_status"], "no_rules")
+                self.assertEqual(result["outcomes"][-1]["status"], "saved")
+        path = self.plan(run="plan-html")
+        robots = self.capture(Opener([Response(b"<html>User-agent: *</html>")]), task="robots-html", url="https://kokkai.ndl.go.jp/robots.txt")
+        with patch("scripts.collect_official_raw.capture_url", return_value=robots) as fetch:
+            result = collect_plan(path, material_root=self.material)
+        self.assertEqual(fetch.call_count, 1)
+        self.assertEqual(next(item for item in result["outcomes"] if item["kind"] == "document")["status"], "robots_disallowed")
+
     def test_host_lock_rejects_another_writer(self):
         with host_lock(self.control, "kokkai.ndl.go.jp"):
             with self.assertRaises(OSError), host_lock(

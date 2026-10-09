@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 // Node専用の開発serverをブラウザappの型設定へ取り込まない既存の検査方式です。
 const serverUrl = new URL('../local-records-server.ts', import.meta.url).href;
-const { localRecordsPlugin, localRequestAllowed, readLocalRecords, readLocalEvaluation, readLocalPolicyContext } = await import(/* @vite-ignore */ serverUrl);
+const { localRecordsPlugin, localRequestAllowed, readLocalRecords, readLocalEvaluation, readLocalPolicyContext, readLocalEconomy, economicSnapshotDigest } = await import(/* @vite-ignore */ serverUrl);
 import { actionRevision } from './evidence-evaluation';
 const fsModule = 'node:fs/promises', osModule = 'node:os', pathModule = 'node:path';
 const { mkdtemp, mkdir, writeFile, rm } = await import(/* @vite-ignore */ fsModule);
@@ -55,6 +55,22 @@ describe('実資料の開発時限定入口', () => {
         await writeFile(file, JSON.stringify({ ...mixed, releaseId: await actionRevision(mixed) }));
         await expect(readLocalEvaluation(file, root)).rejects.toThrow('PrivateField');
       }
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+  it('統計版は本文から再計算した識別子だけを認めます', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'local-economy-'));
+    try {
+      const body = { schemaVersion: 'economic-series/v1', observedAt: '2026-10-07T00:00:00+00:00', provider: 'World Bank WDI', country: 'JPN', unavailable: ['労働生産性'], note: '推移だけで原因を判定しません。', series: [{ id: 'real_gdp', label: '実質GDP', unit: '円', basis: '単一系列', sourceUrl: 'https://api.worldbank.org/v2/country/JPN/indicator/NY.GDP.MKTP.KN?format=json', points: [{ year: 2020, value: 10 }, { year: 2021, value: null }] }] };
+      const text = JSON.stringify(body).replace('"value":10', '"value":10.0');
+      const snapshotId = economicSnapshotDigest(text);
+      const release = text.replace('"note":', `"snapshotId":"${snapshotId}","note":`);
+      await mkdir(join(root, 'releases'));
+      await writeFile(join(root, 'releases', `${snapshotId}.json`), release);
+      await writeFile(join(root, 'current.json'), release);
+      expect(JSON.parse(await readLocalEconomy(root, snapshotId)).series[0].points[0].value).toBe(10);
+      await writeFile(join(root, 'releases', `${snapshotId}.json`), release.replace('"value":10.0', '"value":11'));
+      await expect(readLocalEconomy(root, snapshotId)).rejects.toThrow('EditionMismatch');
+      await expect(readLocalEconomy(root, 'b'.repeat(64))).rejects.toThrow();
     } finally { await rm(root, { recursive: true, force: true }); }
   });
   it('loopback同一originだけを許可します', () => {
