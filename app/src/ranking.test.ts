@@ -6,6 +6,13 @@ const fixture = () => structuredClone(rankingDataset);
 const defaults: RankingOptions = { domain: 'economy', direction: 'harm', period: 4, asOf: '2026-09-24', weights: { economy: 70, technology: 30 } };
 
 describe('行動から人物への評価契約', () => {
+  it('任意期間の終了当日を含み、翌日は含みません', () => {
+    const options = { ...defaults, period: 'custom' as const, dateFrom: '2024-01-01', dateTo: '2024-06-01' };
+    const policy = { ...fixture().policies[0], domain: 'economy' as const, direction: 'harm' as const };
+    const action = fixture().involvements[0];
+    expect(actionMatchesView({ ...action, actionDate: '2024-06-01' }, policy, options)).toBe(true);
+    expect(actionMatchesView({ ...action, actionDate: '2024-06-02' }, policy, options)).toBe(false);
+  });
   it('同政策・同日・同役割の別行動でも採用キーは一つで入力順に依存しない', () => {
     const data = fixture();
     const first = data.involvements.find(item => item.personId === 'fiction-a' && item.role === 'lead')!;

@@ -1,6 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { actionRevision, type EvidenceEvaluationInput } from './evidence-evaluation';
-import { availableRealRelease, createReleaseLoader, parseRealRelease, readRealRoute, realRouteSearch, REAL_RELEASE_MAX_BYTES, type RealRelease } from './real-release-view';
+import { actionRevision, actionIdentity, type EvidenceEvaluationInput } from './evidence-evaluation';
+import { availableRealRelease, createReleaseLoader, parseRealRelease, readRealRoute, realRouteSearch, REAL_RELEASE_MAX_BYTES, recordedIdentityCoverage, realActionHeading, type RealRelease } from './real-release-view';
+
+describe('実投票の利用者向け見出し', () => {
+  it('抽出ログではなく対象議案・日付・賛否を表示します', () => {
+    const action = { namespace: 'sangiin-plenary-vote/v1', policyId: '200-8', actionDate: '2019-11-29', position: 'for' as const, description: '2019-11-29原表抽出結果（HTML marker line=300; allPublishedRowsConfirmed=True）' };
+    expect(realActionHeading(action)).toBe('第200回国会・閣法第8号｜2019-11-29・参議院本会議で賛成');
+    expect(realActionHeading({ ...action, position: 'not_voted' })).toContain('投票なし');
+    expect(realActionHeading({ ...action, policyId: 'unknown' })).toContain('議案番号未確認');
+  });
+  it('他の行動の説明は勝手に投票へ変換しません', () => {
+    expect(realActionHeading({ namespace: 'other', policyId: 'p', actionDate: '2020-01-01', position: 'unknown', description: '資料に記録された行動です。' })).toBe('2020-01-01・資料に記録された行動です。');
+  });
+});
 
 async function fixture(): Promise<RealRelease> {
   // 架空の試験記録です。mode=realは読み取り契約の試験用で、実在人物の検証成功ではありません。
@@ -13,6 +25,38 @@ async function fixture(): Promise<RealRelease> {
 async function resign(release: RealRelease) { const { releaseId: _id, ...body } = release; release.releaseId = await actionRevision(body); return JSON.stringify(release); }
 
 describe('非公開実評価保存版の読み取り', () => {
+  it('照合件数を個人または団体の表示対象へ限定します', async () => {
+    const r = await fixture();
+    r.input.evidenceEvaluation.people.push({ id: 'org', name: '人工団体', actorType: 'organization' });
+    r.verification = { resolvedPersonIds: ['p1', 'org'] };
+    expect(recordedIdentityCoverage(r)).toEqual({ matched: 1, unresolved: 1 });
+    r.input.evidenceEvaluation.options.actorGroup = 'organizations';
+    expect(recordedIdentityCoverage(r)).toEqual({ matched: 1, unresolved: 0 });
+  });
+  it('同じ政策の異なる結果を保存して再読込できます', async () => {
+    const r = await fixture();
+    r.input.evidenceEvaluation.options.timeBasis = 'outcome';
+    const m = { id: 'source', url: 'https://www.sangiin.go.jp/test', originalHash: 'c'.repeat(64), contentHash: 'd'.repeat(64), observedAt: '2026-10-01T00:00:00Z', publishedAt: null };
+    r.input.evidenceEvaluation.materials = [m]; r.input.materialRefs = [{ id: m.id, originalHash: m.originalHash, selector: {} }];
+    for (const outcomeId of ['result-one', 'result-two']) {
+      const semantic = { namespace: 'fixture', sourceActionId: outcomeId, sourceActorId: 'p1', policyId: 'policy', personId: 'p1', policyVersion: 'v1', actionDate: '2024-01-01', role: 'vote' as const, position: 'for' as const, description: '人工の投票', outcomeId, quotes: [{ materialId: m.id, start: 0, end: 1, text: '票' }] };
+      const action = { ...semantic, actionId: await actionIdentity(semantic), revisionId: await actionRevision(semantic) };
+      r.input.evidenceEvaluation.actions.push(action);
+      r.result.rows[0].contributions.push({ policyId: 'policy', actionKey: action.actionId, actionDate: action.actionDate, role: action.role, score: .25, outcomeId });
+    }
+    Object.assign(r.result.rows[0], { score: .5, rank: 1, eligibleCount: 2 });
+    r.result.coverage = { inputActions: 2, assessedActions: 2, readableMaterials: 1 };
+    expect((await parseRealRelease(await resign(r))).result.rows[0].score).toBe(.5);
+    r.result.rows[0].contributions[1].outcomeId = 'result-one';
+    await expect(parseRealRelease(await resign(r))).rejects.toThrow();
+  });
+  it('団体だけの集計を保存し、個人を欠落扱いしません', async () => {
+    const r = await fixture();
+    r.input.evidenceEvaluation.options.actorGroup = 'organizations';
+    r.input.evidenceEvaluation.people.push({ id: 'org', name: '人工団体', actorType: 'organization' });
+    r.result.rows = [{ person: r.input.evidenceEvaluation.people[2], score: null, rank: null, eligibleCount: 0, heldCount: 0, contributions: [] }];
+    expect((await parseRealRelease(await resign(r))).result.rows).toHaveLength(1);
+  });
   it('正本pipelineが生成したwrapped wireをそのまま読みます', async () => {
     const fs = 'node:fs/promises', os = 'node:os', path = 'node:path';
     const { mkdtemp, rm } = await import(/* @vite-ignore */ fs);
@@ -83,6 +127,22 @@ describe('版と人物をURLへ束縛する入口', () => {
 });
 
 describe('非同期ファイル選択', () => {
+  it('指定された版以外を採用しません', async () => {
+    const accepted: RealRelease[] = [], errors: string[] = [];
+    const loader = createReleaseLoader(r => accepted.push(r), e => errors.push(e));
+    await loader.load({ size: 1, text: async () => JSON.stringify(await fixture()) }, 'b'.repeat(64));
+    expect(accepted).toEqual([]); expect(errors).toHaveLength(1);
+  });
+  it('保存照合記録と記載人数を分け、未知IDや重複を昇格しません', async () => {
+    const r = await fixture();
+    expect(recordedIdentityCoverage(r)).toBeNull();
+    r.verification = { resolvedPersonIds: ['p1'] };
+    expect(recordedIdentityCoverage(r)).toEqual({ matched: 1, unresolved: 1 });
+    r.verification = { resolvedPersonIds: ['p1', 'p1'] };
+    expect(recordedIdentityCoverage(r)).toBeNull();
+    r.verification = { resolvedPersonIds: ['unknown'] };
+    expect(recordedIdentityCoverage(r)).toBeNull();
+  });
   it('連続選択は最後の結果だけを採用します', async () => {
     const accepted: RealRelease[] = []; const errors: string[] = [];
     const loader = createReleaseLoader(r => accepted.push(r), e => errors.push(e));

@@ -1,7 +1,14 @@
-import { actionRevision, evaluateEvidence, type EvidenceEvaluationInput, type EvidenceEvaluationResult } from './evidence-evaluation';
+import { actionRevision, evaluateEvidence, type EvidenceAction, type EvidenceEvaluationInput, type EvidenceEvaluationResult } from './evidence-evaluation';
 import { sumRounded } from './ranking';
 
 export const REAL_RELEASE_MAX_BYTES = 5_000_000;
+export function realActionHeading(action: Pick<EvidenceAction, 'namespace' | 'policyId' | 'actionDate' | 'position' | 'description'>): string {
+  if (action.namespace !== 'sangiin-plenary-vote/v1') return `${action.actionDate}・${action.description}`;
+  const bill = /^(\d+)-(\d+)$/.exec(action.policyId);
+  const label = bill ? `第${bill[1]}回国会・閣法第${Number(bill[2])}号` : '議案番号未確認';
+  const position = { for: '賛成', against: '反対', not_voted: '投票なし', unknown: '賛否不明' }[action.position];
+  return `${label}｜${action.actionDate}・参議院本会議で${position}`;
+}
 export type RealRelease = { schemaVersion: 'evidence-release/v1'; engineHash: string; releaseId: string; input: { evidenceEvaluation: EvidenceEvaluationInput; materialRefs: { id: string; originalHash: string; selector: Record<string, unknown> }[] }; result: EvidenceEvaluationResult; publicationStatus: 'requires_human_review'; verification?: unknown };
 export type RealRoute = { dataset: 'real' | 'fiction'; release: string; person: string };
 const hash = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{64}$/.test(v);
@@ -38,25 +45,27 @@ export async function parseRealRelease(text: string): Promise<RealRelease> {
   requireValid(r.mode === 'real' && r.publicationStatus === 'requires_human_review' && Array.isArray(r.rows) && Array.isArray(r.held), '保存された計算結果が不正です。');
   keys(r.coverage, ['inputActions', 'assessedActions', 'readableMaterials']);
   const people = new Map(input.people.map(p => [p.id, p]));
+  const selectedPeople = new Set(input.people.filter(person => input.options.actorGroup === 'organizations' ? person.actorType === 'organization' : person.actorType !== 'organization').map(person => person.id));
   const actions = new Map(input.actions.map(a => [a.actionId, a]));
   const seen = new Set<string>();
   for (const row of r.rows) {
     keys(row, ['person', 'score', 'rank', 'eligibleCount', 'heldCount', 'contributions']);
-    requireValid(object(row.person) && people.has(row.person.id) && !seen.has(row.person.id), '人物の参照が不正です。');
+    requireValid(object(row.person) && selectedPeople.has(row.person.id) && !seen.has(row.person.id), '人物の参照が不正です。');
     requireValid(await actionRevision(row.person) === await actionRevision(people.get(row.person.id)), '人物の内容が一致しません。');
     seen.add(row.person.id);
     requireValid((row.score === null || score(row.score)) && (row.rank === null || (count(row.rank) && row.rank > 0))
       && (row.score === null) === (row.rank === null) && count(row.eligibleCount) && count(row.heldCount) && Array.isArray(row.contributions), '点数・順位が不正です。');
     const policies = new Set<string>();
     for (const c of row.contributions) {
-      keys(c, ['policyId', 'actionKey', 'actionDate', 'role', 'score']);
+      keys(c, ['policyId', 'actionKey', 'actionDate', 'role', 'score', 'outcomeId']);
       const a = actions.get(c.actionKey);
-      requireValid(a && a.personId === row.person.id && a.policyId === c.policyId && a.actionDate === c.actionDate && a.role === c.role && score(c.score) && !policies.has(c.policyId), '計算内訳の行動参照が不正です。');
-      policies.add(c.policyId);
+      const resultKey = input.options.timeBasis === 'outcome' ? c.outcomeId : c.policyId;
+      requireValid(typeof resultKey === 'string' && Boolean(resultKey) && a && (input.options.timeBasis !== 'outcome' || a.outcomeId === c.outcomeId) && a.personId === row.person.id && a.policyId === c.policyId && a.actionDate === c.actionDate && a.role === c.role && score(c.score) && !policies.has(resultKey), '計算内訳の行動参照が不正です。');
+      policies.add(resultKey!);
     }
     requireValid(row.eligibleCount === row.contributions.length && row.score === sumRounded(row.contributions.map(c => c.score)), '保存点数と内訳が一致しません。');
   }
-  requireValid(seen.size === people.size, '人物の計算結果が欠落しています。');
+  requireValid(seen.size === selectedPeople.size, '人物の計算結果が欠落しています。');
   for (const h of r.held) {
     keys(h, ['personId', 'policyId', 'actionId', 'reason']);
     requireValid(typeof h.reason === 'string' && h.reason.trim() && (!h.personId || people.has(h.personId)) && (!h.actionId || actions.has(h.actionId))
@@ -71,7 +80,7 @@ export async function parseRealRelease(text: string): Promise<RealRelease> {
 export function readRealRoute(search: string, pathname = ''): RealRoute {
   const url = new URL(search.startsWith('/') ? search : `${pathname || '/'}${search}`, 'https://local.invalid');
   const p = url.searchParams;
-  return { dataset: url.pathname === '/evaluation' || p.get('dataset') === 'real' ? 'real' : 'fiction', release: p.get('release') ?? '', person: p.get('realPerson') ?? '' };
+  return { dataset: ['/evaluation', '/policies', '/actors'].includes(url.pathname) || p.get('dataset') === 'real' ? 'real' : 'fiction', release: p.get('release') ?? '', person: p.get('realPerson') ?? '' };
 }
 export function realRouteLocation(route: RealRoute): string {
   if (route.dataset !== 'real') return '/ranking';
@@ -87,12 +96,25 @@ export function realRouteSearch(route: RealRoute): string {
 }
 export const availableRealRelease = (route: RealRoute, release: RealRelease | null): RealRelease | null => route.dataset === 'real' && release && route.release === release.releaseId ? release : null;
 
+/** 保存された照合記録の件数です。ブラウザで再検証した件数ではありません。 */
+export function recordedIdentityCoverage(release: RealRelease): { matched: number; unresolved: number } | null {
+  const verification = release.verification;
+  if (!object(verification) || !Array.isArray(verification.resolvedPersonIds)) return null;
+  const input = release.input.evidenceEvaluation;
+  const people = new Set(input.people.map(p => p.id));
+  const ids = verification.resolvedPersonIds;
+  if (ids.some(id => typeof id !== 'string' || !people.has(id)) || new Set(ids).size !== ids.length) return null;
+  const selected = new Set(input.people.filter(p => input.options.actorGroup === 'organizations' ? p.actorType === 'organization' : p.actorType !== 'organization').map(p => p.id));
+  const matched = ids.filter(id => selected.has(id)).length;
+  return { matched, unresolved: selected.size - matched };
+}
+
 /** 非同期読込の最後の選択だけを採用し、不正入力では前正常版を保ちます。 */
 export function createReleaseLoader(onValid: (release: RealRelease) => void, onError: (message: string) => void) {
   let request = 0;
-  return { cancel: () => { request++; }, load: async (file: { size: number; text: () => Promise<string> }) => {
+  return { cancel: () => { request++; }, load: async (file: { size: number; text: () => Promise<string> }, expectedRelease = '') => {
     const id = ++request;
-    try { requireValid(file.size <= REAL_RELEASE_MAX_BYTES, 'ファイルは5MB以下にしてください。'); const release = await parseRealRelease(await file.text()); if (id === request) onValid(release); }
+    try { requireValid(file.size <= REAL_RELEASE_MAX_BYTES, 'ファイルは5MB以下にしてください。'); const release = await parseRealRelease(await file.text()); requireValid(!expectedRelease || release.releaseId === expectedRelease, '指定版と一致しません。'); if (id === request) onValid(release); }
     catch { if (id === request) onError('実評価版を読み取れませんでした。形式・ハッシュ・参照を確認してください。直前の正常版は保持しています。'); }
   } };
 }
