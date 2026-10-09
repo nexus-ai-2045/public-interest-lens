@@ -12,6 +12,11 @@
 
 実データの配布には、リポジトリの履歴へ更新ごとのバイナリを追加する代わりに、同じリポジトリのリリース添付を第一候補にします。公開用の版には、スキーマ版、入力原本の照合値、生成コードのコミット、対象範囲、件数、ライセンス、既知欠落を対応付けます。リリースや外部ストレージの作成は、この方針の記載だけでは実行しません。
 
+## 公開配布版（点数なし）
+
+`data/distribution/` は、非公開の `.local` が無い環境でもページが読める派生物です。世界銀行の`World Development Indicators`（`CC BY 4.0`）と、金融庁サイトの短い引用（公共データ利用規約第1.0版、出典付き）だけを入れます。私的な原本パス、実在人物の点数、`GDP`損失額、責任割合は置きません。再生成は `python -m scripts.build_public_distribution --input-root data/distribution/sources/world-bank --case data/distribution/case-source.json --output-root data/distribution/generated --public-dir app/public/distribution` です。指定した版のファイルが無いときは現在版へ切り替えません。
+
+
 ## 公開してはいけないもの
 
 - `policy_originals`の保存パスなど、私的なファイル位置。

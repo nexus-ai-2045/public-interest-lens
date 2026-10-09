@@ -7,6 +7,7 @@ import { RealRecordsPage } from './RealRecordsPage';
 import { parsePolicyCatalog, type PolicyCatalog } from './policy-context';
 import { EconomyPage } from './EconomyPage';
 import { PoliciesPage } from './PoliciesPage';
+import { ActorsPage } from './CaseChain';
 
 function Quotes({ quotes, release }: { quotes: QuoteRef[]; release: RealRelease }) {
   return <ul className="real-quotes">{quotes.map((q, index) => {
@@ -83,6 +84,7 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   const navigate = useMemo(() => (next: RealRoute) => { window.history.pushState(null, '', realRouteLocation(next)); setRoute(next); }, []);
   useEffect(() => { const restore = () => setRoute(readRealRoute(window.location.search, window.location.pathname)); window.addEventListener('popstate', restore); return () => window.removeEventListener('popstate', restore); }, []);
   if (window.location.pathname === '/policies') return <PoliciesPage />;
+  if (window.location.pathname === '/actors') return <ActorsPage />;
   if (route.dataset === 'real') return <RealEvaluationPanel route={route} navigate={navigate} />;
   if (window.location.pathname === '/history' || (window.location.pathname === '/' && !window.location.search)) return <EconomyPage />;
   if (window.location.pathname === '/records' || (window.location.pathname === '/' && !window.location.search)) return <RealRecordsPage onDemo={() => navigate({ dataset: 'fiction', release: '', person: '' })} onEvaluation={() => navigate({ dataset: 'real', release: '', person: '' })} />;

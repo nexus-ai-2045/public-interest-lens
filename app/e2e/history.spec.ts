@@ -30,6 +30,7 @@ test('未知の指標と取得失敗を架空値へ置き換えません', async
   await page.goto('/history?metric=unknown');
   await expect(page.getByRole('alert')).toContainText('指定された指標は収録されていません');
   await page.route('**/__local__/economy', route => route.fulfill({ status: 404 }));
+  await page.route('**/distribution/**', route => route.abort());
   await page.reload();
   await expect(page.getByRole('alert')).toContainText('長期統計を読み込めませんでした');
 });
