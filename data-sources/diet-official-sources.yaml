@@ -1,8 +1,8 @@
 schema_version: public-interest-lens-source-registry/v1
-recorded_at: 2026-08-06T19:59:58+09:00
+recorded_at: 2026-10-09T18:02:40+09:00
 recorded_by: codex
-observed_at: 2026-08-06T19:59:58+09:00
-scope: 国会・法令・図書館の公式データ取得候補
+observed_at: unknown
+scope: 国会・法令・図書館・財政・公的政治活動の公式データ取得候補。個別取得・網羅・現在の可用性は未確認
 event_time: unknown
 sources:
   - id: cao_sna
@@ -97,11 +97,20 @@ sources:
   - id: sangiin_library
     name: 参議院 ライブラリー
     actor: 参議院
-    canonical_url: https://www.sangiin.go.jp/japanese/kaiki/index.html
+    canonical_url: https://www.sangiin.go.jp/jpn/gikai/library.html
     acquisition: html_pdf_incremental
     entities: [bill, vote, question, answer, petition, resolution, committee, document]
     priority: P1
     status: planned
+    index_urls:
+      - https://www.sangiin.go.jp/jpn/gikai/gian_index.html
+      - https://www.sangiin.go.jp/jpn/gikai/touhyou_index.html
+      - https://www.sangiin.go.jp/jpn/gikai/syuisyo_index.html
+      - https://www.sangiin.go.jp/jpn/gikai/seigan_index.html
+      - https://www.sangiin.go.jp/jpn/gikai/giin_index.html
+      - https://www.sangiin.go.jp/jpn/gikai/koho_index.html
+      - https://www.sangiin.go.jp/japanese/joho1/kaigirok/kaigirok.htm
+      - https://www.sangiin.go.jp/
 
   - id: egov_law_api_v2
     name: e-Gov法令API Version 2
@@ -130,3 +139,62 @@ sources:
     entities: [bibliographic_record, holding, digital_access]
     priority: P2
     status: planned
+
+  - id: official_gazette
+    name: 官報
+    actor: 官報発行・公開機関
+    canonical_url: https://www.kanpo.go.jp/
+    acquisition: html_pdf_incremental
+    entities: [gazette, law_promulgation, public_notice]
+    priority: P1
+    status: planned
+    limitation: 公開区分と無料期間を照合する。有料契約や認証変更は行わない
+
+  - id: national_budget_accounts
+    name: 国の予算と決算
+    actor: 財務省
+    canonical_url: https://www.mof.go.jp/policy/budget/
+    acquisition: html_pdf_incremental
+    entities: [budget, supplementary_budget, settlement, fiscal_report]
+    priority: P1
+    status: planned
+
+  - id: administrative_project_review
+    name: 行政事業レビュー見える化サイト
+    actor: 内閣官房行政改革推進本部
+    canonical_url: https://rssystem.go.jp/
+    acquisition: public_index_file_incremental
+    entities: [review_sheet, budget_project, public_review_file]
+    priority: P1
+    status: planned
+
+  - id: public_political_funds
+    name: 公開政治資金資料
+    actor: 総務省および各都道府県選挙管理委員会
+    canonical_url: https://www.soumu.go.jp/senkyo/seiji_s/seijishikin/
+    acquisition: public_index_file_incremental
+    entities: [political_funds_report, public_report_index]
+    priority: P1
+    status: planned
+    limitation: 選管の索引と公開条件を固定する。第三者の住所・電話を人物検索用へ投影しない
+
+  - id: public_legislator_assets
+    name: 公開議員資産資料と閲覧案内
+    actor: 衆議院および参議院
+    canonical_url: https://www.shugiin.go.jp/internet/itdb_annai.nsf/html/statics/tetuzuki/sisan.htm
+    acquisition: public_index_file_incremental
+    entities: [asset_disclosure_index, public_asset_report]
+    priority: P1
+    status: planned
+    index_urls: [https://www.sangiin.go.jp/jpn/annai/shisan/shisan.html]
+    limitation: 閲覧案内と本文を区別する。現地閲覧のみの本文をネット取得済みに数えない
+
+  - id: election_official_candidates
+    name: 公式選挙名簿と公報と結果
+    actor: 各選挙管理委員会
+    canonical_url: https://www.soumu.go.jp/senkyo/
+    acquisition: public_index_file_incremental
+    entities: [election, candidate_list, election_bulletin, election_result]
+    priority: P2
+    status: planned
+    limitation: 対象選挙と選管索引を固定する。名簿取得と人物統合の完了を分ける
