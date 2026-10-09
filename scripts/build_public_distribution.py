@@ -216,6 +216,29 @@ def _atomic_text(path: Path, text: str) -> None:
 
 def _write_database(path: Path, schema: str, release_id: str, snapshot: dict, case: dict, published: dict) -> None:
     if path.exists():
+        connection = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True)
+        try:
+            if connection.execute("PRAGMA integrity_check").fetchall() != [("ok",)] or connection.execute("PRAGMA foreign_key_check").fetchall():
+                raise ValueError("配布データベースの整合性が不正です")
+            if connection.execute("SELECT releaseId, schemaVersion FROM distribution_releases").fetchall() != [(release_id, "public-distribution/v1")]:
+                raise ValueError("配布データベースの版が一致しません")
+            expected = sqlite3.connect(":memory:")
+            try:
+                _populate_database(expected, schema, release_id, snapshot, case, published)
+                actual_schema = connection.execute("SELECT name, sql FROM sqlite_master WHERE type='table' ORDER BY name").fetchall()
+                expected_schema = expected.execute("SELECT name, sql FROM sqlite_master WHERE type='table' ORDER BY name").fetchall()
+                if actual_schema != expected_schema:
+                    raise ValueError("配布データベースの構造が一致しません")
+                for table, _ in expected_schema:
+                    columns = len(expected.execute(f'PRAGMA table_info("{table}")').fetchall())
+                    ordering = ", ".join(str(index) for index in range(1, columns + 1))
+                    query = f'SELECT * FROM "{table}" ORDER BY {ordering}'
+                    if connection.execute(query).fetchall() != expected.execute(query).fetchall():
+                        raise ValueError("配布データベースの内容が一致しません")
+            finally:
+                expected.close()
+        finally:
+            connection.close()
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     stage = path.with_suffix(".pending")
@@ -223,6 +246,14 @@ def _write_database(path: Path, schema: str, release_id: str, snapshot: dict, ca
         stage.unlink()
     connection = sqlite3.connect(stage)
     try:
+        _populate_database(connection, schema, release_id, snapshot, case, published)
+    finally:
+        connection.close()
+    os.replace(stage, path)
+
+
+def _populate_database(connection: sqlite3.Connection, schema: str, release_id: str, snapshot: dict, case: dict, published: dict) -> None:
+    with connection:
         connection.execute("PRAGMA foreign_keys = ON")
         connection.executescript(schema)
         connection.execute("INSERT INTO distribution_releases VALUES (?, ?)", (release_id, "public-distribution/v1"))
@@ -272,10 +303,6 @@ def _write_database(path: Path, schema: str, release_id: str, snapshot: dict, ca
             "INSERT INTO series_case_links VALUES (?, ?, ?, ?, ?)",
             (release_id, case["caseId"], link["seriesId"], link["relation"], link["note"]),
         )
-        connection.commit()
-    finally:
-        connection.close()
-    os.replace(stage, path)
 
 
 def build_public_distribution(input_root: Path, case_path: Path, output_root: Path, public_dir: Path | None = None) -> dict:
@@ -306,7 +333,7 @@ def build_public_distribution(input_root: Path, case_path: Path, output_root: Pa
     else:
         _atomic_text(economy_path, economy_text)
         _atomic_text(case_file, case_text)
-        _write_database(generation / "catalog.sqlite3", schema, release_id, snapshot, case, published)
+    _write_database(generation / "catalog.sqlite3", schema, release_id, snapshot, case, published)
     manifest = {
         "schemaVersion": "public-distribution-current/v1",
         "snapshotId": release_id,

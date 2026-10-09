@@ -3,6 +3,7 @@ import shutil
 import sqlite3
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from scripts.build_public_distribution import build_public_distribution, read_edition, select_years
@@ -16,6 +17,92 @@ WORLD_BANK = ROOT / "data" / "distribution" / "sources" / "world-bank"
 class PublicDistributionTests(unittest.TestCase):
     def _build(self, folder: Path, case: Path = CASE, source: Path = WORLD_BANK):
         return build_public_distribution(source, case, folder / "out")
+
+    def test_interrupted_database_build_recovers_before_publishing(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with patch("scripts.build_public_distribution._write_database", side_effect=RuntimeError("interrupted")):
+                with self.assertRaises(RuntimeError):
+                    self._build(root)
+            self.assertFalse((root / "out" / "current.json").exists())
+            manifest = self._build(root)
+            database_path = root / "out" / manifest["databasePath"]
+            self.assertTrue(database_path.is_file())
+            database = sqlite3.connect(database_path)
+            try:
+                self.assertEqual(database.execute("PRAGMA integrity_check").fetchone(), ("ok",))
+                self.assertEqual(database.execute("SELECT releaseId FROM distribution_releases").fetchone(), (manifest["snapshotId"],))
+            finally:
+                database.close()
+
+    def test_corrupt_database_stops_without_replacing_current(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            manifest = self._build(root)
+            current_path = root / "out" / "current.json"
+            current = current_path.read_bytes()
+            (root / "out" / manifest["databasePath"]).write_bytes(b"corrupt fixture")
+            with self.assertRaises((ValueError, sqlite3.DatabaseError)):
+                self._build(root)
+            self.assertEqual(current_path.read_bytes(), current)
+
+    def test_interrupted_new_release_preserves_previous_current(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            self._build(root)
+            current_path = root / "out" / "current.json"
+            current = current_path.read_bytes()
+            case = json.loads(CASE.read_text(encoding="utf-8"))
+            case["holdReason"] += "訂正後も未確定です。"
+            case_path = root / "corrected.json"
+            case_path.write_text(json.dumps(case, ensure_ascii=False), encoding="utf-8")
+            with patch("scripts.build_public_distribution._write_database", side_effect=RuntimeError("interrupted")):
+                with self.assertRaises(RuntimeError):
+                    self._build(root, case=case_path)
+            self.assertEqual(current_path.read_bytes(), current)
+            manifest = self._build(root, case=case_path)
+            self.assertTrue((root / "out" / manifest["databasePath"]).is_file())
+
+    def test_immutable_json_mismatch_still_rejects(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            manifest = self._build(root)
+            path = root / "out" / manifest["economyPath"]
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            payload["note"] = "異なる内容"
+            path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "一致しません"):
+                self._build(root)
+
+    def test_database_row_deletion_stops_without_replacing_current(self):
+        self._assert_database_row_change_rejected("DELETE FROM statistic_points")
+
+    def test_database_numeric_change_stops_without_replacing_current(self):
+        self._assert_database_row_change_rejected("UPDATE statistic_points SET value = value + 1 WHERE value IS NOT NULL")
+
+    def test_database_extra_row_stops_without_replacing_current(self):
+        self._assert_database_row_change_rejected("INSERT INTO statistic_points SELECT releaseId, seriesId, 1800, 1 FROM statistic_series LIMIT 1")
+
+    def _assert_database_row_change_rejected(self, statement):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            manifest = self._build(root)
+            current_path = root / "out" / "current.json"
+            current = current_path.read_bytes()
+            database_path = root / "out" / manifest["databasePath"]
+            database = sqlite3.connect(database_path)
+            try:
+                database.execute(statement)
+                database.commit()
+                self.assertEqual(database.execute("PRAGMA integrity_check").fetchone(), ("ok",))
+                self.assertEqual(database.execute("PRAGMA foreign_key_check").fetchall(), [])
+            finally:
+                database.close()
+            modified_database = database_path.read_bytes()
+            with self.assertRaisesRegex(ValueError, "内容が一致しません"):
+                self._build(root)
+            self.assertEqual(current_path.read_bytes(), current)
+            self.assertEqual(database_path.read_bytes(), modified_database)
 
     def test_periods_keep_gaps_and_do_not_zero_fill(self):
         points = [{"year": 2021, "value": 3}, {"year": 2023, "value": None}, {"year": 2025, "value": 4}]
@@ -107,8 +194,11 @@ class PublicDistributionTests(unittest.TestCase):
             self.assertIn(None, [point["value"] for point in real["points"]])
             self.assertNotIn(0, [point["value"] for point in real["points"] if point["value"] is None])
         committed = json.loads((ROOT / "data" / "distribution" / "generated" / "current.json").read_text(encoding="utf-8"))
-        rebuilt = build_public_distribution(WORLD_BANK, CASE, ROOT / "data" / "distribution" / "generated", ROOT / "app" / "public" / "distribution")
-        self.assertEqual(rebuilt["snapshotId"], committed["snapshotId"])
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            rebuilt = build_public_distribution(WORLD_BANK, CASE, root / "out", root / "public")
+            self.assertEqual(rebuilt["snapshotId"], committed["snapshotId"])
+            self.assertEqual(json.loads((root / "public" / "economy.json").read_text(encoding="utf-8"))["snapshotId"], committed["snapshotId"])
 
 
 if __name__ == "__main__":
