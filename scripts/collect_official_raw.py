@@ -79,9 +79,15 @@ def robot_policy(outcome, material_root):
     robots_status = "unconfirmed"
     if receipt:
         text = readback(receipt, material_root).decode("utf-8", errors="replace")
+        directives = [line.split("#", 1)[0].strip() for line in text.splitlines()]
+        has_user_agent = any(
+            line.partition(":")[0].strip().lower() == "user-agent"
+            and bool(line.partition(":")[2].strip())
+            for line in directives
+        )
         if (
             receipt["status"] == 200
-            and "user-agent:" in text.lower()
+            and has_user_agent
             and "<html" not in text.lower()
         ):
             robots = RobotFileParser()

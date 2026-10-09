@@ -25,6 +25,14 @@ async function fixture(): Promise<RealRelease> {
 async function resign(release: RealRelease) { const { releaseId: _id, ...body } = release; release.releaseId = await actionRevision(body); return JSON.stringify(release); }
 
 describe('非公開実評価保存版の読み取り', () => {
+  it('照合件数を個人または団体の表示対象へ限定します', async () => {
+    const r = await fixture();
+    r.input.evidenceEvaluation.people.push({ id: 'org', name: '人工団体', actorType: 'organization' });
+    r.verification = { resolvedPersonIds: ['p1', 'org'] };
+    expect(recordedIdentityCoverage(r)).toEqual({ matched: 1, unresolved: 1 });
+    r.input.evidenceEvaluation.options.actorGroup = 'organizations';
+    expect(recordedIdentityCoverage(r)).toEqual({ matched: 1, unresolved: 0 });
+  });
   it('同じ政策の異なる結果を保存して再読込できます', async () => {
     const r = await fixture();
     r.input.evidenceEvaluation.options.timeBasis = 'outcome';

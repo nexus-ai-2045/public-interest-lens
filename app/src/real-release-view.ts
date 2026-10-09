@@ -100,10 +100,13 @@ export const availableRealRelease = (route: RealRoute, release: RealRelease | nu
 export function recordedIdentityCoverage(release: RealRelease): { matched: number; unresolved: number } | null {
   const verification = release.verification;
   if (!object(verification) || !Array.isArray(verification.resolvedPersonIds)) return null;
-  const people = new Set(release.input.evidenceEvaluation.people.map(p => p.id));
+  const input = release.input.evidenceEvaluation;
+  const people = new Set(input.people.map(p => p.id));
   const ids = verification.resolvedPersonIds;
   if (ids.some(id => typeof id !== 'string' || !people.has(id)) || new Set(ids).size !== ids.length) return null;
-  return { matched: ids.length, unresolved: people.size - ids.length };
+  const selected = new Set(input.people.filter(p => input.options.actorGroup === 'organizations' ? p.actorType === 'organization' : p.actorType !== 'organization').map(p => p.id));
+  const matched = ids.filter(id => selected.has(id)).length;
+  return { matched, unresolved: selected.size - matched };
 }
 
 /** 非同期読込の最後の選択だけを採用し、不正入力では前正常版を保ちます。 */

@@ -150,6 +150,69 @@ class SangiinTests(unittest.TestCase):
         fetch.assert_not_called()
         self.assertEqual(result["failed_urls"], 1)
 
+    def test_unconfirmed_robots_stops_before_network(self):
+        for body, code in [
+            (b"<html>Maintenance</html>", 200),
+            (b"<html>User-agent: *\nDisallow: /</html>", 200),
+            (b"Disallow: /", 200),
+            (b"# User-agent: *\n# maintenance", 200),
+            (b"", 200),
+            (b"redirect", 302),
+        ]:
+            with self.subTest(body=body, code=code):
+                seed = self.seed(b'<a href="/jpn/gikai/other.html">next</a>')
+                data = json.loads(seed.read_text(encoding="utf-8"))
+                data["outcomes"][0]["receipt"] = self.receipt(
+                    "https://www.sangiin.go.jp/robots.txt", body, code
+                )
+                seed.write_text(json.dumps(data), encoding="utf-8")
+                response = self.receipt(
+                    "https://www.sangiin.go.jp/jpn/gikai/other.html", b"<p>material</p>"
+                )
+                with patch(
+                    "scripts.collect_sangiin_materials.capture_url", return_value=response
+                ) as fetch:
+                    with self.assertRaisesRegex(ValueError, "robots policy unconfirmed"):
+                        collect(seed, self.material, f"unknown-{self.seq}", 1)
+                fetch.assert_not_called()
+
+    def test_explicit_missing_robots_allows_collection(self):
+        for code in [404, 410]:
+            with self.subTest(code=code):
+                child = f"https://www.sangiin.go.jp/jpn/gikai/other-{code}.html"
+                seed = self.seed(f'<a href="{child}">next</a>'.encode())
+                data = json.loads(seed.read_text(encoding="utf-8"))
+                data["outcomes"][0]["receipt"] = self.receipt(
+                    "https://www.sangiin.go.jp/robots.txt", b"missing", code
+                )
+                seed.write_text(json.dumps(data), encoding="utf-8")
+                response = self.receipt(child, b"<p>material</p>")
+                with patch(
+                    "scripts.collect_sangiin_materials.capture_url", return_value=response
+                ) as fetch:
+                    result = collect(seed, self.material, f"missing-{code}", 1)
+                self.assertEqual(result["robots_status"], "no_rules")
+                self.assertEqual(result["failed_urls"], 0)
+                self.assertEqual(result["saved_urls"], 2)
+                fetch.assert_called_once()
+
+    def test_parsed_allowing_robots_collects_material(self):
+        child = "https://www.sangiin.go.jp/jpn/gikai/other.html"
+        seed = self.seed(f'<a href="{child}">next</a>'.encode())
+        data = json.loads(seed.read_text(encoding="utf-8"))
+        data["outcomes"][0]["receipt"] = self.receipt(
+            "https://www.sangiin.go.jp/robots.txt", b"User-agent: *\nDisallow:", 200
+        )
+        seed.write_text(json.dumps(data), encoding="utf-8")
+        response = self.receipt(child, b"<p>material</p>")
+        with patch(
+            "scripts.collect_sangiin_materials.capture_url", return_value=response
+        ) as fetch:
+            result = collect(seed, self.material, "parsed-allow", 1)
+        fetch.assert_called_once()
+        self.assertEqual(result["robots_status"], "parsed")
+        self.assertEqual(result["saved_urls"], 2)
+
     def test_http_limit_and_server_failure_block_resume(self):
         child = "https://www.sangiin.go.jp/jpn/gikai/data.html"
         for code in [403, 429, 503]:

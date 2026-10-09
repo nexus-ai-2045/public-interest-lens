@@ -17,6 +17,23 @@ const input = () => ({ materialRefs: [], evidenceEvaluation: { schemaVersion: 'e
 const evaluated = { mode: 'test-only', rows: [], held: [], coverage: { inputActions: 0, assessedActions: 0, readableMaterials: 0 }, publicationStatus: 'requires_human_review' };
 
 describe('非公開評価版の生成と復旧', () => {
+  it('結果評価の監査項目をレビュー資料へ保持し私的項目は拒否します', async () => {
+    const cryptoModule = 'node:crypto'; const { createHash } = await import(/* @vite-ignore */ cryptoModule);
+    const canonical = (v: unknown): string => Array.isArray(v) ? `[${v.map(canonical).join(',')}]` : v && typeof v === 'object' ? `{${Object.entries(v).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([k, x]) => `${JSON.stringify(k)}:${canonical(x)}`).join(',')}}` : JSON.stringify(v);
+    const real: any = input(); real.evidenceEvaluation.mode = 'real'; real.evidenceEvaluation.options.timeBasis = 'outcome';
+    real.evidenceEvaluation.people = [{ id: 'p', name: '人工人物' }];
+    real.evidenceEvaluation.materials = [{ id: 'm', url: 'https://www.sangiin.go.jp/test', originalHash: 'c'.repeat(64) }];
+    real.evidenceEvaluation.actions = [{ actionId: 'a', revisionId: 'r', personId: 'p', policyId: 'policy', policyVersion: 'v1', actionDate: '2000-01-01', role: 'vote', position: 'for', description: '人工記録', interventionId: 'intervention', outcomeId: 'outcome', quotes: [{ materialId: 'm', start: 0, end: 1, text: '票' }] }];
+    const audit = { outcomeId: 'outcome', observationFrom: '2025-01-01', observationTo: '2025-12-31', implementationStatus: 'implemented', evaluationKind: 'observed', evidenceMethod: 'contribution_analysis', scopeReason: '人工範囲', durationReason: '人工期間', magnitudeReason: '人工規模', evaluatedAt: '2026-09-01T00:00:00Z' };
+    real.evidenceEvaluation.assessments = [{ id: 's', policyId: 'policy', policyVersion: 'v1', position: 'for', domain: 'economy', direction: 'harm', impact: 1, rationale: '人工理由', counterEvidence: '人工反証', alternativeExplanation: '人工別要因', criterionVersion: 'test', analysisVersion: 'test', quotes: real.evidenceEvaluation.actions[0].quotes, ...audit }];
+    const body = { schemaVersion: 'evidence-release/v1', engineHash: 'a'.repeat(64), input: real, publicationStatus: 'requires_human_review', result: { ...evaluated, mode: 'real', rows: [{ person: real.evidenceEvaluation.people[0], score: null, rank: null, eligibleCount: 0, heldCount: 1, contributions: [] }], coverage: { inputActions: 1, assessedActions: 0, readableMaterials: 1 } } };
+    const signed = () => ({ ...body, releaseId: createHash('sha256').update(canonical(body)).digest('hex') });
+    const packet = pipeline.buildReviewPacket(signed());
+    expect(packet.actions[0]).toMatchObject({ interventionId: 'intervention', outcomeId: 'outcome' });
+    expect(packet.assessments[0]).toMatchObject(audit);
+    real.evidenceEvaluation.assessments[0].scopeReason = 'file:' + '/private';
+    expect(() => pipeline.buildReviewPacket(signed())).toThrow('非公開パス');
+  });
   it('hashを付け直した偽の検証receiptと得点も拒否します', async () => {
     const cryptoModule = 'node:crypto';
     const { createHash } = await import(/* @vite-ignore */ cryptoModule);

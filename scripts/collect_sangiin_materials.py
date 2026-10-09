@@ -205,6 +205,11 @@ def collect(
     if len(policy_rows) != 1:
         raise ValueError("one saved robots snapshot required")
     robots, policy_status = robot_policy(policy_rows[0], material_root)
+    if robots is None:
+        if policy_rows[0].get("receipt", {}).get("status") in {404, 410}:
+            policy_status = "no_rules"
+        else:
+            raise ValueError("robots policy unconfirmed; collection stopped")
     state_path = output / "checkpoint.json"
     started = time.monotonic()
     with host_lock(root, "sangiin-material-owner"):

@@ -145,6 +145,7 @@ export function buildReviewPacket(release) {
   const assessedPeople = new Set(release.result.rows.filter(r => r.score !== null && Number.isFinite(r.score)).map(r => r.person.id)).size;
   // hashと保存receiptの整合性は、実行時原本再読・独立検証の成功そのものではありません。
   const needsReadback = Boolean(verification && assessedPeople >= 2 && release.result.coverage.assessedActions >= 2);
+  const optionalFields = (record, names) => Object.fromEntries(names.filter(name => record[name] !== undefined).map(name => [name, typeof record[name] === 'string' ? safeText(record[name]) : record[name]]));
   const packet = {
     schemaVersion: 'evidence-review/v1', releaseId, engineHash: release.engineHash,
     publicationStatus: 'requires_human_review', verificationState: 'review_required',
@@ -152,8 +153,8 @@ export function buildReviewPacket(release) {
     conditions: input.options,
     scopeNote: '収録した有限政策の接続実証です。全国を代表する順位ではありません。',
     people: release.result.rows.map(r => ({ id: r.person.id, name: safeText(r.person.name), score: r.score, rank: r.rank, eligibleCount: r.eligibleCount, heldCount: r.heldCount })),
-    actions: input.actions.map(a => ({ actionId: a.actionId, revisionId: a.revisionId, personId: a.personId, policyId: a.policyId, policyVersion: a.policyVersion, actionDate: a.actionDate, role: a.role, position: a.position, description: safeText(a.description), quotes: a.quotes.map(quote) })),
-    assessments: input.assessments.map(a => ({ id: a.id, policyId: a.policyId, policyVersion: a.policyVersion, position: a.position, domain: a.domain, direction: a.direction, impact: a.impact, rationale: safeText(a.rationale), counterEvidence: safeText(a.counterEvidence), alternativeExplanation: safeText(a.alternativeExplanation), criterionVersion: a.criterionVersion, analysisVersion: a.analysisVersion, quotes: a.quotes.map(quote) })),
+    actions: input.actions.map(a => ({ actionId: a.actionId, revisionId: a.revisionId, personId: a.personId, policyId: a.policyId, policyVersion: a.policyVersion, actionDate: a.actionDate, role: a.role, position: a.position, description: safeText(a.description), ...optionalFields(a, ['interventionId', 'outcomeId']), quotes: a.quotes.map(quote) })),
+    assessments: input.assessments.map(a => ({ id: a.id, policyId: a.policyId, policyVersion: a.policyVersion, position: a.position, domain: a.domain, direction: a.direction, impact: a.impact, rationale: safeText(a.rationale), counterEvidence: safeText(a.counterEvidence), alternativeExplanation: safeText(a.alternativeExplanation), criterionVersion: a.criterionVersion, analysisVersion: a.analysisVersion, ...optionalFields(a, ['outcomeId', 'observationFrom', 'observationTo', 'implementationStatus', 'evaluationKind', 'evidenceMethod', 'scopeReason', 'durationReason', 'magnitudeReason', 'evaluatedAt']), quotes: a.quotes.map(quote) })),
     held: release.result.held.map(h => ({ ...(h.personId ? { personId: h.personId } : {}), ...(h.policyId ? { policyId: h.policyId } : {}), ...(h.actionId ? { actionId: h.actionId } : {}), reason: safeText(h.reason) })),
     coverage: release.result.coverage,
     reviewChecklist: ['人物の同一性・対象選挙', '行動と原資料の引用一致', '政策の立場別影響・反証・尺度', '係数と重み変更の感度', '取得範囲と未評価の表示', '引用・転載の権利', '訂正窓口', '公開内容・配信先の個別承認'],
