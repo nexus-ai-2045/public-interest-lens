@@ -1,0 +1,33 @@
+name: 公開前検査
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+env:
+  PYTHONUTF8: "1"
+  # 検査器の版。タグがないためコミットで固定し、更新は人間レビューで行う。
+  REPO_PREFLIGHT_SHA: f0697798e5479e4556646ee92c0d2c2cc4a78475
+jobs:
+  repo-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # 秘密情報・個人パス・名義は全履歴を検査するため、浅い取得にしない。
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      # 作業ツリーを汚さないよう、検査器は一時領域へ取得する。
+      - name: 検査器を取得
+        run: |
+          git init -q "$RUNNER_TEMP/repo-preflight"
+          git -C "$RUNNER_TEMP/repo-preflight" fetch -q --depth 1 https://github.com/nexus-ai-2045/repo-preflight "$REPO_PREFLIGHT_SHA"
+          git -C "$RUNNER_TEMP/repo-preflight" checkout -q FETCH_HEAD
+      # 終了コード 0=pass、1=blocked、2=tool_error。pass は機械検査の範囲内の判定で、公開許可ではない。
+      - name: 全履歴を検査
+        run: python -I "$RUNNER_TEMP/repo-preflight/scripts/readiness_scan.py" --repo "$GITHUB_WORKSPACE"
