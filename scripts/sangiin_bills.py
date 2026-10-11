@@ -14,6 +14,7 @@ from typing import Callable
 from urllib.parse import urljoin, urlparse
 
 from .register_external_material import register_local_material
+from .fetch_diet_minutes import _verified_material
 
 MAX_BYTES = 2 * 1024 * 1024
 HOST = "www.sangiin.go.jp"
@@ -139,11 +140,9 @@ def _register_page(path: Path, url: str, bill_id: str, digest: str,
     task_id = f"bill-{bill_id}"
     for record_path in sorted((storage_root / task_id).glob("*/record.json")):
         try:
-            record = json.loads(record_path.read_text(encoding="utf-8"))
-            original = record_path.parent / record["saved_filename"]
-            if (record.get("source_url") == url and record.get("sha256") == digest
-                    and hashlib.sha256(original.read_bytes()).hexdigest() == digest):
-                return record_path
+            _verified_material(record_path, roots=(storage_root,), url=url,
+                               digest=digest, expected_bytes=path.stat().st_size)
+            return record_path
         except (OSError, ValueError, KeyError, TypeError):
             continue
     return register_local_material(input_path=path, source_url=url, task_id=task_id,
@@ -167,16 +166,32 @@ def fetch_bill_pages(urls: list[str], output_dir: Path, *, as_of: str,
         _bill_id_from_url(url)
     held: list[dict] = []
     for index, url in enumerate(urls):
-        if index:
-            sleep(1.0)
-        for attempt in range(3):
+        session, number = _bill_id_from_url(url)
+        record_path = None
+        for existing in sorted((storage_root / f"bill-{session}-{number}").glob("*/record.json")):
             try:
-                payload = fetch_bytes(url)
+                existing = existing.resolve(strict=True)
+                record = json.loads(existing.read_text(encoding="utf-8"))
+                if not isinstance(record, dict):
+                    raise ValueError("registered material must be an object")
+                record = _verified_material(existing, roots=(storage_root,), url=url,
+                                            digest=record.get("sha256"), expected_bytes=record.get("bytes"))
+                payload = (existing.parent / record["saved_filename"]).read_bytes()
+                record_path = existing
                 break
-            except OSError:
-                if attempt == 2:
-                    raise
-                sleep(3.0)
+            except (OSError, ValueError, KeyError, TypeError) as error:
+                raise ValueError("existing bill registration is invalid") from error
+        if record_path is None:
+            if index:
+                sleep(1.0)
+            for attempt in range(3):
+                try:
+                    payload = fetch_bytes(url)
+                    break
+                except OSError:
+                    if attempt == 2:
+                        raise
+                    sleep(3.0)
         parsed = parse_bill_page(payload, url)
         submitted = date.fromisoformat(parsed["submittedAt"])
         if not recent_start <= submitted <= as_of_date:
@@ -189,8 +204,9 @@ def fetch_bill_pages(urls: list[str], output_dir: Path, *, as_of: str,
                 raise ValueError("cached bill page changed")
         else:
             stage.write_bytes(payload)
-        record_path = _register_page(stage, url, parsed["billId"], digest,
-                                     storage_root=storage_root)
+        if record_path is None:
+            record_path = _register_page(stage, url, parsed["billId"], digest,
+                                         storage_root=storage_root)
         held.append({**parsed, "id": parsed["billId"], "reason": "impact_unverified",
                      "sourceUrl": url, "sha256": digest,
                      "observedAt": _observed_at_from_record(record_path)})

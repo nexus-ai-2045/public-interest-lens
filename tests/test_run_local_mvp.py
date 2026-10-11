@@ -19,6 +19,67 @@ def save_json(path: Path, value: dict) -> str:
 
 
 class LocalMvpTests(unittest.TestCase):
+    def test_legacy_relative_record_resolves_from_source_repository(self):
+        with tempfile.TemporaryDirectory() as temp:
+            repo_root = Path(temp) / "main-checkout"
+            source = self.make_source(repo_root / ".local")
+            manifest_path = source / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["pages"][0]["record_path"] = str(
+                Path(".local") / "diet" / "external-materials" / "page-1" / "record" / "record.json")
+            save_json(manifest_path, manifest)
+            dataset = build_dataset(source, as_of="2026-09-24")
+            self.assertEqual(dataset["held"][0]["observedAt"], "2026-09-24T12:00:00+09:00")
+
+    def test_missing_registered_size_or_time_rejects_source(self):
+        for field in ("bytes", "observed_at"):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as temp:
+                source = self.make_source(Path(temp))
+                record_path = source / "external-materials/page-1/record/record.json"
+                record = json.loads(record_path.read_text(encoding="utf-8"))
+                record.pop(field)
+                save_json(record_path, record)
+                with self.assertRaises(ValueError):
+                    build_dataset(source, as_of="2026-09-24")
+
+    def test_page_observation_must_match_registered_time(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source = self.make_source(Path(temp))
+            manifest_path = source / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["pages"][0]["observed_at"] = "2026-09-24T13:00:00+09:00"
+            save_json(manifest_path, manifest)
+            with self.assertRaisesRegex(ValueError, "observation"):
+                build_dataset(source, as_of="2026-09-24")
+
+    def test_non_object_registered_speech_writes_failure_receipt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = self.make_source(root)
+            record_path = source / "external-materials/page-1/record/record.json"
+            record_path.write_text("[]", encoding="utf-8")
+            output = root / "output"
+            result = run_local_mvp(source, output, as_of="2026-09-24")
+            self.assertEqual(result["status"], "failed")
+            self.assertEqual(result["error_type"], "ValueError")
+            self.assertFalse((output / "current.json").exists())
+            self.assertEqual(json.loads((output / "run-manifest.json").read_text(encoding="utf-8")), result)
+
+    def test_dot_record_path_writes_failure_receipt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = self.make_source(root / ".local")
+            manifest_path = source / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["pages"][0]["record_path"] = "."
+            save_json(manifest_path, manifest)
+            output = root / "output"
+            result = run_local_mvp(source, output, as_of="2026-09-24")
+            self.assertEqual(result["status"], "failed")
+            self.assertEqual(result["error_type"], "ValueError")
+            self.assertFalse((output / "current.json").exists())
+            self.assertEqual(json.loads((output / "run-manifest.json").read_text(encoding="utf-8")), result)
+
     def test_bill_url_mode_writes_manifest_and_preserves_last_good_on_failure(self):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / ".local" / "mvp"
@@ -88,7 +149,8 @@ class LocalMvpTests(unittest.TestCase):
         save_json(material / "record.json", {
             "schema_version": "external-material/v1", "saved_filename": "original.json",
             "source_url": "https://kokkai.ndl.go.jp/api/speech?sessionFrom=1",
-            "sha256": page_hash,
+            "sha256": page_hash, "bytes": (material / "original.json").stat().st_size,
+            "observed_at": "2026-09-24T12:00:00+09:00",
         })
         save_json(source / "manifest.json", {
             "schema_version": "diet-api-manifest/v1", "endpoint": "speech",
