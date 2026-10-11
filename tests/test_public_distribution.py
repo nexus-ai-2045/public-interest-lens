@@ -193,12 +193,57 @@ class PublicDistributionTests(unittest.TestCase):
             real = next(series for series in economy["series"] if series["id"] == "real_gdp")
             self.assertIn(None, [point["value"] for point in real["points"]])
             self.assertNotIn(0, [point["value"] for point in real["points"] if point["value"] is None])
-        committed = json.loads((ROOT / "data" / "distribution" / "generated" / "current.json").read_text(encoding="utf-8"))
+        self._assert_checked_in_distribution(ROOT)
+
+    def _assert_checked_in_distribution(self, artifact_root):
+        committed = json.loads((artifact_root / "data" / "distribution" / "generated" / "current.json").read_text(encoding="utf-8"))
+        for key in ("economyPath", "casePath", "databasePath"):
+            self.assertTrue((artifact_root / "data" / "distribution" / "generated" / committed[key]).is_file(), key)
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
+            shutil.copytree(artifact_root / "data" / "distribution" / "generated", root / "out")
             rebuilt = build_public_distribution(WORLD_BANK, CASE, root / "out", root / "public")
-            self.assertEqual(rebuilt["snapshotId"], committed["snapshotId"])
-            self.assertEqual(json.loads((root / "public" / "economy.json").read_text(encoding="utf-8"))["snapshotId"], committed["snapshotId"])
+            self.assertEqual(rebuilt, committed)
+            for expected_path in sorted((root / "public").rglob("*.json")):
+                relative = expected_path.relative_to(root / "public")
+                shipped_path = artifact_root / "app" / "public" / "distribution" / relative
+                self.assertEqual(json.loads(shipped_path.read_text(encoding="utf-8")), json.loads(expected_path.read_text(encoding="utf-8")), str(relative))
+
+    def test_checked_in_artifact_corruption_is_detected_without_writes(self):
+        committed = json.loads((ROOT / "data" / "distribution" / "generated" / "current.json").read_text(encoding="utf-8"))
+        paths = [
+            "data/distribution/generated/" + committed["databasePath"],
+            "data/distribution/generated/" + committed["economyPath"],
+            "data/distribution/generated/" + committed["casePath"],
+            "app/public/distribution/economy.json",
+            "app/public/distribution/case.json",
+            f'app/public/distribution/releases/{committed["snapshotId"]}.json',
+            f'app/public/distribution/cases/{committed["snapshotId"]}.json',
+            "data/distribution/generated/current.json",
+        ]
+        for relative, change in ((path, change) for path in paths for change in ("modified", "missing")):
+            with self.subTest(artifact=relative, change=change), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                shutil.copytree(ROOT / "data" / "distribution" / "generated", root / "data" / "distribution" / "generated")
+                shutil.copytree(ROOT / "app" / "public" / "distribution", root / "app" / "public" / "distribution")
+                target = root / relative
+                if change == "missing":
+                    target.unlink()
+                elif target.suffix == ".sqlite3":
+                    database = sqlite3.connect(target)
+                    try:
+                        database.execute("UPDATE statistic_points SET value = value + 1 WHERE value IS NOT NULL")
+                        database.commit()
+                    finally:
+                        database.close()
+                else:
+                    payload = json.loads(target.read_text(encoding="utf-8"))
+                    payload["unexpectedFixtureField"] = True
+                    target.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+                before = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+                with self.assertRaises((AssertionError, ValueError, sqlite3.DatabaseError, FileNotFoundError)):
+                    self._assert_checked_in_distribution(root)
+                self.assertEqual(before, {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()})
 
 
 if __name__ == "__main__":

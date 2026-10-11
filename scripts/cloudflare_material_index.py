@@ -19,6 +19,7 @@ except ModuleNotFoundError:
 
 
 INDEX_SCHEMA = 'cloudflare-material-index/v1'
+ROOT = Path(__file__).resolve().parents[1]
 VERIFIED = {'verified_existing', 'uploaded_verified'}
 DDL = [
     'CREATE TABLE IF NOT EXISTS material_objects (hash TEXT PRIMARY KEY CHECK(length(hash)=64), r2_key TEXT NOT NULL UNIQUE, bytes INTEGER NOT NULL CHECK(bytes>=0), media_type TEXT NOT NULL)',
@@ -104,6 +105,86 @@ def pending_packet(packet, existing):
     return dict(packet, batch=batch, skippedObjects=skipped['objects'], skippedOccurrences=skipped['occurrences'])
 
 
+def sql_text(packet):
+    connection = sqlite3.connect(':memory:')
+    try:
+        statements = []
+        for query in packet['batch']:
+            sql = query['sql']
+            params = query.get('params', [])
+            if params:
+                if not re.fullmatch(r'INSERT INTO (material_objects \(hash,r2_key,bytes,media_type\)|material_occurrences \(occurrence_id,hash,source_url,observed_at\)) VALUES \(\?,\?,\?,\?\)', sql) or len(params) != 4:
+                    raise IndexError('unexpected_insert_shape')
+                literals = []
+                for value in params:
+                    if type(value) not in {str, int} or (isinstance(value, str) and '\x00' in value):
+                        raise IndexError('sql_literal_type_refused')
+                    literals.append(connection.execute('SELECT quote(?)', (value,)).fetchone()[0])
+                sql = sql.rsplit(' VALUES ', 1)[0] + ' VALUES (' + ','.join(literals) + ')'
+            elif sql not in DDL:
+                raise IndexError('unexpected_schema_statement')
+            statements.append(sql + ';')
+        return '\n'.join(statements) + '\n'
+    finally:
+        connection.close()
+
+
+def write_sql(path, sql):
+    target = private_output(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_suffix(target.suffix + '.pending')
+    temporary.write_text(sql, encoding='utf-8')
+    temporary.replace(target)
+
+
+def check_output_collisions(outputs, inputs):
+    destinations = []
+    for path in outputs:
+        target = path.resolve()
+        temporary = target.with_suffix(target.suffix + '.pending')
+        if temporary.is_symlink():
+            raise IndexError('output_path_conflict')
+        destinations.extend((target, temporary.resolve()))
+    sources = {path.resolve() for path in inputs}
+    if len(set(destinations)) != len(destinations) or set(destinations) & sources:
+        raise IndexError('output_path_conflict')
+
+
+def public_output(path):
+    root = ROOT.resolve()
+    allowed = root / 'data' / 'cloudflare'
+    if '..' in path.parts:
+        raise IndexError('public_output_escape')
+    requested = path.absolute()
+    if not requested.is_relative_to(allowed) or requested == allowed:
+        raise IndexError('public_output_escape')
+    for current in (requested, *requested.parents):
+        if current == root:
+            break
+        if current.is_symlink() or getattr(current, 'is_junction', lambda: False)():
+            raise IndexError('public_output_symlink')
+    resolved_allowed = allowed.resolve()
+    resolved = requested.resolve()
+    if not resolved_allowed.is_relative_to(root) or not resolved.is_relative_to(resolved_allowed) or resolved.is_dir():
+        raise IndexError('public_output_escape')
+    return resolved
+
+
+def public_manifest(packet, bucket):
+    objects = [dict(hash=row[0], key=row[1], bytes=row[2], mediaType=row[3]) for row in packet['objects']]
+    occurrences = [dict(id=row[0], hash=row[1], sourceUrl=row[2], observedAt=row[3]) for row in packet['occurrences']]
+    return dict(schema='cloudflare-material-catalog/v1', bucket=bucket, storageVerification='full_get_sha256', contentVerification='unverified', objectCount=len(objects), occurrenceCount=len(occurrences), totalBytes=sum(row['bytes'] for row in objects), objects=objects, occurrences=occurrences)
+
+
+def write_public_manifest(path, manifest):
+    target = public_output(path)
+    temporary = target.with_suffix(target.suffix + '.pending')
+    public_output(temporary)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    temporary.replace(target)
+
+
 def normalize_numbers(value):
     if isinstance(value, float) and value.is_integer():
         return int(value)
@@ -151,6 +232,36 @@ class WranglerReadClient:
         return self.results[sql]
 
 
+def read_index(client):
+    schema_query = 'SELECT * FROM "sqlite_master"'
+    client.query_batch([schema_query])
+    names = {row['name'] for row in client.query(schema_query) if row['type'] == 'table'}
+    groups = [('objects', 'material_objects', ('hash', 'r2_key', 'bytes', 'media_type')), ('occurrences', 'material_occurrences', ('occurrence_id', 'hash', 'source_url', 'observed_at'))]
+    statements = [f'SELECT * FROM "{table}"' for _, table, _ in groups if table in names]
+    if statements:
+        client.query_batch(statements)
+    existing = {}
+    present = {}
+    for group, table, columns in groups:
+        present[group] = table in names
+        rows = client.query(f'SELECT * FROM "{table}"') if table in names else []
+        if any(not isinstance(row, dict) or set(row) != set(columns) for row in rows):
+            raise IndexError('index_columns_mismatch')
+        existing[group] = [[row[column] for column in columns] for row in rows]
+    return existing, present
+
+
+def verify_index(packet, client):
+    existing, present = read_index(client)
+    pending = pending_packet(packet, existing)
+    if not all(present.values()) or len(pending['batch']) != len(DDL):
+        raise IndexError('remote_index_incomplete')
+    client.query_batch(['PRAGMA foreign_key_check'])
+    if client.query('PRAGMA foreign_key_check'):
+        raise IndexError('remote_foreign_key_failed')
+    return dict(schema=INDEX_SCHEMA, status='index_verified', objects=len(packet['objects']), occurrences=len(packet['occurrences']), packetHash=rows_hash(packet['objects']+packet['occurrences']))
+
+
 def compare_catalog(path, client):
     uri = path.resolve(strict=True).as_uri() + '?mode=ro'
     connection = sqlite3.connect(uri, uri=True)
@@ -178,19 +289,33 @@ def compare_catalog(path, client):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='検証済みR2受領記録から非公開D1材料索引packetを生成。D1書込み機能はありません。')
+    parser = argparse.ArgumentParser(description='検証済みR2受領記録からD1索引SQL・公開用の許可列だけのmanifestを生成。D1書込みや公開送信は行いません。')
     parser.add_argument('--account-id', required=True)
     parser.add_argument('--bucket')
     parser.add_argument('--receipt', type=Path)
     parser.add_argument('--output', type=Path)
+    parser.add_argument('--sql-output', type=Path, help='--write指定時だけ非公開.localへ不足行INSERT SQLを保存')
+    parser.add_argument('--public-manifest-output', type=Path, help='完全receiptの許可列だけをrepo data/cloudflare配下へ保存。--write必須、送信なし')
     parser.add_argument('--existing-index', type=Path, help='objects/occurrences配列形式の読取済み全索引。全値一致は除外し矛盾は停止')
-    parser.add_argument('--write', action='store_true', help='非公開.localへのpacketまたは検証結果保存だけを許可')
+    parser.add_argument('--read-existing', action='store_true', help='指定D1の既存全索引を読取り、同値行をskip。外部書込みはしない')
+    parser.add_argument('--verify-index', action='store_true', help='適用後D1全索引を完全receiptと全値・外部キー照合')
+    parser.add_argument('--write', action='store_true', help='明示した成果物のローカル保存だけを許可。packet・SQL・検証結果は.local、公開manifestはdata/cloudflare配下')
     parser.add_argument('--verify-catalog', type=Path, help='公開SQLite全行をD1読取り結果と照合')
     parser.add_argument('--database-name')
     args = parser.parse_args(argv)
     try:
+        for path in (args.output, args.sql_output):
+            if path:
+                private_output(path)
+        if args.public_manifest_output:
+            public_output(args.public_manifest_output)
+        outputs = [path for path in (args.output, args.sql_output, args.public_manifest_output) if path]
+        inputs = [path for path in (args.receipt, args.existing_index, args.verify_catalog) if path]
+        check_output_collisions(outputs, inputs)
+        if args.public_manifest_output and (args.output or args.sql_output or args.existing_index or args.read_existing or args.verify_index or args.verify_catalog):
+            raise IndexError('invalid_public_manifest_mode')
         if args.verify_catalog:
-            if not args.database_name or args.receipt or (args.write and not args.output):
+            if not args.database_name or args.receipt or args.sql_output or args.existing_index or args.read_existing or args.verify_index or (args.write and not args.output):
                 raise IndexError('invalid_catalog_mode')
             client = WranglerReadClient(args.account_id, args.database_name)
             result = compare_catalog(args.verify_catalog, client)
@@ -199,20 +324,43 @@ def main(argv=None):
         else:
             if not args.receipt or not args.bucket:
                 raise IndexError('receipt_and_bucket_required')
+            if (args.read_existing and args.existing_index) or (args.verify_index and (args.read_existing or args.existing_index or args.sql_output)):
+                raise IndexError('invalid_index_mode')
+            if (args.read_existing or args.verify_index) and not args.database_name:
+                raise IndexError('database_name_required')
+            if args.write and not args.public_manifest_output and not args.output and (not args.sql_output or args.verify_index):
+                raise IndexError('output_required')
+            if args.write and args.sql_output and not (args.read_existing or args.existing_index):
+                raise IndexError('existing_index_required')
             receipt = json.loads(args.receipt.read_text(encoding='utf-8'))
             if receipt.get('status') != 'verified':
                 print(json.dumps(dict(schema=INDEX_SCHEMA, status='in_progress', indexedObjects=0)))
                 return 1
             packet = build_packet(receipt, args.account_id, args.bucket)
-            if args.existing_index:
-                packet = pending_packet(packet, json.loads(args.existing_index.read_text(encoding='utf-8')))
-            if args.output:
-                private_output(args.output)
-            if args.write:
-                if not args.output:
-                    raise IndexError('output_required')
-                write_json(args.output, packet)
-            result = dict(schema=INDEX_SCHEMA, status='packet_saved' if args.write else 'planned', objects=len(packet['objects']), occurrences=len(packet['occurrences']), batchQueries=len(packet['batch']), packetHash=rows_hash(packet['objects']+packet['occurrences']))
+            if args.public_manifest_output:
+                manifest = public_manifest(packet, args.bucket)
+                if args.write:
+                    write_public_manifest(args.public_manifest_output, manifest)
+                result = dict(schema=INDEX_SCHEMA, status='public_manifest_saved' if args.write else 'planned', objectCount=manifest['objectCount'], occurrenceCount=manifest['occurrenceCount'], totalBytes=manifest['totalBytes'])
+            elif args.verify_index:
+                result = verify_index(packet, WranglerReadClient(args.account_id, args.database_name))
+                if args.write:
+                    write_json(args.output, result)
+            else:
+                if args.read_existing:
+                    existing, _ = read_index(WranglerReadClient(args.account_id, args.database_name))
+                    packet = pending_packet(packet, existing)
+                elif args.existing_index:
+                    packet = pending_packet(packet, json.loads(args.existing_index.read_text(encoding='utf-8')))
+                sql = sql_text(packet) if args.sql_output else None
+                if args.write:
+                    if args.output:
+                        write_json(args.output, packet)
+                    if args.sql_output:
+                        write_sql(args.sql_output, sql)
+                result = dict(schema=INDEX_SCHEMA, status='packet_saved' if args.write else 'planned', objects=len(packet['objects']), occurrences=len(packet['occurrences']), batchQueries=len(packet['batch']), packetHash=rows_hash(packet['objects']+packet['occurrences']))
+                if sql is not None:
+                    result['sqlHash'] = hashlib.sha256(sql.encode('utf-8')).hexdigest()
         print(json.dumps(result, ensure_ascii=False), flush=True)
         return 0
     except IndexError as error:

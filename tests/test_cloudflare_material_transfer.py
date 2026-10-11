@@ -4,7 +4,10 @@ import io
 import json
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 from urllib.error import HTTPError, URLError
 
@@ -199,6 +202,121 @@ class MaterialTransferTests(unittest.TestCase):
                 path.write_text(json.dumps(record))
                 with self.assertRaises(transfer.TransferError):
                     transfer.build_plan(self.root)
+
+
+class TokenProviderTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.path = Path(self.temp.name) / 'default.toml'
+        self.now = datetime(2026, 10, 11, 6, 22, tzinfo=timezone.utc)
+        self.write_credential('OLD', '2026-10-11T06:21:00Z')
+
+    def write_credential(self, token, expiry):
+        self.path.write_text(f'oauth_token = "{token}"\nexpiration_time = "{expiry}"\nrefresh_token = "REFRESH"\n', encoding='utf-8')
+
+    def refresh_result(self, args, **kwargs):
+        self.assertEqual(args, ['wrangler.cmd', 'whoami', '--json'])
+        self.assertEqual(kwargs['env']['CI'], 'true')
+        self.assertEqual(kwargs['stdin'], transfer.subprocess.DEVNULL)
+        self.assertTrue(kwargs['capture_output'])
+        self.write_credential('NEW', '2026-10-11T07:23:00Z')
+        return SimpleNamespace(returncode=0, stdout=json.dumps(dict(loggedIn=True, accounts=[dict(id='a'*32)])).encode())
+
+    def test_expired_default_refreshes_once_for_two_workers(self):
+        with patch.object(transfer, 'DEFAULT_CREDENTIAL_FILE', self.path), patch.object(transfer, 'utc_now', return_value=self.now), patch.object(transfer.shutil, 'which', return_value='wrangler.cmd'), patch.object(transfer.subprocess, 'run', side_effect=self.refresh_result) as refresh:
+            provider = transfer.OAuthTokenProvider(self.path, 'a'*32)
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                tokens = list(pool.map(lambda _: provider.get_token(), range(2)))
+        self.assertEqual(tokens, ['NEW', 'NEW'])
+        self.assertEqual(refresh.call_count, 1)
+
+    def test_custom_expired_credentials_never_refresh(self):
+        with patch.object(transfer, 'DEFAULT_CREDENTIAL_FILE', self.path.parent / 'other.toml'), patch.object(transfer, 'utc_now', return_value=self.now), patch.object(transfer.subprocess, 'run', side_effect=AssertionError), self.assertRaisesRegex(transfer.TransferError, 'custom_credential_expired'):
+            transfer.OAuthTokenProvider(self.path, 'a'*32).get_token()
+
+    def test_refresh_wrong_account_and_unchanged_expiry_stop(self):
+        for result in (dict(loggedIn=False, accounts=[]), dict(loggedIn=True, accounts=[dict(id='b'*32)]), dict(loggedIn=True, accounts=[dict(id='a'*32)])):
+            with self.subTest(result=result), patch.object(transfer, 'DEFAULT_CREDENTIAL_FILE', self.path), patch.object(transfer, 'utc_now', return_value=self.now), patch.object(transfer.shutil, 'which', return_value='wrangler.cmd'), patch.object(transfer.subprocess, 'run', return_value=SimpleNamespace(returncode=0, stdout=json.dumps(result).encode())), self.assertRaises(transfer.TransferError):
+                transfer.OAuthTokenProvider(self.path, 'a'*32).get_token()
+
+    def test_invalid_expiry_stops_without_refresh(self):
+        for expiry in ('2026-10-11T07:23:00', 'invalid'):
+            self.write_credential('OLD', expiry)
+            with patch.object(transfer.subprocess, 'run', side_effect=AssertionError), self.assertRaises(transfer.TransferError):
+                transfer.OAuthTokenProvider(self.path, 'a'*32).get_token()
+
+    def test_unexpired_401_never_refreshes_or_retries(self):
+        self.write_credential('VALID', '2026-10-11T07:23:00Z')
+        error = HTTPError('https://api.cloudflare.com', 401, 'SECRET', {}, io.BytesIO(b'SECRET'))
+        with patch.object(transfer, 'utc_now', return_value=self.now), patch.object(transfer.subprocess, 'run', side_effect=AssertionError), patch.object(transfer, 'urlopen', side_effect=error) as request, self.assertRaisesRegex(transfer.TransferError, 'http_401'):
+            provider = transfer.OAuthTokenProvider(self.path, 'a'*32)
+            transfer.R2Client('a'*32, 'private-test', None, provider).get('key')
+        self.assertEqual(request.call_count, 1)
+
+    def test_request_uses_new_token_after_expiry(self):
+        with patch.object(transfer, 'DEFAULT_CREDENTIAL_FILE', self.path), patch.object(transfer, 'utc_now', return_value=self.now), patch.object(transfer.shutil, 'which', return_value='wrangler.cmd'), patch.object(transfer.subprocess, 'run', side_effect=self.refresh_result), patch.object(transfer, 'urlopen', return_value=io.BytesIO(b'body')) as request:
+            provider = transfer.OAuthTokenProvider(self.path, 'a'*32)
+            self.assertEqual(transfer.R2Client('a'*32, 'private-test', None, provider).get('key'), b'body')
+        self.assertEqual(request.call_args.args[0].get_header('Authorization'), 'Bearer NEW')
+
+    def test_request_boundary_401_refreshes_once_then_retries(self):
+        self.write_credential('OLD', '2026-10-11T06:23:00Z')
+        later = datetime(2026, 10, 11, 6, 24, tzinfo=timezone.utc)
+        error = HTTPError('https://api.cloudflare.com', 401, 'SECRET', {}, io.BytesIO(b'SECRET'))
+        with patch.object(transfer, 'DEFAULT_CREDENTIAL_FILE', self.path), patch.object(transfer, 'utc_now', side_effect=[self.now, later, later, later, later]), patch.object(transfer.shutil, 'which', return_value='wrangler.cmd'), patch.object(transfer.subprocess, 'run', side_effect=self.refresh_result) as refresh, patch.object(transfer, 'urlopen', side_effect=[error, io.BytesIO(b'body')]) as request:
+            provider = transfer.OAuthTokenProvider(self.path, 'a'*32)
+            self.assertEqual(transfer.R2Client('a'*32, 'private-test', None, provider).get('key'), b'body')
+        self.assertEqual(request.call_count, 2)
+        self.assertEqual(refresh.call_count, 1)
+        self.assertEqual(request.call_args.args[0].get_header('Authorization'), 'Bearer NEW')
+
+    def test_failed_refresh_is_latched_and_secret_error_is_redacted(self):
+        with patch.object(transfer, 'DEFAULT_CREDENTIAL_FILE', self.path), patch.object(transfer, 'utc_now', return_value=self.now), patch.object(transfer.shutil, 'which', return_value='wrangler.cmd'), patch.object(transfer.subprocess, 'run', side_effect=RuntimeError('SECRET body')) as refresh:
+            provider = transfer.OAuthTokenProvider(self.path, 'a'*32)
+            for _ in range(2):
+                with self.assertRaisesRegex(transfer.TransferError, '^credential_refresh_failed$'):
+                    provider.get_token()
+        self.assertEqual(refresh.call_count, 1)
+
+    def test_boundary_401_uses_token_already_refreshed_by_other_worker(self):
+        self.write_credential('OLD', '2026-10-11T07:23:00Z')
+        def response(request, **kwargs):
+            if request.get_header('Authorization') == 'Bearer OLD':
+                self.write_credential('NEW', '2026-10-11T08:23:00Z')
+                raise HTTPError(request.full_url, 401, 'SECRET', {}, io.BytesIO(b'SECRET'))
+            return io.BytesIO(b'body')
+        with patch.object(transfer, 'utc_now', return_value=self.now), patch.object(transfer.subprocess, 'run', side_effect=AssertionError), patch.object(transfer, 'urlopen', side_effect=response) as request:
+            provider = transfer.OAuthTokenProvider(self.path, 'a'*32)
+            self.assertEqual(transfer.R2Client('a'*32, 'private-test', None, provider).get('key'), b'body')
+        self.assertEqual(request.call_count, 2)
+
+    def test_unexpired_custom_uses_file_without_refresh(self):
+        self.write_credential('VALID', '2026-10-11T07:23:00Z')
+        with patch.object(transfer, 'utc_now', return_value=self.now), patch.object(transfer.subprocess, 'run', side_effect=AssertionError):
+            self.assertEqual(transfer.OAuthTokenProvider(self.path, 'a'*32).get_token(), 'VALID')
+
+    def test_refresh_missing_refresh_token_and_scope_change_are_refused(self):
+        self.path.write_text('oauth_token="OLD"\nexpiration_time="2026-10-11T06:21:00Z"\n')
+        with patch.object(transfer, 'DEFAULT_CREDENTIAL_FILE', self.path), patch.object(transfer, 'utc_now', return_value=self.now), patch.object(transfer.shutil, 'which', return_value='wrangler.cmd'), patch.object(transfer.subprocess, 'run', side_effect=AssertionError), self.assertRaisesRegex(transfer.TransferError, 'credential_refresh_unavailable'):
+            transfer.OAuthTokenProvider(self.path, 'a'*32).get_token()
+        self.write_credential('OLD', '2026-10-11T06:21:00Z')
+        def scope_change(args, **kwargs):
+            result = self.refresh_result(args, **kwargs)
+            with self.path.open('a', encoding='utf-8') as handle:
+                handle.write('scopes=["new-scope"]\n')
+            return result
+        with patch.object(transfer, 'DEFAULT_CREDENTIAL_FILE', self.path), patch.object(transfer, 'utc_now', return_value=self.now), patch.object(transfer.shutil, 'which', return_value='wrangler.cmd'), patch.object(transfer.subprocess, 'run', side_effect=scope_change), self.assertRaisesRegex(transfer.TransferError, 'credential_refresh_failed'):
+            transfer.OAuthTokenProvider(self.path, 'a'*32).get_token()
+
+    def test_main_write_binds_provider_to_selected_target(self):
+        plan = dict(records=[{}], objects=[dict(bytes=4)])
+        receipt = self.path.parent / '.local' / 'receipt.json'
+        with patch.object(transfer, 'build_plan', return_value=plan), patch.object(transfer, 'OAuthTokenProvider') as provider, patch.object(transfer, 'R2Client') as client, patch.object(transfer, 'transfer_plan'), contextlib.redirect_stdout(io.StringIO()):
+            code = transfer.main(['--corpus-root', str(self.path.parent), '--account-id', 'a'*32, '--bucket', 'private-test', '--credential-file', str(self.path), '--receipt-output', str(receipt), '--write'])
+        self.assertEqual(code, 0)
+        provider.assert_called_once_with(self.path, 'a'*32)
+        client.assert_called_once_with('a'*32, 'private-test', None, provider.return_value)
 
 
 class MemoryClient:

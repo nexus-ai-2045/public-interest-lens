@@ -3,12 +3,16 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
+import shutil
+import subprocess
 import time
 import tomllib
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
+from threading import Lock
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qsl, quote, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -27,6 +31,7 @@ OFFICIAL_HOSTS = frozenset({
     'www.jbaudit.go.jp', 'rssystem.go.jp',
 })
 MAX_OBJECT_BYTES = 300_000_000
+DEFAULT_CREDENTIAL_FILE = Path.home() / '.wrangler/config/default.toml'
 
 
 class TransferError(Exception):
@@ -125,25 +130,85 @@ def build_plan(corpus_root):
 
 def load_token(path):
     with path.open('rb') as handle:
-        token = tomllib.load(handle).get('oauth_token')
+        return validated_token(tomllib.load(handle))
+
+
+def validated_token(data):
+    token = data.get('oauth_token')
     if not isinstance(token, str) or not token or '\n' in token or '\r' in token:
         raise TransferError('credential_unavailable')
     return token
 
 
+def utc_now():
+    return datetime.now(timezone.utc)
+
+
+class OAuthTokenProvider:
+    def __init__(self, path, account_id):
+        if not re.fullmatch(r'[a-f0-9]{32}', account_id):
+            raise TransferError('invalid_account')
+        self.path = path.resolve()
+        self.account_id = account_id
+        self.lock = Lock()
+        self.refresh_failed = False
+
+    def credential(self):
+        try:
+            with self.path.open('rb') as handle:
+                data = tomllib.load(handle)
+            token = validated_token(data)
+            expiry = datetime.fromisoformat(data['expiration_time'])
+            if expiry.tzinfo is None or expiry.utcoffset() is None:
+                raise ValueError
+            return token, expiry, data
+        except Exception:
+            raise TransferError('credential_invalid') from None
+
+    def get_token(self):
+        with self.lock:
+            if self.refresh_failed:
+                raise TransferError('credential_refresh_failed')
+            token, expiry, data = self.credential()
+            if expiry > utc_now():
+                return token
+            if self.path != DEFAULT_CREDENTIAL_FILE.resolve():
+                raise TransferError('custom_credential_expired')
+            self.refresh_failed = True
+            executable = shutil.which('wrangler.cmd') or shutil.which('wrangler')
+            if not executable or not isinstance(data.get('refresh_token'), str) or not data['refresh_token']:
+                raise TransferError('credential_refresh_unavailable')
+            try:
+                env = dict(os.environ, CI='true', WRANGLER_SEND_METRICS='false', CLOUDFLARE_ACCOUNT_ID=self.account_id)
+                result = subprocess.run([executable, 'whoami', '--json'], capture_output=True, stdin=subprocess.DEVNULL, timeout=120, env=env)
+                identity = json.loads(result.stdout)
+                if result.returncode or identity.get('loggedIn') is not True or self.account_id not in {row['id'] for row in identity.get('accounts', [])}:
+                    raise ValueError
+                token, expiry, updated = self.credential()
+                if expiry <= utc_now() or updated.get('scopes') != data.get('scopes'):
+                    raise ValueError
+            except Exception:
+                raise TransferError('credential_refresh_failed') from None
+            self.refresh_failed = False
+            return token
+
+
 class R2Client:
-    def __init__(self, account_id, bucket, token):
+    def __init__(self, account_id, bucket, token, token_provider=None):
         check_target(account_id, bucket)
         self.base = f'https://api.cloudflare.com/client/v4/accounts/{account_id}/r2/buckets/{bucket}/objects/'
         self.token = token
+        self.token_provider = token_provider
 
     def request(self, method, key, payload=None, media_type=None):
         url = self.base + quote(key, safe='/')
-        headers = {'Authorization': 'Bearer ' + self.token}
-        if media_type:
-            headers['Content-Type'] = media_type
-        request = Request(url, data=payload, headers=headers, method=method)
+        boundary_refreshed = False
         for attempt in range(3):
+            token = self.token_provider.get_token() if self.token_provider else self.token
+            headers = {'Authorization': 'Bearer ' + token}
+            if media_type:
+                headers['Content-Type'] = media_type
+            request = Request(url, data=payload, headers=headers, method=method)
             try:
                 with urlopen(request, timeout=120) as response:
                     body = response.read(MAX_OBJECT_BYTES + 1)
@@ -155,6 +220,11 @@ class R2Client:
                 error.close()
                 if method == 'GET' and code == 404:
                     return None
+                if code == 401 and self.token_provider and not boundary_refreshed:
+                    current_token = self.token_provider.get_token()
+                    if current_token != token:
+                        boundary_refreshed = True
+                        continue
                 if code not in {429, 500, 502, 503, 504}:
                     raise TransferError(f'http_{code}') from None
             except (URLError, TimeoutError, OSError):
@@ -245,7 +315,7 @@ def build_parser():
     parser.add_argument('--corpus-root', type=Path, required=True)
     parser.add_argument('--account-id', required=True)
     parser.add_argument('--bucket', required=True)
-    parser.add_argument('--credential-file', type=Path, default=Path.home() / '.wrangler/config/default.toml')
+    parser.add_argument('--credential-file', type=Path, default=DEFAULT_CREDENTIAL_FILE)
     parser.add_argument('--plan-output', type=Path, help='--write指定時のみ非公開.local配下へ計画保存')
     parser.add_argument('--receipt-output', type=Path)
     parser.add_argument('--workers', type=int, choices=[1, 2], default=2)
@@ -270,7 +340,7 @@ def main(argv=None):
         if args.write and args.plan_output:
             write_json(args.plan_output, plan)
         if args.write and not args.plan_only:
-            client = R2Client(args.account_id, args.bucket, load_token(args.credential_file))
+            client = R2Client(args.account_id, args.bucket, None, OAuthTokenProvider(args.credential_file, args.account_id))
             transfer_plan(plan, client, args.receipt_output, args.account_id, args.bucket, args.workers)
         summary = dict(schema=SCHEMA, status='verified' if args.write and not args.plan_only else 'planned', records=len(plan['records']), uniqueObjects=len(plan['objects']), duplicateRecords=len(plan['records'])-len(plan['objects']), uploadBytes=sum(row['bytes'] for row in plan['objects']))
         print(json.dumps(summary, ensure_ascii=False), flush=True)
