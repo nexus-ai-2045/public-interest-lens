@@ -1,21 +1,39 @@
-@property --accent {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: #ff3b47;
-}
+@property --accent { syntax: '<color>'; inherits: true; initial-value: #d33a43; }
+@property --bg { syntax: '<color>'; inherits: true; initial-value: #08080a; }
+@property --panel { syntax: '<color>'; inherits: true; initial-value: #111114; }
+@property --panel-2 { syntax: '<color>'; inherits: true; initial-value: #17171b; }
+@property --text { syntax: '<color>'; inherits: true; initial-value: #e9e7ec; }
+@property --muted { syntax: '<color>'; inherits: true; initial-value: #8d8a95; }
+@property --real { syntax: '<color>'; inherits: true; initial-value: #4fd1c5; }
 
+/* 国賊（既定）：くすんだ暗色。色を抜き、重く沈ませる */
 :root {
-  --bg: #07070b;
-  --panel: #101018;
-  --panel-2: #161622;
-  --line: rgba(255, 255, 255, 0.08);
-  --text: #f4f3f7;
-  --muted: #9a98a8;
-  --accent: #ff3b47;
+  --bg: #08080a;
+  --panel: #111114;
+  --panel-2: #17171b;
+  --line: rgba(255, 255, 255, 0.07);
+  --text: #e9e7ec;
+  --muted: #8d8a95;
+  --accent: #d33a43;
+  --on-accent: #120708;
   --real: #4fd1c5;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   color-scheme: dark;
-  transition: --accent 0.8s var(--ease);
+  transition: --accent 0.9s var(--ease), --bg 0.9s var(--ease), --panel 0.9s var(--ease), --panel-2 0.9s var(--ease), --text 0.9s var(--ease), --muted 0.9s var(--ease), --real 0.9s var(--ease);
+}
+
+/* 国士：明るく健全。光と金色で持ち上げる */
+:root[data-mood='benefit'] {
+  --bg: #fbf7ee;
+  --panel: #ffffff;
+  --panel-2: #fff8e8;
+  --line: rgba(60, 40, 0, 0.1);
+  --text: #1d1a14;
+  --muted: #6c6556;
+  --accent: #f0a500;
+  --on-accent: #1d1a14;
+  --real: #0e8f82;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -40,7 +58,7 @@ button { font: inherit; color: inherit; }
   gap: 10px;
   padding: 10px 16px;
   font-size: 13px;
-  background: rgba(7, 7, 11, 0.72);
+  background: color-mix(in srgb, var(--bg) 75%, transparent);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
 }
@@ -75,7 +93,7 @@ button { font: inherit; color: inherit; }
   line-height: 1.02;
   letter-spacing: -0.04em;
 }
-.hero-mask { display: inline-block; clip-path: inset(-0.5em -0.5em 0 -0.5em); vertical-align: bottom; padding-bottom: 0.06em; }
+.hero-mask { display: inline-block; clip-path: inset(-0.5em -0.5em -0.4em -0.5em); vertical-align: bottom; padding-bottom: 0.06em; }
 .hero-char { display: inline-block; }
 .hero-mask:nth-child(-n + 2) .hero-char {
   color: var(--accent);
@@ -104,7 +122,7 @@ button { font: inherit; color: inherit; }
   transition: color 0.4s var(--ease);
 }
 .direction button small { font-size: 11px; font-weight: 500; }
-.direction button.on { color: #0b0b10; }
+.direction button.on { color: var(--on-accent); }
 .direction-thumb {
   position: absolute; top: 6px; bottom: 6px; left: 6px;
   width: calc(50% - 6px);
@@ -142,7 +160,7 @@ section { padding: 96px 0 24px; }
   transition: all 0.35s var(--ease);
 }
 .tab:hover { color: var(--text); transform: translateY(-2px); }
-.tab.active { color: #0b0b10; background: var(--accent); border-color: transparent; }
+.tab.active { color: var(--on-accent); background: var(--accent); border-color: transparent; }
 
 .rank-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .rank-row {
@@ -229,3 +247,55 @@ section { padding: 96px 0 24px; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   html { scroll-behavior: auto; }
 }
+
+.confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 50; }
+.badge {
+  display: inline-block; margin-right: 8px; padding: 1px 8px; border-radius: 99px;
+  font-style: normal; font-size: 11px; font-weight: 800; vertical-align: 2px;
+  color: var(--on-accent); background: var(--accent);
+}
+
+/* 国賊の上乗せ：彩度を落とし、行はうなだれ、バーは垂れる */
+:root:not([data-mood='benefit']) .avatar { filter: grayscale(0.75) brightness(0.8); }
+:root:not([data-mood='benefit']) .rank-row.top { background: linear-gradient(180deg, #1a1012, var(--panel)); }
+:root:not([data-mood='benefit']) .rank-bar-fill { box-shadow: none; background: linear-gradient(90deg, #4a1d21, var(--accent)); }
+:root:not([data-mood='benefit']) .rank-row.top .rank-no::after { content: '↓'; margin-left: 2px; font-size: 0.6em; opacity: 0.7; }
+:root:not([data-mood='benefit']) .hero-mask:nth-child(-n + 2) .hero-char { text-shadow: 0 6px 0 rgba(0, 0, 0, 0.6); filter: saturate(0.8); }
+:root:not([data-mood='benefit']) .hero::after { background: radial-gradient(ellipse at center, transparent 25%, var(--bg) 80%), repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 4px); }
+:root:not([data-mood='benefit']) .badge { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+
+/* 国士の上乗せ：金色の光沢、きらめき、持ち上がる影 */
+:root[data-mood='benefit'] .hero-mask:nth-child(-n + 2) .hero-char {
+  background: linear-gradient(110deg, #f0a500 20%, #fff3c4 40%, #ff8a3d 60%, #f0a500 80%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: none;
+  animation: shine 3.2s linear infinite;
+}
+@keyframes shine { to { background-position: -250% 0; } }
+:root[data-mood='benefit'] .hero::after { background: radial-gradient(ellipse at center, transparent 35%, var(--bg) 88%); }
+:root[data-mood='benefit'] .rank-row { box-shadow: 0 10px 30px -18px rgba(120, 80, 0, 0.35); }
+:root[data-mood='benefit'] .rank-row.top { background: linear-gradient(135deg, #fff3cf, #ffffff 60%); border-color: rgba(240, 165, 0, 0.55); }
+:root[data-mood='benefit'] .rank-row.top:first-child { box-shadow: 0 0 0 2px rgba(240, 165, 0, 0.5), 0 24px 60px -24px rgba(240, 165, 0, 0.8); }
+:root[data-mood='benefit'] .rank-row.top .rank-no::after { content: '★'; margin-left: 4px; font-size: 0.6em; color: #f0a500; display: inline-block; animation: twinkle 1.6s ease-in-out infinite; }
+@keyframes twinkle { 50% { transform: scale(1.4) rotate(20deg); opacity: 0.6; } }
+:root[data-mood='benefit'] .rank-bar { background: rgba(60, 40, 0, 0.08); }
+:root[data-mood='benefit'] .rank-bar-fill {
+  background: linear-gradient(90deg, #ffd166, #f0a500, #ff8a3d);
+  box-shadow: 0 0 14px rgba(240, 165, 0, 0.6);
+  position: relative; overflow: hidden;
+}
+:root[data-mood='benefit'] .rank-bar-fill::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.85) 50%, transparent 70%);
+  transform: translateX(-100%); animation: sweep 2.4s var(--ease) infinite;
+}
+@keyframes sweep { to { transform: translateX(100%); } }
+:root[data-mood='benefit'] .contrib { background: rgba(240, 165, 0, 0.07); }
+:root[data-mood='benefit'] .rank-no { color: #b8a98a; }
+:root[data-mood='benefit'] .rank-row.top .rank-no { color: #e09400; }
+:root[data-mood='benefit'] .badge { animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes pop { from { transform: scale(0); } }
+
+.rank-no { position: relative; white-space: nowrap; }
+.rank-row.top .rank-no::after { position: absolute; top: -4px; right: -14px; }

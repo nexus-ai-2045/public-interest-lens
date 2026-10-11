@@ -31,7 +31,7 @@ function CountUp({ value, reduce }: { value: number; reduce: boolean }) {
   return <span ref={ref}>{value}</span>;
 }
 
-export function Ranking({ direction, reduce }: { direction: Direction; reduce: boolean }) {
+export function Ranking({ direction, reduce, onCelebrate }: { direction: Direction; reduce: boolean; onCelebrate: (x: number, y: number) => void }) {
   const [domain, setDomain] = useState<DomainFilter>('all');
   const [open, setOpen] = useState<string | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
@@ -60,10 +60,22 @@ export function Ranking({ direction, reduce }: { direction: Direction; reduce: b
   useLayoutEffect(() => {
     if (reduce || !listRef.current) return;
     const ctx = gsap.context(() => {
-      gsap.from('.rank-bar-fill', { scaleX: 0, duration: 1.1, ease: 'expo.out', stagger: 0.05 });
+      if (direction === 'harm') {
+        // 国賊：バーは重たく伸び、上位の行はがくっと沈む
+        gsap.from('.rank-bar-fill', { scaleX: 0, duration: 1.3, ease: 'power4.in', stagger: 0.05 });
+        gsap.fromTo('.rank-row.top', { y: -14, rotate: 0 }, { y: 0, rotate: (i: number) => [-0.8, 0.6, -0.4][i] ?? 0, duration: 1.1, ease: 'bounce.out', stagger: 0.08, delay: 0.2 });
+      } else {
+        // 国士：バーは弾んで伸び、上位の行がふわっと持ち上がる
+        gsap.from('.rank-bar-fill', { scaleX: 0, duration: 1.2, ease: 'elastic.out(1, 0.55)', stagger: 0.05 });
+        gsap.fromTo('.rank-row.top', { scale: 0.96 }, { scale: 1, duration: 0.9, ease: 'back.out(3)', stagger: 0.08 });
+      }
     }, listRef);
     return () => ctx.revert();
   }, [direction, domain, reduce]);
+
+  const badge = (n: number) => direction === 'harm'
+    ? (n === 1 ? 'ワースト1' : n <= 3 ? '要注意' : null)
+    : (n === 1 ? 'MVP' : n <= 3 ? '称賛' : null);
 
   return (
     <section className="ranking" id="ranking" aria-labelledby="ranking-title">
@@ -95,12 +107,12 @@ export function Ranking({ direction, reduce }: { direction: Direction; reduce: b
           const isOpen = open === r.person.id;
           return (
             <li key={r.person.id} className={`rank-row${r.rank <= 3 ? ' top' : ''}${isOpen ? ' open' : ''}`} data-flip-id={r.person.id}>
-              <button className="rank-main" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : r.person.id)}>
+              <button className="rank-main" aria-expanded={isOpen} onClick={(e) => { if (!isOpen && direction === 'benefit') onCelebrate(e.clientX, e.clientY); setOpen(isOpen ? null : r.person.id); }}>
                 <span className="rank-no">{String(r.rank).padStart(2, '0')}</span>
                 <span className="avatar" style={{ ['--h' as string]: r.person.hue }} aria-hidden="true">{r.person.name.replace('架空議員', '').slice(0, 1)}</span>
                 <span className="rank-name">
                   <strong>{r.person.name}</strong>
-                  <small>{r.person.house}・{r.person.district}</small>
+                  <small>{badge(r.rank) && <em className="badge">{badge(r.rank)}</em>}{r.person.house}・{r.person.district}</small>
                 </span>
                 <span className="rank-bar" aria-hidden="true"><span className="rank-bar-fill" style={{ width: `${r.score}%` }} /></span>
                 <span className="rank-score"><CountUp value={r.score} reduce={reduce} /><small>点</small></span>
