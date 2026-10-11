@@ -9,7 +9,7 @@ const pack = (name = '試験記載名') => ({ schemaVersion: 'ranking-dataset/v1
 
 test('通常の入口で実資料を読み、架空順位に変換しない', async ({ page }) => {
   await page.route('**/__local__/records', route => route.fulfill({ json: pack() }));
-  await page.goto('/');
+  await page.goto('/records');
   await expect(page.getByRole('button', { name: '試験記載名', exact: true })).toBeVisible();
   await expect(page.locator('.real-records-table')).toContainText('未評価');
   await expect(page.getByText('架空議員あおい', { exact: true })).toHaveCount(0);

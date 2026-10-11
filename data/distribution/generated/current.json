@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "public-distribution-current/v1",
+  "snapshotId": "cba5414edb2b3fd1a83c5f7c19dc05697c1a898ac7d808dc58b783c8f964743c",
+  "economyPath": "generations/cba5414edb2b3fd1a83c5f7c19dc05697c1a898ac7d808dc58b783c8f964743c/economy.json",
+  "casePath": "generations/cba5414edb2b3fd1a83c5f7c19dc05697c1a898ac7d808dc58b783c8f964743c/case.json",
+  "databasePath": "generations/cba5414edb2b3fd1a83c5f7c19dc05697c1a898ac7d808dc58b783c8f964743c/catalog.sqlite3",
+  "scoringStatus": "held",
+  "personScores": 0
+}

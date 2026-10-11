@@ -4,14 +4,14 @@ export const DOMAINS = ['economy', 'technology', 'fiscal', 'security', 'governan
 export type Domain = typeof DOMAINS[number];
 export type RankedDomain = 'economy' | 'technology' | 'overall';
 export type Direction = 'benefit' | 'harm';
-export type Period = 2 | 4 | 8 | 'cumulative';
+export type Period = 2 | 4 | 8 | 30 | 40 | 'custom' | 'cumulative';
 export type RankingEvidence = { id: string; title: string; date: string; kind: 'verified' | 'computed' | 'ai' | 'unknown'; source: string; summary: string; url?: string; locator?: string; sha256?: string };
-export type Person = { id: string; name: string; house?: string; district?: string; electionIds?: string[]; roleClass?: string };
+export type Person = { id: string; name: string; house?: string; district?: string; electionIds?: string[]; roleClass?: string; actorType?: 'person' | 'organization' };
 export type Policy = { id: string; title: string; domain: Domain; direction: Direction; impact: 1 | 2 | 3; reviewStatus: 'reviewed' | 'pending'; rationale: string; counterEvidence: string; alternativeExplanation: string; evidenceIds: string[] };
 export type Involvement = { id?: string; personId: string; policyId: string; actionDate: string; role: 'lead' | 'coauthor' | 'vote' | 'context'; description: string; evidenceIds: string[] };
 export type RankingDataset = { schemaVersion: 'ranking-dataset/v1'; fictional: boolean; asOf: string; coverage: { scope: string; assessedPeople: number; targetPeople: number | null; sourceStatus: string }; people: Person[]; policies: Policy[]; involvements: Involvement[]; evidence: RankingEvidence[]; held?: { personId?: string; policyId?: string; reason: string; sourceRefs?: string[] }[] };
-export type RankingOptions = { domain: Domain | 'overall'; direction: Direction; period: Period; asOf: string; weights: { economy: number; technology: number } };
-export type RankingContribution = { policyId: string; actionKey: string; actionDate: string; role: Involvement['role']; score: number };
+export type RankingOptions = { domain: Domain | 'overall'; direction: Direction; period: Period; asOf: string; weights: { economy: number; technology: number }; dateFrom?: string; dateTo?: string; timeBasis?: 'action' | 'outcome'; actorGroup?: 'people' | 'organizations' };
+export type RankingContribution = { policyId: string; actionKey: string; actionDate: string; role: Involvement['role']; score: number; outcomeId?: string };
 export type RankingRow = { person: Person; score: number | null; rank: number | null; eligibleCount: number; heldCount: number; contributions: RankingContribution[] };
 
 export const ROLE_FACTOR: Record<Involvement['role'], number> = { lead: 1, coauthor: .5, vote: .25, context: 0 };
@@ -29,8 +29,9 @@ export function assignRanks(rows: RankingRow[]): RankingRow[] {
 const validDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 const finiteWeight = (value: number) => Number.isFinite(value) && value >= 0 && value <= 100;
 
-function periodStart(asOf: string, period: Period): string | null {
+function periodStart(asOf: string, period: Period, dateFrom?: string): string | null {
   if (period === 'cumulative') return null;
+  if (period === 'custom') return dateFrom ?? null;
   const date = new Date(`${asOf}T00:00:00Z`);
   date.setUTCFullYear(date.getUTCFullYear() - period);
   return date.toISOString().slice(0, 10);
@@ -38,15 +39,16 @@ function periodStart(asOf: string, period: Period): string | null {
 
 /** 表示条件への一致だけを判定する。保留・参考行動も含み、算定資格は判定しない。 */
 export function actionMatchesView(action: Involvement, policy: Policy, options: RankingOptions): boolean {
-  const start = periodStart(options.asOf, options.period);
-  return action.actionDate <= options.asOf && (!start || action.actionDate >= start)
+  const start = periodStart(options.asOf, options.period, options.dateFrom);
+  return action.actionDate <= (options.period === 'custom' ? options.dateTo ?? options.asOf : options.asOf) && (!start || action.actionDate >= start)
     && policy.direction === options.direction && (options.domain === 'overall' || policy.domain === options.domain);
 }
 
 /** 全資料が創作である表示fixtureだけを計算する。実人物への適用は別の検証済み入口が必要。 */
 export function rankPeople(data: RankingDataset, options: RankingOptions): RankingRow[] {
   check(data.schemaVersion === 'ranking-dataset/v1' && data.fictional === true, '架空表示用データのみ算定できます');
-  check(validDate(options.asOf) && [2, 4, 8, 'cumulative'].includes(options.period), '比較期間が不正です');
+  check(validDate(options.asOf) && [2, 4, 8, 30, 40, 'custom', 'cumulative'].includes(options.period), '比較期間が不正です');
+  if (options.period === 'custom') check(validDate(options.dateFrom ?? '') && validDate(options.dateTo ?? '') && options.dateFrom! <= options.dateTo! && options.dateTo! <= options.asOf, '任意期間が不正です');
   check(DOMAINS.includes(options.domain as Domain) || options.domain === 'overall', '評価分野が不正です');
   check(['benefit', 'harm'].includes(options.direction), '影響方向が不正です');
   check(finiteWeight(options.weights.economy) && finiteWeight(options.weights.technology), '重みが不正です');

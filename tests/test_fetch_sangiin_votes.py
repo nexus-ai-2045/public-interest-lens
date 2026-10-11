@@ -50,7 +50,81 @@ def fixture(bill_id="221-53", *, yes=2, no=1, rows=True, date_text=None):
     ).encode("utf-8")
 
 
+def legacy_fixture():
+    title = "架空の情報処理法案"
+    return (
+        "<html><meta charset='utf-8'>第200回国会 2019年 11月 29日"
+        f"<table><tr><th>案件名：</th><td>日程第４　{title}（内閣提出）</td></tr></table>"
+        "<p>投票総数 2　賛成票 1　反対票 1</p>"
+        "<table><caption class='party'>架空会派(3名)<br>賛成票 1　反対票 1</caption>"
+        "<tr><td class='pro'><img src='../images/sansei.jpg' alt='票'></td>"
+        "<td class='con'>　</td><td class='nam'>架空一郎</td>"
+        "<td class='pro'>　</td><td class='con'><img src='../images/hantai.jpg' alt='票'></td>"
+        "<td class='nam'>架空二郎</td>"
+        "<td class='pro'>　</td><td class='con'>　</td>"
+        "<td class='nam'><img src='../images/spacer.gif' alt='投票なし'>架空三郎</td></tr>"
+        "</table></html>"
+    ).encode("utf-8"), title
+
+
 class VotesTests(unittest.TestCase):
+    def test_legacy_table_keeps_every_position_and_rejects_changed_mark(self):
+        payload, title = legacy_fixture()
+        result = parse_vote_page(
+            payload, bill_id="200-8", title=title, url=CANONICAL["200-8"]
+        )
+        self.assertTrue(result["allPublishedRowsConfirmed"])
+        self.assertEqual(result["rowCounts"], {"yes": 1, "no": 1, "noVote": 1})
+        self.assertEqual(
+            [row["voteText"] for row in result["rows"]],
+            ["賛成", "反対", "投票なし"],
+        )
+        self.assertEqual(result["rows"][0]["rowText"], "架空一郎")
+        self.assertNotIn("賛成", result["rows"][0]["rowText"])
+        with self.assertRaises(ValueError):
+            parse_vote_page(
+                payload.replace(b"sansei.jpg", b"other.jpg"),
+                bill_id="200-8",
+                title=title,
+                url=CANONICAL["200-8"],
+            )
+        with self.assertRaises(ValueError):
+            parse_vote_page(
+                payload.replace(b"spacer.gif", b"unknown.jpg"),
+                bill_id="200-8",
+                title=title,
+                url=CANONICAL["200-8"],
+            )
+        with self.assertRaises(ValueError):
+            parse_vote_page(
+                payload.replace(
+                    "sansei.jpg' alt='票'>".encode(),
+                    "sansei.jpg' alt='票'><img src='unknown.jpg' alt='票'>".encode(),
+                    1,
+                ),
+                bill_id="200-8",
+                title=title,
+                url=CANONICAL["200-8"],
+            )
+        with self.assertRaises(ValueError):
+            parse_vote_page(
+                payload,
+                bill_id="200-8",
+                title=title[2:7],
+                url=CANONICAL["200-8"],
+            )
+        extra = (
+            "<tr><td class='pro'>UNKNOWN MARK</td><td class='con'>　</td>"
+            "<td class='nam'>　</td></tr></table></html>"
+        ).encode()
+        with self.assertRaises(ValueError):
+            parse_vote_page(
+                payload.replace(b"</table></html>", extra),
+                bill_id="200-8",
+                title=title,
+                url=CANONICAL["200-8"],
+            )
+
     def test_partial_title_does_not_identify_the_official_bill(self):
         with self.assertRaises(ValueError):
             parse_vote_page(
@@ -122,7 +196,7 @@ class VotesTests(unittest.TestCase):
         self.assertNotIn("架空一郎", json.dumps(result, ensure_ascii=False))
 
     def test_three_urls_maximum_duplicate_and_official_scope(self):
-        urls = list(CANONICAL.values())
+        urls = [CANONICAL[bill] for bill in TITLES]
         result = self.run_collect(
             urls, fetch=lambda url: fixture({v: k for k, v in CANONICAL.items()}[url])
         )
@@ -139,7 +213,7 @@ class VotesTests(unittest.TestCase):
 
     def test_network_failure_retries_three_times_and_preserves_completed_target(self):
         calls = []
-        urls = list(CANONICAL.values())[:2]
+        urls = [CANONICAL[bill] for bill in TITLES][:2]
 
         def broken(url):
             calls.append(url)
@@ -369,7 +443,7 @@ class VotesTests(unittest.TestCase):
 
     def test_second_request_waits_at_least_three_seconds(self):
         waits = []
-        urls = list(CANONICAL.values())[:2]
+        urls = [CANONICAL[bill] for bill in TITLES][:2]
         with patch(
             "scripts.fetch_sangiin_votes.time.monotonic",
             side_effect=[10.0, 10.05, 13.0],

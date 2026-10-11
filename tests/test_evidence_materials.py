@@ -4,6 +4,9 @@ from pathlib import Path
 import tempfile
 import copy
 import unittest
+import subprocess
+import sys
+import os
 from unittest.mock import patch
 
 from scripts.register_external_material import register_local_material
@@ -71,6 +74,94 @@ class EvidenceMaterialsTests(unittest.TestCase):
             json.loads(self.record.read_text(encoding="utf-8"))["observed_at"],
         )
         self.assertIsNone(result["publishedAt"])
+
+    def test_registered_text_preserves_literal_utf8_without_execution(self):
+        ref = {**self.ref, "selector": {"kind": "registered-text"}}
+        result = read_material(ref, self.pool, _include_source_record=True)
+        original = (self.record.parent / "original.json").read_bytes()
+        self.assertEqual(result["text"], original.decode("utf-8"))
+        self.assertEqual(result["contentHash"], hashlib.sha256(original).hexdigest())
+        self.assertEqual(result["sourceRecord"]["_kind"], "registered-text")
+        self.assertNotIn("verified", result)
+        with self.assertRaises(ValueError):
+            read_material(
+                {**ref, "selector": {"kind": "registered-text", "start": 0}}, self.pool
+            )
+
+    def test_registered_text_rejects_non_utf8_pdf_tampering_and_escape(self):
+        for filename, data in [("invalid.txt", b"\xff"), ("test.pdf", b"%PDF-1.7")]:
+            source = self.root / filename
+            source.write_bytes(data)
+            record = register_local_material(
+                input_path=source,
+                source_url="https://www.sangiin.go.jp/test",
+                task_id=filename.replace(".", "-"),
+                title="試験",
+                purpose="試験",
+                storage_root=self.pool,
+                observed_at="2026-09-30T00:00:00Z",
+            )
+            ref = {
+                "id": filename,
+                "recordPath": str(record),
+                "originalHash": hashlib.sha256(data).hexdigest(),
+                "selector": {"kind": "registered-text"},
+            }
+            with self.subTest(filename=filename), self.assertRaises(ValueError):
+                read_material(ref, self.pool)
+        ref = {**self.ref, "selector": {"kind": "registered-text"}}
+        with self.assertRaises(ValueError):
+            read_material({**ref, "originalHash": "0" * 64}, self.pool)
+        outside = self.root / "outside.json"
+        outside.write_text("{}", encoding="utf-8")
+        with self.assertRaises(ValueError):
+            read_material({**ref, "recordPath": str(outside)}, self.pool)
+
+    def test_registered_text_cli_reads_public_registered_html_but_does_not_relax_speech_hosts(
+        self,
+    ):
+        source = self.root / "literal.html"
+        text = '<script>throw new Error("実行禁止")</script>\r\n反証 🧪'
+        source.write_bytes(text.encode("utf-8"))
+        record = register_local_material(
+            input_path=source,
+            source_url="https://www.digital.go.jp/test",
+            task_id="registered-html",
+            title="試験",
+            purpose="試験",
+            storage_root=self.pool,
+            observed_at="2026-09-30T00:00:00Z",
+        )
+        ref = {
+            "id": "registered-html",
+            "recordPath": str(record),
+            "originalHash": hashlib.sha256(source.read_bytes()).hexdigest(),
+            "selector": {"kind": "registered-text"},
+        }
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "scripts.read_evidence_materials",
+                "--material-root",
+                str(self.pool),
+                "--include-source-record",
+            ],
+            input=json.dumps([ref]).encode("utf-8"),
+            capture_output=True,
+            cwd=Path(__file__).resolve().parents[1],
+            env={**os.environ, "PYTHONUTF8": "1"},
+            timeout=30,
+            check=True,
+        )
+        material = json.loads(result.stdout)[0]
+        self.assertEqual(material["text"], text)
+        self.assertEqual(material["originalHash"], material["contentHash"])
+        with self.assertRaises(ValueError):
+            read_material(
+                {**ref, "selector": {"kind": "ndl-speech", "speechId": "test"}},
+                self.pool,
+            )
 
     def test_path_escape_is_rejected_before_reading(self):
         outside = self.root / "outside.json"

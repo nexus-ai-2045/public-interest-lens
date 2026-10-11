@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.parse import urlparse
 
-from .fetch_diet_minutes import _default_fetch_json, collect_pages
+from .fetch_diet_minutes import _default_fetch_json, _verified_material, collect_pages
 from .sangiin_bills import fetch_bill_pages
 from .evidence_materials import build_readable_evidence
 
@@ -79,21 +79,27 @@ def _read_verified_speeches(source_dir: Path) -> tuple[list[dict], dict]:
         if not isinstance(record_value, str) or not record_value:
             raise ValueError("registered source record missing")
         record_path = Path(record_value)
+        if not record_path.parts:
+            raise ValueError("registered source record path is empty")
+        local_ancestor = next((parent for parent in source_dir.resolve().parents
+                               if parent.name == ".local"), None)
         if not record_path.is_absolute():
-            record_path = Path(__file__).resolve().parents[1] / record_path
+            record_path = (local_ancestor.parent / record_path
+                           if local_ancestor is not None and record_path.parts[0] == ".local"
+                           else source_dir / record_path)
         record_path = record_path.resolve(strict=True)
-        if not record_path.is_relative_to((source_dir / "external-materials").resolve()):
-            raise ValueError("registered source path escapes run")
-        record = _read_json(record_path)
-        filename = record.get("saved_filename")
-        if (record.get("schema_version") != "external-material/v1"
-                or record.get("source_url") != entry["source_url"]
-                or record.get("sha256") != entry["sha256"]
-                or not isinstance(filename, str)):
-            raise ValueError("registered source metadata mismatch")
-        original = (record_path.parent / filename).resolve(strict=True)
-        if original.parent != record_path.parent or hashlib.sha256(original.read_bytes()).hexdigest() != entry["sha256"]:
-            raise ValueError("registered original hash mismatch")
+        _read_json(record_path)
+        roots = (source_dir / "external-materials",)
+        if local_ancestor is not None:
+            roots += (local_ancestor / "external-materials",)
+        try:
+            registered = _verified_material(record_path, roots=roots,
+                                            url=entry["source_url"], digest=entry["sha256"],
+                                            expected_bytes=len(payload))
+        except ValueError as error:
+            raise ValueError("registered original hash mismatch or metadata invalid") from error
+        if entry.get("observed_at") and entry["observed_at"] != registered["observed_at"]:
+            raise ValueError("page observation differs from registered record")
         page = json.loads(payload)
         records = page.get("speechRecord")
         if (not isinstance(records, list) or page.get("startRecord") != start
@@ -106,7 +112,8 @@ def _read_verified_speeches(source_dir: Path) -> tuple[list[dict], dict]:
             if record["speechID"] in ids:
                 raise ValueError("duplicate speech identifier")
             ids.add(record["speechID"])
-            speeches.append(record)
+            speeches.append({**record, "_sourceObservation": registered["observed_at"],
+                             "_sourceHash": entry["sha256"], "_sourceUrl": entry["source_url"]})
         next_start += len(records)
     if manifest.get("records_saved") != len(speeches):
         raise ValueError("source manifest count mismatch")
@@ -157,12 +164,18 @@ def build_dataset(source_dir: Path, *, as_of: str, candidate_pack: Path | None =
                       or quote not in (speech.get("speech") or "") else
                       "bill_action_and_impact_unverified")
             held.append({"id": candidate["id"], "reason": reason,
-                         "sourceSpeechId": candidate.get("source_speech_id")})
+                         "sourceSpeechId": candidate.get("source_speech_id"),
+                         **({"observedAt": speech["_sourceObservation"],
+                             "sha256": speech["_sourceHash"],
+                             "sourceUrl": speech["speechURL"] if _official_url(
+                                 speech.get("speechURL", "")) else speech["_sourceUrl"]}
+                            if speech is not None else {})})
     else:
         held = [{"id": item["speechID"], "reason": "speech_is_not_action_or_impact",
                  "sourceSpeechId": item["speechID"],
-                 **({"sourceUrl": item["speechURL"]} if _official_url(
-                     item.get("speechURL", "")) else {})} for item in speeches]
+                 "observedAt": item["_sourceObservation"], "sha256": item["_sourceHash"],
+                 "sourceUrl": item["speechURL"] if _official_url(
+                     item.get("speechURL", "")) else item["_sourceUrl"]} for item in speeches]
     return {
         "schemaVersion": SCHEMA_VERSION,
         "fictional": False,

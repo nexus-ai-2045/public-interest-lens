@@ -10,6 +10,7 @@ from urllib.parse import urlsplit
 
 from .fetch_diet_minutes import _validate_page, _verified_material
 from .fetch_sangiin_votes import read_registered_votes
+from .register_external_material import validate_source_url
 
 TOPIC_WORDS = (
     "研究",
@@ -46,7 +47,9 @@ def _official(url: str) -> bool:
     )
 
 
-def _registered(path: Path, root: Path, expected_hash: str) -> tuple[dict, bytes]:
+def _registered(
+    path: Path, root: Path, expected_hash: str, *, registered_text=False
+) -> tuple[dict, bytes]:
     path = path.resolve(strict=True)
     if not path.is_relative_to(root.resolve(strict=True)):
         raise ValueError("登録原本の参照が保管先外です")
@@ -56,11 +59,15 @@ def _registered(path: Path, root: Path, expected_hash: str) -> tuple[dict, bytes
     if not isinstance(record, dict):
         raise ValueError("登録メタデータはJSONオブジェクトが必要です")
     size = record.get("bytes")
-    if (
-        type(size) is not int
-        or not 0 < size <= MAX_MATERIAL_BYTES
-        or not _official(record.get("source_url", ""))
-    ):
+    source_url = record.get("source_url", "")
+    source_valid = _official(source_url)
+    if registered_text and isinstance(source_url, str):
+        validate_source_url(source_url)
+        parsed = urlsplit(source_url)
+        source_valid = (
+            parsed.scheme == "https" and not parsed.username and not parsed.password
+        )
+    if type(size) is not int or not 0 < size <= MAX_MATERIAL_BYTES or not source_valid:
         raise ValueError("登録原本のURLまたはサイズが不正です")
     checked = _verified_material(
         path,
@@ -109,14 +116,46 @@ def read_material(
     if not isinstance(ref, dict) or not isinstance(ref.get("selector"), dict):
         raise ValueError("原本参照と位置指定はオブジェクトが必要です")
     cache = {} if _cache is None else _cache
-    record_key = (str(Path(ref["recordPath"]).resolve()), ref["originalHash"])
+    registered_text = ref["selector"].get("kind") == "registered-text"
+    record_key = (
+        str(Path(ref["recordPath"]).resolve()),
+        ref["originalHash"],
+        registered_text,
+    )
     if record_key not in cache:
         cache[record_key] = _registered(
-            Path(ref["recordPath"]), material_root, ref["originalHash"]
+            Path(ref["recordPath"]),
+            material_root,
+            ref["originalHash"],
+            registered_text=registered_text,
         )
     record, payload = cache[record_key]
     selector = ref["selector"]
-    if selector["kind"] == "ndl-speech":
+    if registered_text:
+        if set(selector) != {"kind"} or Path(
+            record["saved_filename"]
+        ).suffix.lower() not in {
+            ".txt",
+            ".html",
+            ".htm",
+            ".json",
+            ".xml",
+            ".csv",
+            ".md",
+        }:
+            raise ValueError("登録テキストは位置指定なしの対応文字原本だけを読めます")
+        try:
+            text = payload.decode("utf-8", errors="strict")
+        except UnicodeDecodeError as error:
+            raise ValueError("登録テキストは厳格UTF-8が必要です") from error
+        if not text.strip() or "\x00" in text or payload.startswith(b"%PDF-"):
+            raise ValueError("登録テキストが空または非対応のバイナリです")
+        source_record = {
+            "_kind": "registered-text",
+            "id": ref["id"],
+            "locator": "literal UTF-8 original; no normalization",
+        }
+    elif selector["kind"] == "ndl-speech":
         if urlsplit(record["source_url"]).hostname != "kokkai.ndl.go.jp":
             raise ValueError("会議録の取得元が不正です")
         parsed_key = ("speech", record_key)
@@ -179,7 +218,15 @@ def read_material(
             "position": {"賛成": "for", "反対": "against", "投票なし": "not_voted"}.get(
                 matched[0]["voteText"], "unknown"
             ),
-            "locator": f'HTML line={matched[0]["sourceLine"]}; allPublishedRowsConfirmed={vote["allPublishedRowsConfirmed"]}',
+            "locator": (
+                f'HTML marker line={matched[0]["markerLine"]}; '
+                f'name line={matched[0]["sourceLine"]}; '
+                "quote=literal name cell; "
+                f'allPublishedRowsConfirmed={vote["allPublishedRowsConfirmed"]}'
+                if selector["billId"] == "200-8"
+                else f'HTML line={matched[0]["sourceLine"]}; '
+                f'allPublishedRowsConfirmed={vote["allPublishedRowsConfirmed"]}'
+            ),
         }
     else:
         raise ValueError("未対応の原本位置です")

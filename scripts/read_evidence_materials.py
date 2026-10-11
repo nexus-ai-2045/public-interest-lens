@@ -13,6 +13,7 @@ def main():
         description="登録原本を再読し、対応する本文を返します"
     )
     parser.add_argument("--material-root", type=Path, required=True)
+    parser.add_argument("--include-source-record", action="store_true")
     args = parser.parse_args()
     try:
         raw = sys.stdin.buffer.read(5_000_001)
@@ -20,7 +21,11 @@ def main():
             raise ValueError("入力の上限超過です")
         value = json.loads(raw.decode("utf-8"))
         if isinstance(value, list):
-            materials = read_materials(value, args.material_root)
+            materials = read_materials(
+                value,
+                args.material_root,
+                _include_source_record=args.include_source_record,
+            )
         elif isinstance(value, dict) and set(value) == {
             "materialRefs",
             "readableEvidence",

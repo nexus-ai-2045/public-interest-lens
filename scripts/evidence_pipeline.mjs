@@ -81,15 +81,19 @@ async function atomicJson(out, name, text) {
 function validateEvaluationResult(input, result) {
   fields(result, ['mode', 'rows', 'held', 'coverage', 'publicationStatus']);
   if (!Array.isArray(result.rows) || !Array.isArray(result.held)) throw new Error('評価結果一覧が不正です');
+  const selectedPeople = new Set(input.people.filter(person => input.options.actorGroup === 'organizations' ? person.actorType === 'organization' : person.actorType !== 'organization').map(person => person.id));
+  if ((input.options.timeBasis === 'outcome' || input.options.actorGroup !== undefined) && (new Set(result.rows.map(row => row.person?.id)).size !== selectedPeople.size || result.rows.some(row => !selectedPeople.has(row.person?.id)))) throw new Error('評価対象の集団と結果が一致しません');
   let contributions = 0;
   for (const row of result.rows) {
     fields(row, ['person', 'score', 'rank', 'eligibleCount', 'heldCount', 'contributions']);
     if (!Array.isArray(row.contributions) || row.eligibleCount !== row.contributions.length || !Number.isSafeInteger(row.heldCount) || row.heldCount < 0) throw new Error('人物の集計が不正です');
     const policies = new Set();
     for (const c of row.contributions) {
-      fields(c, ['policyId', 'actionKey', 'actionDate', 'role', 'score']);
-      if (policies.has(c.policyId) || !Number.isFinite(c.score) || c.score < 0) throw new Error('寄与点が不正または重複しています');
-      policies.add(c.policyId); contributions++;
+      fields(c, ['policyId', 'actionKey', 'actionDate', 'role', 'score', 'outcomeId']);
+      const resultKey = input.options.timeBasis === 'outcome' ? c.outcomeId : c.policyId;
+      const action = input.actions.find(a => a.actionId === c.actionKey && a.personId === row.person.id);
+      if (typeof resultKey !== 'string' || !resultKey || policies.has(resultKey) || !action || (input.options.timeBasis === 'outcome' && action.outcomeId !== c.outcomeId) || !Number.isFinite(c.score) || c.score < 0) throw new Error('寄与点が不正または重複しています');
+      policies.add(resultKey); contributions++;
     }
   }
   for (const held of result.held) fields(held, ['personId', 'policyId', 'actionId', 'reason']);
@@ -105,7 +109,7 @@ export function buildReviewPacket(release) {
   if (release.schemaVersion !== 'evidence-release/v1' || !/^[a-f0-9]{64}$/.test(releaseId) || hash(canonical(body)) !== releaseId
     || release.publicationStatus !== 'requires_human_review' || release.input?.evidenceEvaluation?.mode !== 'real' || release.result?.mode !== 'real') throw new Error('実資料評価版の整合性が不正です');
   const input = release.input.evidenceEvaluation;
-  fields(input.options, ['domain', 'direction', 'period', 'asOf', 'weights']);
+  fields(input.options, ['domain', 'direction', 'period', 'asOf', 'weights', 'timeBasis', 'dateFrom', 'dateTo', 'actorGroup']);
   fields(input.options.weights, ['economy', 'technology']);
   validateEvaluationResult(input, release.result);
   const verification = release.verification ? validateVerification(input, structuredClone(release.verification)) : null;
@@ -118,7 +122,7 @@ export function buildReviewPacket(release) {
       for (const contribution of row.contributions) {
         const action = input.actions.find(a => a.actionId === contribution.actionKey && a.personId === person.id && a.policyId === contribution.policyId);
         if (!action || !verification.actionRevisions.some(v => v.id === action.actionId && v.revisionId === action.revisionId)
-          || !input.assessments.some(a => a.policyId === action.policyId && a.policyVersion === action.policyVersion && a.position === action.position
+          || !input.assessments.some(a => a.policyId === action.policyId && a.policyVersion === action.policyVersion && a.position === action.position && (input.options.timeBasis !== 'outcome' || a.outcomeId === contribution.outcomeId)
             && a.direction === input.options.direction && (input.options.domain === 'overall' || a.domain === input.options.domain)
             && verification.assessmentRevisions.some(v => v.id === a.id && v.revisionId === hash(canonical(a))))) throw new Error('得点に行動・分析の検証参照がありません');
       }
@@ -126,7 +130,9 @@ export function buildReviewPacket(release) {
   }
   const source = new Map(input.materials.map(m => [m.id, m]));
   const safeText = value => {
-    if (typeof value !== 'string' || /(?:[a-z]:[\\/]|file:\/\/|\\\\|\/(?:Users|home)\/|\.local[\\/])/i.test(value)) throw new Error('レビュー資料へ非公開パスを含められません');
+    // 先頭の HTTPS scheme だけを除外し、本文中の連結パスも検出する。
+    const inspect = typeof value === 'string' && value.startsWith('https://') ? value.slice(8) : value;
+    if (typeof inspect !== 'string' || /(?:[a-z]:[\\/]|file:\/\/|\\\\|\/(?:Users|home)\/|\.local[\\/])/i.test(inspect)) throw new Error('レビュー資料へ非公開パスを含められません');
     return value;
   };
   const quote = q => {
@@ -139,6 +145,7 @@ export function buildReviewPacket(release) {
   const assessedPeople = new Set(release.result.rows.filter(r => r.score !== null && Number.isFinite(r.score)).map(r => r.person.id)).size;
   // hashと保存receiptの整合性は、実行時原本再読・独立検証の成功そのものではありません。
   const needsReadback = Boolean(verification && assessedPeople >= 2 && release.result.coverage.assessedActions >= 2);
+  const optionalFields = (record, names) => Object.fromEntries(names.filter(name => record[name] !== undefined).map(name => [name, typeof record[name] === 'string' ? safeText(record[name]) : record[name]]));
   const packet = {
     schemaVersion: 'evidence-review/v1', releaseId, engineHash: release.engineHash,
     publicationStatus: 'requires_human_review', verificationState: 'review_required',
@@ -146,8 +153,8 @@ export function buildReviewPacket(release) {
     conditions: input.options,
     scopeNote: '収録した有限政策の接続実証です。全国を代表する順位ではありません。',
     people: release.result.rows.map(r => ({ id: r.person.id, name: safeText(r.person.name), score: r.score, rank: r.rank, eligibleCount: r.eligibleCount, heldCount: r.heldCount })),
-    actions: input.actions.map(a => ({ actionId: a.actionId, revisionId: a.revisionId, personId: a.personId, policyId: a.policyId, policyVersion: a.policyVersion, actionDate: a.actionDate, role: a.role, position: a.position, description: safeText(a.description), quotes: a.quotes.map(quote) })),
-    assessments: input.assessments.map(a => ({ id: a.id, policyId: a.policyId, policyVersion: a.policyVersion, position: a.position, domain: a.domain, direction: a.direction, impact: a.impact, rationale: safeText(a.rationale), counterEvidence: safeText(a.counterEvidence), alternativeExplanation: safeText(a.alternativeExplanation), criterionVersion: a.criterionVersion, analysisVersion: a.analysisVersion, quotes: a.quotes.map(quote) })),
+    actions: input.actions.map(a => ({ actionId: a.actionId, revisionId: a.revisionId, personId: a.personId, policyId: a.policyId, policyVersion: a.policyVersion, actionDate: a.actionDate, role: a.role, position: a.position, description: safeText(a.description), ...optionalFields(a, ['interventionId', 'outcomeId']), quotes: a.quotes.map(quote) })),
+    assessments: input.assessments.map(a => ({ id: a.id, policyId: a.policyId, policyVersion: a.policyVersion, position: a.position, domain: a.domain, direction: a.direction, impact: a.impact, rationale: safeText(a.rationale), counterEvidence: safeText(a.counterEvidence), alternativeExplanation: safeText(a.alternativeExplanation), criterionVersion: a.criterionVersion, analysisVersion: a.analysisVersion, ...optionalFields(a, ['outcomeId', 'observationFrom', 'observationTo', 'implementationStatus', 'evaluationKind', 'evidenceMethod', 'scopeReason', 'durationReason', 'magnitudeReason', 'evaluatedAt']), quotes: a.quotes.map(quote) })),
     held: release.result.held.map(h => ({ ...(h.personId ? { personId: h.personId } : {}), ...(h.policyId ? { policyId: h.policyId } : {}), ...(h.actionId ? { actionId: h.actionId } : {}), reason: safeText(h.reason) })),
     coverage: release.result.coverage,
     reviewChecklist: ['人物の同一性・対象選挙', '行動と原資料の引用一致', '政策の立場別影響・反証・尺度', '係数と重み変更の感度', '取得範囲と未評価の表示', '引用・転載の権利', '訂正窓口', '公開内容・配信先の個別承認'],
