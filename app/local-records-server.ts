@@ -13,8 +13,8 @@ import { parseEconomicSnapshot, type EconomicSnapshot } from './src/economy-view
 export function economicSnapshotDigest(text: string): string {
   const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
   const code = 'import json,sys\nfrom scripts.build_economy_snapshot import snapshot_digest\nprint(snapshot_digest(json.load(sys.stdin)))';
-  let result = spawnSync('python3', ['-c', code], { input: text, cwd: repoRoot, encoding: 'utf8' });
-  if (result.error) result = spawnSync('python', ['-c', code], { input: text, cwd: repoRoot, encoding: 'utf8' });
+  let result = spawnSync('python3', ['-X', 'utf8', '-c', code], { input: text, cwd: repoRoot, encoding: 'utf8' });
+  if (result.error) result = spawnSync('python', ['-X', 'utf8', '-c', code], { input: text, cwd: repoRoot, encoding: 'utf8' });
   const digest = result.stdout?.trim() ?? '';
   if (result.status !== 0 || !/^[a-f0-9]{64}$/.test(digest)) throw new Error('EditionMismatch');
   return digest;
