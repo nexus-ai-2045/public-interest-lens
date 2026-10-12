@@ -63,9 +63,27 @@ def private_output(path):
 def write_json(path, data):
     target = private_output(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    temporary = target.with_suffix(target.suffix + '.pending')
+    temporary = pending_path(target)
     temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     temporary.replace(target)
+
+
+def pending_path(path):
+    return path.with_suffix(path.suffix + '.pending')
+
+
+def check_output_paths(corpus_root, plan, outputs):
+    root = corpus_root.resolve(strict=True)
+    inputs = {Path(row[key]).resolve() for row in plan['records'] for key in ('recordPath', 'sourcePath') if row.get(key)}
+    seen = set()
+    for output in outputs:
+        target = private_output(output)
+        for path in (target, pending_path(target).resolve()):
+            if path in seen or path in inputs:
+                raise TransferError('output_path_conflict')
+            if path.is_relative_to(root) and (path.name == 'record.json' or path.name.startswith('original.')):
+                raise TransferError('output_path_conflict')
+            seen.add(path)
 
 
 def build_plan(corpus_root):
@@ -117,6 +135,8 @@ def build_plan(corpus_root):
         item = objects[digest]
         if item['bytes'] != size:
             raise TransferError('duplicate_integrity_mismatch')
+        if item['mediaType'] != media_type:
+            raise TransferError('duplicate_media_type_conflict')
         if safe not in item['occurrences']:
             item['occurrences'].append(safe)
         entry['key'] = item['key']
@@ -337,6 +357,7 @@ def main(argv=None):
         if args.write and not args.plan_only and not args.receipt_output:
             raise TransferError('receipt_required')
         plan = build_plan(args.corpus_root)
+        check_output_paths(args.corpus_root, plan, [path for path in (args.plan_output, args.receipt_output) if path])
         if args.write and args.plan_output:
             write_json(args.plan_output, plan)
         if args.write and not args.plan_only:

@@ -192,6 +192,35 @@ class MaterialTransferTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertTrue(plan_path.exists())
 
+    def test_duplicate_media_type_conflict_stops_before_transfer(self):
+        self.record()
+        self.record('two', source_url='https://www.soumu.go.jp/other.pdf', media_type='application/octet-stream')
+        with self.assertRaisesRegex(transfer.TransferError, 'duplicate_media_type_conflict'):
+            transfer.build_plan(self.root)
+
+    def test_output_overlapping_inputs_or_other_output_is_rejected_before_write(self):
+        folder = self.record()
+        record_path = folder / 'record.json'
+        original = record_path.read_bytes()
+        alias = self.root / 'alias.json'
+        alias.symlink_to(record_path)
+        receipt = self.root / 'receipt.json'
+        cases = (
+            ['--plan-output', str(record_path), '--write', '--plan-only'],
+            ['--plan-output', str(alias), '--write', '--plan-only'],
+            ['--plan-output', str(self.root / 'new' / 'record.json'), '--write', '--plan-only'],
+            ['--plan-output', str(receipt), '--receipt-output', str(receipt), '--write'],
+            ['--plan-output', str(receipt) + '.pending', '--receipt-output', str(receipt), '--write'],
+        )
+        for extra in cases:
+            with self.subTest(extra=extra):
+                with patch.object(transfer, 'R2Client', side_effect=AssertionError), contextlib.redirect_stdout(io.StringIO()) as output:
+                    result = transfer.main(['--corpus-root', str(self.root), '--account-id', 'a'*32, '--bucket', 'private-test', *extra])
+                self.assertEqual(result, 1)
+                self.assertEqual(json.loads(output.getvalue())['errorCode'], 'output_path_conflict')
+                self.assertEqual(record_path.read_bytes(), original)
+                self.assertFalse(receipt.exists())
+
     def test_credential_query_keys_are_rejected(self):
         folder = self.record()
         path = folder / 'record.json'
