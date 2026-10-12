@@ -27,7 +27,10 @@ export function EconomyPage() {
       try {
         const response = await fetch(`/__local__/economy${edition ? `?edition=${encodeURIComponent(edition)}` : ''}`, { signal: controller.signal, cache: 'no-store' });
         if (!response.ok) throw new Error('local');
-        adopt(parseEconomicSnapshot(await response.text()), 'この画面はローカル保存版です。公開配布版ではありません。');
+        const text = await response.text();
+        const contentType = response.headers.get('content-type') ?? '';
+        if (!contentType.toLowerCase().includes('application/json') && /^\s*(?:<!doctype\s+html\b|<html\b)/i.test(text)) throw new Error('local');
+        adopt(parseEconomicSnapshot(text), 'この画面はローカル保存版です。公開配布版ではありません。');
         return;
       } catch (reason) {
         if (controller.signal.aborted) return;
