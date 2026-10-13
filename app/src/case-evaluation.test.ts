@@ -18,7 +18,7 @@ function artificialSpec(change: (spec: CaseEvaluationSpec) => void = () => {}): 
 }
 
 function artificialTexts(): Map<string, CaseMaterialText> {
-  const quotes = [...caseSource.citations, ...comparison.citations];
+  const quotes = [...caseSource.citations, ...comparison.citations, ...FINANCIAL_REVIVAL_DRAFT.assessments.flatMap(a => a.comparison?.citations ?? [])];
   return new Map(quotes.map(c => [c.id, { text: `人工の保存本文。${c.quote}。人工の後続文。`, observedAt: '2026-10-09T00:00:00Z', publishedAt: null }]));
 }
 
@@ -72,12 +72,24 @@ describe('金融再生プログラムの事例を既存の根拠評価へ接続�
     }
   });
 
-  it('現在の下書き仕様（影響段階・対照群が未確定）は全員保留で、仮の点数を作りません', async () => {
-    const { result, notes, input } = await evaluate({ ...FINANCIAL_REVIVAL_DRAFT, mode: 'test-only' });
+  it('影響段階が未確定の仕様は全員保留で、仮の点数を作りません', async () => {
+    const spec = structuredClone({ ...FINANCIAL_REVIVAL_DRAFT, mode: 'test-only' as const });
+    spec.assessments[0].impact = null;
+    const { result, notes, input } = await evaluate(spec);
     expect(input.assessments).toHaveLength(0);
     expect(notes.map(n => n.reason)).toEqual(['影響の段階が未確定のため分析を作りません']);
     expect(result.rows.every(r => r.score === null)).toBe(true);
     expect(result.coverage.assessedActions).toBe(0);
+  });
+
+  it('現在の仕様（段階1・比較群あり）を人工本文で通すと、竹中1点・伊藤0.5点で、結果観測後の行動は使いません', async () => {
+    const { row, input, heldReasons } = await evaluate({ ...FINANCIAL_REVIVAL_DRAFT, mode: 'test-only' });
+    expect(input.assessments[0]).toMatchObject({ impact: 1, evidenceMethod: 'quantitative', observationFrom: '2002-03-31', observationTo: '2005-03-31' });
+    expect(row('takenaka-heizo').score).toBe(1);
+    expect(row('ito-fsa').score).toBe(0.5);
+    expect(row('ito-fsa').contributions[0].actionDate).toBe('2002-10-30');
+    expect(row('okamoto-fsa').score).toBeNull();
+    expect(heldReasons('okamoto-fsa')).toEqual(['行動または引用が未検証です']);
   });
 
   it('引用が保存本文に無い、または行動を二重に割り当てた仕様は変換で止めます', async () => {
