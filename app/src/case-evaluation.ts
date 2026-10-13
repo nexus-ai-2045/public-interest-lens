@@ -71,8 +71,9 @@ export async function buildCaseEvaluationInput(source: CaseSource, spec: CaseEva
 }
 
 /**
- * 金融再生プログラムの評価仕様の下書き。実在評価として成立していません。
- * 伊藤（2002副大臣・2005大臣）は同一人物の公式在職記録が未確認、影響段階と対照群は未確定です。
+ * 金融再生プログラムの評価仕様。独立検証と原本readbackを通るまでは実在評価として成立していません。
+ * 影響段階1（限定的）は2026-10-13の人間判断。比較群は金融庁「（表１）金融再生法開示債権等の推移」（docs/reports/fsa-financial-revival-2002.md）。
+ * 伊藤（2002副大臣・2005大臣）は同一人物の公式在職記録が未確認です。
  */
 export const FINANCIAL_REVIVAL_DRAFT: CaseEvaluationSpec = {
   mode: 'real', namespace: 'fsa-financial-revival-2002', policyId: 'fsa-financial-revival-2002', policyVersion: '2002-10-30', outcomeId: 'major-bank-npl-ratio',
@@ -83,12 +84,15 @@ export const FINANCIAL_REVIVAL_DRAFT: CaseEvaluationSpec = {
     { personId: 'okamoto-fsa', name: '岡本（金融危機対応室長）', roleClass: '行政官', actorIds: ['okamoto-20021219'], role: 'context', position: 'for' },
   ],
   assessments: [{
-    id: 'npl-ratio-major-banks', position: 'for', domain: 'economy', direction: 'benefit', impact: null, comparison: null,
+    id: 'npl-ratio-major-banks', position: 'for', domain: 'economy', direction: 'benefit', impact: 1,
+    // 引用文は Mac 側で保存した業態別表（CSV）の行。原本readbackでの一致は独立検証で確かめる。
+    comparison: { treatedGroup: '主要行', controlGroup: '地域銀行', observationFrom: '2002-03-31', observationTo: '2005-03-31',
+      citations: [{ id: 'fsaNplTable1', url: 'https://www.fsa.go.jp/status/npl/20070809/data01.xlsx', quote: '平成17年3月期,主要行,2.9' }] },
     citationIds: ['danwa20050525', 'ito20050525'],
-    rationale: '主要行の不良債権比率が8.4%から2.9%へ下がったと実施主体が発表している。',
-    counterEvidence: '査定の厳格化、貸出の増減、対象行の範囲でも比率は動く。',
-    alternativeExplanation: '日銀の量的緩和、輸出回復、りそな救済などの交絡を分離していない。',
-    criterionVersion: 'outcome-v1', analysisVersion: 'draft-1', evaluatedAt: '2026-10-13T00:00:00Z',
-    scopeReason: '主要行の不良債権比率に限る。GDPへの経路は未確立。', durationReason: '2002-10-30の公表から2005-05-25の目標達成発表まで。', magnitudeReason: '未確定（対照群の結果で決める）。',
+    rationale: '主要行の不良債権比率は平成14年3月期8.4%から平成17年3月期2.9%へ下がり、同期間の地域銀行（8.0%→5.5%）との差の差は−3.0ポイント。差は平成19年3月期まで続いた。',
+    counterEvidence: '開始前（平成12→14年3月期）に主要行は地域銀行より1.2ポイント多く悪化しており、差の一部は揺り戻しの可能性がある。査定の厳格化や債権売却でも比率は下がる。',
+    alternativeExplanation: '日銀の量的緩和、輸出回復、りそな救済、再生専門子会社の算入時期の違い、埼玉りそな銀行の地域銀行への編入を分離していない。地域銀行にもリレーションシップバンキングの行動計画がかかっていた。',
+    criterionVersion: 'outcome-v1', analysisVersion: 'did-1', evaluatedAt: '2026-10-13T00:00:00Z',
+    scopeReason: '主要行（都銀・信託）の不良債権比率に限る。GDPや貸出への経路は未確立。', durationReason: '平成14年3月期から平成17年3月期。差は平成19年3月期まで持続。', magnitudeReason: '差の差−3.0ポイント。経済全体への経路が未確立のため、段階1（限定的）とした（2026-10-13の人間判断）。',
   }],
 };
