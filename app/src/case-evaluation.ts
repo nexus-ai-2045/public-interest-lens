@@ -1,4 +1,5 @@
 import { actionIdentity, actionRevision, sha256, type EvidenceAction, type EvidenceEvaluationInput, type Material, type PositionAssessment, type QuoteRef } from './evidence-evaluation';
+import { judgeImpact, type ImpactSeries } from './impact-rule';
 import type { Involvement, RankingOptions } from './ranking';
 
 /** 公開配布版の事例（data/distribution/case-source.json）のうち、評価入力へ写す部分だけです。 */
@@ -12,6 +13,8 @@ export type CasePersonSpec = { personId: string; name: string; roleClass?: strin
 export type CaseComparison = { treatedGroup: string; controlGroup: string; observationFrom: string; observationTo: string; citations: CaseCitation[] };
 export type CaseAssessmentSpec = Pick<PositionAssessment, 'domain' | 'direction' | 'rationale' | 'counterEvidence' | 'alternativeExplanation' | 'criterionVersion' | 'analysisVersion' | 'evaluatedAt' | 'scopeReason' | 'durationReason' | 'magnitudeReason'> & {
   id: string; position: 'for' | 'against'; impact: 1 | 2 | 3 | null; citationIds: string[]; comparison: CaseComparison | null;
+  /** 実測の系列。あれば影響段階は判定ルール（impact-rule.ts、設計決定0007）で決め、impact は null にしておきます。 */
+  series?: ImpactSeries;
 };
 export type CaseEvaluationSpec = { mode: EvidenceEvaluationInput['mode']; namespace: string; policyId: string; policyVersion: string; outcomeId: string; options: RankingOptions; people: CasePersonSpec[]; assessments: CaseAssessmentSpec[] };
 /** 保存原本の本文。引用は本文中の位置で照合します（引用文そのものを本文とみなす推定はしません）。 */
@@ -57,9 +60,17 @@ export async function buildCaseEvaluationInput(source: CaseSource, spec: CaseEva
   const notes: CaseConversion['notes'] = [];
   const assessments: PositionAssessment[] = [];
   for (const a of spec.assessments) {
+    let impact = a.impact;
+    if (a.series) {
+      if (a.impact !== null) fail(`${a.id} は実測の系列を持つので、影響段階を手で入れず判定ルールに任せてください`);
+      const judged = judgeImpact(a.series);
+      notes.push({ assessmentId: a.id, reason: `判定ルール ${judged.ruleVersion}: ${judged.reason}` });
+      if (judged.direction !== null && judged.direction !== a.direction) { notes.push({ assessmentId: a.id, reason: '判定ルールの向きが仕様の向きと逆のため分析を作りません' }); continue; }
+      impact = judged.stage;
+    }
     // 影響段階が未確定のまま仮の値を置かない。分析を作らず、評価器側で「影響根拠不足」として保留させる。
-    if (a.impact === null) { notes.push({ assessmentId: a.id, reason: '影響の段階が未確定のため分析を作りません' }); continue; }
-    const { comparison, citationIds, impact, ...rest } = a;
+    if (impact === null) { notes.push({ assessmentId: a.id, reason: '影響の段階が未確定のため分析を作りません' }); continue; }
+    const { comparison, citationIds, impact: _manual, series: _series, ...rest } = a;
     assessments.push({ ...rest, impact, policyId: spec.policyId, policyVersion: spec.policyVersion, outcomeId: spec.outcomeId,
       quotes: await quotesFor([...citationIds, ...(comparison?.citations.map(c => c.id) ?? [])]),
       observationFrom: comparison?.observationFrom ?? source.observationFrom, observationTo: comparison?.observationTo ?? source.observationTo,
@@ -72,7 +83,7 @@ export async function buildCaseEvaluationInput(source: CaseSource, spec: CaseEva
 
 /**
  * 金融再生プログラムの評価仕様。独立検証と原本readbackを通るまでは実在評価として成立していません。
- * 影響段階1（限定的）は2026-10-13の人間判断。比較群は金融庁「（表１）金融再生法開示債権等の推移」（docs/reports/fsa-financial-revival-2002.md）。
+ * 影響段階は判定ルール（impact-rule.ts、設計決定0007）が実測の系列から決めます。2026-10-13の人間判断（段階1）は、ルール導入で置き換えました。比較群は金融庁「（表１）金融再生法開示債権等の推移」（docs/reports/fsa-financial-revival-2002.md）。
  * 伊藤（2002副大臣・2005大臣）は同一人物の公式在職記録が未確認です。
  */
 export const FINANCIAL_REVIVAL_DRAFT: CaseEvaluationSpec = {
@@ -84,7 +95,16 @@ export const FINANCIAL_REVIVAL_DRAFT: CaseEvaluationSpec = {
     { personId: 'okamoto-fsa', name: '岡本（金融危機対応室長）', roleClass: '行政官', actorIds: ['okamoto-20021219'], role: 'context', position: 'for' },
   ],
   assessments: [{
-    id: 'npl-ratio-major-banks', position: 'for', domain: 'economy', direction: 'benefit', impact: 1,
+    id: 'npl-ratio-major-banks', position: 'for', domain: 'economy', direction: 'benefit', impact: null,
+    series: {
+      definition: '金融庁「（表１）金融再生法開示債権等の推移」の不良債権比率（％）。主要行＝46行目、地域銀行＝58行目',
+      start: '2002-10-30', better: 'lower', economy: null, sectorGdpShare: null,
+      target: [
+        { asOf: '2000-03-31', treated: 5.4, control: 6.2 }, { asOf: '2001-03-31', treated: 5.3, control: 7.3 }, { asOf: '2002-03-31', treated: 8.4, control: 8.0 },
+        { asOf: '2003-03-31', treated: 7.2, control: 7.8 }, { asOf: '2004-03-31', treated: 5.2, control: 6.9 }, { asOf: '2005-03-31', treated: 2.9, control: 5.5 },
+        { asOf: '2006-03-31', treated: 1.8, control: 4.5 }, { asOf: '2007-03-31', treated: 1.5, control: 4.0 },
+      ],
+    },
     // 引用文は Mac 側で保存した業態別表（CSV）の行。原本readbackでの一致は独立検証で確かめる。
     comparison: { treatedGroup: '主要行', controlGroup: '地域銀行', observationFrom: '2002-03-31', observationTo: '2005-03-31',
       citations: [{ id: 'fsaNplTable1', url: 'https://www.fsa.go.jp/status/npl/20070809/data01.xlsx', quote: '平成17年3月期,主要行,2.9' }] },
@@ -93,6 +113,6 @@ export const FINANCIAL_REVIVAL_DRAFT: CaseEvaluationSpec = {
     counterEvidence: '開始前（平成12→14年3月期）に主要行は地域銀行より1.2ポイント多く悪化しており、差の一部は揺り戻しの可能性がある。査定の厳格化や債権売却でも比率は下がる。',
     alternativeExplanation: '日銀の量的緩和、輸出回復、りそな救済、再生専門子会社の算入時期の違い、埼玉りそな銀行の地域銀行への編入を分離していない。地域銀行にもリレーションシップバンキングの行動計画がかかっていた。',
     criterionVersion: 'outcome-v1', analysisVersion: 'did-1', evaluatedAt: '2026-10-13T00:00:00Z',
-    scopeReason: '主要行（都銀・信託）の不良債権比率に限る。GDPや貸出への経路は未確立。', durationReason: '平成14年3月期から平成17年3月期。差は平成19年3月期まで持続。', magnitudeReason: '差の差−3.0ポイント。経済全体への経路が未確立のため、段階1（限定的）とした（2026-10-13の人間判断）。',
+    scopeReason: '主要行（都銀・信託）の不良債権比率に限る。GDPや貸出への経路は未確立。', durationReason: '平成14年3月期から平成17年3月期。差は平成19年3月期まで持続。', magnitudeReason: '差の差−3.0ポイント（平成14→17年3月期）。段階は判定ルールが系列から決める。',
   }],
 };
