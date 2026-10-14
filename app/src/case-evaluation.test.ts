@@ -12,6 +12,7 @@ function artificialSpec(change: (spec: CaseEvaluationSpec) => void = () => {}): 
   spec.mode = 'test-only';
   spec.namespace = 'test-only';
   spec.assessments[0].impact = 2;
+  delete spec.assessments[0].series;
   spec.assessments[0].comparison = structuredClone(comparison);
   change(spec);
   return spec;
@@ -75,6 +76,7 @@ describe('金融再生プログラムの事例を既存の根拠評価へ接続�
   it('影響段階が未確定の仕様は全員保留で、仮の点数を作りません', async () => {
     const spec = structuredClone({ ...FINANCIAL_REVIVAL_DRAFT, mode: 'test-only' as const });
     spec.assessments[0].impact = null;
+    delete spec.assessments[0].series;
     const { result, notes, input } = await evaluate(spec);
     expect(input.assessments).toHaveLength(0);
     expect(notes.map(n => n.reason)).toEqual(['影響の段階が未確定のため分析を作りません']);
@@ -82,14 +84,31 @@ describe('金融再生プログラムの事例を既存の根拠評価へ接続�
     expect(result.coverage.assessedActions).toBe(0);
   });
 
-  it('現在の仕様（段階1・比較群あり）を人工本文で通すと、竹中1点・伊藤0.5点で、結果観測後の行動は使いません', async () => {
-    const { row, input, heldReasons } = await evaluate({ ...FINANCIAL_REVIVAL_DRAFT, mode: 'test-only' });
+  it('現在の仕様は判定ルールが実測から段階を決め、開始前のばらつきが大きいため全員保留になります', async () => {
+    const { result, input, notes } = await evaluate({ ...FINANCIAL_REVIVAL_DRAFT, mode: 'test-only' });
+    expect(input.assessments).toHaveLength(0);
+    expect(notes[0].reason).toMatch(/^判定ルール impact-rule-v1: 効果-1\.575（開始前のばらつき1\.2/);
+    expect(notes[1].reason).toBe('影響の段階が未確定のため分析を作りません');
+    expect(result.rows.every(r => r.score === null)).toBe(true);
+  });
+
+  it('判定ルールが段階1を出す系列なら、竹中1点・伊藤0.5点で、結果観測後の行動は使いません', async () => {
+    const spec = structuredClone({ ...FINANCIAL_REVIVAL_DRAFT, mode: 'test-only' as const });
+    // 人工の系列（開始前の差がほぼ一定）。実在の統計ではありません。
+    spec.assessments[0].series!.target = [0, 0.1, -0.1, -0.5, -3, -3, -3, -3].map((g, i) => ({ asOf: `${2000 + i}-03-31`, treated: 8 + g, control: 8 }));
+    const { row, input, heldReasons } = await evaluate(spec);
     expect(input.assessments[0]).toMatchObject({ impact: 1, evidenceMethod: 'quantitative', observationFrom: '2002-03-31', observationTo: '2005-03-31' });
     expect(row('takenaka-heizo').score).toBe(1);
     expect(row('ito-fsa').score).toBe(0.5);
     expect(row('ito-fsa').contributions[0].actionDate).toBe('2002-10-30');
     expect(row('okamoto-fsa').score).toBeNull();
     expect(heldReasons('okamoto-fsa')).toEqual(['行動または引用が未検証です']);
+  });
+
+  it('実測の系列があるのに段階を手で入れた仕様は止めます', async () => {
+    const spec = structuredClone({ ...FINANCIAL_REVIVAL_DRAFT, mode: 'test-only' as const });
+    spec.assessments[0].impact = 1;
+    await expect(buildCaseEvaluationInput(caseSource, spec, artificialTexts())).rejects.toThrow('判定ルールに任せて');
   });
 
   it('引用が保存本文に無い、または行動を二重に割り当てた仕様は変換で止めます', async () => {
