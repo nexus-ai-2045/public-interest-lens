@@ -1,0 +1,43 @@
+name: 訂正・異議の申し立て
+description: 評価・引用・人物の同定・反証について、誤りや不足を知らせる
+title: "[訂正] "
+labels: ["correction"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        この欄は公開されます。ご自身や第三者の連絡先・住所などの個人情報、非公開資料の本文は書かないでください。
+        受け付けた後の流れは [訂正の手順](https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/corrections.md) にあります。
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 種類
+      options:
+        - 引用・出典の誤り
+        - 人物の取り違え（同姓同名・在職期間）
+        - 投票・行動の記録の誤り
+        - 反証・別の説明の追加
+        - 評価の判定そのものへの異議
+        - その他
+    validations:
+      required: true
+  - type: input
+    id: target
+    attributes:
+      label: 対象
+      description: 画面のURL、または人物・政策の名前
+    validations:
+      required: true
+  - type: textarea
+    id: claim
+    attributes:
+      label: どこが、どう違うか
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 根拠となる公開資料
+      description: 公的機関の資料・会議録・統計など、誰でも確認できる出典のURLと該当箇所
+    validations:
+      required: true
