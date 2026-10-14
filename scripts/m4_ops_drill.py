@@ -23,6 +23,7 @@ from scripts import build_public_distribution as distribution
 
 EVIDENCE_KIND = "synthetic_drill_not_m4_evidence"
 MARK = "【架空・訓練用】"
+SYNTHETIC_LABEL = f"{MARK}架空の統計（実在の提供元ではない）"
 FIXTURE_HOST_PATH = "https://www.fsa.go.jp/__synthetic-drill-fixture__/"
 INDICATORS = {"NY.GDP.MKTP.KN": 500, "NY.GDP.MKTP.CN": 520, "SP.POP.TOTL": 100}
 ORIGINAL_QUOTE = f"{MARK}架空の発表文です。架空人物Aが架空施策を説明した、と記す。"
@@ -120,7 +121,10 @@ def observed_state(output_root: Path, public_dir: Path) -> dict:
         "latestYear": latest_year,
         "publicEconomyMatches": (public_dir / "economy.json").read_bytes() == economy_bytes,
         "publicCaseMatches": (public_dir / "case.json").read_bytes() == case_bytes,
-        "publicReleaseMatches": (public_dir / "releases" / f"{release}.json").read_bytes() == economy_bytes,
+        "publicReleaseMatches": (public_dir / "releases" / f"{release}.json").read_bytes() == economy_bytes
+        and (public_dir / "cases" / f"{release}.json").read_bytes() == case_bytes,
+        "provider": economy.get("provider"),
+        "evidenceKind": economy.get("evidenceKind"),
         "personScores": manifest["personScores"],
         "scoringStatus": manifest["scoringStatus"],
     }
@@ -141,6 +145,8 @@ def _expect(step: str, state: dict, *, latest_year: int, quote: str, snapshot_id
         problems.append("引用が期待した改訂ではありません")
     if not (state["publicEconomyMatches"] and state["publicCaseMatches"] and state["publicReleaseMatches"]):
         problems.append("配信用の写しが現在版と一致しません")
+    if state["evidenceKind"] != "synthetic_drill_not_m4_evidence" or not str(state["provider"]).startswith(MARK):
+        problems.append("生成物に架空データの印がありません")
     if state["personScores"] != 0 or state["scoringStatus"] != "held":
         problems.append("架空訓練で点数が作られました")
     if problems:
@@ -161,7 +167,7 @@ def run_drill(work_root: Path) -> dict:
     steps: list[dict] = []
 
     def build(statistics: Path, case: Path) -> dict:
-        return distribution.build_public_distribution(statistics, case, output_root, public_dir)
+        return distribution.build_public_distribution(statistics, case, output_root, public_dir, synthetic_label=SYNTHETIC_LABEL)
 
     def record(step: str, **extra) -> dict:
         state = observed_state(output_root, public_dir)
@@ -268,7 +274,7 @@ def run_drill(work_root: Path) -> dict:
     economy_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     tampered_current = (tampered / "out" / "current.json").read_bytes()
     try:
-        distribution.build_public_distribution(stats_2020, case_original, tampered / "out", tampered / "public")
+        distribution.build_public_distribution(stats_2020, case_original, tampered / "out", tampered / "public", synthetic_label=SYNTHETIC_LABEL)
     except ValueError:
         pass
     else:
