@@ -84,19 +84,9 @@ describe('金融再生プログラムの事例を既存の根拠評価へ接続�
     expect(result.coverage.assessedActions).toBe(0);
   });
 
-  it('現在の仕様は判定ルールが実測から段階を決め、開始前のばらつきが大きいため全員保留になります', async () => {
-    const { result, input, notes } = await evaluate({ ...FINANCIAL_REVIVAL_DRAFT, mode: 'test-only' });
-    expect(input.assessments).toHaveLength(0);
-    expect(notes[0].reason).toMatch(/^判定ルール impact-rule-v1: 効果-1\.575（開始前のばらつき1\.2/);
-    expect(notes[1].reason).toBe('影響の段階が未確定のため分析を作りません');
-    expect(result.rows.every(r => r.score === null)).toBe(true);
-  });
-
-  it('判定ルールが段階1を出す系列なら、竹中1点・伊藤0.5点で、結果観測後の行動は使いません', async () => {
-    const spec = structuredClone({ ...FINANCIAL_REVIVAL_DRAFT, mode: 'test-only' as const });
-    // 人工の系列（開始前の差がほぼ一定）。実在の統計ではありません。
-    spec.assessments[0].series!.target = [0, 0.1, -0.1, -0.5, -3, -3, -3, -3].map((g, i) => ({ asOf: `${2000 + i}-03-31`, treated: 8 + g, control: 8 }));
-    const { row, input, heldReasons } = await evaluate(spec);
+  it('現在の仕様は判定ルールが実測から段階1を決め、竹中1点・伊藤0.5点で、結果観測後の行動は使いません', async () => {
+    const { row, input, heldReasons, notes } = await evaluate({ ...FINANCIAL_REVIVAL_DRAFT, mode: 'test-only' });
+    expect(notes[0].reason).toMatch(/^判定ルール impact-rule-v1: 効果-2\.6565（開始前のばらつき1\.280519/);
     expect(input.assessments[0]).toMatchObject({ impact: 1, evidenceMethod: 'quantitative', observationFrom: '2002-03-31', observationTo: '2005-03-31' });
     expect(row('takenaka-heizo').score).toBe(1);
     expect(row('ito-fsa').score).toBe(0.5);

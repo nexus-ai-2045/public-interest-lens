@@ -10,10 +10,15 @@ const series = (gaps: number[], change: Partial<ImpactSeries> = {}): ImpactSerie
 const clear = [0, 0.1, -0.1, 0.05, 0, -0.5, -3, -3, -3.1, -3];
 
 describe('影響段階の判定ルール impact-rule-v1', () => {
-  it('金融再生の実測（平成12〜19年3月期）は、開始前のばらつきが大きく保留になる', () => {
+  it('金融再生の実測（平成10〜19年3月期、開始前5年）は段階1になる', () => {
     const judged = judgeImpact(FINANCIAL_REVIVAL_DRAFT.assessments[0].series!);
-    expect(judged).toMatchObject({ stage: null, direction: 'benefit', preYears: 3, effect: -1.575, spread: 1.2 });
-    expect(judged.reason).toContain('保留');
+    expect(judged).toMatchObject({ stage: 1, direction: 'benefit', preYears: 5, effect: -2.6565, spread: 1.280519 });
+    expect(judged.reason).toContain('経済全体の指標で同じ向きの差が確認できないため段階1');
+  });
+
+  it('金融再生でも開始前を3年に削ると、ばらつきの2倍を超えず保留になる', () => {
+    const s = FINANCIAL_REVIVAL_DRAFT.assessments[0].series!;
+    expect(judgeImpact({ ...s, target: s.target.filter(p => p.asOf >= '2000-03-31') })).toMatchObject({ stage: null, preYears: 3 });
   });
 
   it('開始前が3年に足りなければ、計算せずに保留', () => {
