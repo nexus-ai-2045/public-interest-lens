@@ -96,6 +96,12 @@
 node scripts/evidence_pipeline.mjs --review-input <保存評価版JSON> --output-dir <repo内.localのレビュー保存先>
 ```
 
+金融再生プログラムの事例評価（`FINANCIAL_REVIVAL_DRAFT`）は、登録原本を持つMacで次の入口から非公開レビュー資料にできます。出典URLで登録原本へ結び付けた引用本文を再読して評価入力を作り、原本を別に再読する実行側の独立検証（人物照合・引用位置・`judgeImpact`の再計算）を通った行動と分析だけが点数になります。人物照合台帳（`case-identities/v1`、形式は `scripts/case_evaluation_run.mjs` 冒頭）の引用が登録済み名簿の再読本文に逐語で無い人物は未照合で、その行は保留です。検証の受領書をCLI入力で渡すことはできません。出力は `.local/` 配下だけで、公開・送信はしません。
+
+```text
+node scripts/case_evaluation_run.mjs --case-source data/distribution/case-source.json --material-root <登録原本の保管先> --identities <人物照合台帳JSON> --output-dir <repo内.local配下>
+```
+
 段階ごとの受入条件の正本は `PROJECT_SSOT.md`。ここでは今回の確認状態と、完了のために回収する証拠を記録する。過去の遠隔検証や公開承認を今回の差分に流用しない。
 
 | 段階 | 現在の状態 | 担当と必要な完了証拠 |
