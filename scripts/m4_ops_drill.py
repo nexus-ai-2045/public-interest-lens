@@ -291,15 +291,11 @@ def run_drill(work_root: Path) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="M4運用訓練（架空データ）。結果はM4の証跡ではありません。")
-    parser.add_argument("--work-root", type=Path, help="訓練の出力先。省略時は一時ディレクトリを使い、終了時に消します。")
-    args = parser.parse_args()
-    if args.work_root:
-        if args.work_root.exists() and any(args.work_root.iterdir()):
-            parser.error("--work-root は空のディレクトリを指定してください")
-        result = run_drill(args.work_root)
-    else:
-        with tempfile.TemporaryDirectory() as folder:
-            result = run_drill(Path(folder))
+    # 生成物は実在の出典（世界銀行・金融庁）の体裁を借りるため、残すと実データと取り違えられる。
+    # 出力先は指定させず、一時ディレクトリで実行して終了時に必ず消す。
+    parser.parse_args()
+    with tempfile.TemporaryDirectory() as folder:
+        result = run_drill(Path(folder))
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 

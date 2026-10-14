@@ -247,10 +247,10 @@ python -m scripts.run_local_mvp --output-dir .local/mvp/sangiin-bills-20260924 -
 
 ```powershell
 python -m unittest tests.test_m4_ops_drill -v
-python -m scripts.m4_ops_drill --work-root .local/m4-drill/<実行日>
+python -m scripts.m4_ops_drill
 ```
 
-`--work-root` は空のディレクトリを指定します。省略すると一時ディレクトリで実行し、終了時に消します。各段で`current.json`が指す世代を読み直し、統計・事例・`DB`の版識別子、`DB`整合性、最新年、引用、配信用の写しの一致、点数0件を期待値と照合します。期待と違えば停止します。
+訓練は一時ディレクトリで実行し、終了時に生成物を消します。生成物は世界銀行・金融庁の出典の体裁を借りた架空データなので、残して再利用できないようにしています。各段で`current.json`が指す世代を読み直し、統計・事例・`DB`の版識別子、`DB`整合性、最新年、引用、配信用の写しの一致、点数0件を期待値と照合します。期待と違えば停止します。
 
 | 段 | 操作 | 期待する状態 |
 |---|---|---|
