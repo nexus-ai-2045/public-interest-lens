@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { judgeImpact, type ImpactPoint, type ImpactSeries } from './impact-rule';
+import { judgeAcrossCountries, judgeImpact, type ImpactPoint, type ImpactSeries } from './impact-rule';
 import { FINANCIAL_REVIVAL_DRAFT } from './case-evaluation';
 
 // 金融再生以外は人工の系列です。実在の統計ではありません。
@@ -47,5 +47,35 @@ describe('影響段階の判定ルール impact-rule-v1', () => {
     expect(judgeImpact(series(clear.map(g => -g)))).toMatchObject({ stage: 1, direction: 'harm' });
     const dup = series(clear); dup.target[1] = { ...dup.target[0] };
     expect(judgeImpact(dup)).toMatchObject({ stage: null, reason: '同じ期末の観測が重複しています' });
+  });
+});
+
+describe('国際比較の判定 judgeAcrossCountries', () => {
+  // 人工の系列。日本は開始後に3下がり、比較国はほぼ横ばい。
+  const yearsOf = (vals: number[]) => vals.map((value, i) => ({ asOf: `${1995 + i}-12-31`, value }));
+  const japan = yearsOf([100, 100.1, 99.9, 100, 100.05, 99.5, 97, 97, 96.9, 97]);
+  const flat = (country: string, wobble = 0) => ({ country, points: yearsOf([100, 100 + wobble, 100, 100 - wobble, 100, 100, 100, 100, 100, 100]) });
+  const cross = (controls: { country: string; points: { asOf: string; value: number }[] }[]) =>
+    judgeAcrossCountries({ definition: '人工', start: '1999-10-01', better: 'lower', sectorGdpShare: null, treated: japan, controls });
+
+  it('3か国すべてで同じ向きなら段階1', () => {
+    expect(cross([flat('A'), flat('B', 0.05), flat('C', 0.1)])).toMatchObject({ stage: 1, direction: 'benefit' });
+  });
+
+  it('比較国が2か国では保留', () => {
+    expect(cross([flat('A'), flat('B')])).toMatchObject({ stage: null });
+  });
+
+  it('向きが国ごとに割れたら保留し、多数が逆向きならその向きになる', () => {
+    const falling = (country: string) => ({ country, points: yearsOf([100, 100.1, 99.9, 100, 100.05, 99.5, 96, 96, 95.9, 96]) });
+    expect(cross([flat('A'), falling('B'), flat('C', 3)])).toMatchObject({ stage: null });
+    expect(cross([flat('A'), falling('B'), falling('C')])).toMatchObject({ stage: 1, direction: 'harm' });
+  });
+
+  it('開始前から差が同じ向きに開いていた国は数えない', () => {
+    const rising = (country: string) => ({ country, points: yearsOf([97, 98, 99, 100.5, 101.5, 101, 101, 101, 101, 101]) });
+    const judged = cross([rising('A'), rising('B'), flat('C')]);
+    expect(judged.countries.filter(c => c.country !== 'C').every(c => !c.passes)).toBe(true);
+    expect(judged.stage).toBeNull();
   });
 });
