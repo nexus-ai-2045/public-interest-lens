@@ -83,7 +83,7 @@ export async function buildCaseEvaluationInput(source: CaseSource, spec: CaseEva
 
 /**
  * 金融再生プログラムの評価仕様。独立検証と原本readbackを通るまでは実在評価として成立していません。
- * 影響段階は判定ルール（impact-rule.ts、設計決定0007）が実測の系列から決めます。2026-10-13の人間判断（段階1）は、ルール導入で置き換えました。比較群は金融庁「（表１）金融再生法開示債権等の推移」（docs/reports/fsa-financial-revival-2002.md）。
+ * 影響段階は判定ルール（impact-rule.ts、設計決定0007）が実測の系列から決めます。2026-10-13の人間判断（段階1）は、ルール導入で置き換えました。比較群の系列は金融庁「（表６）リスク管理債権額等の推移」で平成10年3月期まで遡ったもの（docs/reports/fsa-npl-backfill-1997.md）。判定は段階1（2026-10-14）。
  * 伊藤（2002副大臣・2005大臣）は同一人物の公式在職記録が未確認です。
  */
 export const FINANCIAL_REVIVAL_DRAFT: CaseEvaluationSpec = {
@@ -97,22 +97,23 @@ export const FINANCIAL_REVIVAL_DRAFT: CaseEvaluationSpec = {
   assessments: [{
     id: 'npl-ratio-major-banks', position: 'for', domain: 'economy', direction: 'benefit', impact: null,
     series: {
-      definition: '金融庁「（表１）金融再生法開示債権等の推移」の不良債権比率（％）。主要行＝46行目、地域銀行＝58行目',
+      definition: '金融庁「（表６）リスク管理債権額等の推移」（平成19年版）のリスク管理債権÷貸出金×100（％、小数2桁）。主要行は平成14年3月期まで都銀・信託・興銀、平成15年3月期から都銀・信託（表の定義どおり。新生・あおぞらは全期間除く）。地域銀行＝地方銀行・第二地方銀行。docs/reports/fsa-npl-backfill-1997.md',
       start: '2002-10-30', better: 'lower', economy: null, sectorGdpShare: null,
       target: [
-        { asOf: '2000-03-31', treated: 5.4, control: 6.2 }, { asOf: '2001-03-31', treated: 5.3, control: 7.3 }, { asOf: '2002-03-31', treated: 8.4, control: 8.0 },
-        { asOf: '2003-03-31', treated: 7.2, control: 7.8 }, { asOf: '2004-03-31', treated: 5.2, control: 6.9 }, { asOf: '2005-03-31', treated: 2.9, control: 5.5 },
-        { asOf: '2006-03-31', treated: 1.8, control: 4.5 }, { asOf: '2007-03-31', treated: 1.5, control: 4.0 },
+        { asOf: '1998-03-31', treated: 5.51, control: 4.15 }, { asOf: '1999-03-31', treated: 6.32, control: 5.03 }, { asOf: '2000-03-31', treated: 5.82, control: 5.90 },
+        { asOf: '2001-03-31', treated: 5.72, control: 7.33 }, { asOf: '2002-03-31', treated: 9.16, control: 8.00 }, { asOf: '2003-03-31', treated: 7.79, control: 7.87 },
+        { asOf: '2004-03-31', treated: 5.54, control: 6.93 }, { asOf: '2005-03-31', treated: 3.10, control: 5.60 }, { asOf: '2006-03-31', treated: 1.89, control: 4.58 },
+        { asOf: '2007-03-31', treated: 1.67, control: 4.02 },
       ],
     },
     // 引用文は Mac 側で保存した業態別表（CSV）の行。原本readbackでの一致は独立検証で確かめる。
     comparison: { treatedGroup: '主要行', controlGroup: '地域銀行', observationFrom: '2002-03-31', observationTo: '2005-03-31',
       citations: [{ id: 'fsaNplTable1', url: 'https://www.fsa.go.jp/status/npl/20070809/data01.xlsx', quote: '平成17年3月期,主要行,2.9' }] },
     citationIds: ['danwa20050525', 'ito20050525'],
-    rationale: '主要行の不良債権比率は平成14年3月期8.4%から平成17年3月期2.9%へ下がり、同期間の地域銀行（8.0%→5.5%）との差の差は−3.0ポイント。差は平成19年3月期まで続いた。',
-    counterEvidence: '開始前（平成12→14年3月期）に主要行は地域銀行より1.2ポイント多く悪化しており、差の一部は揺り戻しの可能性がある。査定の厳格化や債権売却でも比率は下がる。',
+    rationale: 'リスク管理債権比率で、主要行は平成14年3月期9.16%から平成17年3月期3.10%へ下がり、地域銀行（8.00%→5.60%）より大きく下がった。判定ルールの効果（開始後2〜5年目の差の平均−開始前5年の差の平均）は−2.66ポイントで、平成19年3月期まで同じ向きが続いた。',
+    counterEvidence: '開始前の差は平成10〜14年3月期に+1.36〜−1.61ポイントと揺れ（ばらつき1.28）、平成14年3月期だけ主要行が大きく悪化しているため、差の一部は揺り戻しの可能性がある。主要行の範囲は平成15年3月期に変わる（興銀が抜ける）。当時の発表値とは平成12〜14年3月期で0.26〜0.43ポイント違う。査定の厳格化や債権売却でも比率は下がる。',
     alternativeExplanation: '日銀の量的緩和、輸出回復、りそな救済、再生専門子会社の算入時期の違い、埼玉りそな銀行の地域銀行への編入を分離していない。地域銀行にもリレーションシップバンキングの行動計画がかかっていた。',
     criterionVersion: 'outcome-v1', analysisVersion: 'did-1', evaluatedAt: '2026-10-13T00:00:00Z',
-    scopeReason: '主要行（都銀・信託）の不良債権比率に限る。GDPや貸出への経路は未確立。', durationReason: '平成14年3月期から平成17年3月期。差は平成19年3月期まで持続。', magnitudeReason: '差の差−3.0ポイント（平成14→17年3月期）。段階は判定ルールが系列から決める。',
+    scopeReason: '主要行（都銀・信託）の不良債権比率に限る。GDPや貸出への経路は未確立。', durationReason: '平成14年3月期から平成17年3月期。差は平成19年3月期まで持続。', magnitudeReason: '効果−2.66ポイント（ばらつき1.28の2倍を超える）。段階は判定ルールが系列から決める。',
   }],
 };
