@@ -153,6 +153,7 @@ python -m unittest discover -s tests -v
 - [国会データの取得範囲](docs/diet-data-coverage.md): 公式ソースと取得状態。
 - [`ADR` 0002](docs/adr/0002-person-ranking-and-evidence-boundary.md): 人物ランキングへの目的修正。
 - [人間レビュー](human-review-checklist.md): 算定方法と実在データ公開の判断。
+- [訂正・異議の手順](docs/corrections.md): 公開後の申し立ての受付・改版・再計算。
 - [外部資料保存](docs/external-materials.md): 既存登録処理を使う。取得と真偽を分離。
 - [貢献手順](CONTRIBUTING.md): 変更の範囲、テスト、資料の取扱い。
 - [公開前検査](PREFLIGHT.md) / [公開対象と未確認事項](PUBLIC_READY.md): リポジトリ公開とアプリ公開を区別。
