@@ -260,7 +260,7 @@ def _populate_database(connection: sqlite3.Connection, schema: str, release_id: 
         for series in snapshot["series"]:
             connection.execute(
                 "INSERT INTO statistic_series VALUES (?, ?, ?, ?, ?, ?)",
-                (release_id, series["id"], series["label"], series["unit"], "CC BY 4.0（World Bank: World Development Indicators）", series["sourceUrl"]),
+                (release_id, series["id"], series["label"], series["unit"], snapshot.get("seriesLicense", "CC BY 4.0（World Bank: World Development Indicators）"), series["sourceUrl"]),
             )
             connection.executemany(
                 "INSERT INTO statistic_points VALUES (?, ?, ?, ?)",
@@ -305,9 +305,16 @@ def _populate_database(connection: sqlite3.Connection, schema: str, release_id: 
         )
 
 
-def build_public_distribution(input_root: Path, case_path: Path, output_root: Path, public_dir: Path | None = None) -> dict:
+def build_public_distribution(input_root: Path, case_path: Path, output_root: Path, public_dir: Path | None = None, *, synthetic_label: str | None = None) -> dict:
+    """`synthetic_label` は運用訓練用。指定すると統計系列の提供元・出典URL・利用条件を架空の表示に置き換え、生成物そのものに架空と残す。"""
     case = load_case(case_path)
     snapshot = build_snapshot(input_root)
+    if synthetic_label:
+        snapshot["provider"] = synthetic_label
+        snapshot["seriesLicense"] = synthetic_label
+        snapshot["evidenceKind"] = "synthetic_drill_not_m4_evidence"
+        for series in snapshot["series"]:
+            series["sourceUrl"] = f"urn:synthetic-drill:{series['id']}"
     snapshot["outcomes"] = [_outcome(case)]
     snapshot["causes"] = []
     snapshot["note"] = "統計の推移だけで、特定の政策や人物による影響とは認定しません。政策事例は別ファイルで、採点は保留です。"
