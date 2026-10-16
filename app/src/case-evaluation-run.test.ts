@@ -121,6 +121,25 @@ describe('事例評価の非公開実行入口', () => {
     } finally { await f.cleanup(); }
   }, 120_000);
 
+  it('読み戻しの対象は行動・評価・比較から参照される引用だけで、参照されない引用は登録原本がなくても止めない', async () => {
+    const spec = artificialSpec();
+    const ids = run.citationList(caseSource, spec).map((c: { id: string }) => c.id);
+    expect(ids).not.toContain('fsaRules');
+    expect(ids).toEqual(expect.arrayContaining(['danwa20050525', 'ito20050525', 'okamoto20021219', 'fsaNplTable1']));
+    const unused = caseSource.citations.filter(c => !ids.includes(c.id)).map(c => c.id);
+    expect(unused).toEqual(['fsaRules']);
+    // fsaRules だけ登録しない原本で全件実行が止まらない。
+    const f = await fixture(spec, allResolved());
+    try {
+      const { rm: rmFile } = await import(/* @vite-ignore */ fsModule);
+      const registered = await run.indexRegistered(f.args[3]);
+      const rules = registered.get(caseSource.citations.find(c => c.id === 'fsaRules')!.url);
+      await rmFile(rules.recordPath);
+      const { summary } = await run.runCaseEvaluation({ args: f.args, spec });
+      expect(summary.verifiedActions).toBe(5);
+    } finally { await f.cleanup(); }
+  }, 120_000);
+
   it('未知・重複の引数と自己申告の受領書は受け付けない', () => {
     const ok = ['--case-source', 'a', '--material-root', 'b', '--identities', 'c', '--output-dir', 'd'];
     expect(run.parseArgs(ok)['--output-dir']).toBe('d');

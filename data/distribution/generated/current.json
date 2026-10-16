@@ -1,9 +1,9 @@
 {
   "schemaVersion": "public-distribution-current/v1",
-  "snapshotId": "cba5414edb2b3fd1a83c5f7c19dc05697c1a898ac7d808dc58b783c8f964743c",
-  "economyPath": "generations/cba5414edb2b3fd1a83c5f7c19dc05697c1a898ac7d808dc58b783c8f964743c/economy.json",
-  "casePath": "generations/cba5414edb2b3fd1a83c5f7c19dc05697c1a898ac7d808dc58b783c8f964743c/case.json",
-  "databasePath": "generations/cba5414edb2b3fd1a83c5f7c19dc05697c1a898ac7d808dc58b783c8f964743c/catalog.sqlite3",
+  "snapshotId": "982f9c52145cb4c72d8614bc2b6df318e453d4a200f88c2906d62342c725fe33",
+  "economyPath": "generations/982f9c52145cb4c72d8614bc2b6df318e453d4a200f88c2906d62342c725fe33/economy.json",
+  "casePath": "generations/982f9c52145cb4c72d8614bc2b6df318e453d4a200f88c2906d62342c725fe33/case.json",
+  "databasePath": "generations/982f9c52145cb4c72d8614bc2b6df318e453d4a200f88c2906d62342c725fe33/catalog.sqlite3",
   "scoringStatus": "held",
   "personScores": 0
 }

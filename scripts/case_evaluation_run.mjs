@@ -112,14 +112,29 @@ export function readRefs(refs, materialRoot) {
 
 const refFor = (id, found) => ({ id, recordPath: found.recordPath, originalHash: found.originalHash, selector: { kind: 'registered-text' } });
 
-/** 仕様と事例に出る引用を、出典URLで登録原本へ対応させる。 */
+/**
+ * 読み戻しの対象にする引用。事例入力の actors・観察などの citationIds、評価の citationIds、比較の citations から
+ * 実際に参照されるものだけ（事例入力の citationIds 全般と、評価仕様の citationIds・比較の citations）。どこからも参照されない引用（利用規約 fsaRules など）は登録原本がなくても止めない。
+ */
 export function citationList(source, spec) {
-  const citations = new Map();
-  for (const c of [...source.citations, ...spec.assessments.flatMap(a => a.comparison?.citations ?? [])]) {
-    requireThat(!citations.has(c.id) || citations.get(c.id).url === c.url, '引用IDが競合しています');
-    citations.set(c.id, c);
-  }
-  return [...citations.values()];
+  const byId = new Map();
+  const add = c => {
+    requireThat(!byId.has(c.id) || byId.get(c.id).url === c.url, '引用IDが競合しています');
+    byId.set(c.id, c);
+  };
+  source.citations.forEach(add);
+  spec.assessments.forEach(a => a.comparison?.citations.forEach(add));
+  // 事例入力のうち citations 以外のどこか（actors・観察・実施主体など）が citationIds で参照する引用は、すべて対象。
+  const used = new Set();
+  const collect = value => {
+    if (Array.isArray(value)) value.forEach(collect);
+    else if (value && typeof value === 'object') for (const [k, v] of Object.entries(value)) {
+      if (k === 'citationIds' && Array.isArray(v)) v.forEach(id => used.add(id)); else collect(v);
+    }
+  };
+  collect({ ...source, citations: undefined });
+  for (const a of spec.assessments) { (a.citationIds ?? []).forEach(id => used.add(id)); (a.comparison?.citations ?? []).forEach(c => used.add(c.id)); }
+  return [...byId.values()].filter(c => used.has(c.id));
 }
 
 export function parseManifest(manifest, spec) {

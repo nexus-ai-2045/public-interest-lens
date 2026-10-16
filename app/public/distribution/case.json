@@ -1,6 +1,6 @@
 {
   "schemaVersion": "public-case/v1",
-  "snapshotId": "cba5414edb2b3fd1a83c5f7c19dc05697c1a898ac7d808dc58b783c8f964743c",
+  "snapshotId": "982f9c52145cb4c72d8614bc2b6df318e453d4a200f88c2906d62342c725fe33",
   "caseId": "fsa-financial-revival-2002",
   "title": "金融再生プログラム",
   "scoringStatus": "held",
@@ -195,7 +195,7 @@
       "url": "https://www.fsa.go.jp/danwa/danwa/20050525-1.html",
       "license": "公共データ利用規約（第1.0版）。出典：金融庁ウェブサイト（2026年10月9日に利用）",
       "locator": "第1項。不良債権比率",
-      "quote": "主要行の平成16年度決算が発表され、不良債権比率は2.9％となった。"
+      "quote": "不良債権比率は2.9％となった。"
     },
     {
       "id": "ito20050525",
