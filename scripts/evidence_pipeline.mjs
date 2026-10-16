@@ -1,8 +1,9 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { lstat, realpath, mkdir, readFile, writeFile, rename, unlink, link, rmdir } from 'node:fs/promises';
-import { dirname, resolve, relative, isAbsolute, join } from 'node:path';
+import { dirname, resolve, relative, join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import { canonicalPath, isStrictlyInside as within, sameTrailingParts } from './path_guard.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 function canonical(value) {
@@ -48,19 +49,16 @@ function validateVerification(input, receipt, inputHash = hash(canonical(input))
   receipt.assessmentRevisions.sort((a, b) => a.id.localeCompare(b.id));
   return receipt;
 }
-function within(root, path) {
-  const rel = relative(root, path);
-  return rel !== '' && !isAbsolute(rel) && rel !== '..' && !rel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`);
-}
 async function noLink(path) {
   try { if ((await lstat(path)).isSymbolicLink()) throw new Error('リンク経由の保存は禁止です'); }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
 }
 async function outputLocation(repoRoot, outputDir) {
-  const root = await realpath(resolve(repoRoot));
+  const root = await canonicalPath(repoRoot);
   const local = join(root, '.local');
-  const out = resolve(outputDir);
+  const out = await canonicalPath(outputDir);
   if (!within(local, out)) throw new Error('出力はrepoの.local配下に限定します');
+  if (!sameTrailingParts(out, resolve(outputDir), relative(root, out))) throw new Error('リンク経由の保存は禁止です');
   let cursor = root;
   for (const part of relative(root, out).split(/[\\/]/)) {
     cursor = join(cursor, part);
