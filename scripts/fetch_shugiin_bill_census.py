@@ -115,6 +115,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument('--parse-only', action='store_true')
     ns = p.parse_args(argv)
     raw, manifest = ns.out / 'raw', ns.out / 'manifest.csv'
+    raw.mkdir(parents=True, exist_ok=True)
 
     listing = []
     for session in range(ns.first, ns.last + 1):
