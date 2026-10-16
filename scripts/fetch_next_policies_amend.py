@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """改正法(単独の法令データを持たないもの)を、改正された法律の改正履歴(e-Gov API v2)から探す。"""
+from pathlib import Path
 import json, sys, os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import importlib.util
-src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fetch_next_policies_laws.py")).read()
+src = open(os.path.join(str(Path(__file__).resolve().parent), "fetch_next_policies_laws.py")).read()
 head = src.split("for key, num in LAWS:")[0]
 exec(head)
 TARGET = [

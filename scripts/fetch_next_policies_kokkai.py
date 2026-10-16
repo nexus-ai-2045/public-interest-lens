@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """国会会議録検索システムAPIで、各法案を議題とした会議を探す(原本JSONを保存)。"""
+from pathlib import Path
 import json, os, sys, urllib.parse
-src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fetch_next_policies_laws.py")).read()
+src = open(os.path.join(str(Path(__file__).resolve().parent), "fetch_next_policies_laws.py")).read()
 exec(src.split("LAWS = [")[0])
 exec("last = [0.0]\n" + src.split("last = [0.0]")[1].split("for key, num in LAWS:")[0])
 Q = [

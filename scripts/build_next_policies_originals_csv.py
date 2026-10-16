@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """取得済みの原本から originals.csv を組み立てる。引用は原本のテキストに完全一致するものだけを残す。"""
+from pathlib import Path
 import csv, glob, json, os, re, sys
-ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+ROOT = str(Path(__file__).resolve().parents[1])
 LOC = os.path.join(ROOT, ".local/next-policies-originals")
 RAW, TXT = LOC + "/raw", LOC + "/text"
 OUT = os.path.join(ROOT, "data/acquired/next-policies-originals/originals.csv")

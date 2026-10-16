@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """e-Gov 法令API v2 から13政策の法令の公布日・施行日の原本(JSON)を取得し manifest に記録する。"""
+from pathlib import Path
 import csv, hashlib, json, os, sys, time, urllib.parse, urllib.request, datetime
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+ROOT = os.path.join(str(Path(__file__).resolve().parent), "..")
 RAW = os.path.join(ROOT, ".local/next-policies-originals/raw")
 MAN = os.path.join(ROOT, ".local/next-policies-originals/manifest.csv")
 os.makedirs(RAW, exist_ok=True)

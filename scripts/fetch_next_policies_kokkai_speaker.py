@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """各法案の趣旨説明(提案理由)をした大臣・議員の氏名と役職を国会会議録検索システムAPIから取る。"""
+from pathlib import Path
 import json, os, urllib.parse
-src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fetch_next_policies_kokkai.py")).read()
+src = open(os.path.join(str(Path(__file__).resolve().parent), "fetch_next_policies_kokkai.py")).read()
 exec(src.split("out = []")[0])
 res = []
 for key, sess, bill in Q:

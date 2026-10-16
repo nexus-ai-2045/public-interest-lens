@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """公式ページ・PDFを取得し、原本を保存・manifest に記録・テキスト化する。
 使い方: fetch_next_policies_pages.py urls.tsv   (列: id<TAB>URL)"""
+from pathlib import Path
 import hashlib, json, os, re, subprocess, sys, tempfile, html
-src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fetch_next_policies_laws.py")).read()
+src = open(os.path.join(str(Path(__file__).resolve().parent), "fetch_next_policies_laws.py")).read()
 exec(src.split("LAWS = [")[0])
 exec("last = [0.0]\n" + src.split("last = [0.0]")[1].split("for key, num in LAWS:")[0])
 TXT = os.path.join(ROOT, ".local/next-policies-originals/text")

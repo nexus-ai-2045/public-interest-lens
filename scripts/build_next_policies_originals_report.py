@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+from pathlib import Path
 import csv, collections, os
-ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+ROOT = str(Path(__file__).resolve().parents[1])
 rows = list(csv.DictReader(open(ROOT + "/data/acquired/next-policies-originals/originals.csv", encoding="utf-8")))
 ORDER = ["携帯電話料金", "民泊", "電力小売全面自由化", "科学技術基本法", "IT基本法", "知的財産基本法", "研究開発税制", "国立大学法人法",
          "資金決済法", "FIT", "マイナンバー法", "会社法", "薬事法改正"]

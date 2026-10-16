@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """参議院・衆議院の常任委員長を原本から committee-chairs.csv にする。"""
+from pathlib import Path
 import re, csv, os, glob, unicodedata
 from html import unescape
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+ROOT = os.path.join(str(Path(__file__).resolve().parent), '..')
 RAW = os.path.join(ROOT, '.local/office-holders/raw')
 OUT = os.path.join(ROOT, 'data/acquired/office-holders/committee-chairs.csv')
 ERA = {'昭和': 1925, '平成': 1988, '令和': 2018}

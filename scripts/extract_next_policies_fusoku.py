@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """e-Gov法令本文JSONから附則(施行期日)の最初の条文テキストを抜き出して表示・保存する。"""
+from pathlib import Path
 import glob, json, os, re
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+ROOT = os.path.join(str(Path(__file__).resolve().parent), "..")
 RAW = os.path.join(ROOT, ".local/next-policies-originals/raw")
 
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """衆議院「衆議院の動き」(平成11〜15年、第143〜158回国会) の委員会ページを取得する。
 1.1秒以上あけ、manifest.csv に記録する。原本は .local/office-holders/raw/shugiin/ に保存。"""
+from pathlib import Path
 import os, re, time, hashlib, subprocess, datetime, csv
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+ROOT = os.path.join(str(Path(__file__).resolve().parent), '..')
 R = os.path.join(ROOT, '.local/office-holders')
 RAW = os.path.join(R, 'raw/shugiin')
 os.makedirs(RAW, exist_ok=True)
