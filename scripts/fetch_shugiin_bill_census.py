@@ -65,14 +65,14 @@ def text(fragment: str) -> str:
 def parse_listing(page: str, session: int, url: str) -> list[dict]:
     """kaiji ページの「衆法の一覧」「参法の一覧」「閣法の一覧」の表を行に分ける。"""
     rows = []
-    parts = re.split(r'<caption[^>]*>(.*?)</caption>', page, flags=re.S)
+    parts = re.split(r'<caption[^>]*>(.*?)</caption>', page, flags=re.S | re.I)
     for caption, body in zip(parts[1::2], parts[2::2]):
         kind = text(caption).replace('の一覧', '')
         if kind not in KINDS:
             continue
-        body = body.split('</table>', 1)[0]
-        for tr in re.findall(r'<tr[^>]*>(.*?)</tr>', body, flags=re.S):
-            tds = re.findall(r'<td[^>]*>(.*?)</td>', tr, flags=re.S)
+        body = re.split(r'</table>', body, maxsplit=1, flags=re.I)[0]
+        for tr in re.findall(r'<tr[^>]*>(.*?)</tr>', body, flags=re.S | re.I):
+            tds = re.findall(r'<td[^>]*>(.*?)</td>', tr, flags=re.S | re.I)
             if len(tds) < 4:
                 continue
             keika = re.search(r'href="\./keika/([^"]+)"', tr)
@@ -87,8 +87,8 @@ def parse_listing(page: str, session: int, url: str) -> list[dict]:
 def parse_keika(page: str) -> dict[str, str]:
     """経過ページの「項目／内容」の表を、項目名→内容の辞書にする。"""
     out = {}
-    for tr in re.findall(r'<tr[^>]*>(.*?)</tr>', page, flags=re.S):
-        cells = re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', tr, flags=re.S)
+    for tr in re.findall(r'<tr[^>]*>(.*?)</tr>', page, flags=re.S | re.I):
+        cells = re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', tr, flags=re.S | re.I)
         if len(cells) == 2:
             key, value = text(cells[0]), text(cells[1])
             if key and key != '項目':
@@ -151,6 +151,7 @@ def main(argv: list[str] | None = None) -> int:
             body = dest.read_bytes() if dest.exists() else (None if ns.parse_only else fetch(r['経過URL'], dest, manifest))
             kv = parse_keika(body.decode('cp932', errors='replace')) if body else {}
             row['提出者'] = kv.get('議案提出者', '')
+            row['提出者一覧'] = kv.get('議案提出者一覧', '')
             row['付託日_衆'], row['付託委員会_衆'] = split_pair(kv.get('衆議院付託年月日／衆議院付託委員会', ''))
             row['議決日_衆'], row['議決結果_衆'] = split_pair(kv.get('衆議院審議終了年月日／衆議院審議結果', ''))
             row['賛成会派_衆'] = kv.get('衆議院審議時賛成会派', '')
