@@ -117,6 +117,40 @@ class EvidenceMaterialsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             read_material({**ref, "recordPath": str(outside)}, self.pool)
 
+    def test_registered_text_reads_shift_jis_only_when_the_html_declares_it(self):
+        quote = "不良債権処理の加速のための施策を「金融再生プログラム」として取りまとめ、10月30日に公表しました。"
+        cases = [
+            ("declared.html", ('<html><head><meta charset="shift_jis"></head><body>' + quote + "<br></body></html>").encode("cp932"), True),
+            ("undeclared.html", ("<html><body>" + quote + "</body></html>").encode("cp932"), False),
+            ("declared.txt", ('<meta charset="shift_jis">' + quote).encode("cp932"), False),
+        ]
+        for filename, data, readable in cases:
+            source = self.root / filename
+            source.write_bytes(data)
+            record = register_local_material(
+                input_path=source,
+                source_url="https://www.fsa.go.jp/test",
+                task_id=filename.replace(".", "-"),
+                title="試験",
+                purpose="試験",
+                storage_root=self.pool,
+                observed_at="2026-09-30T00:00:00Z",
+            )
+            ref = {
+                "id": filename,
+                "recordPath": str(record),
+                "originalHash": hashlib.sha256(data).hexdigest(),
+                "selector": {"kind": "registered-text"},
+            }
+            with self.subTest(filename=filename):
+                if readable:
+                    result = read_material(ref, self.pool, _include_source_record=True)
+                    self.assertIn(quote, result["text"])
+                    self.assertIn("Shift_JIS", result["sourceRecord"]["locator"])
+                else:
+                    with self.assertRaises(ValueError):
+                        read_material(ref, self.pool)
+
     def test_registered_text_cli_reads_public_registered_html_but_does_not_relax_speech_hosts(
         self,
     ):
