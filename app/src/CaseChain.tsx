@@ -1,6 +1,7 @@
 import { PUBLIC_SITE } from './site-mode';
 import { useEffect, useState, type KeyboardEvent } from 'react';
 import { ProductHeader } from './ProductHeader';
+import { CaseVerdictPanel } from './CaseVerdictPanel';
 import { distributionCaseUrl, parsePublicCase, type PublicCase } from './public-distribution';
 
 const steps = [
@@ -42,10 +43,11 @@ export function CaseChain({ initialStep = 'implementation' }: { initialStep?: St
   if (error) return <p role="alert">{error}</p>;
   if (!record) return <p>政策事例を読み込んでいます。</p>;
   return <article className="case-chain" aria-labelledby="case-title">
-    <p className="state-banner">公開配布版です。非公開の原本には接続していません。採点は0件で、影響の規模は保留です。</p>
+    <p className="state-banner">公開配布版です。非公開の原本には接続していません。この事例は判定ルールで影響段階1（限定的）と判定済みで、人物ごとの結果を下に示します。</p>
     <h3 id="case-title">{record.title}</h3>
     <p>{record.periodNote}</p>
-    <p>{record.holdReason}</p>
+    <CaseVerdictPanel />
+    <details><summary>配布データ作成時点の保留理由（判定ルール導入前の記述）</summary><p>{record.holdReason}</p></details>
     <div className="case-steps" role="tablist" aria-label="政策の調べ方">
       {steps.map((item, index) => <button key={item.id} id={`case-tab-${item.id}`} type="button" role="tab" aria-selected={step === item.id} tabIndex={step === item.id ? 0 : -1} onKeyDown={event => move(event, index)} onClick={() => setStep(item.id)}>{item.label}</button>)}
     </div>
@@ -55,7 +57,7 @@ export function CaseChain({ initialStep = 'implementation' }: { initialStep?: St
       {step === 'comparison' && <><h4>どこまで比べられたか</h4><p>{record.comparison}</p><h4>まだ潰せていない説明</h4><ul>{record.counterEvidence.map(item => <li key={item}>{item}</li>)}</ul><h4>原因候補（未確立）</h4><ul>{record.causeCandidates.map(item => <li key={item.id}>{item.label}</li>)}</ul><p>{record.statisticLink.note}</p><a href="/history?years=40">40年の統計に戻る</a></>}
       {step === 'actors' && <>
         <h4>資料にある行動</h4>
-        <ul>{record.actors.map(actor => <li key={actor.id}><strong>{actor.label}</strong>（{actor.date}）<p>{actor.action}</p><p className="fine-note">{actor.identityNote} 点数は付けていません。</p></li>)}</ul>
+        <ul>{record.actors.map(actor => <li key={actor.id}><strong>{actor.label}</strong>（{actor.date}）<p>{actor.action}</p><p className="fine-note">{actor.identityNote} 人物ごとの点数は上の「判定結果」にまとめています。</p></li>)}</ul>
         <h4>機関・集団</h4>
         <ul>{record.organizations.map(org => <li key={org.id}><strong>{org.name}</strong><p>{org.relation}</p></li>)}</ul>
         <h4>名簿にあるだけで、行動としては未確認</h4>
@@ -68,6 +70,6 @@ export function CaseChain({ initialStep = 'implementation' }: { initialStep?: St
 }
 
 export function ActorsPage() {
-  useEffect(() => { document.title = PUBLIC_SITE ? '人物と団体｜試作版・実在人物の採点なし' : '人物と団体｜国賊／国士ランキング'; }, []);
-  return <div className="app-shell research-page" data-theme="light"><ProductHeader title="人物と団体" label="採点していません"><nav aria-label="主なページ"><a href="/history">長期推移</a><a href="/policies">政策と結果</a><a href="/actors">人物・団体</a>{!PUBLIC_SITE && <a href="/evaluation">保存評価版</a>}<a href="/ranking">架空ランキング</a></nav></ProductHeader><main><h2>資料に残った行動と、点数にしない関係</h2><p>所属、名簿、会見での説明は、影響の点数ではありません。{!PUBLIC_SITE && '保存済みの評価版は別の入口です。'}</p><CaseChain initialStep="actors" /></main></div>;
+  useEffect(() => { document.title = PUBLIC_SITE ? '人物と団体｜試作版・政策事例の判定つき' : '人物と団体｜国賊／国士ランキング'; }, []);
+  return <div className="app-shell research-page" data-theme="light"><ProductHeader title="人物と団体" label="政策事例の判定つき"><nav aria-label="主なページ"><a href="/history">長期推移</a><a href="/policies">政策と結果</a><a href="/actors">人物・団体</a>{!PUBLIC_SITE && <a href="/evaluation">保存評価版</a>}<a href="/ranking">架空ランキング</a></nav></ProductHeader><main><h2>資料に残った行動と、点数にしない関係</h2><p>所属、名簿、会見での説明は、影響の点数ではありません。点数が付くのは、判定結果に載せた行動だけです。{!PUBLIC_SITE && '保存済みの評価版は別の入口です。'}</p><CaseChain initialStep="actors" /></main></div>;
 }
