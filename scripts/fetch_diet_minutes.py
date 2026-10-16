@@ -15,9 +15,11 @@ from typing import Callable
 try:
     from .register_external_material import register_local_material
     from .official_raw import capture_url, readback
+    from .path_guard import inside_without_links
 except ImportError:
     from register_external_material import register_local_material
     from official_raw import capture_url, readback
+    from path_guard import inside_without_links
 
 BASE_URL = "https://kokkai.ndl.go.jp/api"
 ENDPOINT_RECORD_KEYS = {
@@ -620,7 +622,7 @@ def main() -> int:
     if (
         not resolved_output.is_relative_to(diet_root.resolve())
         or resolved_output == diet_root.resolve()
-        or args.output_dir.absolute() != resolved_output
+        or inside_without_links(diet_root, args.output_dir) != resolved_output
     ):
         parser.error(
             "--output-dir はmaterial rootと同じrepoの .local/diet/<bounded-shard> にしてください"

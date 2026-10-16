@@ -401,7 +401,7 @@ class IndexTests(unittest.TestCase):
 
     def test_resolved_pending_alias_collision_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp) / '.local'
+            root = Path(temp).resolve() / '.local'
             source = root / 'receipt.json'
             output = root / 'packet.json'
             temporary = output.with_suffix('.json.pending')
@@ -415,7 +415,7 @@ class IndexTests(unittest.TestCase):
 
     def test_public_guard_rejects_parent_symlink_and_resolved_allowed_escape(self):
         with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as outside:
-            root = Path(temp)
+            root = Path(temp).resolve()
             allowed = root / 'data' / 'cloudflare'
             target = allowed / 'materials.json'
             resolve = Path.resolve
