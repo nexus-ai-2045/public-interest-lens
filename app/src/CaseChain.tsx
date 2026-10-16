@@ -1,3 +1,4 @@
+import { PUBLIC_SITE } from './site-mode';
 import { useEffect, useState, type KeyboardEvent } from 'react';
 import { ProductHeader } from './ProductHeader';
 import { distributionCaseUrl, parsePublicCase, type PublicCase } from './public-distribution';
@@ -67,6 +68,6 @@ export function CaseChain({ initialStep = 'implementation' }: { initialStep?: St
 }
 
 export function ActorsPage() {
-  useEffect(() => { document.title = '人物と団体｜国賊／国士ランキング'; }, []);
-  return <div className="app-shell research-page" data-theme="light"><ProductHeader title="人物と団体" label="採点していません"><nav aria-label="主なページ"><a href="/history">長期推移</a><a href="/policies">政策と結果</a><a href="/actors">人物・団体</a><a href="/evaluation">保存評価版</a><a href="/ranking">架空ランキング</a></nav></ProductHeader><main><h2>資料に残った行動と、点数にしない関係</h2><p>所属、名簿、会見での説明は、影響の点数ではありません。保存済みの評価版は別の入口です。</p><CaseChain initialStep="actors" /></main></div>;
+  useEffect(() => { document.title = PUBLIC_SITE ? '人物と団体｜試作版・実在人物の採点なし' : '人物と団体｜国賊／国士ランキング'; }, []);
+  return <div className="app-shell research-page" data-theme="light"><ProductHeader title="人物と団体" label="採点していません"><nav aria-label="主なページ"><a href="/history">長期推移</a><a href="/policies">政策と結果</a><a href="/actors">人物・団体</a>{!PUBLIC_SITE && <a href="/evaluation">保存評価版</a>}<a href="/ranking">架空ランキング</a></nav></ProductHeader><main><h2>資料に残った行動と、点数にしない関係</h2><p>所属、名簿、会見での説明は、影響の点数ではありません。{!PUBLIC_SITE && '保存済みの評価版は別の入口です。'}</p><CaseChain initialStep="actors" /></main></div>;
 }

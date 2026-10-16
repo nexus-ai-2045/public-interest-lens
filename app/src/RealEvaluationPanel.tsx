@@ -1,3 +1,5 @@
+import { PUBLIC_SITE } from './site-mode';
+import { PublicUnavailablePage } from './PublicSiteNotice';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { QuoteRef } from './evidence-evaluation';
 import { availableRealRelease, createReleaseLoader, readRealRoute, realRouteLocation, recordedIdentityCoverage, realActionHeading, REAL_RELEASE_MAX_BYTES, type RealRelease, type RealRoute } from './real-release-view';
@@ -85,6 +87,7 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   useEffect(() => { const restore = () => setRoute(readRealRoute(window.location.search, window.location.pathname)); window.addEventListener('popstate', restore); return () => window.removeEventListener('popstate', restore); }, []);
   if (window.location.pathname === '/policies') return <PoliciesPage />;
   if (window.location.pathname === '/actors') return <ActorsPage />;
+  if (PUBLIC_SITE && (route.dataset === 'real' || window.location.pathname === '/records')) return <PublicUnavailablePage />;
   if (route.dataset === 'real') return <RealEvaluationPanel route={route} navigate={navigate} />;
   if (window.location.pathname === '/history' || (window.location.pathname === '/' && !window.location.search)) return <EconomyPage />;
   if (window.location.pathname === '/records' || (window.location.pathname === '/' && !window.location.search)) return <RealRecordsPage onDemo={() => navigate({ dataset: 'fiction', release: '', person: '' })} onEvaluation={() => navigate({ dataset: 'real', release: '', person: '' })} />;

@@ -25,15 +25,15 @@ test('連続切替後も最後の方向・選択・URLが一致し戻ると復�
   const motion = page.locator('#inspector-content > div').last();
   await expect.poll(() => motion.evaluate(el => getComputedStyle(el).transform)).toBe('none');
   await expect.poll(() => motion.evaluate(el => getComputedStyle(el).opacity)).toBe('1');
-  await expect(page).toHaveTitle('国士ランキング');
+  await expect(page).toHaveTitle('国士ランキング｜架空データ版');
   await expect(page.locator('.app-shell')).toHaveAttribute('data-theme', 'light');
   await expect(page).toHaveURL(/view=benefit/);
   await expect(page.locator('.inspector-heading')).toContainText('架空議員べに');
   await page.reload();
-  await expect(page).toHaveTitle('国士ランキング');
+  await expect(page).toHaveTitle('国士ランキング｜架空データ版');
   await page.getByRole('button', { name: '悪影響', exact: true }).click();
   await page.goBack();
-  await expect(page).toHaveTitle('国士ランキング');
+  await expect(page).toHaveTitle('国士ランキング｜架空データ版');
 });
 
 test('動きを減らす設定は切替中にも適用されます', async ({ page }) => {
