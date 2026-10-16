@@ -122,6 +122,7 @@ function App({ onOpenReal }: { onOpenReal: () => void }) {
     catch { setShareMessage(`コピーできませんでした。共有リンク：${target}`); }
   };
   const inspectFile = async (file?: File) => {
+    if (PUBLIC_SITE) return;
     const request = ++inspectionRequest.current;
     if (!file) return;
     try {

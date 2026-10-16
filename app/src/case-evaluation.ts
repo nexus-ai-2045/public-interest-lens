@@ -117,3 +117,15 @@ export const FINANCIAL_REVIVAL_DRAFT: CaseEvaluationSpec = {
     scopeReason: '主要行（都銀・信託）の不良債権比率に限る。GDPや貸出への経路は未確立。', durationReason: '平成14年3月期から平成17年3月期。差は平成19年3月期まで持続。', magnitudeReason: '効果−2.66ポイント（ばらつき1.28の2倍を超える）。段階は判定ルールが系列から決める。',
   }],
 };
+
+/**
+ * 金融庁「（表１）金融再生法開示債権等の推移」の不良債権比率（％、公表値、小数第1位）。
+ * 値の出どころは docs/reports/fsa-financial-revival-2002.md 第2・3節（Excel と PDF で一致を確認、独立検証は未実施）。
+ * 判定ルールの系列（表６、リスク管理債権）とは別の表です。ここは「参考の差の差」にだけ使い、段階は決めません。
+ */
+export const TABLE1_NPL_RATIO = {
+  source: '金融庁「（表１）金融再生法開示債権等の推移」（平成19年3月期、平成19年8月9日公表）不良債権比率',
+  report: 'docs/reports/fsa-financial-revival-2002.md',
+  from: '平成14年3月期', to: '平成17年3月期',
+  major: { from: 8.4, to: 2.9 }, regional: { from: 8.0, to: 5.5 },
+} as const;

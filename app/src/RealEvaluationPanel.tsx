@@ -88,8 +88,8 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   if (window.location.pathname === '/policies') return <PoliciesPage />;
   if (window.location.pathname === '/actors') return <ActorsPage />;
   if (PUBLIC_SITE && (route.dataset === 'real' || window.location.pathname === '/records')) return <PublicUnavailablePage />;
-  if (route.dataset === 'real') return <RealEvaluationPanel route={route} navigate={navigate} />;
+  if (!PUBLIC_SITE && route.dataset === 'real') return <RealEvaluationPanel route={route} navigate={navigate} />;
   if (window.location.pathname === '/history' || (window.location.pathname === '/' && !window.location.search)) return <EconomyPage />;
-  if (window.location.pathname === '/records' || (window.location.pathname === '/' && !window.location.search)) return <RealRecordsPage onDemo={() => navigate({ dataset: 'fiction', release: '', person: '' })} onEvaluation={() => navigate({ dataset: 'real', release: '', person: '' })} />;
+  if (!PUBLIC_SITE && (window.location.pathname === '/records' || (window.location.pathname === '/' && !window.location.search))) return <RealRecordsPage onDemo={() => navigate({ dataset: 'fiction', release: '', person: '' })} onEvaluation={() => navigate({ dataset: 'real', release: '', person: '' })} />;
   return <>{typeof fictional === 'function' ? fictional(navigate) : fictional}</>;
 }
