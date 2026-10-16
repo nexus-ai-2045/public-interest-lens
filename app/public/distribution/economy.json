@@ -1,6 +1,6 @@
 {
   "schemaVersion": "economic-series/v1",
-  "observedAt": "2026-10-08T18:33:28.992090+00:00",
+  "observedAt": "2026-10-16T21:52:19.391966+00:00",
   "provider": "World Bank WDI",
   "country": "JPN",
   "series": [
@@ -858,5 +858,5 @@
       ]
     }
   ],
-  "snapshotId": "cba5414edb2b3fd1a83c5f7c19dc05697c1a898ac7d808dc58b783c8f964743c"
+  "snapshotId": "982f9c52145cb4c72d8614bc2b6df318e453d4a200f88c2906d62342c725fe33"
 }

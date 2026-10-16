@@ -106,7 +106,8 @@ export const FINANCIAL_REVIVAL_DRAFT: CaseEvaluationSpec = {
         { asOf: '2007-03-31', treated: 1.67, control: 4.02 },
       ],
     },
-    // 引用文は Mac 側で保存した業態別表（CSV）の行。原本readbackでの一致は独立検証で確かめる。
+    // 引用文は Mac 側で保存した業態別表（CSV）の行。xlsx は読み戻し対象外で、引用文はセルの文字列そのものではない（見出しは「17年3月期」の形）。
+    // 数値は openpyxl で別に確認済み（主要行 14年3月期 8.4・17年3月期 2.9、地域銀行 8.0・5.5）。判定結果の数値には使わない。
     comparison: { treatedGroup: '主要行', controlGroup: '地域銀行', observationFrom: '2002-03-31', observationTo: '2005-03-31',
       citations: [{ id: 'fsaNplTable1', url: 'https://www.fsa.go.jp/status/npl/20070809/data01.xlsx', quote: '平成17年3月期,主要行,2.9' }] },
     citationIds: ['danwa20050525', 'ito20050525'],
