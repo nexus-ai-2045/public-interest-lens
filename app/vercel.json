@@ -1,0 +1,7 @@
+{
+  "framework": "vite",
+  "installCommand": "npm ci",
+  "buildCommand": "VITE_PUBLIC_SITE=true npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [{ "source": "/((?!assets/|distribution/).*)", "destination": "/index.html" }]
+}
