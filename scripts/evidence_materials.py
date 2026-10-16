@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import date
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -109,6 +110,16 @@ def _material(mid: str, record: dict, text: str) -> dict:
     }
 
 
+_SHIFT_JIS_META = re.compile(rb"<meta[^>]+charset\s*=\s*[\"']?\s*(shift_jis|shift-jis|sjis|x-sjis|windows-31j|cp932)\b", re.I)
+
+
+def _declared_text_encoding(payload: bytes, filename: str) -> str:
+    """HTML が先頭で Shift_JIS を宣言しているときだけ cp932 で読む。それ以外は厳格 UTF-8。推測はしない。"""
+    if Path(filename).suffix.lower() in {".html", ".htm"} and _SHIFT_JIS_META.search(payload[:4096]):
+        return "cp932"
+    return "utf-8"
+
+
 def read_material(
     ref: dict, material_root: Path, *, _cache=None, _include_source_record=False
 ) -> dict:
@@ -144,16 +155,17 @@ def read_material(
             ".md",
         }:
             raise ValueError("登録テキストは位置指定なしの対応文字原本だけを読めます")
+        encoding = _declared_text_encoding(payload, record["saved_filename"])
         try:
-            text = payload.decode("utf-8", errors="strict")
+            text = payload.decode(encoding, errors="strict")
         except UnicodeDecodeError as error:
-            raise ValueError("登録テキストは厳格UTF-8が必要です") from error
+            raise ValueError("登録テキストは厳格UTF-8（またはHTMLが宣言したShift_JIS）が必要です") from error
         if not text.strip() or "\x00" in text or payload.startswith(b"%PDF-"):
             raise ValueError("登録テキストが空または非対応のバイナリです")
         source_record = {
             "_kind": "registered-text",
             "id": ref["id"],
-            "locator": "literal UTF-8 original; no normalization",
+            "locator": f"literal {'UTF-8' if encoding == 'utf-8' else 'Shift_JIS (cp932, declared by the HTML)'} original; no normalization",
         }
     elif selector["kind"] == "ndl-speech":
         if urlsplit(record["source_url"]).hostname != "kokkai.ndl.go.jp":
