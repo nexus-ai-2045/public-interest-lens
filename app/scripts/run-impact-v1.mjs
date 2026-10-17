@@ -11,7 +11,7 @@ const root = new URL('../../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, root), 'utf8');
 
 const tables = new Map();
-for (const dir of ['domestic-stats', 'intl-stats']) {
+for (const dir of ['domestic-stats', 'intl-stats', 'more-stats']) {
   for (const name of readdirSync(new URL(`data/acquired/${dir}/`, root)).filter(n => n.endsWith('.csv') && n !== 'manifest.csv')) {
     tables.set(`${dir}/${name}`, batch.parseCsv(read(`data/acquired/${dir}/${name}`)));
   }
