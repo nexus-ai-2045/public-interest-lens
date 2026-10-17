@@ -73,7 +73,8 @@ class SourceCheckTests(unittest.TestCase):
         law["amount"]["median"] += 1
         tampered["members"][0]["laws"][0]["evidence"][0]["url"] = "https://example.com/"
         bad = {r["項目"] for r in source_check.check_members(tampered, self.ranking) if r["結果"] == source_check.NG}
-        self.assertEqual(bad, {"議員ページの額", "証拠URL"})
+        # 額を変えると、配分の合計も額と合わなくなる。
+        self.assertEqual(bad, {"議員ページの額", "証拠URL", "配分の合計"})
 
 
 if __name__ == "__main__":
