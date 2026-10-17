@@ -4,7 +4,7 @@
  * ファイルの読み書きは app/scripts/run-impact-v1.mjs が行い、このモジュールは純粋な関数だけにします（ブラウザ用ビルドにも入れられる）。
  * 方法の説明は data/derived/impact-v1/spec.md。
  */
-import { judgeAcrossCountries, judgeImpact, type CountryPoint, type ImpactPoint, type ImpactSeries } from './impact-rule';
+import { judgeAcrossCountries, judgeImpact, MIN_PRE_YEARS, type CountryPoint, type ImpactPoint, type ImpactSeries } from './impact-rule';
 
 export type Row = Record<string, string>;
 /** 取得済み CSV の中身。キーは data/acquired/ からの相対パス。 */
@@ -23,8 +23,13 @@ export type ShareOption = { name: string; sector: Ref; total: Ref };
  * source が無ければ intl-stats/intl-stats.csv（国,指標,年,値）の「指標」列で code を探す。
  * source があれば、そのファイルで where に合う行を取り、国は countryColumn の列から読む（ratio は使えない）。
  */
-export type IntlSource = { file: string; countryColumn: string; where: Row };
-export type IntlSpec = { code: string; ratio?: string; label: string; rebase: boolean; better: 'lower' | 'higher'; source?: IntlSource };
+export type IntlSource = { file: string; countryColumn: string; where: Row; /** 候補の名前（altSources から選んだとき理由欄に書く）。 */ name?: string };
+/**
+ * altSources は、同じ指標を測る別の出所の候補（値が一致しない別の取得物など）。source と altSources のうち、日本の判定に必要な10年を最も多く覆うものを
+ * 法律ごとに1つ選ぶ（同数なら先に書いたもの）。候補どうしはつながない（chooseOption と同じ考え方）。
+ * reference は、向き（高いほど良いか）を決められない指標。better は計算上の置き方にすぎず、貢献・悪影響とは読まず、「上昇／低下」と書く。
+ */
+export type IntlSpec = { code: string; ratio?: string; label: string; rebase: boolean; better: 'lower' | 'higher'; source?: IntlSource; altSources?: IntlSource[]; reference?: boolean };
 export type Mapping = {
   indicator: string;
   field: string;
@@ -37,7 +42,15 @@ export type Mapping = {
   reason: string;
   /** 取得済みだが判定に使わない系列（使わない理由は reason に書く）。 */
   unused?: string;
+  /**
+   * 法律の題名で系列を決める指標（利用件数）。題名がちょうど1つの規則の keyword だけを含むときに、その施設・交通機関の系列を実質GDPと比べる。
+   * 0個または2個以上に当たる題名は系列なし（施設・交通機関を一意に名指していない）。
+   */
+  titleRules?: TitleRule[];
+  /** 新しく配線した系列で判定できないとき（日本の開始前が3年に足りない等）に、元の判定を保つ。 */
+  keepVerdict?: '系列なし' | '比較群なし' | '国内系列なし';
 };
+export type TitleRule = { keyword: string; name: string; ref: Ref };
 
 const sna = (base: string) => `domestic-stats/sna_gdp_by_industry_${base}base.csv`;
 const snaReal = (base: string, activity: string): Ref => ({ file: sna(base), where: { 価格: '実質(連鎖方式)', 経済活動: activity } });
@@ -89,8 +102,44 @@ const energy = (series: string, category: string): Ref => ({ file: 'more-stats/e
 /** 世界銀行 WDI の追加取得分（more-stats/worldbank_extra.csv）。国は「区分」列、指標コードは「備考」列にある。 */
 const wbExtra = (code: string): IntlSource => ({ file: 'more-stats/worldbank_extra.csv', countryColumn: '区分', where: { 備考: `世界銀行 WDI ${code}` } });
 
+/** gap-stats（data/acquired/gap-stats/）の表。 */
+const gap = (file: string, where: Row): IntlSource => ({ file: `gap-stats/${file}`, countryColumn: '国', where });
+const AIRPORTS = 'gap-stats/airport_passengers.csv';
+const airport = (division: string): Ref => ({ file: AIRPORTS, where: { 国: 'JPN', 区分: `${division}／暦年／合計` } });
+/**
+ * 利用件数：題名に施設・交通機関の名前がちょうど1つだけあるときの系列。空港別の乗降客数（暦年・国際線＋国内線）。
+ * 港湾・道路・自動車は利用件数を取得していない。鉄道（鉄道統計年報）は年度の系列で、年度の比較群（年度のGDPなど）が取得済みの統計に無く、
+ * 暦年の実質GDPと組にしない方針（年度と暦年を組にしない）のため配線しない。
+ */
+export const USAGE_TITLE_RULES: TitleRule[] = [
+  { keyword: '中部国際空港', name: '空港管理状況調書 中部国際空港の乗降客数（暦年）', ref: airport('中部国際（会社管理）') },
+  { keyword: '成田国際空港', name: '空港管理状況調書 成田国際空港の乗降客数（暦年）', ref: airport('成田国際（会社管理）') },
+  { keyword: '関西国際空港', name: '空港管理状況調書 関西国際空港の乗降客数（暦年）', ref: airport('関西国際（会社管理）') },
+  { keyword: '東京国際空港', name: '空港管理状況調書 東京国際空港の乗降客数（暦年）', ref: airport('東京国際（国管理）') },
+  { keyword: '航空法', name: '空港管理状況調書 全空港計の乗降客数（暦年）', ref: airport('全空港計３（全空港計１、全空港計２）') },
+];
+/** 題名から利用件数の規則を1つ決める。0個・2個以上は null。 */
+export function matchTitleRule(rules: TitleRule[], title: string): TitleRule | null {
+  const hit = rules.filter(r => title.includes(r.keyword));
+  return hit.length === 1 ? hit[0] : null;
+}
+/** 題名で系列を決める対応表から、この法律の対応を作る。当たる規則が無ければ null。titleRules が無い対応はそのまま。 */
+export function resolveMapping(mapping: Mapping, law: { title: string }): Mapping | null {
+  if (!mapping.titleRules) return mapping;
+  const rule = matchTitleRule(mapping.titleRules, law.title);
+  if (!rule) return null;
+  return {
+    ...mapping,
+    target: {
+      definition: `${rule.name}の指数と実質GDP指数（開始前最後の年=100）`, better: 'higher',
+      options: SNA_BASES.map(base => ({ name: `${rule.name}対 国民経済計算${base}基準 実質「合計」`, treated: rule.ref, control: snaReal(base, '合計') })),
+    },
+  };
+}
+
 const none = (indicator: string, field: string, reason: string): Mapping => ({ indicator, field, match: '系列なし', target: null, economy: null, share: [], intl: null, reason });
-const noControl = (indicator: string, field: string, unused: string, reason: string): Mapping => ({ indicator, field, match: '比較群なし', target: null, economy: null, share: [], intl: null, reason, unused });
+/** 比較群なし：国内の比較群は作れない。intl があれば国際比較だけ行い、判定は「比較群なし」のまま国際比較の欄に結果を書く。 */
+const noControl = (indicator: string, field: string, unused: string, reason: string, intl: IntlSpec | null = null): Mapping => ({ indicator, field, match: '比較群なし', target: null, economy: null, share: [], intl, reason, unused });
 
 /**
  * triage の指標 → 取得済みの系列。結果を見る前に固定する（docs/indicator-control-table.md の考え方）。
@@ -100,9 +149,12 @@ export const INDICATOR_MAP: Mapping[] = [
   {
     indicator: '不良債権比率', field: '金融', match: '直接',
     target: null, economy: null, share: [],
-    intl: { code: 'WB:FB.AST.NPER.ZS', label: '世界銀行 銀行の不良債権比率（総貸出に対する%）', rebase: false, better: 'lower', source: wbExtra('FB.AST.NPER.ZS') },
+    intl: {
+      code: 'WB:FB.AST.NPER.ZS', label: '世界銀行 銀行の不良債権比率（総貸出に対する%）', rebase: false, better: 'lower', source: { ...wbExtra('FB.AST.NPER.ZS'), name: 'WDI FB.AST.NPER.ZS（日本2010〜2022年）' },
+      altSources: [{ ...gap('npl_wb_gfdd.csv', { 区分: 'WB:GFDD.SI.02' }), name: 'GFDD.SI.02（日本1998〜2020年）' }],
+    },
     unused: '金融庁 金融再生法開示債権の状況（全国銀行、不良債権比率、1999年3月期〜）［more-stats/npl_fsa_all_banks.csv］',
-    reason: '対象の法律（預金保険法・金融再生法など）は全国の銀行に及ぶため、国内には影響を受けない比較群がない。金融庁の全国銀行の系列は取得したが、比べる相手がないので国内の判定には使わない（金融再生プログラム用の主要行対地域銀行の比較群も、全銀行に及ぶ法律では比較群も同時に影響を受けるため流用しない）。判定ルールが比較群なしで扱えるのは国際比較だけなので、世界銀行の不良債権比率で日本と12か国を比べる。金融庁の系列とは定義（金融再生法開示債権と IMF の金融健全性指標）が違うため、日本の値も世界銀行の系列を使う。日本の値は2010〜2022年だけなので、2004年以前に施行の法律は日本の開始前の値がない',
+    reason: '対象の法律（預金保険法・金融再生法など）は全国の銀行に及ぶため、国内には影響を受けない比較群がない。金融庁の全国銀行の系列は取得したが、比べる相手がないので国内の判定には使わない（金融再生プログラム用の主要行対地域銀行の比較群も、全銀行に及ぶ法律では比較群も同時に影響を受けるため流用しない）。判定ルールが比較群なしで扱えるのは国際比較だけなので、世界銀行の不良債権比率で日本と12か国を比べる。金融庁の系列とは定義（金融再生法開示債権と IMF の金融健全性指標）が違うため、日本の値も世界銀行の系列を使う。日本の値は2010〜2022年だけなので、2004年以前に施行の法律は日本の開始前の値がない。世界銀行 GFDD.SI.02（日本1998〜2020年、gap-stats）は同じ名前の指標だが重なる年でも値が一致しない（最大2.3ポイント差）ため、つながずに別の候補とし、法律ごとに日本の判定に必要な10年を最も多く覆う方を1つ選ぶ（同数なら WDI）。1998年施行の法律は GFDD にも開始前の値がない',
   },
   {
     indicator: '貸出残高', field: '金融', match: '代理',
@@ -120,7 +172,13 @@ export const INDICATOR_MAP: Mapping[] = [
     share: snaShare('transport'), intl: null,
     reason: '国民経済計算に旅客輸送だけの付加価値はなく、運輸業（2011基準以降は運輸・郵便業）で代える。貨物・郵便を含むため代理。2000基準は運輸・通信業が1つなので使わない。国際統計に産業別付加価値がないため国際比較なし',
   },
-  none('利用件数', '交通・移動', '旅客数・利用件数（国土交通省の鉄道・自動車・航空輸送統計）は未取得。法律ごとに対象の交通機関（空港・港湾・鉄道・道路）が違い、どの系列に固定するか決めていない。消費者物価の鉄道運賃は利用量ではないため代わりにしない'),
+  {
+    indicator: '利用件数', field: '交通・移動', match: '直接',
+    target: null, titleRules: USAGE_TITLE_RULES, keepVerdict: '系列なし',
+    economy: { definition: '運輸業の実質付加価値指数と実質GDP指数（開始前最後の年=100）', better: 'higher', options: snaVsGdp('transport') },
+    share: snaShare('transport'), intl: null,
+    reason: '題名が空港名（中部国際・成田国際・関西国際・東京国際）か「航空法」をちょうど1つだけ含む法律に限り、国土交通省 空港管理状況調書の乗降客数（暦年、国際線＋国内線）を実質GDPと比べる（利用が増えるほど良いとみなす。向きは機械的な仮定）。題名が施設・交通機関を一意に名指さない法律（交通政策基本法・港湾法・道路法・バリアフリー法・自動車関連など）は系列なし。港湾・道路・自動車の利用件数は未取得。鉄道（鉄道統計年報、年度）は取得したが、年度の比較群が取得済みの統計に無く、暦年のGDPと組にしないため配線しない。空港別の統計は2007年からで、2009年以前に施行の法律は開始前が3年に足りず、系列なしのままにする',
+  },
   {
     indicator: '就業者数', field: '交通・移動', match: '代理',
     target: { definition: '運輸業の就業者数と就業者総数（開始前最後の年=100）', better: 'higher', options: lfsVsTotal('transport') },
@@ -145,10 +203,14 @@ export const INDICATOR_MAP: Mapping[] = [
     reason: '国民経済計算の情報通信業（2005基準以降）。放送・情報サービスを含む。2000基準は運輸・通信業が1つなので使わない。国際統計に産業別付加価値がないため国際比較なし',
   },
   {
-    indicator: 'ブロードバンド普及率', field: '通信・ネット', match: '代理',
+    indicator: 'ブロードバンド普及率', field: '通信・ネット', match: '直接',
     target: null, economy: null, share: snaShare('ict'),
-    intl: { code: 'WB:IT.NET.USER.ZS', label: '世界銀行 インターネット利用者（人口比%）', rebase: false, better: 'higher' },
-    reason: '国内のブロードバンド契約数は未取得。世界銀行のインターネット利用者比率で国際比較だけ行う（契約率ではないため代理）',
+    intl: {
+      code: 'WB:IT.NET.BBND.P2', label: '固定ブロードバンド契約数（人口100人当たり）', rebase: false, better: 'higher',
+      source: { ...gap('broadband.csv', { 区分: 'WB:IT.NET.BBND.P2' }), name: '世界銀行 WDI IT.NET.BBND.P2（日本1998〜2023年）' },
+      altSources: [{ ...gap('broadband.csv', { 系列: '固定ブロードバンド契約数（人口100人当たり、OECD）' }), name: 'OECD DF_BB_TEL_DATABASE（日本2009〜2025年）' }],
+    },
+    reason: '国内のブロードバンド契約数の時系列表は取得できていない（影響を受けない国内の比較群もない）ため、国際比較だけ行う。契約率そのものの系列（固定ブロードバンド契約数、人口100人当たり）を使う。世界銀行（1998年〜）と OECD（2009年〜）は出所が違うので、つながずに別の候補とし、法律ごとに日本の判定に必要な10年を最も多く覆う方を1つ選ぶ（同数なら世界銀行）。以前使ったインターネット利用者比率（契約率ではないため代理）はやめた。比率のまま比べる',
   },
   none('ネット企業の時価総額', '通信・ネット', '業種別の株式時価総額を載せた公式の時系列表が見つからず、取得していない'),
   none('世界輸出シェア', '半導体・電子', '取得済みの統計に半導体の輸出額（国連 Comtrade 等）がない'),
@@ -190,10 +252,12 @@ export const INDICATOR_MAP: Mapping[] = [
     reason: '経済全体の法律なので国内に比較群がない。国際比較で、労働力人口1人当たり実質GDP（就業者・労働時間ではないため代理）を比べる',
   },
   noControl('賃金', '労働市場', '毎月勤労統計調査 現金給与総額など（産業×就業形態×規模）［more-stats/wages_monthly_labour_survey.csv］',
-    '毎月勤労統計の賃金は取得したが、対象の法律（労働基準法・労働組合法・男女雇用機会均等法・短時間労働者法など）は全産業の労働者に及ぶため、影響を受けない産業がなく、分野対経済全体の比較群が作れない。賃金の国際比較の系列（OECD など）は未取得。法律ごとに対象の集団（介護労働者なら医療,福祉、短時間労働者ならパート）を決めて比べる方法はありうるが、指標ごとに1つの対応に固定するこの段階では行わない'),
+    '毎月勤労統計の賃金は取得したが、対象の法律（労働基準法・労働組合法・男女雇用機会均等法・短時間労働者法など）は全産業の労働者に及ぶため、影響を受けない産業がなく、分野対経済全体の比較群が作れない。国内の判定は行わず「比較群なし」のままにし、国際比較だけ行う: OECD の平均年間賃金（フルタイム換算の雇用者1人当たり、実質・2025年価格・米ドル購買力平価）を日本の開始前最後の年=100にそろえて13か国で比べる（高いほど良いとみなす。向きは機械的な仮定）。法律ごとに対象の集団（介護労働者なら医療,福祉、短時間労働者ならパート）を決めて比べる方法はありうるが、指標ごとに1つの対応に固定するこの段階では行わない',
+    { code: 'OECD:AV_AN_WAGE_REAL_USD_PPP', label: 'OECD 平均年間賃金（実質・2025年価格・米ドル購買力平価）', rebase: true, better: 'higher', source: gap('oecd_wages.csv', { 系列: '平均年間賃金（OECD）', 区分: '実質（2025年価格）／米ドル（購買力平価）' }) }),
   noControl('雇用の流動性', '労働市場', '雇用動向調査 入職率・離職率・転職入職率（1991〜2025年）［more-stats/employment_turnover.csv］; 労働力調査 転職者数・転職者比率（2002〜2025年）［more-stats/job_changers_lfs.csv］',
-    '雇用動向調査と労働力調査の転職の系列は取得したが、対象の法律（雇用保険法・高年齢者雇用安定法・育児介護休業法など）は全産業の労働者に及ぶため、影響を受けない産業がなく、分野対経済全体の比較群が作れない（労働生産性と同じ扱い）。労働移動の国際比較の系列（OECD など）は未取得。年齢・性別の区分で対象の集団と全体を比べる方法はありうるが、法律ごとの対象の集団を決める必要があり、この段階では行わない'),
-  none('電子申請率', '行政のデジタル化', '国の行政手続のオンライン利用率は年度ごとのPDF資料にしかなく、年度をまたぐ表形式の公式系列が見つからないため取得していない'),
+    '雇用動向調査と労働力調査の転職の系列は取得したが、対象の法律（雇用保険法・高年齢者雇用安定法・育児介護休業法など）は全産業の労働者に及ぶため、影響を受けない産業がなく、分野対経済全体の比較群が作れない。国内の判定は行わず「比較群なし」のままにし、国際比較だけ行う: OECD の勤続1年未満の就業者の割合（就業者全体・男女計・年齢計、%、比率のまま）を日本と比較国で比べる。日本は2013年からなので、施行が2016年以降（開始前が3年以上）の法律だけが判定でき、それ以前は「国際：保留」。就業者全体の区分が無い米国・韓国は比較国に入らない（雇用者の区分とはつながない）。転職が多いほど良いか悪いかは決められない（流動性が高いことを望ましいとする既存の取り決めが無い）ので、向きは決めない「参考」とし、貢献・悪影響ではなく日本が比較国より「上昇／低下」と書き、議員への配分には使わない。年齢・性別の区分で対象の集団と全体を比べる方法はありうるが、法律ごとの対象の集団を決める必要があり、この段階では行わない',
+    { code: 'OECD:TENURE_LT12', label: 'OECD 勤続1年未満の就業者割合（就業者全体・男女計、%）', rebase: false, better: 'higher', reference: true, source: gap('oecd_tenure.csv', { 区分: '勤続1年未満／就業者全体／男女計' }) }),
+  none('電子申請率', '行政のデジタル化', '総務省の報道資料から国の行政手続のオンライン利用率（2007〜2015年度、日本のみ。2009年度は定義が変わる）を取得した（gap-stats/egov_online_rate.csv）が、系列なしのままにする。理由は3つ。国内にも国際にも比べる相手（比較群）がなく、日本の率だけでは差の差が作れない。2016年度以降は同じ定義で続く値が資料に無い。評価対象の6本のうち、施行が2005年の1本は開始前の値がなく、2016年以降の5本は開始後の値がない（開始前3年と開始後2年が要る）'),
   none('行政手続きの時間', '行政のデジタル化', '行政手続きの所要時間の公式系列がない'),
 ];
 
@@ -347,6 +411,22 @@ export function intlByCountry(tables: Tables, spec: IntlSpec): Map<string, Map<n
 }
 
 /**
+ * source と altSources のうち、日本の判定に必要な10年（開始前5年と開始後5年）の値を最も多く持つものを1つ選ぶ。同数なら先に書いたもの。
+ * 候補が1つだけならそのまま返す。選ばれたものは source に入り、altSources は外れる。
+ */
+export function chooseIntlSpec(tables: Tables, spec: IntlSpec, start: string): IntlSpec {
+  if (!spec.source || !spec.altSources?.length) return spec;
+  const need = neededYears(start);
+  let best = spec.source, bestCoverage = -1;
+  for (const source of [spec.source, ...spec.altSources]) {
+    const jp = intlByCountry(tables, { ...spec, source, altSources: undefined }).get('JPN');
+    const coverage = jp ? need.filter(y => jp.has(y)).length : 0;
+    if (coverage > bestCoverage) { best = source; bestCoverage = coverage; }
+  }
+  return { ...spec, source: best, altSources: undefined };
+}
+
+/**
  * 日本と比較国の点列。指数・金額は日本の開始前最後の年を全員100にそろえ、その年の値が無い国は外す。比率（%）はそろえない。
  */
 export function buildCrossCountry(byCountry: Map<string, Map<number, number>>, spec: IntlSpec, start: string, treatedCountry = 'JPN') {
@@ -377,37 +457,53 @@ export type LawResult = Law & {
 
 const stageLabel = (stage: 1 | 2 | 3 | null) => stage === null ? '保留' : `段階${stage}`;
 const dirLabel = (d: 'benefit' | 'harm' | null) => d === null ? '' : d === 'benefit' ? '貢献' : '悪影響';
+/** 向きを決めない（参考）指標は、貢献・悪影響ではなく、日本が比較国より上がったか下がったかだけを書く。 */
+const refDirLabel = (d: 'benefit' | 'harm' | null) => d === null ? '' : d === 'benefit' ? '上昇' : '低下';
 
 export function evaluateLaw(tables: Tables, law: Law, mappings: Mapping[] = INDICATOR_MAP): LawResult {
-  const mapping = mappings.find(m => m.indicator === law.indicator);
+  const base = mappings.find(m => m.indicator === law.indicator);
   const blank = { series: '', verdict: '系列なし', direction: '', effect: null, spread: null, cross: '系列なし' };
-  if (!mapping) return { ...law, ...blank, reason: `系列なし：指標「${law.indicator}」が対応表にない` };
-  if (mapping.match === '系列なし') return { ...law, ...blank, reason: `系列なし：${mapping.reason}` };
-  if (mapping.match === '比較群なし') return { ...law, ...blank, verdict: '比較群なし', reason: `比較群なし：${mapping.reason}` };
+  if (!base) return { ...law, ...blank, reason: `系列なし：指標「${law.indicator}」が対応表にない` };
+  if (base.match === '系列なし') return { ...law, ...blank, reason: `系列なし：${base.reason}` };
+  if (base.match === '比較群なし' && !base.intl) return { ...law, ...blank, verdict: '比較群なし', reason: `比較群なし：${base.reason}` };
+  const mapping = resolveMapping(base, law);
+  if (!mapping) return { ...law, ...blank, reason: `系列なし：題名が施設・交通機関をちょうど1つだけ名指していない（題名で系列を決める指標）／${base.reason}` };
 
   const reasons: string[] = [];
-  let result: Omit<LawResult, keyof Law | 'cross' | 'reason'> = { ...blank, verdict: '国内系列なし' };
+  const keep = mapping.keepVerdict;
+  let result: Omit<LawResult, keyof Law | 'cross' | 'reason'> = { ...blank, verdict: mapping.match === '比較群なし' ? '比較群なし' : '国内系列なし' };
   if (mapping.target) {
     const built = buildImpactSeries(tables, mapping, law.start);
-    if (!built) { result = { ...blank, verdict: '保留' }; reasons.push('国内：期間が足りない（判定に必要な年に系列の値がない）'); }
+    if (!built) { result = { ...blank, verdict: keep ?? '保留' }; reasons.push('国内：期間が足りない（判定に必要な年に系列の値がない）'); }
     else {
       const j = judgeImpact(built.series);
-      result = { series: built.label, verdict: stageLabel(j.stage), direction: dirLabel(j.direction), effect: j.effect, spread: j.spread };
+      // 新しく配線した系列の開始が施行より後で、開始前が足りないときは、元の判定（系列なし）を保つ。
+      const verdict = keep && j.stage === null && j.preYears < MIN_PRE_YEARS ? keep : stageLabel(j.stage);
+      result = { series: built.label, verdict, direction: dirLabel(j.direction), effect: j.effect, spread: j.spread };
       reasons.push(`国内：${j.preYears < 3 || j.effect === null ? '期間が足りない。' : ''}${j.reason}`);
     }
-  } else reasons.push('国内：国内に比較群がない');
+  } else if (mapping.match === '比較群なし') reasons.push(`比較群なし：国内に影響を受けない比較群がない。${mapping.reason}`);
+  else reasons.push('国内：国内に比較群がない');
 
   let cross = '系列なし';
   if (mapping.intl) {
-    const built = buildCrossCountry(intlByCountry(tables, mapping.intl), mapping.intl, law.start);
+    const spec = chooseIntlSpec(tables, mapping.intl, law.start);
+    const sourceNote = base.intl?.altSources?.length && spec.source?.name ? `、出所：${spec.source.name}` : '';
+    const built = buildCrossCountry(intlByCountry(tables, spec), spec, law.start);
+    const first = built ? Math.min(...built.treated.map(p => Number(p.asOf.slice(0, 4)))) : null;
+    const jpPre = built ? Math.min(built.treated.filter(p => p.asOf < law.start).length, 5) : 0;
     if (!built) { cross = '保留'; reasons.push('国際：日本の開始前の値がない'); }
-    else {
-      const j = judgeAcrossCountries({ definition: mapping.intl.label, start: law.start, better: mapping.intl.better, sectorGdpShare: null, treated: built.treated, controls: built.controls });
+    else if (jpPre < MIN_PRE_YEARS) {
+      cross = '保留';
+      reasons.push(`国際（${spec.label}${sourceNote}）：日本の開始前の観測が${jpPre}年で、${MIN_PRE_YEARS}年に足りない（日本の系列は${first}年から）。元の判定を保つ`);
+    } else {
+      const j = judgeAcrossCountries({ definition: spec.label, start: law.start, better: spec.better, sectorGdpShare: null, treated: built.treated, controls: built.controls });
       const passed = j.countries.filter(c => c.passes).length;
-      cross = `${stageLabel(j.stage)}${j.direction ? '・' + dirLabel(j.direction) : ''}（比較国${built.controls.length}か国、条件を満たした国${passed}）`;
-      reasons.push(`国際（${mapping.intl.label}${built.baseYear ? `、${built.baseYear}年=100` : ''}）：${j.reason}`);
-      if (!result.series) result = { ...result, series: `国際：${mapping.intl.label}` };
+      const label = spec.reference ? refDirLabel : dirLabel;
+      cross = `${stageLabel(j.stage)}${j.direction ? '・' + label(j.direction) : ''}${spec.reference && j.direction ? '（参考：向きは決めない）' : ''}（比較国${built.controls.length}か国、条件を満たした国${passed}）`;
+      reasons.push(`国際（${spec.label}${built.baseYear ? `、${built.baseYear}年=100` : ''}${sourceNote}）：${j.reason}`);
     }
+    if (!result.series) result = { ...result, series: `国際：${spec.label}` };
   }
   if (mapping.match === '代理') reasons.push(`代理系列：${mapping.reason}`);
   const overlap = pandemicOverlap(law.start);
@@ -418,15 +514,24 @@ export function evaluateLaw(tables: Tables, law: Law, mappings: Mapping[] = INDI
 export const IMPACT_HEADER = ['id', '題名', '分野', '指標', '施行日', '系列', '判定', '向き', '効果', 'ばらつき', '国際比較', '理由'];
 export const impactRow = (r: LawResult) => [r.id, r.title, r.field, r.indicator, r.start, r.series, r.verdict, r.direction, r.effect, r.spread, r.cross, r.reason];
 
-export const MAP_HEADER = ['指標', '分野', '対応', '国内_対象と比較（候補を優先順に）', '国内_向き', '経済全体の指標（候補を優先順に）', 'GDP比（候補を優先順に）', '国際比較_指標コード', '国際比較_説明', '取得済みだが判定に使わない系列', '理由'];
+export const MAP_HEADER = ['指標', '分野', '対応', '国内_対象と比較（候補を優先順に）', '国内_向き', '向き（指標ごとの扱い）', '経済全体の指標（候補を優先順に）', 'GDP比（候補を優先順に）', '国際比較_指標コード', '国際比較_説明', '取得済みだが判定に使わない系列', '理由'];
+/** 指標ごとの向きの扱い。国内の系列があればその向き、無ければ国際の向き。決められないものは「参考」（議員への配分に使わない）。 */
+export const directionOf = (m: Mapping) => {
+  if (m.match === '系列なし') return '';
+  if (m.intl?.reference) return '参考（向きは決めない。議員への配分に使わない）';
+  const better = m.target?.better ?? (m.titleRules ? 'higher' : m.intl?.better);
+  return better === undefined ? '' : better === 'higher' ? '高いほど良い' : '低いほど良い';
+};
 export const mapRow = (m: Mapping) => [
   m.indicator, m.field, m.match,
-  m.target ? m.target.options.map(o => `${o.name}［${o.treated.file === o.control.file ? o.treated.file : `${o.treated.file} 対 ${o.control.file}`}］`).join('; ') : m.unused ? '国内では作らない（理由欄）' : '系列なし',
-  m.target ? (m.target.better === 'higher' ? '高いほど良い' : '低いほど良い') : '',
+  m.target ? m.target.options.map(o => `${o.name}［${o.treated.file === o.control.file ? o.treated.file : `${o.treated.file} 対 ${o.control.file}`}］`).join('; ')
+    : m.titleRules ? `題名がちょうど1つだけ含む語で決める: ${m.titleRules.map(r => `「${r.keyword}」→ ${r.name}［${r.ref.file}］`).join('; ')}（実質GDPと比べる。当たらない題名は系列なし）` : m.unused ? '国内では作らない（理由欄）' : '系列なし',
+  m.target ? (m.target.better === 'higher' ? '高いほど良い' : '低いほど良い') : m.titleRules ? '高いほど良い' : '',
+  directionOf(m),
   m.economy ? m.economy.options.map(o => `${o.name}［${o.treated.file}］`).join('; ') : '',
   m.share.map(o => o.name).join('; '),
   m.intl ? (m.intl.ratio ? `${m.intl.code} ÷ ${m.intl.ratio}` : m.intl.code) : '系列なし',
-  m.intl ? `${m.intl.label}（${m.intl.better === 'higher' ? '高いほど良い' : '低いほど良い'}${m.intl.rebase ? '、日本の開始前最後の年=100' : '、比率のまま'}）${m.intl.source ? `［${m.intl.source.file}］` : ''}` : '',
+  m.intl ? `${m.intl.label}（${m.intl.reference ? '向きは決めない（参考）' : m.intl.better === 'higher' ? '高いほど良い' : '低いほど良い'}${m.intl.rebase ? '、日本の開始前最後の年=100' : '、比率のまま'}）${m.intl.source ? `［${[m.intl.source, ...(m.intl.altSources ?? [])].map(x => x.file + (x.name ? `：${x.name}` : '')).join(' ／ ')}］` : ''}` : '',
   m.unused ?? '',
   m.reason,
 ];

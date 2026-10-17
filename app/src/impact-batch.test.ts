@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   FISCAL_YEAR_FILES, INDICATOR_MAP, asOfYear, buildCrossCountry, buildImpactSeries, buildPairPoints, chooseOption, evaluateLaw, extractSeries, intlByCountry,
-  mapRow, neededYears, pandemicOverlap, parseCsv, startPeriod, toCsv, MAP_HEADER, type Mapping, type Tables,
+  chooseIntlSpec, directionOf, matchTitleRule, mapRow, neededYears, resolveMapping, USAGE_TITLE_RULES, pandemicOverlap, parseCsv, startPeriod, toCsv, MAP_HEADER, type Mapping, type Tables,
 } from './impact-batch';
 
 // すべて人工の表です。実在の統計ではありません。
@@ -117,8 +117,9 @@ describe('対応表と1法律の判定', () => {
     expect(INDICATOR_MAP.map(m => m.indicator).sort()).toEqual([...triageIndicators].sort());
     for (const m of INDICATOR_MAP) {
       expect(m.reason.length).toBeGreaterThan(10);
-      if (m.match === '系列なし' || m.match === '比較群なし') expect(m.target ?? m.intl).toBeNull();
-      else expect(m.target ?? m.intl).not.toBeNull();
+      if (m.match === '系列なし') expect(m.target ?? m.intl ?? m.titleRules ?? null).toBeNull();
+      else if (m.match !== '比較群なし') expect(m.target ?? m.intl ?? m.titleRules ?? null).not.toBeNull();
+      expect(m.target === null || !m.titleRules).toBe(true);
       if (m.match === '比較群なし') expect(m.unused).toBeTruthy();
       expect(mapRow(m)).toHaveLength(MAP_HEADER.length);
     }
@@ -138,11 +139,25 @@ describe('対応表と1法律の判定', () => {
     expect(byName.get('不良債権比率')).toMatchObject({ target: null, intl: { code: 'WB:FB.AST.NPER.ZS', better: 'lower' } });
     expect(byName.get('エネルギー効率')).toMatchObject({ target: null, intl: { code: 'WB:EG.EGY.PRIM.PP.KD', rebase: true } });
     for (const i of ['賃金', '雇用の流動性']) expect(byName.get(i)!.match).toBe('比較群なし');
-    for (const i of ['企業倒産件数', '電子申請率', '行政手続きの時間', 'ネット企業の時価総額', '利用件数']) expect(byName.get(i)!.match).toBe('系列なし');
+    for (const i of ['企業倒産件数', '電子申請率', '行政手続きの時間', 'ネット企業の時価総額']) expect(byName.get(i)!.match).toBe('系列なし');
+    expect(byName.get('利用件数')!.titleRules).toBe(USAGE_TITLE_RULES);
   });
 
-  it('比較群なしの指標は判定ルールを呼ばず、判定を「比較群なし」にする', () => {
-    const r = evaluateLaw(new Map(), { id: 'x', title: 't', field: '労働市場', indicator: '雇用の流動性', start: '2005-04-01' });
+  it('向きは指標ごとに固定し、決められない雇用の流動性は参考。不良債権は低いほど良い', () => {
+    const byName = new Map(INDICATOR_MAP.map(m => [m.indicator, m]));
+    expect(directionOf(byName.get('雇用の流動性')!)).toMatch(/^参考/);
+    expect(directionOf(byName.get('賃金')!)).toBe('高いほど良い');
+    expect(directionOf(byName.get('不良債権比率')!)).toBe('低いほど良い');
+    expect(directionOf(byName.get('ブロードバンド普及率')!)).toBe('高いほど良い');
+    expect(directionOf(byName.get('利用件数')!)).toBe('高いほど良い');
+    expect(directionOf(byName.get('電子申請率')!)).toBe('');
+    expect(byName.get('雇用の流動性')!.intl).toMatchObject({ reference: true, rebase: false });
+    for (const m of INDICATOR_MAP) if (m.indicator !== '雇用の流動性') expect(m.intl?.reference).toBeUndefined();
+  });
+
+  it('国際の系列がない比較群なしの指標は判定ルールを呼ばず、判定を「比較群なし」にする', () => {
+    const noIntl: Mapping = { indicator: '人工', field: '人工', match: '比較群なし', target: null, economy: null, share: [], intl: null, reason: '人工の理由です', unused: '人工' };
+    const r = evaluateLaw(new Map(), { id: 'x', title: 't', field: '人工', indicator: '人工', start: '2005-04-01' }, [noIntl]);
     expect(r).toMatchObject({ verdict: '比較群なし', cross: '系列なし', effect: null, direction: '' });
     expect(r.reason).toMatch(/^比較群なし：/);
   });
@@ -194,5 +209,131 @@ describe('対応表と1法律の判定', () => {
     const r = evaluateLaw(synthetic, { id: 'x', title: 't', field: '人工', indicator: '人工', start: '2009-04-01' }, [mapping]);
     expect(r).toMatchObject({ verdict: '保留', effect: null });
     expect(r.reason).toContain('期間が足りない');
+  });
+});
+
+// ---- gap-stats の配線 ----
+
+describe('国際の候補の選び方（つながない）', () => {
+  const t: Tables = new Map([
+    ['a.csv', csv('国,区分,年,値', [...yearly(2010, [1, 2, 3, 4, 5, 6, 7, 8], ['JPN', 'A']), ...yearly(2010, [1, 2, 3, 4, 5, 6, 7, 8], ['USA', 'A'])])],
+    ['b.csv', csv('国,区分,年,値', [...yearly(1998, Array.from({ length: 23 }, (_, i) => i + 1), ['JPN', 'B']), ...yearly(1998, [9, 9, 9, 9, 9], ['USA', 'B'])])],
+  ]);
+  const spec = {
+    code: 'X', label: 'X', rebase: false, better: 'lower' as const,
+    source: { file: 'a.csv', countryColumn: '国', where: { 区分: 'A' }, name: 'A' },
+    altSources: [{ file: 'b.csv', countryColumn: '国', where: { 区分: 'B' }, name: 'B' }],
+  };
+  it('日本の判定に必要な10年を最も多く覆う候補を、法律ごとに1つ選ぶ', () => {
+    // 2001年施行は1996〜2005年が必要。A は0年、B は1998〜2005年の8年。
+    expect(chooseIntlSpec(t, spec, '2001-04-01').source?.name).toBe('B');
+    // 2016年施行は2011〜2020年が必要。A は2011〜2017年の7年、B は10年。
+    expect(chooseIntlSpec(t, spec, '2016-04-01').source?.name).toBe('B');
+    // 2013年施行は2008〜2017年が必要。A は2010〜2017年の8年、B は10年。
+    expect(chooseIntlSpec(t, spec, '2013-01-01').source?.name).toBe('B');
+  });
+  it('同数なら先に書いた候補、候補が1つならそのまま。選んだ後は altSources を持たない', () => {
+    const same = chooseIntlSpec(t, { ...spec, altSources: [{ ...spec.source, name: 'A2' }] }, '2013-01-01');
+    expect(same.source?.name).toBe('A');
+    expect(same.altSources).toBeUndefined();
+    const single = { ...spec, altSources: undefined };
+    expect(chooseIntlSpec(t, single, '2001-04-01')).toBe(single);
+  });
+  it('候補の値は混ぜない（選ばれなかった候補の年は使わない）', () => {
+    const chosen = chooseIntlSpec(t, { ...spec, altSources: [{ ...spec.source, name: 'A2' }] }, '2013-01-01');
+    const jp = intlByCountry(t, chosen).get('JPN')!;
+    expect(jp.get(2010)).toBe(1);
+    expect([...jp.keys()]).toHaveLength(8);
+  });
+});
+
+describe('利用件数は題名がちょうど1つの施設・交通機関を名指すときだけ', () => {
+  const mapping = INDICATOR_MAP.find(m => m.indicator === '利用件数')!;
+  it('空港名・航空法の題名は1つの規則に当たり、交通政策基本法・港湾法・鉄道・道路・複数の名指しには当たらない', () => {
+    expect(matchTitleRule(USAGE_TITLE_RULES, '中部国際空港の設置及び管理に関する法律案')?.keyword).toBe('中部国際空港');
+    expect(matchTitleRule(USAGE_TITLE_RULES, '航空法の一部を改正する法律案')?.keyword).toBe('航空法');
+    for (const title of ['交通政策基本法案', '港湾法の一部を改正する法律案', '鉄道軌道整備法の一部を改正する法律案', '道路法等の一部を改正する法律案', '自動車の保管場所の確保等に関する法律の一部を改正する法律案',
+      '成田国際空港及び関西国際空港に関する法律案', '中部国際空港と航空法の法律案']) {
+      expect(matchTitleRule(USAGE_TITLE_RULES, title), title).toBeNull();
+    }
+  });
+  it('当たった規則は、その空港の暦年・合計の乗降客数を実質GDPと比べる対応になる', () => {
+    const m = resolveMapping(mapping, { title: '中部国際空港の設置及び管理に関する法律案' })!;
+    expect(m.target?.better).toBe('higher');
+    expect(m.target?.options[0].treated).toEqual({ file: 'gap-stats/airport_passengers.csv', where: { 国: 'JPN', 区分: '中部国際（会社管理）／暦年／合計' } });
+    expect(m.target?.options[0].control.where).toEqual({ 価格: '実質(連鎖方式)', 経済活動: '合計' });
+    expect(resolveMapping(mapping, { title: '交通政策基本法案' })).toBeNull();
+    // 題名で決めない指標はそのまま
+    const other = INDICATOR_MAP.find(x => x.indicator === '宿泊者数')!;
+    expect(resolveMapping(other, { title: '何でも' })).toBe(other);
+  });
+  it('名指しのない題名は系列なし（理由に題名の規則を書く）', () => {
+    const r = evaluateLaw(new Map(), { id: 'x', title: '交通政策基本法案', field: '交通・移動', indicator: '利用件数', start: '2013-12-04' });
+    expect(r).toMatchObject({ verdict: '系列なし', cross: '系列なし', effect: null });
+    expect(r.reason).toContain('ちょうど1つだけ名指していない');
+  });
+  it('系列が施行より後に始まり開始前が3年に足りないときは、元の判定（系列なし）を保つ。開始前が足りれば判定する', () => {
+    const airport = Array.from({ length: 12 }, (_, i) => ['JPN', '中部国際（会社管理）／暦年／合計', 2007 + i, 100 + (i < 8 ? 0 : 20 * (i - 7))]);
+    const gdp = (price: string) => Array.from({ length: 30 }, (_, i) => [price, '合計', 1994 + i, 100 + i]);
+    const tables: Tables = new Map([
+      ['gap-stats/airport_passengers.csv', csv('国,区分,年,値', airport)],
+      ...['2020', '2015', '2011', '2005', '2000'].map(b => [`domestic-stats/sna_gdp_by_industry_${b}base.csv`, csv('価格,経済活動,年,値', [...gdp('実質(連鎖方式)'), ...gdp('名目')])] as [string, Tables extends Map<string, infer R> ? R : never]),
+    ]);
+    const title = '中部国際空港の設置及び管理に関する法律案';
+    const early = evaluateLaw(tables, { id: 'x', title, field: '交通・移動', indicator: '利用件数', start: '2005-04-01' });
+    expect(early.verdict).toBe('系列なし');
+    expect(early.reason).toContain('期間が足りない');
+    const late = evaluateLaw(tables, { id: 'x', title, field: '交通・移動', indicator: '利用件数', start: '2011-04-01' });
+    expect(late.verdict).not.toBe('系列なし');
+    expect(late.series).toContain('中部国際空港');
+  });
+});
+
+describe('国際比較だけ行う比較群なし・国内系列なしの指標', () => {
+  const years = (from: number, n: number, f: (i: number) => number, country: string) => Array.from({ length: n }, (_, i) => [country, '区分X', from + i, f(i)]);
+  const controls = ['USA', 'GBR', 'FRA', 'DEU', 'ITA'];
+  const world = (jpFrom: number, jp: (i: number) => number): Tables => new Map([['gap-stats/t.csv', csv('国,区分,年,値', [
+    ...years(jpFrom, 2030 - jpFrom, jp, 'JPN'), ...controls.flatMap(c => years(1990, 40, () => 10, c)),
+  ])]]);
+  const map = (reference: boolean): Mapping => ({
+    indicator: '人工', field: '人工', match: '比較群なし', target: null, economy: null, share: [], reason: '人工の理由です', unused: '人工',
+    intl: { code: 'X', label: '人工の国際系列', rebase: false, better: 'higher', reference, source: { file: 'gap-stats/t.csv', countryColumn: '国', where: { 区分: '区分X' } } },
+  });
+  const law = (start: string) => ({ id: 'x', title: 't', field: '人工', indicator: '人工', start });
+
+  it('日本の開始前が3年に足りなければ、判定は比較群なしのまま、国際は保留で理由に系列の開始年を書く', () => {
+    const r = evaluateLaw(world(2013, () => 10), law('2015-04-01'), [map(false)]);
+    expect(r.verdict).toBe('比較群なし');
+    expect(r.cross).toBe('保留');
+    expect(r.reason).toContain('日本の開始前の観測が2年で、3年に足りない（日本の系列は2013年から）');
+  });
+  it('開始前が足りれば国際比較で段階が出る。判定の欄は比較群なしのまま', () => {
+    const r = evaluateLaw(world(1990, i => (i < 25 ? 10 + (i % 2) * 0.1 : 20)), law('2015-04-01'), [map(false)]);
+    expect(r.verdict).toBe('比較群なし');
+    expect(r.cross).toMatch(/^段階1・貢献（比較国5か国/);
+  });
+  it('参考の指標は貢献・悪影響と書かず、日本が上昇／低下した向きだけを書く', () => {
+    const up = evaluateLaw(world(1990, i => (i < 25 ? 10 + (i % 2) * 0.1 : 20)), law('2015-04-01'), [map(true)]);
+    expect(up.cross).toMatch(/^段階1・上昇（参考：向きは決めない）/);
+    expect(up.cross).not.toMatch(/貢献|悪影響/);
+    const down = evaluateLaw(world(1990, i => (i < 25 ? 10 + (i % 2) * 0.1 : 1)), law('2015-04-01'), [map(true)]);
+    expect(down.cross).toMatch(/^段階1・低下（参考/);
+  });
+  it('日本に開始前の値が1つもなければ、従来どおり「日本の開始前の値がない」', () => {
+    const r = evaluateLaw(world(2020, () => 10), law('2015-04-01'), [map(false)]);
+    expect(r.cross).toBe('保留');
+    expect(r.reason).toContain('日本の開始前の値がない');
+  });
+  it('実際の対応表: 賃金と雇用の流動性は比較群なしのまま国際系列を持ち、電子申請率は系列なしのまま', () => {
+    const wage = INDICATOR_MAP.find(m => m.indicator === '賃金')!;
+    expect(wage).toMatchObject({ match: '比較群なし', target: null, intl: { rebase: true, better: 'higher' } });
+    expect(wage.intl!.source!.where['区分']).toBe('実質（2025年価格）／米ドル（購買力平価）');
+    const tenure = INDICATOR_MAP.find(m => m.indicator === '雇用の流動性')!;
+    expect(tenure.intl!.source!.where['区分']).toBe('勤続1年未満／就業者全体／男女計');
+    expect(INDICATOR_MAP.find(m => m.indicator === '電子申請率')!.match).toBe('系列なし');
+    const npl = INDICATOR_MAP.find(m => m.indicator === '不良債権比率')!;
+    expect(npl.intl!.altSources!.map(s => s.where['区分'])).toEqual(['WB:GFDD.SI.02']);
+    const bb = INDICATOR_MAP.find(m => m.indicator === 'ブロードバンド普及率')!;
+    expect(bb.intl!.code).toBe('WB:IT.NET.BBND.P2');
   });
 });
