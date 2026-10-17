@@ -1,5 +1,5 @@
 """bill-triage-v2 の2つの実装（app/src/indicator-pick.ts と scripts/triage_v2_line2.py）の出力が全題名で同じことと、
-派生データの形（170本・語彙・一致表）を確かめる。規則の中身の正しさではなく、書き起こしの写し間違いと出力の食い違いを拾う。"""
+派生データの形（施行日のある全行・語彙・一致表）を確かめる。規則の中身の正しさではなく、書き起こしの写し間違いと出力の食い違いを拾う。"""
 import csv
 import unittest
 from pathlib import Path
@@ -8,6 +8,7 @@ from scripts import triage_v2_line2 as py
 
 ROOT = Path(__file__).resolve().parents[1]
 V2 = ROOT / "data" / "derived" / "bill-triage-v2"
+ENFORCEMENT = ROOT / "data" / "acquired" / "enforcement-dates" / "enforcement.csv"
 
 
 def read(path):
@@ -15,11 +16,15 @@ def read(path):
         return list(csv.DictReader(f))
 
 
+def dated_count():
+    return sum(1 for r in read(ENFORCEMENT) if r["施行日"].strip())
+
+
 class TriageV2Test(unittest.TestCase):
     def test_python_implementation_reproduces_the_typescript_line1_output(self):
         # 系統1のラベルは TypeScript の実装の出力。同じ入力（系統1のAIの種類・分野）をPython実装に通して、全行で同じになる。
         rows = read(V2 / "labels-line1.csv")
-        self.assertEqual(len(rows), 170)
+        self.assertEqual(len(rows), dated_count())
         for r in rows:
             out = py.triage(r["題名"], r["系統1_入力種類"], r["系統1_入力分野"])
             self.assertEqual(
@@ -55,7 +60,7 @@ class TriageV2Test(unittest.TestCase):
         l1 = {r["id"]: r for r in read(V2 / "labels-line1.csv")}
         l2 = {r["id"]: r for r in read(V2 / "labels-line2.csv")}
         ag = read(V2 / "agreement.csv")
-        self.assertEqual(len(ag), 170)
+        self.assertEqual(len(ag), dated_count())
         for r in ag:
             a, b = l1[r["id"]], l2[r["id"]]
             same = a["結果"] != "保留" and (a["結果"], a["分野"], a["指標"]) == (b["系統2_判定"], b["系統2_分野"], b["系統2_指標"])

@@ -4,7 +4,7 @@
 
 ## 入力と規則
 
-対象は `data/acquired/enforcement-dates/enforcement.csv` の施行日が空でない170本。系統1は `bill-triage-v1/triage.csv`、系統2は `bill-triage-v1-line2/labels.csv` の題名・種類・分野を入力にします。第1条、委員会、統計値は分野選択に使いません。
+対象は `data/acquired/enforcement-dates/enforcement.csv` の施行日が空でない行（作成時170本、2026-10-17 の追加取得後197本）。系統1は `bill-triage-v1/triage.csv`、系統2は `bill-triage-v1-line2/labels.csv` の題名・種類・分野を入力にします。第1条、委員会、統計値は分野選択に使いません。
 
 - D1：全8分野の語を題名から探し、題名の最初の位置にある語の分野に決め直します。AIの入力分野や語表の分野順を優先しません。語が無ければ対応表なし。指標の選択順（表の上から）とは別です。
 - D2：「及び〜設置法」「及び〜整備法」を除いた最初の法律で判断します。
@@ -19,7 +19,7 @@
 
 - `labels-line1.csv`：TypeScript `app/src/indicator-pick.ts` の適用結果。
 - `labels-line2.csv`：Python `scripts/triage_v2_line2.py` の適用結果。
-- `agreement.csv`：施行日のある全170件を保持。両系統とも定義済みの判定で、判定・分野・指標が一致した場合のみ採用します。両系統が保留でも採用しません。
+- `agreement.csv`：施行日のある全行を保持。両系統とも定義済みの判定で、判定・分野・指標が一致した場合のみ採用します。両系統が保留でも採用しません。
 
 影響表から除くのは、両系統が明示的に評価対象外で一致した行だけです。系統欠落、保留、食い違いは影響表へ残し、段階と向きを採用しません。後段の損失・便益・公開候補へは進みません。
 

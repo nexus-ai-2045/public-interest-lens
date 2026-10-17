@@ -10,10 +10,10 @@
     "inputs": {
       "enacted": "f8ec2d1b14c988aad522dafcee33037e6288d0972613eed18a938b7616c8c94b",
       "triage": "62bc7a90ee69c95359f3ad79be8346c05fa811d7f1bf8251227f2d42b4e8a6fb",
-      "dated": "fafabd00c1325594ff4310bb2c729a0bdf7cbbc128d6be6ac90ac5f290b2fa44",
-      "impact": "7d27f73ff599dd9ef30e0a0b8fc43042070132cad0a176e4ced41131112aebeb",
-      "loss": "289c362397051905ee51147ca1b72a109ca79fbfaa09b818c612797ef9d62f46",
-      "publish": "56e3e12fe7135b4da842fa853d7e69f60443cbc36c2ad0bdbe8f006bf867b135",
+      "dated": "0dea3397ba16a1ec812f7451824bd170958005c6e8ee8fa79aad20a608db7157",
+      "impact": "ba521f6c30593411076496edba058c1463929fad4eb6cc634adfc889431ff242",
+      "loss": "78ef505b4cfe6e60a8be3a1b8adb9e9efd3b88d329b9dc42779ee404eab1f0fb",
+      "publish": "e5edb38ef2b0f853ba17543670b213795b6c077a401160bee5fcff4600fd975d",
       "enforcement": "15e5877e6d057ab73d4494c59549273ec964298b765363191ab46458338b7509"
     }
   },
@@ -67,6 +67,20 @@
       "reason": "参考の行や保留の判定を含むため、額を公開しない"
     },
     {
+      "id": "閣法-145-34",
+      "title": "国民金融公庫法の一部を改正する法律案",
+      "side": "loss",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
+    {
+      "id": "衆法-146-10",
+      "title": "貸金業の規制等に関する法律等の一部を改正する法律案",
+      "side": "loss",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
+    {
       "id": "衆法-147-33",
       "title": "信用金庫法の一部を改正する法律案",
       "side": "loss",
@@ -76,6 +90,13 @@
     {
       "id": "衆法-147-34",
       "title": "出資の受入れ、預り金及び金利等の取締りに関する法律の一部を改正する法律及び貸金業の規制等に関する法律の一部を改正する法律案",
+      "side": "loss",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
+    {
+      "id": "閣法-147-20",
+      "title": "住宅金融公庫法等の一部を改正する法律案",
       "side": "loss",
       "reasonCode": "R1",
       "reason": "参考の行や保留の判定を含むため、額を公開しない"
@@ -116,6 +137,20 @@
       "reason": "参考の行や保留の判定を含むため、額を公開しない"
     },
     {
+      "id": "閣法-151-9",
+      "title": "住宅金融公庫法等の一部を改正する法律案",
+      "side": "loss",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
+    {
+      "id": "衆法-185-2",
+      "title": "特定地域における一般乗用旅客自動車運送事業の適正化及び活性化に関する特別措置法等の一部を改正する法律案",
+      "side": "loss",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
+    {
       "id": "衆法-189-20",
       "title": "特定複合観光施設区域の整備の推進に関する法律案",
       "side": "loss",
@@ -128,6 +163,13 @@
       "side": "benefit",
       "reasonCode": "R4",
       "reason": "便益を減らしうる項目が未測定で、純額を出せない"
+    },
+    {
+      "id": "閣法-193-37",
+      "title": "金融商品取引法の一部を改正する法律案",
+      "side": "benefit",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
     },
     {
       "id": "閣法-193-59",
@@ -189,8 +231,8 @@
   "counts": {
     "enacted": 3415,
     "evaluated": 349,
-    "dated": 170,
-    "staged": 33,
+    "dated": 197,
+    "staged": 47,
     "amounted": 6,
     "publishable": 1,
     "published": 1
