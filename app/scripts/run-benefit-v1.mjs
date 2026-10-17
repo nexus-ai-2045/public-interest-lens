@@ -1,4 +1,4 @@
-// benefit-v1：loss-v1 の法律に benefit-rule-v1 をかけ、data/derived/benefit-v1/ と data/derived/publish-v1/ に書き出す。
+// benefit-v1：loss-v1 の法律に benefit-rule-v1.1 をかけ、data/derived/benefit-v1/ と data/derived/publish-v1/ に書き出す。
 // 実行：cd app && node scripts/run-benefit-v1.mjs （Node 22.18 以降。型注釈は Node が取り除く）
 // 判定は app/src/benefit-rule.ts・impact-rule.ts・loss-rule.ts だけにあり、ここでは読み書きだけをする。人物・採決・役職のデータは読まない。
 import { register } from 'node:module';
@@ -36,7 +36,7 @@ console.log(`loss-v1 ${results.length} 本。目的の分類の2系統の一致 
 for (const r of results) {
   const full = benefit.rejudgeImpact(tables, r.row.law.indicator, r.row.law.start, false);
   const n = r.decision.net;
-  console.log([r.row.law.id, r.decision.row, r.decision.publishable ? '公開可' : '公開不可',
+  console.log([r.row.law.id, r.row.law.direction ?? '-', r.decision.row, r.decision.publishable ? (r.decision.lowerBound ? '公開可（下限）' : '公開可') : '公開不可',
     n ? `${(n.median / 1e12).toFixed(2)}兆円（${(n.low / 1e12).toFixed(2)}〜${(n.high / 1e12).toFixed(2)}）` : '',
     `元の窓の再判定=${full ? `${full.stage}/${full.direction}` : 'なし'}（impact.csv=${r.row.law.stage}/${r.row.law.direction}）`,
     r.decision.reason.slice(0, 120)].join(' | '));
