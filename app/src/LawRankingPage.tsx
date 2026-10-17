@@ -15,6 +15,7 @@ const funnel: { key: keyof PublicRanking['counts']; label: string }[] = [
 ];
 const reasonTitles: Record<string, string> = {
   APPROVAL: '公開の承認待ち',
+  SOURCE: '出典チェックで食い違い（確認中）',
   R1: '参考の行・保留の判定を含む',
   R3: '新型コロナの時期と分けられない',
   R4: '便益を減らしうる項目が未測定',
