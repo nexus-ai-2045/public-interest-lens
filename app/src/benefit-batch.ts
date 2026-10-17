@@ -105,6 +105,8 @@ export function rejudgeImpact(tables: Tables, indicator: string, start: string, 
   return { stage: j.stage, direction: j.direction };
 }
 
+const purposeTextOf = (c: Classification) => c.texts.map(t => t.text).join('\n');
+
 export function evaluateBenefit(tables: Tables, row: LossRow, purposes: Row[], line2: Map<string, BenefitLine2>): BenefitLawResult {
   const { law, built, result } = row;
   const line1 = classifyLaw(purposes, { id: law.id, title: law.title, indicator: law.indicator });
@@ -140,7 +142,7 @@ export function evaluateBenefit(tables: Tables, row: LossRow, purposes: Row[], l
   const finalLoss = usedInput && grossLoss?.lossYen ? estimateLoss({ ...usedInput, regulationBenefitYen: passed ? passed.median : null }) : null;
   const decision = decidePublication({
     reference: built?.reference ?? false, lossBlocked: built ? built.blocked ?? null : '損失額の入力の対応がない指標',
-    originalLoss: result, directionConflict: classification.directionConflict, covid, benefits, grossLoss, finalLoss, direction: law.direction,
+    originalLoss: result, directionConflict: classification.directionConflict, covid, benefits, grossLoss, finalLoss, direction: law.direction, purposeText: purposeTextOf(line1),
   });
   return { row, classification, line1, agreement, benefits, covid, usedInput, grossLoss, finalLoss, benefitYen, decision, recomputed };
 }
@@ -180,7 +182,7 @@ export const BENEFIT_HEADER = ['id', '題名', '便益の種類', '便益の状�
 export function benefitRows(r: BenefitLawResult, groups: Map<string, string>): string[][] {
   return r.benefits.map(b => [
     r.row.law.id, r.row.law.title, b.kind, b.state, stateLabel(b.state), b.yen ? String(b.yen.median) : '',
-    b.yen === null ? (u => `${u.sign}（${u.why}）`)(unmeasuredSign(b)) : '', b.series,
+    b.yen === null ? (u => `${u.sign}（${u.why}）`)(unmeasuredSign(b, { direction: r.row.law.direction, purposeText: purposeTextOf(r.line1) })) : '', b.series,
     b.effect === null ? '' : String(b.effect), b.spread === null ? '' : String(b.spread), b.reason, groups.get(`${r.row.law.id}|${b.kind}`) ?? '',
   ]);
 }

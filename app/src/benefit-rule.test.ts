@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseCsv, toCsv, type Tables } from './impact-batch';
 import type { LossResult } from './loss-rule';
 import {
-  combineBenefits, cutAtCovid, decidePublication, includedBenefit, judgeCovidSeparation, LOWER_BOUND_LABEL, measureBenefit, netRange, overlapsCovid, sideLabel, stateLabel, unmeasuredBenefit, unmeasuredSign,
+  combineBenefits, cutAtCovid, decidePublication, includedBenefit, judgeCovidSeparation, LOWER_BOUND_LABEL, measureBenefit, netRange, overlapsCovid, sideLabel, SECURITY_KIND, stateLabel, unmeasuredBenefit, unmeasuredSign,
   type BenefitMeasurement, type BenefitSeriesInput, type CovidCheck, type PublishInput,
 } from './benefit-rule';
 import { classifyA, classifyLaw, pickPurposes, preprocessA } from './benefit-classification';
@@ -179,6 +179,42 @@ describe('v1.1 の R4：便益の側では、加算のみの未測定は止め�
   });
   it('側の表示は法律の影響段階の向きから付ける', () => {
     expect([sideLabel('benefit'), sideLabel('harm'), sideLabel(null)]).toEqual(['国士側（貢献）', '国賊側（悪影響）', '保留（向きなし）']);
+  });
+});
+
+describe('v1.2：安全保障の既定（便益の側だけ、第1条の原文で決める）', () => {
+  const noCovid: CovidCheck = { applies: false, separable: true, reason: '' };
+  const base: PublishInput = {
+    reference: false, lossBlocked: null, originalLoss: loss(-100), directionConflict: false, covid: noCovid,
+    benefits: [includedBenefit('経済（内包）', ''), unmeasuredBenefit('安全（犯罪）', ''), unmeasuredBenefit(SECURITY_KIND, '系列なし')],
+    grossLoss: loss(-100), finalLoss: loss(-100, -80, -120, true), direction: 'benefit',
+  };
+  const sec = unmeasuredBenefit(SECURITY_KIND, '');
+  it('便益の側で、原文に「安全保障」か「セキュリティ」があれば加算のみ', () => {
+    expect(unmeasuredSign(sec, { direction: 'benefit', purposeText: '我が国の安全保障に資する' }).sign).toBe('加算のみ');
+    expect(unmeasuredSign(sec, { direction: 'benefit', purposeText: 'サイバーセキュリティの確保' }).sign).toBe('加算のみ');
+  });
+  it('原文に語が無ければ、またはテキストが無ければ今までどおり減らしうる', () => {
+    expect(unmeasuredSign(sec, { direction: 'benefit', purposeText: '国民経済の発展に資する' }).sign).toBe('減らしうる');
+    expect(unmeasuredSign(sec, { direction: 'benefit' }).sign).toBe('減らしうる');
+    expect(unmeasuredSign(sec).sign).toBe('減らしうる');
+  });
+  it('損失の側・向きなしでは適用しない', () => {
+    for (const direction of ['harm', null] as const) expect(unmeasuredSign(sec, { direction, purposeText: '安全保障' }).sign).toBe('減らしうる');
+  });
+  it('未測定以外（検出・未換算）と、ほかの対応表外の種類には適用しない', () => {
+    expect(unmeasuredSign({ ...sec, state: '検出・未換算', detected: 'benefit' }, { direction: 'benefit', purposeText: '安全保障' }).sign).toBe('減らしうる');
+    expect(unmeasuredSign(unmeasuredBenefit('対応表外（福祉）', ''), { direction: 'benefit', purposeText: '安全保障' }).sign).toBe('減らしうる');
+    expect(unmeasuredSign(unmeasuredBenefit('消費者保護', ''), { direction: 'benefit', purposeText: '安全保障' }).sign).toBe('減らしうる');
+  });
+  it('公開の判定：語があれば R6（下限）、無ければ R4', () => {
+    expect(decidePublication({ ...base, purposeText: 'サイバーセキュリティ' })).toMatchObject({ row: 'R6', publishable: true, lowerBound: true });
+    expect(decidePublication({ ...base, purposeText: '経済の発展' })).toMatchObject({ row: 'R4', publishable: false });
+    expect(decidePublication({ ...base, direction: 'harm', originalLoss: loss(100), grossLoss: loss(100), purposeText: '安全保障' }).row).toBe('R4');
+  });
+  it('安全保障だけでなく、ほかの減らしうる未測定が残れば止める', () => {
+    const d = decidePublication({ ...base, purposeText: '安全保障', benefits: [unmeasuredBenefit(SECURITY_KIND, ''), unmeasuredBenefit('消費者保護', '')] });
+    expect(d.row).toBe('R4');
   });
 });
 
