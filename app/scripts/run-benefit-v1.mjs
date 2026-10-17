@@ -25,7 +25,7 @@ const impactRows = impact.parseCsv(read(`${derived('impact')}impact.csv`));
 const purposes = impact.parseCsv(read('data/acquired/law-purposes/purposes.csv'));
 // 設計決定0007：系統2（系統1を見ずに別のセッションが付けた分類）と一致したものだけ採用する。
 const line2 = agreement.parseBenefitLine2(impact.parseCsv(read('data/derived/benefit-v1-line2/labels.csv')));
-const results = benefit.evaluateBenefits(tables, impactRows, purposes, line2);
+const results = benefit.evaluateBenefits(tables, impactRows, purposes, line2, { includeStage1: version === 'v2' });
 const groups = benefit.benefitGroups(results);
 
 const outB = new URL(derived('benefit'), root);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocateAll, allocateExact, applyVariant, distributeLargestRemainder, lawTotals, parseAmount, personTotals, rankSensitivity, ranks, toLossCredit, type Law } from './allocation-batch';
+import { allocatable, allocateAll, allocateExact, applyVariant, distributeLargestRemainder, lawTotals, parseAmount, personTotals, rankSensitivity, ranks, toLossCredit, type Law } from './allocation-batch';
 import { allocateLoss, type Involvement } from './loss-rule';
 
 // 名前はすべて架空。
@@ -90,5 +90,23 @@ describe('allocation-v1', () => {
       expect(rows.reduce((s, r) => s + r.share.low, 0)).toBe(Math.round(amount.low * rate));
       expect(rows.reduce((s, r) => s + r.share.high, 0)).toBe(Math.round(amount.high * rate));
     }
+  });
+});
+
+describe('参考の行（貸出残高・段階1）は配分しない', () => {
+  const referenceLaw: Law = { ...lossLaw, lawId: '閣法-1-3', reference: true, publishable: false };
+  const withRef = new Map(inv).set('閣法-1-3', [{ personId: '甲野太郎', action: 'decide', position: 'prime_minister', evidenceUrl: url }]);
+
+  it('allocatable は参考の行を除く', () => {
+    expect(allocatable([lossLaw, referenceLaw, benefitLaw]).map(l => l.lawId)).toEqual(['閣法-1-1', '衆法-1-2']);
+  });
+
+  it('allocateAll は参考の行の関与があっても行を作らず、人ごとの合計にも入らない', () => {
+    const all = [lossLaw, referenceLaw, benefitLaw];
+    const rows = allocateAll(all, withRef);
+    expect(rows.some(r => r.lawId === '閣法-1-3')).toBe(false);
+    expect(rows).toEqual(allocateAll(laws, inv));
+    expect(personTotals(all, rows).every(p => !p.laws.includes('閣法-1-3'))).toBe(true);
+    expect(lawTotals(all, rows).some(t => t.lawId === '閣法-1-3')).toBe(false);
   });
 });

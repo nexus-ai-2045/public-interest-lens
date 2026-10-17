@@ -21,14 +21,14 @@ for (const dir of ['domestic-stats', 'intl-stats', 'more-stats', 'gap-stats', 'o
 }
 
 const impactRows = impact.parseCsv(read(`${derived('impact')}impact.csv`));
-const rows = loss.evaluateLosses(tables, impactRows);
+const rows = loss.evaluateLosses(tables, impactRows, undefined, { includeStage1: version === 'v2' });
 const out = new URL(derived('loss'), root);
 mkdirSync(out, { recursive: true });
 writeFileSync(new URL('loss.csv', out), impact.toCsv(loss.LOSS_HEADER, rows.map(loss.lossRow)));
 
-console.log(`振り分け ${version}：impact-v1 ${impactRows.length} 本のうち段階2以上 ${rows.length} 本`);
+console.log(`振り分け ${version}：impact-v1 ${impactRows.length} 本のうち段階2以上と参考の段階1 ${rows.length} 本`);
 for (const r of rows) {
   const m = r.result?.lossYen;
   const amount = m ? `${(m.median / 1e12).toFixed(2)}兆円（${(m.low / 1e12).toFixed(2)}〜${(m.high / 1e12).toFixed(2)}）${r.result.years}年` : '保留';
-  console.log([r.law.id, r.law.indicator, r.group, r.built?.reference ? '参考' : '', amount, r.result?.reason ?? ''].join(' | '));
+  console.log([r.law.id, r.law.indicator, r.group, r.built?.reference || r.stage1Reference ? '参考' : '', amount, r.result?.reason ?? ''].join(' | '));
 }

@@ -104,8 +104,16 @@ export function toLossLaw(r: ImpactRow): LossLaw {
   return { id: r.id, title: r['題名'], field: r['分野'], indicator: r['指標'], start: r['施行日'], stage: m ? Number(m[1]) as 1 | 2 | 3 : null, direction };
 }
 
-/** loss-rule-v1 の対象（段階2以上・向きあり）。判定ルールも同じ条件で保留にするが、表に載せる行をここで先に絞る。 */
+/** loss-rule-v1 の本来の対象（段階2以上・向きあり）。判定ルールも同じ条件で保留にする。 */
 export const qualifies = (l: LossLaw) => l.stage !== null && l.stage >= 2 && l.direction !== null;
+
+/** 段階1（対象の指標は動いたが、経済全体の指標では確認できていない）で向きのある行。額は参考として出すだけで、合計・公開・議員への配分には使わない。 */
+export const isStage1Reference = (l: LossLaw) => l.stage === 1 && l.direction !== null;
+
+/** 表に載せる行：本来の対象と、参考として額を出す段階1。 */
+export const listed = (l: LossLaw) => qualifies(l) || isStage1Reference(l);
+
+export const STAGE1_REFERENCE_REASON = '参考（段階1）：対象の指標は動いたが、経済全体の指標では確認できていないため、この額は合計に入れず、公開に使わず、議員への配分にも使わない。段階2以上と同じ方法・同じ入力で計算した参考値';
 
 /** 損失額の窓：開始年の5年前〜開始後10年目（開始年が1年目）。 */
 export const lossWindow = (start: string) => { const y = startYear(start); return { from: y - 5, to: y + MAX_LOSS_YEARS - 1 }; };
@@ -143,7 +151,7 @@ export function alignControls(treated: CountryPoint[], candidates: CountrySeries
 }
 
 /** blocked があれば判定ルールを呼ばない（系列の定義が窓の中で変わるなど、入力を作れない理由）。 */
-export type LossBuilt = { input: LossInput; elements: string[]; note: string; reference: boolean; baseYear: number | null; blocked?: string };
+export type LossBuilt = { input: LossInput; elements: string[]; note: string; reference: boolean; baseYear: number | null; blocked?: string; stage1Reference?: boolean };
 
 /** 1法律の loss-rule-v1 の入力。系列が無いものも、無いまま（比較国0か国など）判定ルールに渡す。 */
 export function buildLossInput(tables: Tables, law: LossLaw, sources: LossSource[] = LOSS_SOURCES): LossBuilt | null {
@@ -259,7 +267,7 @@ export function observationGroups(laws: { id: string; indicator: string; start: 
 
 // ---- 表 ----
 
-export type LossRow = { law: LossLaw; result: LossResult | null; built: LossBuilt | null; group: string };
+export type LossRow = { law: LossLaw; result: LossResult | null; built: LossBuilt | null; group: string; stage1Reference?: boolean };
 
 const yen = (x: number) => String(x);
 export function amountCell(r: LossResult | null): string {
@@ -270,8 +278,9 @@ export function amountCell(r: LossResult | null): string {
 
 export const LOSS_HEADER = ['id', '題名', '分野', '指標', '段階', '向き', '損失または便益の額', '単位', '計算式の要素', '参考フラグ', '理由', '観測グループ'];
 
-export function lossRow({ law, result, built, group }: LossRow): string[] {
+export function lossRow({ law, result, built, group, stage1Reference }: LossRow): string[] {
   const reasons: string[] = [];
+  if (stage1Reference) reasons.push(STAGE1_REFERENCE_REASON);
   if (!built) reasons.push('損失額の入力の対応がない指標');
   else {
     reasons.push(built.blocked ?? result!.reason);
@@ -285,16 +294,26 @@ export function lossRow({ law, result, built, group }: LossRow): string[] {
   return [
     law.id, law.title, law.field, law.indicator, law.stage === null ? '保留' : `段階${law.stage}`,
     law.direction === 'benefit' ? '貢献' : law.direction === 'harm' ? '悪影響' : '',
-    amountCell(result), unit, built ? built.elements.join('／') : '', built?.reference ? '参考' : '', reasons.join('／'), group,
+    amountCell(result), unit, built ? built.elements.join('／') : '', built?.reference || stage1Reference ? '参考' : '', reasons.join('／'), group,
   ];
 }
 
-/** impact.csv の全行から、対象の法律に loss-rule-v1 をかけた表の行。 */
-export function evaluateLosses(tables: Tables, impactRows: ImpactRow[], sources: LossSource[] = LOSS_SOURCES): LossRow[] {
-  const laws = impactRows.map(toLossLaw).filter(qualifies);
+/**
+ * impact.csv の全行から、対象の法律に loss-rule-v1 をかけた表の行。
+ * includeStage1 のとき（振り分けv2の出力）だけ、段階1（向きあり）も同じ入力・同じ estimateLoss で額を計算するが、参考扱い（reference=true）にする。
+ * estimateLoss は段階2未満を保留にするので、計算のときだけ段階2として渡す（段階1の行を参考として計算するための唯一の例外。表の「段階」欄は段階1のまま）。
+ */
+export function evaluateLosses(tables: Tables, impactRows: ImpactRow[], sources: LossSource[] = LOSS_SOURCES, options: { includeStage1?: boolean } = {}): LossRow[] {
+  const laws = impactRows.map(toLossLaw).filter(options.includeStage1 ? listed : qualifies);
   const groups = observationGroups(laws);
   return laws.map(law => {
+    const stage1Reference = isStage1Reference(law);
     const built = buildLossInput(tables, law, sources);
-    return { law, built, result: built && !built.blocked ? estimateLoss(built.input) : null, group: groups.get(law.id)! };
+    if (built && stage1Reference) {
+      built.input = { ...built.input, judgement: { stage: 2, direction: law.direction } };
+      built.reference = true;
+      built.stage1Reference = true;
+    }
+    return { law, built, result: built && !built.blocked ? estimateLoss(built.input) : null, group: groups.get(law.id)!, stage1Reference };
   });
 }

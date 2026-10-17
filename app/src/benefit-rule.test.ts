@@ -105,6 +105,11 @@ describe('公開の判定表 R1〜R6（上から順に、最初に当たった�
     expect(decidePublication({ ...ok, lossBlocked: '系列の断絶' }).row).toBe('R1');
     expect(decidePublication({ ...ok, originalLoss: { ...loss(1), lossYen: null } }).row).toBe('R1');
   });
+  it('R1：段階1の参考の行は、他がすべて満たされていても公開不可', () => {
+    const d = decidePublication({ ...ok, reference: true, stage1Reference: true });
+    expect(d).toMatchObject({ row: 'R1', publishable: false });
+    expect(d.reason).toContain('段階1');
+  });
   it('R2：向きの矛盾', () => {
     expect(decidePublication({ ...ok, directionConflict: true })).toMatchObject({ row: 'R2', publishable: false });
   });
