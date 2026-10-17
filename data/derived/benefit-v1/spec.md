@@ -29,7 +29,7 @@
 cd app && node scripts/run-benefit-v1.mjs   # Node 22.18 以降
 ```
 
-出力：`data/derived/benefit-v1/classification.csv`（目的の分類の2系統）、`benefit.csv`（種類ごとの便益の状態。v1.1 から未測定の行に「未測定の符号」の列）、`data/derived/publish-v1/publish.csv`（法律ごとの公開の判定。v1.1 から「側」の列）。`loss-v1/loss.csv` は変えていません。テストは `app/src/benefit-rule.test.ts`（人工データ）。
+出力：`data/derived/benefit-v1/classification.csv`（目的の分類の2系統）、`agreement.csv`（系統1と系統2の一致）、`benefit.csv`（種類ごとの便益の状態。v1.1 から未測定の行に「未測定の符号」の列）、`data/derived/publish-v1/publish.csv`（法律ごとの公開の判定。v1.1 から「側」の列）。`loss-v1/loss.csv` は変えていません。テストは `app/src/benefit-rule.test.ts`（人工データ）。
 
 ## 方法
 
@@ -41,6 +41,7 @@ cd app && node scripts/run-benefit-v1.mjs   # Node 22.18 以降
 - 向きの矛盾（目的が損失額の指標を抑える）も2系統で付け、一致して「抑える」なら R2。
 - 種類は提案 2-4 の対応表に、`経済（付加価値の外）`（海外所得）と `移転` を加えたもの。表に無い種類は `対応表外（…）` で、指標と比較群が固定されていないので未測定。
 - **限界**：設計決定0007は独立した AI 2系統を求めるが、ここでは同じ AI が同じセッションで2つの方法（語の表と読み）を書いた。独立性は限られる。独立した系統（別のモデル・別のセッション）で置き換えられるよう、系統Bは表の形で外に出してある。
+- **2系統目（2026-10-17 追加）**：上の系統A・Bの一致を「系統1」とし、別のセッションが系統1を見ずに付けた「系統2」（`data/derived/benefit-v1-line2/`）と種類の集合・向きの矛盾が一致したものだけ採用する。一致しない・系統2が無いものは保留（`app/src/line-agreement.ts`、一致表は `agreement.csv`）。結果は `docs/reports/adr0007-line2.md`。
 
 ### 2. 便益の状態（`measureBenefit`）
 
