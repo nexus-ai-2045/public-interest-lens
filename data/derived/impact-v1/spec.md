@@ -2,10 +2,6 @@
 
 `bill-triage-v1` で評価対象になり、施行日が確定している法律に、取得済みの統計から系列を当てて、判定ルール `impact-rule-v1`（`app/src/impact-rule.ts`）で影響段階を出します。判定の計算は `impact-rule.ts` だけが行い、この段階では系列を選んで窓を作るだけです（ロジックを1か所に保つため）。
 
-## 振り分けの版（切り替え）
-
-`node scripts/run-impact-v1.mjs` は振り分けの版を `--triage v1|v2`（または環境変数 `TRIAGE_VERSION`）で切り替える。**既定は v2**（`data/derived/bill-triage-v2/`。指標の選び方 indicator-pick-v1 を両系統に当てたあとの一致で採否を決める）。`--triage v1` は従来どおり `bill-triage-v1` を読み、`bill-triage-v1/agreement.csv` を書く（v2 のときは v1 のファイルに書かない）。以下の「入力」の表は v1 の場合の記述。v2 では、`labels-line1.csv`・`labels-line2.csv` のどちらかが評価対象とした施行日のある法律を判定に回し、両系統の判定・分野・指標が同じものだけ採用する。
-
 ## 入力
 
 | 入力 | 使う行 |
