@@ -115,8 +115,27 @@ describe('振り分け：系統1と系統2の比較（設計決定0007）', () =
     expect(ag.reason).toContain('指標（系統1：貸出残高、系統2：なし）');
   });
 
+  it('両系統が保留でも採用しない', () => {
+    const ag = compareTriage('x', { ...l1, 結果: '保留' }, { ...l2, 系統2_判定: '保留' });
+    expect(ag.agreed).toBe(false);
+    expect(holdByTriage(law, ag).verdict).toBe(HELD_BY_TRIAGE);
+  });
+
   it('どちらかの系統が無ければ不一致（保留）', () => {
     expect(compareTriage('x', l1, undefined).agreed).toBe(false);
     expect(compareTriage('x', undefined, l2).reason).toBe('系統1の振り分けが無い');
+  });
+
+  it('系統2で参考計算した保留行は、系統1の計算と表示しない', () => {
+    const held = holdByTriage(law, compareTriage('x', undefined, l2), '系統2');
+    expect(held.reason).toContain('参考：系統2の分野・指標での判定');
+    expect(held.reason).not.toContain('参考：系統1');
+    expect(held.verdict).toBe(HELD_BY_TRIAGE);
+  });
+
+  it('両系統が欠落した行は参考計算の入力なしと表示する', () => {
+    const held = holdByTriage(law, compareTriage('x', undefined, undefined), '入力');
+    expect(held.reason).toContain('参考計算なし：両系統の分野・指標が無い');
+    expect(held.reason).not.toContain('入力の分野・指標での判定');
   });
 });
