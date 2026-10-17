@@ -14,6 +14,7 @@ import {
   type BenefitMeasurement, type CovidCheck, type PublishDecision, type YenRange,
 } from './benefit-rule';
 import { classifyLaw, type Classification } from './benefit-classification';
+import { adoptAgreed, compareBenefitLines, type BenefitAgreement, type BenefitLine2 } from './line-agreement';
 
 /** 便益の指標の候補（対象と比較の組）。unit は公的機関が公表した単価の系列（既定3）。無ければ null。 */
 export type BenefitOption = { name: string; definition: string; better: 'lower' | 'higher'; treated: Ref; control: Ref; unit: { ref: Ref; source: string } | null };
@@ -77,7 +78,11 @@ const cutInput = (input: LossInput): LossInput => ({ ...input, treated: cutAtCov
 
 export type BenefitLawResult = {
   row: LossRow;
+  /** 2系統（系統1と系統2、設計決定0007）が一致しないものを保留に替えたあとの分類。判定にはこれを使う。 */
   classification: Classification;
+  /** 系統1（classifyLaw）そのままの分類。 */
+  line1: Classification;
+  agreement: BenefitAgreement;
   benefits: BenefitMeasurement[];
   covid: CovidCheck;
   /** 判定に使った窓の loss-rule-v1 の入力（便益なし）。 */
@@ -100,9 +105,12 @@ export function rejudgeImpact(tables: Tables, indicator: string, start: string, 
   return { stage: j.stage, direction: j.direction };
 }
 
-export function evaluateBenefit(tables: Tables, row: LossRow, purposes: Row[]): BenefitLawResult {
+export function evaluateBenefit(tables: Tables, row: LossRow, purposes: Row[], line2: Map<string, BenefitLine2>): BenefitLawResult {
   const { law, built, result } = row;
-  const classification = classifyLaw(purposes, { id: law.id, title: law.title, indicator: law.indicator });
+  const line1 = classifyLaw(purposes, { id: law.id, title: law.title, indicator: law.indicator });
+  // 設計決定0007：系統1と系統2が一致した分類だけ使い、一致しなければ保留（系統2が無い法律も保留）。
+  const agreement = compareBenefitLines(line1, line2.get(law.id));
+  const classification = adoptAgreed(line1, agreement);
   const w = lossWindow(law.start);
   const applies = overlapsCovid(w.from, w.to);
 
@@ -134,11 +142,11 @@ export function evaluateBenefit(tables: Tables, row: LossRow, purposes: Row[]): 
     reference: built?.reference ?? false, lossBlocked: built ? built.blocked ?? null : '損失額の入力の対応がない指標',
     originalLoss: result, directionConflict: classification.directionConflict, covid, benefits, grossLoss, finalLoss, direction: law.direction,
   });
-  return { row, classification, benefits, covid, usedInput, grossLoss, finalLoss, benefitYen, decision, recomputed };
+  return { row, classification, line1, agreement, benefits, covid, usedInput, grossLoss, finalLoss, benefitYen, decision, recomputed };
 }
 
-export function evaluateBenefits(tables: Tables, impactRows: ImpactRow[], purposes: Row[]): BenefitLawResult[] {
-  return evaluateLosses(tables, impactRows).map(r => evaluateBenefit(tables, r, purposes));
+export function evaluateBenefits(tables: Tables, impactRows: ImpactRow[], purposes: Row[], line2: Map<string, BenefitLine2>): BenefitLawResult[] {
+  return evaluateLosses(tables, impactRows).map(r => evaluateBenefit(tables, r, purposes, line2));
 }
 
 /** 同じ便益の系列で窓が重なる法律のまとまり（足さない）。測った系列のある種類だけ。 */
@@ -158,13 +166,13 @@ const rangeCell = (label: string, r: YenRange) => `${label}：中央値=${r.medi
 
 export const CLASSIFICATION_HEADER = ['id', '題名', '指標', '使った第1条', '印', '系統A_種類', '系統A_引用', '系統B_種類', '系統B_引用', '系統B_注記', '種類の一致', '向きの矛盾_A', '向きの矛盾_B', '採用する種類', '保留の理由', '出典URL'];
 export function classificationRow(r: BenefitLawResult): string[] {
-  const c = r.classification, l = r.row.law;
+  const c = r.line1, l = r.row.law, adopted = r.classification;
   const yn = (b: boolean) => b ? '抑える' : 'なし';
   return [
     l.id, l.title, l.indicator, c.texts.map(t => `${t.lawName}（${t.version}）`).join('／'), c.flags.join('／'),
     c.a.kinds.join('・'), c.a.quotes.join('／'), c.b?.kinds.join('・') ?? '', c.b?.quotes.map(q => `「${q}」`).join('／') ?? '', c.b?.note ?? '',
     c.agreed ? '一致' : '不一致', yn(c.a.directionConflict), c.b ? yn(c.b.directionConflict) : '',
-    c.kinds === null ? '保留' : c.kinds.join('・') || 'なし', c.holdReason ?? '', c.texts.map(t => t.url).join(' '),
+    adopted.kinds === null ? '保留' : adopted.kinds.join('・') || 'なし', adopted.holdReason ?? '', c.texts.map(t => t.url).join(' '),
   ];
 }
 

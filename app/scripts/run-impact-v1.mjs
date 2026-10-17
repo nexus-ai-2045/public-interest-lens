@@ -6,6 +6,7 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 
 register('./ts-extension-hook.mjs', import.meta.url);
 const batch = await import('../src/impact-batch.ts');
+const agreement = await import('../src/line-agreement.ts');
 
 const root = new URL('../../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, root), 'utf8');
@@ -17,20 +18,27 @@ for (const dir of ['domestic-stats', 'intl-stats', 'more-stats', 'gap-stats']) {
   }
 }
 
-const triage = batch.parseCsv(read('data/derived/bill-triage-v1/triage.csv')).filter(r => r['結果'] === '評価対象');
+const triageAll = batch.parseCsv(read('data/derived/bill-triage-v1/triage.csv'));
+const triage = triageAll.filter(r => r['結果'] === '評価対象');
+// 設計決定0007：系統2（系統1を見ずに別のセッションが付けた振り分け）と判定・分野・指標が一致した法律だけ採用し、一致しなければ保留。
+const triageById = new Map(triageAll.map(r => [r.id, r]));
+const line2Rows = batch.parseCsv(read('data/derived/bill-triage-v1-line2/labels.csv'));
+const line2ById = new Map(line2Rows.map(r => [r.id, r]));
 const enforcement = new Map(batch.parseCsv(read('data/acquired/enforcement-dates/enforcement.csv')).filter(r => r['施行日'].trim() !== '').map(r => [r.id, r]));
 const laws = triage.filter(r => enforcement.has(r.id)).map(r => ({ id: r.id, title: enforcement.get(r.id)['題名'], field: r['分野'], indicator: r['指標'], start: enforcement.get(r.id)['施行日'].trim() }));
 
 const unknown = [...new Set(triage.map(r => r['指標']))].filter(i => !batch.INDICATOR_MAP.some(m => m.indicator === i));
 if (unknown.length) throw new Error(`対応表にない指標: ${unknown.join(', ')}`);
 
-const results = laws.map(law => batch.evaluateLaw(tables, law));
+const agreements = new Map(laws.map(law => [law.id, agreement.compareTriage(law.id, triageById.get(law.id), line2ById.get(law.id))]));
+const results = laws.map(law => agreement.holdByTriage(batch.evaluateLaw(tables, law), agreements.get(law.id)));
 const out = new URL('data/derived/impact-v1/', root);
 mkdirSync(out, { recursive: true });
 writeFileSync(new URL('indicator-map.csv', out), batch.toCsv(batch.MAP_HEADER, batch.INDICATOR_MAP.map(batch.mapRow)));
 writeFileSync(new URL('impact.csv', out), batch.toCsv(batch.IMPACT_HEADER, results.map(batch.impactRow)));
+writeFileSync(new URL('data/derived/bill-triage-v1/agreement.csv', root), batch.toCsv(agreement.TRIAGE_AGREEMENT_HEADER, laws.map(law => agreement.triageAgreementRow(law.title, agreements.get(law.id)))));
 
 const count = (key, f = v => v) => results.reduce((m, r) => m.set(f(r[key]), (m.get(f(r[key])) ?? 0) + 1), new Map());
-console.log(`評価対象 ${triage.length} 本のうち施行日あり ${laws.length} 本`);
+console.log(`評価対象 ${triage.length} 本のうち施行日あり ${laws.length} 本。振り分けの2系統の一致 ${[...agreements.values()].filter(a => a.agreed).length}/${laws.length}`);
 console.log('判定:', Object.fromEntries(count('verdict')));
 console.log('国際比較:', Object.fromEntries(count('cross', v => v.replace(/（.*$/, ''))));

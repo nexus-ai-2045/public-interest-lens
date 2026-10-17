@@ -7,6 +7,7 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 register('./ts-extension-hook.mjs', import.meta.url);
 const impact = await import('../src/impact-batch.ts');
 const benefit = await import('../src/benefit-batch.ts');
+const agreement = await import('../src/line-agreement.ts');
 
 const root = new URL('../../', import.meta.url);
 const read = rel => readFileSync(new URL(rel, root), 'utf8');
@@ -20,7 +21,9 @@ for (const dir of ['domestic-stats', 'intl-stats', 'more-stats', 'gap-stats', 'o
 
 const impactRows = impact.parseCsv(read('data/derived/impact-v1/impact.csv'));
 const purposes = impact.parseCsv(read('data/acquired/law-purposes/purposes.csv'));
-const results = benefit.evaluateBenefits(tables, impactRows, purposes);
+// 設計決定0007：系統2（系統1を見ずに別のセッションが付けた分類）と一致したものだけ採用する。
+const line2 = agreement.parseBenefitLine2(impact.parseCsv(read('data/derived/benefit-v1-line2/labels.csv')));
+const results = benefit.evaluateBenefits(tables, impactRows, purposes, line2);
 const groups = benefit.benefitGroups(results);
 
 const outB = new URL('data/derived/benefit-v1/', root);
@@ -28,11 +31,13 @@ const outP = new URL('data/derived/publish-v1/', root);
 mkdirSync(outB, { recursive: true });
 mkdirSync(outP, { recursive: true });
 writeFileSync(new URL('classification.csv', outB), impact.toCsv(benefit.CLASSIFICATION_HEADER, results.map(benefit.classificationRow)));
+writeFileSync(new URL('agreement.csv', outB), impact.toCsv(agreement.AGREEMENT_HEADER, results.map(r => agreement.agreementRow(r.row.law.id, r.row.law.title, r.agreement))));
 writeFileSync(new URL('benefit.csv', outB), impact.toCsv(benefit.BENEFIT_HEADER, results.flatMap(r => benefit.benefitRows(r, groups))));
 writeFileSync(new URL('publish.csv', outP), impact.toCsv(benefit.PUBLISH_HEADER, results.map(benefit.publishRow)));
 
-const agreed = results.filter(r => r.classification.agreed).length;
-console.log(`loss-v1 ${results.length} 本。目的の分類の2系統の一致 ${agreed}/${results.length}`);
+const agreed = results.filter(r => r.line1.agreed).length;
+const count = s => results.filter(r => r.agreement.status === s).length;
+console.log(`loss-v1 ${results.length} 本。系統1の中（A・B）の一致 ${agreed}/${results.length}。系統1と系統2：一致 ${count('一致')}、不一致 ${count('不一致')}、系統1が保留 ${count('系統1が保留')}、系統2なし ${count('系統2なし')}`);
 for (const r of results) {
   const full = benefit.rejudgeImpact(tables, r.row.law.indicator, r.row.law.start, false);
   const n = r.decision.net;
