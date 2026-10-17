@@ -17,7 +17,7 @@ test('通常の入口で実資料を読み、架空順位に変換しない', as
   await expect(page.getByRole('region', { name: '選択した投票行の詳細' })).toContainText('試験議案');
   await expect(page.getByRole('link', { name: '公式の原資料を開く' })).toHaveAttribute('href', /sangiin/);
   await page.getByRole('button', { name: '架空デモ', exact: true }).click();
-  await expect(page).toHaveURL(/\/ranking$/);
+  await expect(page).toHaveURL(/\/demo$/);
   await expect(page.getByText('全人物・政策・資料が架空です。', { exact: true })).toBeVisible();
 });
 

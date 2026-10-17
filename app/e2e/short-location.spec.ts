@@ -25,7 +25,7 @@ test('人物ページの空検索は例外を出さず、履歴と再読込で�
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto('/people/fiction-a');
   await page.getByRole('searchbox', { name: '人物名で検索' }).fill('存在しない人物');
-  await expect(page).toHaveURL(/\/ranking$/);
+  await expect(page).toHaveURL(/\/demo$/);
   await expect(page.locator('tbody tr')).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole('searchbox', { name: '人物名で検索' })).toHaveValue('存在しない人物');
@@ -35,13 +35,13 @@ test('人物ページの空検索は例外を出さず、履歴と再読込で�
 });
 
 test('短い既定URLと、存在しない版・行動の停止を維持する', async ({ page }) => {
-  await page.goto('/ranking');
-  await expect(page).toHaveURL(/\/ranking$/);
+  await page.goto('/demo');
+  await expect(page).toHaveURL(/\/demo$/);
   await page.getByRole('button', { name: '貢献', exact: true }).click();
-  await expect(page).toHaveURL(/\/ranking\?view=benefit$/);
+  await expect(page).toHaveURL(/\/demo\?view=benefit$/);
   await page.goto('/actions/missing');
   await expect(page.getByRole('alert')).toContainText('見つかりません');
   await expect(page.locator('tbody tr')).toHaveCount(0);
-  await page.goto('/ranking?version=unknown');
+  await page.goto('/demo?version=unknown');
   await expect(page.getByRole('alert')).toContainText('評価版は利用できません');
 });

@@ -33,7 +33,7 @@ export function readViewLocation(pathname: string, search: string, asOf: string,
       if (!action) return fail('指定された行動は見つかりません。');
       state = { ...state, selectedPersonId: action.personId, selectedActionKey: actionKey(action), selectedPolicyId: action.policyId };
     }
-  } else if (!['/', '/ranking', '/ranking/'].includes(pathname)) {
+  } else if (!['/', '/demo', '/demo/'].includes(pathname)) {
     return fail('指定されたページは見つかりません。');
   } else if (state.selectedActionKey) {
     page = 'action';
@@ -56,7 +56,7 @@ export function readViewLocation(pathname: string, search: string, asOf: string,
 
 /** 既定値・導出可能な政策ID・説明文・一時検索状態はURLに保存しません。 */
 export function serializeViewLocation(state: ViewState, data: RankingDataset, page: ViewPage, pinVersion?: string): string {
-  let path = '/ranking';
+  let path = '/demo';
   const action = data.involvements.find(item => actionKey(item) === state.selectedActionKey && item.personId === state.selectedPersonId);
   if (page === 'person') {
     if (!data.people.some(person => person.id === state.selectedPersonId)) throw new Error('指定された人物は見つかりません。');
