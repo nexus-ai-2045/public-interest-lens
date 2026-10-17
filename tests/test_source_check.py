@@ -64,6 +64,17 @@ class SourceCheckTests(unittest.TestCase):
         self.assertIn(("SOURCE", law_id), {(h["reasonCode"], h["id"]) for h in payload["held"]})
         self.assertEqual(payload["counts"]["published"], len(payload["laws"]))
 
+    def test_members_page_matches_ranking(self):
+        members = json.loads(source_check.MEMBERS.read_text(encoding="utf-8"))
+        rows = source_check.check_members(members, self.ranking)
+        self.assertEqual([r for r in rows if r["結果"] == source_check.NG], [])
+        tampered = copy.deepcopy(members)
+        law = next(l for l in tampered["laws"] if l["id"] == self.ranking["laws"][0]["id"])
+        law["amount"]["median"] += 1
+        tampered["members"][0]["laws"][0]["evidence"][0]["url"] = "https://example.com/"
+        bad = {r["項目"] for r in source_check.check_members(tampered, self.ranking) if r["結果"] == source_check.NG}
+        self.assertEqual(bad, {"議員ページの額", "証拠URL"})
+
 
 if __name__ == "__main__":
     unittest.main()

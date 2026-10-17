@@ -33,6 +33,7 @@ if str(ROOT) not in sys.path:
 DERIVED = ROOT / "data" / "derived"
 ACQUIRED = ROOT / "data" / "acquired"
 RANKING = ROOT / "app" / "public" / "distribution" / "ranking.json"
+MEMBERS = ROOT / "app" / "public" / "distribution" / "members.json"
 REPORT_DIR = DERIVED / "source-check"
 
 PRIMARY_HOSTS = ("go.jp", "oecd.org", "worldbank.org", "imf.org", "un.org")
@@ -258,6 +259,37 @@ def check(ranking: dict, ctx: dict) -> tuple[list[dict[str, str]], dict]:
     return rows, summary
 
 
+def check_members(members: dict, ranking: dict) -> list[dict[str, str]]:
+    """議員ページ：法律の額が公開ランキングと同じか、証拠が一次資料か、個人の配分の合計が額×帰属率を超えないか。"""
+    rows: list[dict[str, str]] = []
+
+    def add(subject: str, item: str, published, primary, result: str, note: str = "") -> None:
+        rows.append({"id": subject, "項目": item, "公開値": str(published), "一次資料の値": str(primary), "結果": result, "備考": note})
+
+    published = {law["id"]: law for law in ranking["laws"]}
+    held = {item["id"] for item in ranking["held"] if item["reasonCode"] == "SOURCE"}
+    for law in members["laws"]:
+        if law["id"] in held:
+            add(law["id"], "議員ページの法律", "載っている", "出典チェックで外した法律", NG)
+        elif law["id"] in published:
+            want = published[law["id"]]
+            got = (law["amount"]["low"], law["amount"]["median"], law["amount"]["high"])
+            exp = (want["amountLowYen"], want["amountMedianYen"], want["amountHighYen"])
+            add(law["id"], "議員ページの額", got, exp, OK if got == exp else NG, "公開ランキングの額")
+    shares: dict[str, list[int]] = {}
+    bad_urls = 0
+    for member in members["members"]:
+        for law in member["laws"]:
+            shares.setdefault(law["lawId"], []).append(abs(law["share"]["median"]))
+            bad_urls += sum(not is_primary(e["url"]) for e in law["evidence"])
+    add("議員ページ", "証拠URL", "一次資料以外の URL の数", bad_urls, OK if bad_urls == 0 else NG, "国会会議録・衆参の議案情報だけ")
+    amounts = {law["id"]: abs(law["amount"]["median"]) for law in members["laws"]}
+    for law_id, values in shares.items():
+        cap = amounts.get(law_id, 0) * members["rate"]
+        add(law_id, "個人の配分の合計", sum(values), f"{cap:.0f} 以下", OK if sum(values) <= cap + len(values) else NG, "額×帰属率を超えない（丸め誤差は1人1円まで）")
+    return rows
+
+
 def write_report(rows: list[dict[str, str]], summary: dict, report_dir: Path = REPORT_DIR) -> None:
     report_dir.mkdir(parents=True, exist_ok=True)
     with (report_dir / "check.csv").open("w", encoding="utf-8", newline="") as handle:
@@ -275,9 +307,15 @@ def rebuild(approved: list[str], approved_at: str, ranking_path: Path = RANKING,
 
     candidate = ranking_builder.build(approved, approved_at, held_by_check=set())
     rows, summary = check(candidate, context())
+    payload = ranking_builder.build(approved, approved_at, held_by_check=set(summary["heldOut"]))
+    if MEMBERS.exists():
+        member_rows = check_members(json.loads(MEMBERS.read_text(encoding="utf-8")), payload)
+        rows += member_rows
+        summary["memberMismatch"] = sum(r["結果"] == NG for r in member_rows)
+        summary["items"] = len(rows)
+        summary["match"] = sum(r["結果"] == OK for r in rows)
     if write:
         write_report(rows, summary)
-        payload = ranking_builder.build(approved, approved_at, held_by_check=set(summary["heldOut"]))
         ranking_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return summary
 
@@ -294,7 +332,7 @@ def main() -> int:
     approved_at = current["approval"]["approvedAt"] or (str(date.today()) if approved else "")
     summary = rebuild(approved, approved_at, args.ranking, write=not args.dry_run)
     print(json.dumps(summary, ensure_ascii=False))
-    return 1 if summary["mismatch"] else 0
+    return 1 if summary["mismatch"] or summary.get("memberMismatch") else 0
 
 
 if __name__ == "__main__":

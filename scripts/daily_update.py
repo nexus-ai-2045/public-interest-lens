@@ -8,6 +8,7 @@
 - 振り分け：成立法のうち、AI の振り分け（2系統）がまだ無い法律を一覧にする。定期ルーチンの Claude が2系統で付ける。
 - 再計算：app/scripts の判定ルール（triage v2 → 影響 → 損失 → 便益と公開判定）を順に回す。
 - 公開ランキング：公開可の法律は全件公開（2026-10-17 の常時承認）。出典チェックの不一致は外す。
+- 議員ページ：同じ派生データから作り直し、出典チェックで照合する（不一致があれば取り込まない）。
 - 片付け：main に取り込み済みで2日以上動きのない claude/ と report/ のリモートブランチと、古い作業ファイルを消す。
 """
 
@@ -209,7 +210,16 @@ def rebuild(run: Run) -> bool:
     detail = f"照合{summary['items']}項目・一致{summary['match']}・不一致{summary['mismatch']}・対象外{summary['notApplicable']}"
     if summary["heldOut"]:
         detail += "・公開から外した法律 " + "、".join(summary["heldOut"])
+    if summary.get("memberMismatch"):
+        detail += f"・議員ページの不一致{summary['memberMismatch']}件"
     run.record("出典チェック", "完了" if not summary["mismatch"] else "外した", detail)
+    # 議員ページは出典チェック後の公開ランキングと同じ派生データから作り、作り直したあとにもう一度照合する。
+    if not run.command("議員ページ：members.json", ["node", "scripts/build_public_members.mjs"]):
+        return False
+    summary = source_check.rebuild(approved, approved_at if approved else "")
+    if summary.get("memberMismatch"):
+        run.record("出典チェック（議員ページ）", "失敗", f"不一致{summary['memberMismatch']}件。取り込まない")
+        return False
     return True
 
 
