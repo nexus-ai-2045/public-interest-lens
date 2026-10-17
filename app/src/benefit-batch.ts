@@ -1,5 +1,5 @@
 /**
- * loss-v1 の法律に benefit-rule-v1（app/src/benefit-rule.ts）をかける処理（benefit-v1）。
+ * loss-v1 の法律に benefit-rule-v1.1（app/src/benefit-rule.ts）をかける処理（benefit-v1）。
  * 目的の分類は app/src/benefit-classification.ts（2系統）、便益の指標の差は impact-rule-v1、額は loss-rule-v1、
  * 便益の状態と公開の判定は benefit-rule.ts だけが行い、ここでは系列を選んで入力を作り、結果を表にするだけです。
  * 法律だけを扱います。人物・採決・役職のデータは読まない。ファイルの読み書きは app/scripts/run-benefit-v1.mjs。
@@ -10,7 +10,7 @@ import { judgeImpact } from './impact-rule';
 import { amountCell, evaluateLosses, lossWindow, observationGroups, type ImpactRow, type LossRow } from './loss-batch';
 import { estimateLoss, MAX_LOSS_YEARS, type LossInput, type LossResult } from './loss-rule';
 import {
-  combineBenefits, cutAtCovid, decidePublication, includedBenefit, judgeCovidSeparation, measureBenefit, overlapsCovid, stateLabel, unmeasuredBenefit,
+  combineBenefits, cutAtCovid, decidePublication, includedBenefit, judgeCovidSeparation, LOWER_BOUND_LABEL, measureBenefit, overlapsCovid, sideLabel, stateLabel, unmeasuredBenefit, unmeasuredSign,
   type BenefitMeasurement, type CovidCheck, type PublishDecision, type YenRange,
 } from './benefit-rule';
 import { classifyLaw, type Classification } from './benefit-classification';
@@ -126,10 +126,13 @@ export function evaluateBenefit(tables: Tables, row: LossRow, purposes: Row[]): 
     ? [unmeasuredBenefit('目的の分類', `保留：${classification.holdReason}`)]
     : classification.kinds.map(k => measureKind(tables, k, law.start, applies, years));
   const benefitYen = combineBenefits(benefits);
-  const finalLoss = usedInput && grossLoss?.lossYen ? estimateLoss({ ...usedInput, regulationBenefitYen: benefitYen ? benefitYen.median : null }) : null;
+  // v1.1：貢献の法律で未測定があるときは、測った便益だけの合計（下限）を渡しておく。下限で出してよいかは decidePublication の R4 が決める。
+  const lowerBoundYen = !benefitYen && law.direction === 'benefit' ? combineBenefits(benefits.filter(b => b.yen !== null)) : null;
+  const passed = benefitYen ?? lowerBoundYen;
+  const finalLoss = usedInput && grossLoss?.lossYen ? estimateLoss({ ...usedInput, regulationBenefitYen: passed ? passed.median : null }) : null;
   const decision = decidePublication({
     reference: built?.reference ?? false, lossBlocked: built ? built.blocked ?? null : '損失額の入力の対応がない指標',
-    originalLoss: result, directionConflict: classification.directionConflict, covid, benefits, grossLoss, finalLoss,
+    originalLoss: result, directionConflict: classification.directionConflict, covid, benefits, grossLoss, finalLoss, direction: law.direction,
   });
   return { row, classification, benefits, covid, usedInput, grossLoss, finalLoss, benefitYen, decision, recomputed };
 }
@@ -165,19 +168,20 @@ export function classificationRow(r: BenefitLawResult): string[] {
   ];
 }
 
-export const BENEFIT_HEADER = ['id', '題名', '便益の種類', '便益の状態', '表示', '便益の額（円）', '系列', '効果', 'ばらつき', '理由', '便益グループ'];
+export const BENEFIT_HEADER = ['id', '題名', '便益の種類', '便益の状態', '表示', '便益の額（円）', '未測定の符号', '系列', '効果', 'ばらつき', '理由', '便益グループ'];
 export function benefitRows(r: BenefitLawResult, groups: Map<string, string>): string[][] {
   return r.benefits.map(b => [
-    r.row.law.id, r.row.law.title, b.kind, b.state, stateLabel(b.state), b.yen ? String(b.yen.median) : '', b.series,
+    r.row.law.id, r.row.law.title, b.kind, b.state, stateLabel(b.state), b.yen ? String(b.yen.median) : '',
+    b.yen === null ? (u => `${u.sign}（${u.why}）`)(unmeasuredSign(b)) : '', b.series,
     b.effect === null ? '' : String(b.effect), b.spread === null ? '' : String(b.spread), b.reason, groups.get(`${r.row.law.id}|${b.kind}`) ?? '',
   ]);
 }
 
-export const PUBLISH_HEADER = ['id', '題名', '損失または便益', '便益の状態', '判定表の行', '公開可否', '理由'];
+export const PUBLISH_HEADER = ['id', '題名', '側', '損失または便益', '便益の状態', '判定表の行', '公開可否', '理由'];
 export function publishRow(r: BenefitLawResult): string[] {
   const d = r.decision;
   let amount: string;
-  if (d.net) amount = `${rangeCell(d.net.median > 0 ? '純損失' : '純便益', d.net)}（円、${windowLabel(r.usedInput)}${r.covid.applies ? '、2019年で切った窓' : ''}）`;
+  if (d.net) amount = `${d.lowerBound ? `${LOWER_BOUND_LABEL}：` : ''}${rangeCell(d.net.median > 0 ? '純損失' : '純便益', d.net)}（円、${windowLabel(r.usedInput)}${r.covid.applies ? '、2019年で切った窓' : ''}）`;
   else if (r.grossLoss?.lossYen && r.covid.separable) amount = `${amountCell(r.grossLoss)}（円、便益を差し引く前、${windowLabel(r.usedInput)}${r.covid.applies ? '、2019年で切った窓' : ''}）`;
   else if (r.row.result?.lossYen) amount = `${amountCell(r.row.result)}（円、loss-v1 の元の窓、便益を差し引く前）`;
   else amount = '保留';
@@ -185,6 +189,6 @@ export function publishRow(r: BenefitLawResult): string[] {
   if (r.covid.applies && d.row !== 'R3' && d.row !== 'R1') reasons.push(r.covid.reason);
   if (r.classification.flags.length) reasons.push(`第1条の印：${r.classification.flags.join('／')}`);
   reasons.push(`独立でない：観測グループ ${r.row.group} の中の額は足さない`);
-  return [r.row.law.id, r.row.law.title, amount, r.benefits.map(b => `${b.kind}：${stateLabel(b.state)}`).join('／'), d.row, d.publishable ? '公開可' : '公開不可', reasons.join('／')];
+  return [r.row.law.id, r.row.law.title, sideLabel(r.row.law.direction), amount, r.benefits.map(b => `${b.kind}：${stateLabel(b.state)}`).join('／'), d.row, d.publishable ? '公開可' : '公開不可', reasons.join('／')];
 }
 
