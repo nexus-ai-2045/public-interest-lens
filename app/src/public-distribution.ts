@@ -116,7 +116,7 @@ export function parsePublicRanking(text: string): PublicRanking {
   }
   if (approval.approvedLaws.some(id => !seen.has(id))) throw new Error('承認した法律が見つかりません。');
   for (const item of value.held) {
-    if (!onlyKeys(item, ['id', 'title', 'side', 'reasonCode', 'reason']) || !LAW_ID.test(item.id) || seen.has(item.id) || !['loss', 'benefit'].includes(item.side) || !/^(R\d|APPROVAL)$/.test(item.reasonCode) || !prose(item.title, 500) || !prose(item.reason, 500)) throw new Error('保留の項目が不正です。');
+    if (!onlyKeys(item, ['id', 'title', 'side', 'reasonCode', 'reason']) || !LAW_ID.test(item.id) || seen.has(item.id) || !['loss', 'benefit'].includes(item.side) || !/^(R\d|APPROVAL|SOURCE)$/.test(item.reasonCode) || !prose(item.title, 500) || !prose(item.reason, 500)) throw new Error('保留の項目が不正です。');
     seen.add(item.id);
   }
   if (!onlyKeys(value.counts, COUNT_KEYS) || !COUNT_KEYS.every(key => Number.isSafeInteger(value.counts[key as keyof PublicRanking['counts']]) && value.counts[key as keyof PublicRanking['counts']] >= 0)) throw new Error('件数が不正です。');
