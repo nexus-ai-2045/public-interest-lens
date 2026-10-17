@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { PUBLIC_SITE } from './site-mode';
 import { ProductHeader } from './ProductHeader';
 import { GrowthCauses } from './GrowthCauses';
+import { LineReveal, type LineSeries } from './motion';
 import {
-  WORLD_PERIODS, distributionWorldGdpUrl, formatMetric, formatRate, growthRanking, latestRanking, linearTicks, logTicks, parseWorldGdp, periodLabel, periodRange, pointsInRange,
+  WORLD_PERIODS, distributionWorldGdpUrl, formatMetric, formatRate, growthRanking, latestRanking, parseWorldGdp, periodLabel, periodRange, pointsInRange,
   type GrowthBasis, type WorldGdpSnapshot, type WorldMetric, type WorldPeriod,
 } from './world-gdp';
 
@@ -17,7 +18,7 @@ const METRIC_UNIT: Record<WorldMetric, string> = {
 };
 const JAPAN = 'JPN';
 
-export type WorldView = { metric: WorldMetric; period: WorldPeriod; log: boolean; hidden: string[]; focus: string; basis: GrowthBasis };
+export type WorldView = { metric: WorldMetric; period: WorldPeriod; indexed: boolean; hidden: string[]; focus: string; basis: GrowthBasis };
 
 function readView(): WorldView {
   const params = new URLSearchParams(window.location.search);
@@ -25,7 +26,7 @@ function readView(): WorldView {
   return {
     metric: METRIC_KEYS[params.get('metric') ?? ''] ?? 'nominalUsd',
     period: (WORLD_PERIODS as readonly string[]).includes(period) ? period as WorldPeriod : '1990',
-    log: params.get('scale') === 'log',
+    indexed: params.get('scale') === 'index',
     hidden: (params.get('hide') ?? '').split(',').filter(code => /^[A-Z]{3}$/.test(code) && code !== JAPAN),
     focus: /^[A-Z]{3}$/.test(params.get('focus') ?? '') && params.get('focus') !== JAPAN ? params.get('focus')! : '',
     basis: params.get('basis') === 'percapita' ? 'perCapita' : 'real',
@@ -34,7 +35,7 @@ function readView(): WorldView {
 
 function viewLocation(view: WorldView): string {
   const params = new URLSearchParams({ metric: METRIC_PARAM[view.metric], period: view.period });
-  if (view.log && view.metric !== 'realGrowth') params.set('scale', 'log');
+  if (view.indexed && view.metric !== 'realGrowth') params.set('scale', 'index');
   if (view.hidden.length) params.set('hide', [...view.hidden].sort().join(','));
   if (view.focus) params.set('focus', view.focus);
   if (view.basis === 'perCapita') params.set('basis', 'percapita');
@@ -42,63 +43,19 @@ function viewLocation(view: WorldView): string {
 }
 
 
-export function LineChart({ data, view, onHover, hover, narrow }: { data: WorldGdpSnapshot; view: WorldView; hover: string; onHover: (code: string) => void; narrow: boolean }) {
-  const W = narrow ? 420 : 900, H = narrow ? 340 : 380, M = narrow ? { top: 14, right: 64, bottom: 30, left: 58 } : { top: 18, right: 118, bottom: 34, left: 86 };
+/** 表示する国・期間の折れ線データ。値の無い国は入れない。 */
+export function worldLineSeries(data: WorldGdpSnapshot, view: WorldView): LineSeries[] {
   const range = periodRange(data, view.metric, view.period);
-  if (!range) return <p role="status">この期間の値はありません。</p>;
-  const log = view.log && view.metric !== 'realGrowth';
-  const lines = data.countries
+  if (!range) return [];
+  return data.countries
     .filter(country => !view.hidden.includes(country.code))
-    .map(country => ({ country, points: pointsInRange(country.series[view.metric], range.from, range.to) }))
+    .map(country => ({ id: country.code, label: country.name, points: pointsInRange(country.series[view.metric], range.from, range.to).map(([year, value]) => ({ year, value })) }))
     .filter(line => line.points.length > 0);
-  const values = lines.flatMap(line => line.points.map(([, value]) => value));
-  if (!values.length) return <p role="status">表示する国を一つ以上選んでください。</p>;
-  let lo = Math.min(...values), hi = Math.max(...values);
-  if (view.metric === 'realGrowth') { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
-  else if (!log) lo = 0;
-  if (lo === hi) hi = lo + 1;
-  const ticks = log ? logTicks(lo, hi) : linearTicks(lo, hi, narrow ? 4 : 5);
-  if (!log) { lo = Math.min(lo, ticks[0] ?? lo); hi = Math.max(hi, ticks[ticks.length - 1] ?? hi); }
-  const innerW = W - M.left - M.right, innerH = H - M.top - M.bottom;
-  const x = (year: number) => M.left + (range.to === range.from ? innerW / 2 : (year - range.from) / (range.to - range.from) * innerW);
-  const y = (value: number) => M.top + innerH - (log ? (Math.log10(value) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo)) : (value - lo) / (hi - lo)) * innerH;
-  const yearTicks = linearTicks(range.from, range.to, narrow ? 4 : 6).filter(year => Number.isInteger(year) && year >= range.from && year <= range.to);
-  const shortLabel = (value: number) => view.metric === 'nominalUsd' ? formatMetric('nominalUsd', value).replace('ドル', '') : view.metric === 'perCapitaPpp' ? new Intl.NumberFormat('ja-JP', { notation: 'compact', maximumFractionDigits: 1 }).format(value) : `${value}％`;
-  const role = (code: string) => code === JAPAN ? 'japan' : code === view.focus ? 'focus' : code === hover ? 'hover' : 'other';
-  const order = { other: 0, hover: 1, focus: 2, japan: 3 };
-  const sorted = [...lines].sort((a, b) => order[role(a.country.code)] - order[role(b.country.code)]);
-  const labels = sorted.filter(line => role(line.country.code) !== 'other').map(line => {
-    const [year, value] = line.points[line.points.length - 1];
-    return { code: line.country.code, name: line.country.name, x: x(year), y: y(value), kind: role(line.country.code) };
-  });
-  labels.sort((a, b) => a.y - b.y);
-  for (let i = 1; i < labels.length; i++) if (labels[i].y - labels[i - 1].y < 16) labels[i].y = labels[i - 1].y + 16;
-  return <svg className="world-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${METRIC_LABEL[view.metric]}、${range.from}〜${range.to}年、${lines.length}か国・地域の推移`} onMouseLeave={() => onHover('')}>
-    {ticks.map(tick => <g key={tick} className="world-grid"><line x1={M.left} x2={W - M.right} y1={y(tick)} y2={y(tick)} /><text x={M.left - 8} y={y(tick)} dy="0.32em" textAnchor="end">{shortLabel(tick)}</text></g>)}
-    {view.metric === 'realGrowth' && <line className="world-zero" x1={M.left} x2={W - M.right} y1={y(0)} y2={y(0)} />}
-    {yearTicks.map(year => <text key={year} className="world-axis" x={x(year)} y={H - 10} textAnchor="middle">{year}</text>)}
-    {sorted.map(({ country, points }) => {
-      const d = points.map(([year, value], index) => `${index ? 'L' : 'M'}${x(year).toFixed(1)},${y(value).toFixed(1)}`).join('');
-      return <g key={country.code} className={`world-line world-line-${role(country.code)}`} onMouseEnter={() => onHover(country.code)}>
-        <path d={d}><title>{country.name}：{points[points.length - 1][0]}年 {formatMetric(view.metric, points[points.length - 1][1])}</title></path>
-        {points.length === 1 && <circle cx={x(points[0][0])} cy={y(points[0][1])} r={3} />}
-      </g>;
-    })}
-    {labels.map(label => <text key={label.code} className={`world-end-label world-end-${label.kind}`} x={label.x + 6} y={label.y} dy="0.32em">{label.name}</text>)}
-  </svg>;
 }
 
-function useNarrow() {
-  const query = '(max-width: 600px)';
-  const [narrow, setNarrow] = useState(() => typeof window.matchMedia === 'function' && window.matchMedia(query).matches);
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return;
-    const list = window.matchMedia(query);
-    const update = () => setNarrow(list.matches);
-    list.addEventListener('change', update);
-    return () => list.removeEventListener('change', update);
-  }, []);
-  return narrow;
+/** 指数表示の基準年。期間の最初の年を 100 にする。 */
+export function worldBaseYear(data: WorldGdpSnapshot, view: WorldView): number | undefined {
+  return periodRange(data, view.metric, view.period)?.from;
 }
 
 export function GrowthBars({ data, view }: { data: WorldGdpSnapshot; view: WorldView }) {
@@ -142,8 +99,6 @@ export function WorldGdpPage() {
   const [view, setView] = useState<WorldView>(readView);
   const [data, setData] = useState<WorldGdpSnapshot | null>(null);
   const [error, setError] = useState('');
-  const [hover, setHover] = useState('');
-  const narrow = useNarrow();
   useEffect(() => {
     const controller = new AbortController();
     void (async () => {
@@ -171,14 +126,14 @@ export function WorldGdpPage() {
   const missing = data?.countries.filter(country => !country.series[shown.metric] && !shown.hidden.includes(country.code)) ?? [];
   const toggle = (code: string, visible: boolean) => change({ hidden: visible ? shown.hidden.filter(item => item !== code) : [...shown.hidden, code] }, 'replace');
   const metricNames: Record<WorldMetric, string> = { nominalUsd: '名目GDP', realGrowth: '実質成長率', perCapitaPpp: '一人あたりGDP（購買力平価）' };
-  return <div className="app-shell research-page world-page" data-theme="light"><ProductHeader title="世界のGDP比較" label="日本と各国を比べる" brandHref="/world"><nav aria-label="主なページ"><a href="/history">長期推移</a><a href="/world" className="nav-active" aria-current="page">世界のGDP</a><a href="/policies">政策と結果</a><a href="/actors">人物・団体</a><a href="/ranking">法律ランキング</a><a href="/demo">架空デモ</a></nav></ProductHeader><main>
+  return <div className="app-shell research-page world-page" data-theme="light"><ProductHeader title="世界のGDP比較" label="日本と各国を比べる" brandHref="/world"><nav aria-label="主なページ"><a href="/history">長期推移</a><a href="/world" className="nav-active" aria-current="page">世界のGDP</a><a href="/policies">政策と結果</a><a href="/actors">人物・団体</a><a href="/ranking">法律ランキング</a><a href="/members">議員ランキング</a><a href="/methodology">計算方法</a><a href="/demo">架空デモ</a></nav></ProductHeader><main>
     <h2>日本の経済は、世界と比べてどうですか？</h2>
-    <p>世界の主要国（名目GDPの上位国と、中国・韓国・台湾・東南アジアなど）を、同じ統計で並べます。日本は赤い太線です。グラフの差だけで、原因や誰かの責任とは判定しません。</p>
+    <p>世界の主要国（名目GDPの上位国と、中国・韓国・台湾・東南アジアなど）を、同じ統計で並べます。日本は色付きの線、ほかの国は灰色です。グラフの差だけで、原因や誰かの責任とは判定しません。</p>
     <section className="real-intake world-controls" aria-label="表示の切り替え">
       <div className="world-segment" role="group" aria-label="見る指標">{(Object.keys(METRIC_PARAM) as WorldMetric[]).map(metric => <button key={metric} type="button" aria-pressed={shown.metric === metric} onClick={() => change({ metric })}>{metricNames[metric]}</button>)}</div>
       <label>見る期間<select value={shown.period} onChange={event => change({ period: event.target.value as WorldPeriod })}>{WORLD_PERIODS.map(period => <option key={period} value={period}>{periodLabel(period)}</option>)}</select></label>
-      {shown.metric !== 'realGrowth' && <label className="world-check"><input type="checkbox" checked={shown.log} onChange={event => change({ log: event.target.checked }, 'replace')} />対数の目盛りで見る（伸び率を比べやすくします）</label>}
-      <label>色を付けて比べる国<select value={shown.focus} onChange={event => change({ focus: event.target.value }, 'replace')}><option value="">選ばない</option>{data?.countries.filter(country => country.code !== JAPAN).map(country => <option key={country.code} value={country.code}>{country.name}</option>)}</select></label>
+      {shown.metric !== 'realGrowth' && <label className="world-check"><input type="checkbox" checked={shown.indexed} onChange={event => change({ indexed: event.target.checked }, 'replace')} />期間の最初の年を100として伸びを比べる</label>}
+      <label>表で色を付けて比べる国<select value={shown.focus} onChange={event => change({ focus: event.target.value }, 'replace')}><option value="">選ばない</option>{data?.countries.filter(country => country.code !== JAPAN).map(country => <option key={country.code} value={country.code}>{country.name}</option>)}</select></label>
     </section>
     {error && <p className="state-banner" role="alert">{error}</p>}
     {data && <>
@@ -189,8 +144,8 @@ export function WorldGdpPage() {
       </fieldset>
       <section aria-labelledby="world-chart-heading">
         <h3 id="world-chart-heading">{METRIC_LABEL[shown.metric]}：{periodLabel(shown.period)}</h3>
-        <p className="fine-note">{METRIC_UNIT[shown.metric]}{shown.log && shown.metric !== 'realGrowth' ? '対数の目盛りでは、同じ傾きが同じ伸び率を表します。' : ''}線に触れると国名を強調します。</p>
-        <div className="world-chart-wrap"><LineChart data={data} view={shown} hover={hover} onHover={setHover} narrow={narrow} /></div>
+        <p className="fine-note">{METRIC_UNIT[shown.metric]}{shown.indexed && shown.metric !== 'realGrowth' ? `${worldBaseYear(data, shown)}年を100とした指数です。` : ''}グラフに触れるか矢印キーで、その年の値を読めます。</p>
+        <div className="world-chart-wrap"><LineReveal key={`${shown.metric}-${shown.period}-${shown.indexed}-${shown.hidden.join(',')}`} series={worldLineSeries(data, shown)} highlightId={JAPAN} indexed={shown.indexed && shown.metric !== 'realGrowth'} baseYear={worldBaseYear(data, shown)} format={value => shown.indexed && shown.metric !== 'realGrowth' ? value.toFixed(0) : value === 0 ? '0' : formatMetric(shown.metric, value)} caption={`${METRIC_LABEL[shown.metric]}、${periodLabel(shown.period)}。日本を色で強調`} /></div>
         {missing.length > 0 && <p className="fine-note">この指標の値が無いため表示していない国・地域：{missing.map(country => country.name).join('、')}。</p>}
       </section>
       <div className="world-grid-2">
