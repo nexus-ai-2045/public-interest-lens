@@ -10,6 +10,7 @@ import { parsePolicyCatalog, type PolicyCatalog } from './policy-context';
 import { EconomyPage } from './EconomyPage';
 import { PoliciesPage } from './PoliciesPage';
 import { ActorsPage } from './CaseChain';
+import { MotionGalleryPage } from './MotionGalleryPage';
 import { LawRankingPage } from './LawRankingPage';
 import { MembersPage, MethodologyPage } from './MembersPage';
 
@@ -92,6 +93,7 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   if (['/ranking', '/ranking/'].includes(window.location.pathname)) return <LawRankingPage />;
   if (['/members', '/members/'].includes(window.location.pathname)) return <MembersPage />;
   if (['/methodology', '/methodology/'].includes(window.location.pathname)) return <MethodologyPage />;
+  if (window.location.pathname === '/demo/motion') return <MotionGalleryPage />;
   if (PUBLIC_SITE && (route.dataset === 'real' || window.location.pathname === '/records')) return <PublicUnavailablePage />;
   if (!PUBLIC_SITE && route.dataset === 'real') return <RealEvaluationPanel route={route} navigate={navigate} />;
   if (window.location.pathname === '/history' || (window.location.pathname === '/' && !window.location.search)) return <EconomyPage />;
