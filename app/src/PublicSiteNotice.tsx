@@ -18,7 +18,7 @@ export function PublicUnavailablePage() {
     <ProductHeader title="公開版の案内" label="試作版" brandHref="/history" />
     <main><h2>この機能は公開版に含まれていません</h2>
       <p>端末内の非公開評価版や収集記録を読む機能です。このサイトからは利用できません。</p>
-      <p><a href="/history">長期推移を読む</a> · <a href="/policies">政策事例と判定結果を読む</a> · <a href="/ranking">法律ランキングを見る</a> · <a href="/members">議員ランキングを見る</a> · <a href="/demo">架空デモを見る</a></p>
+      <p><a href="/history">長期推移を読む</a> · <a href="/world">世界のGDPと比べる</a> · <a href="/policies">政策事例と判定結果を読む</a> · <a href="/ranking">法律ランキングを見る</a> · <a href="/members">議員ランキングを見る</a> · <a href="/demo">架空デモを見る</a></p>
     </main>
   </div>;
 }

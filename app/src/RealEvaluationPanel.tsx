@@ -12,6 +12,7 @@ import { PoliciesPage } from './PoliciesPage';
 import { ActorsPage } from './CaseChain';
 import { MotionGalleryPage } from './MotionGalleryPage';
 import { LawRankingPage } from './LawRankingPage';
+import { WorldGdpPage } from './WorldGdpPage';
 import { MembersPage, MethodologyPage } from './MembersPage';
 
 function Quotes({ quotes, release }: { quotes: QuoteRef[]; release: RealRelease }) {
@@ -91,6 +92,7 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   if (window.location.pathname === '/policies') return <PoliciesPage />;
   if (window.location.pathname === '/actors') return <ActorsPage />;
   if (['/ranking', '/ranking/'].includes(window.location.pathname)) return <LawRankingPage />;
+  if (['/world', '/world/'].includes(window.location.pathname)) return <WorldGdpPage />;
   if (['/members', '/members/'].includes(window.location.pathname)) return <MembersPage />;
   if (['/methodology', '/methodology/'].includes(window.location.pathname)) return <MethodologyPage />;
   if (window.location.pathname === '/demo/motion') return <MotionGalleryPage />;
