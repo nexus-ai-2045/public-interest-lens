@@ -11,9 +11,9 @@
       "enacted": "f8ec2d1b14c988aad522dafcee33037e6288d0972613eed18a938b7616c8c94b",
       "triage": "62bc7a90ee69c95359f3ad79be8346c05fa811d7f1bf8251227f2d42b4e8a6fb",
       "dated": "12b812eeb62f3a35b95bfa42283393ab1e88cf0f1101e912561a844627f6b1a7",
-      "impact": "6e0f04340514ac66424a8e1bc76643937df930be086fa854a6015875a8f13278",
-      "loss": "8ede437d609266210fa11d2cabf82f7110de196d033b017569192ca301055a57",
-      "publish": "b589b10dafc141c8173c496a85224bc8e99c7634ace699995603ab8b5c110794",
+      "impact": "e664267dfd5f2c0be42b1797e0c4445fb1b516d0c4ad9505c5c2722cfe1ad8e8",
+      "loss": "27826caa8280e6eb5a4ac8dc7f4e7b25480de9ff332f4db952c07ca8e2fe55a5",
+      "publish": "80671b266355b6098697ae28a4d946e65f32b8194ef1e185eda842c264236a14",
       "enforcement": "1730f6b38926eb00a2b6cc1243be5bd45e22352665579814305d5dddb24c0869"
     }
   },
@@ -294,8 +294,8 @@
       "id": "閣法-164-11",
       "title": "運輸の安全性の向上のための鉄道事業法等の一部を改正する法律案",
       "side": "benefit",
-      "reasonCode": "R1",
-      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+      "reasonCode": "R4",
+      "reason": "便益を減らしうる項目が未測定で、純額を出せない"
     },
     {
       "id": "閣法-166-94",
@@ -364,8 +364,8 @@
       "id": "衆法-185-2",
       "title": "特定地域における一般乗用旅客自動車運送事業の適正化及び活性化に関する特別措置法等の一部を改正する法律案",
       "side": "loss",
-      "reasonCode": "R1",
-      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+      "reasonCode": "R3",
+      "reason": "損失の窓が新型コロナの時期と重なり、分けて測れない"
     },
     {
       "id": "衆法-189-20",
@@ -419,6 +419,13 @@
     {
       "id": "閣法-193-59",
       "title": "通訳案内士法及び旅行業法の一部を改正する法律案",
+      "side": "loss",
+      "reasonCode": "R3",
+      "reason": "損失の窓が新型コロナの時期と重なり、分けて測れない"
+    },
+    {
+      "id": "閣法-195-7",
+      "title": "旅館業法の一部を改正する法律案",
       "side": "loss",
       "reasonCode": "R3",
       "reason": "損失の窓が新型コロナの時期と重なり、分けて測れない"
@@ -498,8 +505,8 @@
     "enacted": 3415,
     "evaluated": 349,
     "dated": 281,
-    "staged": 63,
-    "amounted": 6,
+    "staged": 64,
+    "amounted": 9,
     "publishable": 1,
     "published": 1
   }
