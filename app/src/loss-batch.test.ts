@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseCsv, toCsv, type Tables } from './impact-batch';
 import {
-  LOSS_HEADER, LOSS_SOURCES, OECD_FILE, alignControls, buildLossInput, evaluateLosses, lossRow, lossWindow, observationGroups, qualifies, toLossLaw, listed, STAGE1_REFERENCE_REASON, type LossSource,
+  EXPANSION_LOSS_SOURCES, LOSS_HEADER, LOSS_SOURCES, OECD_FILE, alignControls, buildLossInput, evaluateLosses, lossRow, lossWindow, observationGroups, qualifies, toLossLaw, listed, STAGE1_REFERENCE_REASON, type LossSource,
 } from './loss-batch';
 
 // すべて人工の表です。実在の統計ではありません。
@@ -180,6 +180,80 @@ describe('OECD 表6の産業別付加価値で計算する分野', () => {
     const [row] = evaluateLosses(oecd, [impactRow('T5', '通信業の付加価値', '2015-04-01', '段階3', '貢献')]);
     expect(row.result!.lossYen).toBeNull();
     expect(row.result!.reason).toContain('一致しない');
+  });
+});
+
+describe('field-expansion-v1 の新分野：OECD の節が未取得なら保留', () => {
+  const stage1 = (indicator: string) => impactRow('N1', indicator, '2015-04-01', '段階1', '上昇');
+
+  it('新分野の指標ごとに OECD の節と日本の経済活動が決まっている。代理の指標は参考、直接は参考でない', () => {
+    expect(EXPANSION_LOSS_SOURCES).toHaveLength(14);
+    for (const s of EXPANSION_LOSS_SOURCES) {
+      expect(s.reference).toBe(s.indicator.endsWith('（代理）'));
+      expect(s.oecd).toBeTruthy();
+      expect(s.sector!.length).toBeGreaterThan(0);
+      expect(LOSS_SOURCES).toContain(s);
+    }
+    const sections = Object.fromEntries(EXPANSION_LOSS_SOURCES.map(s => [s.indicator, (s.oecd!.parts ?? [s.oecd!.industry]).join('+')]));
+    expect(sections).toMatchObject({
+      '農林水産業の付加価値': 'A', '建設業の付加価値': 'F', '不動産業の付加価値（代理）': 'L', '教育の付加価値（代理）': 'P', '保健衛生・社会事業の付加価値（代理）': 'Q',
+      '製造業の付加価値': 'C', '卸売・小売業の付加価値': 'G', '専門・科学技術、業務支援サービス業の付加価値': 'M+N', 'その他のサービス業の付加価値（代理）': 'R+S',
+    });
+  });
+
+  it('節が industry_va.csv に無いときは、エラーにせず「国際比較の系列が未取得」で保留にする（今ある H・I・J・K・_T だけの表）', () => {
+    const only = oecdTables([...oecdRows('JPN', 'J', jpFlat), ...oecdRows('AUS', 'J', grow(1.02))]);
+    for (const indicator of ['建設業の付加価値', '教育の付加価値（代理）', '専門・科学技術、業務支援サービス業の付加価値']) {
+      const [row] = evaluateLosses(only, [stage1(indicator)], undefined, { includeStage1: true });
+      expect(row.result).toBeNull();
+      expect(row.built!.blocked).toContain('国際比較の系列が未取得');
+      const cells = lossRow(row);
+      expect(cells[LOSS_HEADER.indexOf('理由')]).toContain('国際比較の系列が未取得');
+      expect(cells[LOSS_HEADER.indexOf('損失または便益の額')]).toBe('');
+    }
+  });
+
+  it('合算する節の片方だけ無いときも保留（M だけあって N が無い）', () => {
+    const only = oecdTables([...oecdRows('JPN', 'M', jpFlat), ...oecdRows('AUS', 'M', grow(1.02))]);
+    const [row] = evaluateLosses(only, [stage1('専門・科学技術、業務支援サービス業の付加価値')], undefined, { includeStage1: true });
+    expect(row.built!.blocked).toContain('N');
+    expect(row.result).toBeNull();
+  });
+
+  it('表そのものが無くても（OECD の CSV が空）止まらず保留', () => {
+    const empty: Tables = new Map([...tables, [OECD_FILE, []]]);
+    const [row] = evaluateLosses(empty, [stage1('農林水産業の付加価値')], undefined, { includeStage1: true });
+    expect(row.built!.blocked).toContain('国際比較の系列が未取得');
+  });
+
+  it('節がそろえば計算し、代理は参考フラグ・向きは上昇／低下。M と N は足し合わせる', () => {
+    const rows = [
+      ...oecdRows('JPN', 'M', jpFlat), ...oecdRows('JPN', 'N', jpFlat),
+      ...['AUS', 'FRA', 'KOR'].flatMap((c, i) => [...oecdRows(c, 'M', grow(1.018 + i * 0.002)), ...oecdRows(c, 'N', grow(1.018 + i * 0.002))]),
+    ];
+    const [row] = evaluateLosses(oecdTables(rows), [stage1('専門・科学技術、業務支援サービス業の付加価値（代理）')], undefined, { includeStage1: true });
+    expect(row.built!.blocked).toBeUndefined();
+    expect(row.built!.input.treated.find(p => p.asOf === '2012-12-31')!.value).toBeCloseTo(2 * jpFlat(2012), 6);
+    expect(row.built!.input.controls.map(c => c.country)).toEqual(['AUS', 'FRA', 'KOR']);
+    expect(row.built!.reference).toBe(true);
+    const cells = lossRow(row);
+    expect(cells[LOSS_HEADER.indexOf('参考フラグ')]).toBe('参考');
+    expect(cells[LOSS_HEADER.indexOf('向き')]).toBe('上昇');
+    expect(cells[LOSS_HEADER.indexOf('計算式の要素')]).toContain('M+N');
+  });
+
+  it('直接の指標は参考フラグを付けない（段階2以上なら通常扱い）', () => {
+    const rows = [...oecdRows('JPN', 'F', jpFlat), ...['AUS', 'FRA', 'KOR'].flatMap((c, i) => oecdRows(c, 'F', grow(1.018 + i * 0.002)))];
+    const [row] = evaluateLosses(oecdTables(rows), [impactRow('N2', '建設業の付加価値', '2015-04-01', '段階3', '悪影響')]);
+    expect(row.built!.reference).toBe(false);
+    expect(lossRow(row)[LOSS_HEADER.indexOf('参考フラグ')]).toBe('');
+    expect(lossRow(row)[LOSS_HEADER.indexOf('向き')]).toBe('悪影響');
+  });
+
+  it('impact.csv の向きが上昇／低下の行は、額の向きの判定では貢献／悪影響と同じ側に読み、neutral を付ける', () => {
+    expect(toLossLaw(impactRow('a', 'x', '2015-04-01', '段階1', '上昇'))).toMatchObject({ direction: 'benefit', neutral: true });
+    expect(toLossLaw(impactRow('b', 'x', '2015-04-01', '段階1', '低下'))).toMatchObject({ direction: 'harm', neutral: true });
+    expect(toLossLaw(impactRow('c', 'x', '2015-04-01', '段階3', '貢献')).neutral).toBeUndefined();
   });
 });
 

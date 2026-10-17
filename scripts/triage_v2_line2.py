@@ -52,6 +52,36 @@ _FIELD_WORDS = {
 }
 
 
+# field-expansion-v1（docs/提案/分野の拡張-v1.md の3）の新分野。(分野: (指標名, 直接の語, 代理の語))。水道・廃棄物は承認項目 B3 の推奨に従い作らない。
+# 既存8分野の語が題名に1つも無いときだけ当てる（既存優先）。代理の語に当たった法律の指標には「（代理）」を付け、直接の語と別の指標にする
+# （代理は参考扱い：合計に入れず、公開せず、議員への配分に使わない）。語の全文は scripts/estimate_field_expansion.py の NEW_FIELDS（水道・廃棄物を除く）と同じ。
+_NEW_FIELDS = {
+    "農林水産": ("農林水産業の付加価値", "農業、農地、農林、林業、森林、水産、漁業、漁船、漁港、漁場、畜産、家畜、酪農、農産物、農薬、肥料、種苗、農協、農業協同組合、森林組合、漁業協同組合、植物防疫、米穀、木材、農村、牧野、農作物、原料乳、お茶、花き、真珠、棚田、土地改良、養殖、養ほう、野菜、生産調整、国有林野、農山漁村、農住", "食料、食糧、飼料"),
+    "建設": ("建設業の付加価値", "建設、建築、公共工事、工事、測量", "都市計画、都市再生、都市再開発、市街地、区画整理、宅地造成、耐震、国土強靱化、国土形成、公共施設、無電柱化、基盤整備、河川、海岸、砂防、景観、歴史的風致、首都圏整備、津波防災地域"),
+    "住宅・不動産": ("不動産業の付加価値", "", "住宅、不動産、賃貸、借地、借家、宅地建物、マンション、区分所有、土地基本、土地収用、建物、居住、地価、空家、住生活"),
+    "教育": ("教育の付加価値", "", "教育、学校、大学、義務教育、奨学、学習、教職員、幼稚園、就学、学級、教科用、留学、育英"),
+    "医療・福祉": ("保健衛生・社会事業の付加価値", "", "医療、医師、歯科、薬事、医薬、薬剤師、薬局、看護、介護、福祉、保健、健康増進、感染症の予防、予防接種、精神保健、老人、母子、難病、臓器、献血、血液、保育、子育て、児童福祉、障害福祉、障害者総合支援、障害児、児童虐待、医薬品、診療、病院、原子爆弾被爆者、結核、検疫、狂犬病、社会福祉、栄養、生活衛生、母体、あん摩、柔道整復、臨床、移植、造血幹細胞、死因究明、アレルギー、インフルエンザ、自殺対策、障害者自立支援、障害者の日常生活、がん対策、がん登録、肝炎、循環器病、公認心理師、高齢者虐待、次世代育成、子どもの貧困、生活困窮者"),
+    "製造業": ("製造業の付加価値", "製造、工業、鉱工業、工場、繊維、化学物質、計量、産業標準、火薬、高圧ガス、家庭用機器", "容器包装、再商品化、食品、たばこ、電気用品、消費生活用、企業立地、産業集積、伝統的工芸品、アルコール、酒類"),
+    "商業": ("卸売・小売業の付加価値", "小売、卸売、商店街、商業、流通、古物、質屋", "訪問販売、特定商取引、販売、中心市街地、景品、表示"),
+    "専門サービス・研究開発": ("専門・科学技術、業務支援サービス業の付加価値", "弁護士、司法書士、行政書士、税理士、公認会計士、弁理士、社会保険労務士、土地家屋調査士、建築士、技術士、不動産鑑定、警備業、探偵、研究開発、試験研究、科学技術、研究所、研究施設、産業技術", "特許、実用新案、意匠、商標、知的財産、著作権"),
+    "文化・娯楽・生活サービス": ("その他のサービス業の付加価値", "", "文化、芸術、文化財、スポーツ、体育、競馬、自転車競技、小型自動車競走、モーターボート競走、興行、遊技、風俗、公衆浴場、宗教、映画、博物館、図書館、劇場、オリンピック、万国博覧会、博覧会、墓地、理容、美容、クリーニング、美術、競技大会、温泉"),
+}
+PROXY_SUFFIX = "（代理）"
+NEW_FIELD_NAMES = tuple(_NEW_FIELDS)
+ALL_FIELDS = tuple(_PICK) + NEW_FIELD_NAMES
+
+
+def new_indicator(field: str, match: str) -> str:
+    """新分野の指標。直接の語は指標名そのまま、代理の語は「（代理）」付き。"""
+    name = _NEW_FIELDS[field][0]
+    return name if match == "直接" else name + PROXY_SUFFIX
+
+
+def _new_hits(text: str) -> list[tuple[int, str, str, str]]:
+    return [(text.find(w), f, w, m) for f, (_, direct, proxy) in _NEW_FIELDS.items()
+            for m, ws in (("直接", direct), ("代理", proxy)) for w in _words(ws) if w and w in text]
+
+
 def _words(s: str) -> list[str]:
     return s.split("、")
 
@@ -76,7 +106,7 @@ def pick(field: str, text: str) -> tuple[str, str, str]:
 
 
 def triage(title: str, kind: str, field: str) -> dict:
-    if kind not in KINDS or (field != NO_FIELD and field not in _PICK):
+    if kind not in KINDS or (field != NO_FIELD and field not in ALL_FIELDS):
         return {"kind": kind, "field": field, "indicator": "", "verdict": "保留", "rules": ["D5"],
                 "reason": f"D5：種類「{kind}」・分野「{field}」が定義にない値のため保留"}
     rules, notes = [], []
@@ -99,11 +129,28 @@ def triage(title: str, kind: str, field: str) -> dict:
     if first and any(pos == first[0] and f != first[1] for pos, f, _ in hits):
         return {"kind": kind, "field": "", "indicator": "", "verdict": "保留", "rules": [*rules, "D5"],
                 "reason": "D5：最初の語の位置で複数の分野が競合するため保留"}
+    new_match = ""
+    if first is None:
+        # 既存8分野の語が無いときだけ新分野の語を当てる。同じ位置の語が別の語の一部なら長い語を採り、別々の分野の語が重なれば保留（D5）。
+        nh = _new_hits(text)
+        if nh:
+            pos = min(h[0] for h in nh)
+            top = [h for h in nh if h[0] == pos]
+            top = [h for h in top if not any(h[2] != g[2] and h[2] in g[2] for g in top)]
+            if len({h[1] for h in top}) > 1:
+                return {"kind": kind, "field": "", "indicator": "", "verdict": "保留", "rules": [*rules, "D5"],
+                        "reason": "D5：最初の語の位置で複数の分野が競合するため保留"}
+            _, nf, nw, new_match = max(top, key=lambda h: len(h[2]))
+            first = (pos, nf, nw)
     field = first[1] if first else NO_FIELD
     rules.append("D1")
     notes.append(f"D1：題名で最初の語「{first[2]}」の分野" if first else "D1：題名に8分野の語が無い")
     indicator = ""
-    if field != NO_FIELD:
+    if new_match:
+        indicator, sign, word = new_indicator(field, new_match), field + new_match, first[2]
+        rules.append(sign)
+        notes.append(f"{sign}（語「{word}」）")
+    elif field != NO_FIELD:
         indicator, sign, word = pick(field, text)
         rules.append(sign)
         notes.append(f"{sign}（語「{word}」）" if word else sign)

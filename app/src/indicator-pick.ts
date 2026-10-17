@@ -78,6 +78,38 @@ export const FIELD_WORDS: Record<Field, string[]> = {
     'データ活用'],
 };
 
+/**
+ * field-expansion-v1（docs/提案/分野の拡張-v1.md の3）の新分野。既存8分野の語が題名に1つも無いときだけ当てる（既存優先）。
+ * 水道・廃棄物は承認項目 B3 の推奨に従い作らない。直接の語は指標名そのまま、代理の語に当たったときは「（代理）」付きの別の指標にする
+ * （代理は参考扱い：合計に入れず、公開せず、議員への配分に使わない）。scripts/triage_v2_line2.py は同じ文書から別に書き起こした実装。
+ */
+export const NEW_FIELD_WORDS = {
+  '農林水産': { indicator: '農林水産業の付加価値', direct: ['農業', '農地', '農林', '林業', '森林', '水産', '漁業', '漁船', '漁港', '漁場', '畜産', '家畜', '酪農', '農産物', '農薬', '肥料', '種苗', '農協', '農業協同組合', '森林組合', '漁業協同組合', '植物防疫', '米穀', '木材', '農村', '牧野', '農作物', '原料乳', 'お茶', '花き', '真珠', '棚田', '土地改良', '養殖', '養ほう', '野菜', '生産調整', '国有林野', '農山漁村', '農住'],
+    proxy: ['食料', '食糧', '飼料'] },
+  '建設': { indicator: '建設業の付加価値', direct: ['建設', '建築', '公共工事', '工事', '測量'],
+    proxy: ['都市計画', '都市再生', '都市再開発', '市街地', '区画整理', '宅地造成', '耐震', '国土強靱化', '国土形成', '公共施設', '無電柱化', '基盤整備', '河川', '海岸', '砂防', '景観', '歴史的風致', '首都圏整備', '津波防災地域'] },
+  '住宅・不動産': { indicator: '不動産業の付加価値', direct: [],
+    proxy: ['住宅', '不動産', '賃貸', '借地', '借家', '宅地建物', 'マンション', '区分所有', '土地基本', '土地収用', '建物', '居住', '地価', '空家', '住生活'] },
+  '教育': { indicator: '教育の付加価値', direct: [],
+    proxy: ['教育', '学校', '大学', '義務教育', '奨学', '学習', '教職員', '幼稚園', '就学', '学級', '教科用', '留学', '育英'] },
+  '医療・福祉': { indicator: '保健衛生・社会事業の付加価値', direct: [],
+    proxy: ['医療', '医師', '歯科', '薬事', '医薬', '薬剤師', '薬局', '看護', '介護', '福祉', '保健', '健康増進', '感染症の予防', '予防接種', '精神保健', '老人', '母子', '難病', '臓器', '献血', '血液', '保育', '子育て', '児童福祉', '障害福祉', '障害者総合支援', '障害児', '児童虐待', '医薬品', '診療', '病院', '原子爆弾被爆者', '結核', '検疫', '狂犬病', '社会福祉', '栄養', '生活衛生', '母体', 'あん摩', '柔道整復', '臨床', '移植', '造血幹細胞', '死因究明', 'アレルギー', 'インフルエンザ', '自殺対策', '障害者自立支援', '障害者の日常生活', 'がん対策', 'がん登録', '肝炎', '循環器病', '公認心理師', '高齢者虐待', '次世代育成', '子どもの貧困', '生活困窮者'] },
+  '製造業': { indicator: '製造業の付加価値', direct: ['製造', '工業', '鉱工業', '工場', '繊維', '化学物質', '計量', '産業標準', '火薬', '高圧ガス', '家庭用機器'],
+    proxy: ['容器包装', '再商品化', '食品', 'たばこ', '電気用品', '消費生活用', '企業立地', '産業集積', '伝統的工芸品', 'アルコール', '酒類'] },
+  '商業': { indicator: '卸売・小売業の付加価値', direct: ['小売', '卸売', '商店街', '商業', '流通', '古物', '質屋'],
+    proxy: ['訪問販売', '特定商取引', '販売', '中心市街地', '景品', '表示'] },
+  '専門サービス・研究開発': { indicator: '専門・科学技術、業務支援サービス業の付加価値', direct: ['弁護士', '司法書士', '行政書士', '税理士', '公認会計士', '弁理士', '社会保険労務士', '土地家屋調査士', '建築士', '技術士', '不動産鑑定', '警備業', '探偵', '研究開発', '試験研究', '科学技術', '研究所', '研究施設', '産業技術'],
+    proxy: ['特許', '実用新案', '意匠', '商標', '知的財産', '著作権'] },
+  '文化・娯楽・生活サービス': { indicator: 'その他のサービス業の付加価値', direct: [],
+    proxy: ['文化', '芸術', '文化財', 'スポーツ', '体育', '競馬', '自転車競技', '小型自動車競走', 'モーターボート競走', '興行', '遊技', '風俗', '公衆浴場', '宗教', '映画', '博物館', '図書館', '劇場', 'オリンピック', '万国博覧会', '博覧会', '墓地', '理容', '美容', 'クリーニング', '美術', '競技大会', '温泉'] },
+} as const satisfies Record<string, { indicator: string; direct: readonly string[]; proxy: readonly string[] }>;
+export type NewField = keyof typeof NEW_FIELD_WORDS;
+export const NEW_FIELDS = Object.keys(NEW_FIELD_WORDS) as NewField[];
+export const PROXY_SUFFIX = '（代理）';
+export type WordMatch = '直接' | '代理';
+/** 新分野の指標。直接の語は指標名そのまま、代理の語は「（代理）」付き。 */
+export const newIndicator = (field: NewField, match: WordMatch) => NEW_FIELD_WORDS[field].indicator + (match === '代理' ? PROXY_SUFFIX : '');
+
 /** D2：設置法・整備法を含む題名は、題名の最初の法律で決める。「…及び法務省設置法の一部を…」の「及び法務省設置法」を除く。 */
 export function firstLawTitle(title: string): string {
   return title.replace(/及び[^及]*(設置法|整備法)/g, '');
@@ -118,7 +150,7 @@ export function triageV2(input: TriageInput): TriageOutput {
   const rules: string[] = [];
   const notes: string[] = [];
   let { kind, field } = input;
-  if (!(KINDS as readonly string[]).includes(kind) || !([...FIELDS, NO_FIELD] as string[]).includes(field)) {
+  if (!(KINDS as readonly string[]).includes(kind) || !([...FIELDS, ...NEW_FIELDS, NO_FIELD] as string[]).includes(field)) {
     return { kind, field, indicator: '', verdict: '保留', rules: ['D5'], reason: `D5：種類「${kind}」・分野「${field}」が定義にない値のため保留` };
   }
   const seg = firstLawTitle(input.title);
@@ -135,11 +167,34 @@ export function triageV2(input: TriageInput): TriageOutput {
   if (first && hits.some(hit => hit.pos === first.pos && hit.field !== first.field)) {
     return { kind, field: '', indicator: '', verdict: '保留', rules: [...rules, 'D5'], reason: 'D5：最初の語の位置で複数の分野が競合するため保留' };
   }
-  field = first?.field ?? NO_FIELD;
+  let newMatch: WordMatch | null = null;
+  let firstWord = first?.word ?? '';
+  if (!first) {
+    // 既存8分野の語が無いときだけ新分野の語を当てる。同じ位置の語が別の語の一部なら長い語を採り、別々の分野の語が重なれば保留（D5）。
+    const nh = NEW_FIELDS.flatMap(f => (['直接', '代理'] as const).flatMap(match =>
+      (match === '直接' ? NEW_FIELD_WORDS[f].direct : NEW_FIELD_WORDS[f].proxy).map(word => ({ field: f, word, match, pos: seg.indexOf(word) }))))
+      .filter(hit => hit.pos >= 0);
+    if (nh.length) {
+      const pos = Math.min(...nh.map(hit => hit.pos));
+      const at = nh.filter(hit => hit.pos === pos);
+      const top = at.filter(hit => !at.some(g => g.word !== hit.word && g.word.includes(hit.word)));
+      if (new Set(top.map(hit => hit.field)).size > 1) {
+        return { kind, field: '', indicator: '', verdict: '保留', rules: [...rules, 'D5'], reason: 'D5：最初の語の位置で複数の分野が競合するため保留' };
+      }
+      const best = top.reduce((a, b) => (b.word.length > a.word.length ? b : a));
+      field = best.field; newMatch = best.match; firstWord = best.word;
+    }
+  } else field = first.field;
+  if (!first && newMatch === null) field = NO_FIELD;
   rules.push('D1');
-  notes.push(first ? `D1：題名で最初の語「${first.word}」の分野` : 'D1：題名に8分野の語が無い');
+  notes.push(firstWord ? `D1：題名で最初の語「${firstWord}」の分野` : 'D1：題名に8分野の語が無い');
   let indicator = '';
-  if (field !== NO_FIELD) {
+  if (newMatch !== null) {
+    indicator = newIndicator(field as NewField, newMatch);
+    const sign = `${field}${newMatch}`;
+    rules.push(sign);
+    notes.push(`${sign}（語「${firstWord}」）`);
+  } else if (field !== NO_FIELD) {
     const p = pickIndicator(field as Field, seg);
     indicator = p.indicator;
     rules.push(p.rule);

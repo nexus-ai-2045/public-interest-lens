@@ -4,7 +4,8 @@ loss-rule-v1 が比較国の「同じ定義の分野の実質付加価値」を�
 - データフロー: OECD.SDD.NAD,DSD_NAMAIN10@DF_TABLE6,2.0（Annual value added and its components by economic activity）
 - 取引 B1G（総付加価値）、部門 S1（経済全体）、単位 XDC（自国通貨）
 - 価格: V=名目（current prices）、L=連鎖実質（chain linked volume）、LR=連鎖実質（再基準化）
-- 産業: _T=全産業、J=情報通信、I=宿泊・飲食、K=金融・保険、H=運輸・保管（ISIC Rev.4）
+- 産業: _T=全産業、J=情報通信、I=宿泊・飲食、K=金融・保険、H=運輸・保管（ISIC Rev.4）。field-expansion-v1 で A・C・F・G・L・M・N・P・Q・R・S・T を追加
+  （各コードを OECD が実際に返すか、集約コード（M_N など）があるかは、この環境から確かめていない。取得後に industry_va.csv の産業を確かめる）
 
 原本は raw ディレクトリに国ごとに保存し、URL・sha256・HTTP の結果を manifest.csv に残します（原本は Git に入れない）。
 整えた表は industry_va.csv（列: 国,産業,指標,価格,年,値,単位,基準年,出典URL）に書きます。
@@ -34,6 +35,21 @@ ACTIVITIES = {
     'I': '宿泊・飲食サービス（ISIC Rev.4 I）',
     'K': '金融・保険（ISIC Rev.4 K）',
     'H': '運輸・保管（ISIC Rev.4 H）',
+    # field-expansion-v1（docs/提案/分野の拡張-v1.md の5-2）で足した節。D（電気・ガス）と E（水・廃棄物）は、水道・廃棄物の分野を作らない
+    # （承認項目 B3 の推奨）ので足さない。M と N、R と S は日本の国民経済計算では1つの行なので、損失額の段階（app/src/loss-batch.ts）で足し合わせる。
+    # T（雇用主としての世帯）は日本の「その他のサービス」に含まれるか未確認のため、取得だけして合算には使わない。
+    'A': '農林水産業（ISIC Rev.4 A）',
+    'C': '製造業（ISIC Rev.4 C）',
+    'F': '建設業（ISIC Rev.4 F）',
+    'G': '卸売・小売業（ISIC Rev.4 G）',
+    'L': '不動産業（ISIC Rev.4 L）',
+    'M': '専門・科学技術サービス業（ISIC Rev.4 M）',
+    'N': '管理・支援サービス業（ISIC Rev.4 N）',
+    'P': '教育（ISIC Rev.4 P）',
+    'Q': '保健衛生・社会事業（ISIC Rev.4 Q）',
+    'R': '芸術・娯楽・レクリエーション（ISIC Rev.4 R）',
+    'S': 'その他のサービス（ISIC Rev.4 S）',
+    'T': '雇用主としての世帯（ISIC Rev.4 T）',
 }
 PRICES = {
     'V': '名目（current prices）',

@@ -189,7 +189,8 @@ def regression(path: Path = LABELS_LINE2) -> tuple[int, int, int]:
     with path.open(encoding="utf-8", newline="") as f:
         for r in csv.DictReader(f):
             old = r["系統2_分野"]
-            if old in ("", HOLD):
+            # 新分野は bill-triage-v2 に取り込み済み（空欄・保留・新分野の行は「既存分野が変わるか」の確認に使わない）。
+            if old in ("", HOLD) or old in NEW_FIELDS:
                 continue
             c = classify(r["題名"])
             if old != NO_FIELD:

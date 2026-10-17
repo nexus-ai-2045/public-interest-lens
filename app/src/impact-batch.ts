@@ -4,6 +4,7 @@
  * ファイルの読み書きは app/scripts/run-impact-v1.mjs が行い、このモジュールは純粋な関数だけにします（ブラウザ用ビルドにも入れられる）。
  * 方法の説明は data/derived/impact-v1/spec.md。
  */
+import { NEW_FIELDS, NEW_FIELD_WORDS, PROXY_SUFFIX, type NewField } from './indicator-pick';
 import { judgeAcrossCountries, judgeImpact, MIN_PRE_YEARS, type CountryPoint, type ImpactPoint, type ImpactSeries } from './impact-rule';
 
 export type Row = Record<string, string>;
@@ -49,6 +50,8 @@ export type Mapping = {
   titleRules?: TitleRule[];
   /** 新しく配線した系列で判定できないとき（日本の開始前が3年に足りない等）に、元の判定を保つ。 */
   keepVerdict?: '系列なし' | '比較群なし' | '国内系列なし';
+  /** 代理の系列（field-expansion-v1 の代理の語に当たる法律）。向き（高いほど良い）は機械的な仮定にすぎないので、貢献・悪影響とは読まず「上昇／低下」と書く。合計・公開・議員への配分には使わない。 */
+  reference?: boolean;
 };
 export type TitleRule = { keyword: string; name: string; ref: Ref };
 
@@ -60,7 +63,8 @@ const cpi = (base: string, where: Row): Ref => ({ file: `domestic-stats/cpi_item
 
 /** SNA の基準ごとの経済活動名。2000基準は運輸と通信が1つで、分けられないものは入れない。 */
 const SNA_BASES = ['2020', '2015', '2011', '2005', '2000'] as const;
-type SnaKey = 'ict' | 'transport' | 'lodging' | 'electricity' | 'electronics' | 'finance';
+type SnaKey = 'ict' | 'transport' | 'lodging' | 'electricity' | 'electronics' | 'finance'
+  | 'agriculture' | 'construction' | 'realEstate' | 'education' | 'health' | 'manufacturing' | 'commerce' | 'professional' | 'otherServices';
 const SNA_NAMES: Record<SnaKey, Partial<Record<(typeof SNA_BASES)[number], string>>> = {
   ict: { 2020: '9.情報通信業', 2015: '9.情報通信業', 2011: '9.情報通信業', 2005: '(10)情報通信業' },
   transport: { 2020: '7.運輸・郵便業', 2015: '7.運輸・郵便業', 2011: '7.運輸・郵便業', 2005: '(9)運輸業' },
@@ -68,6 +72,17 @@ const SNA_NAMES: Record<SnaKey, Partial<Record<(typeof SNA_BASES)[number], strin
   electricity: { 2020: '4.電気・ガス・水道・廃棄物処理業', 2015: '4.電気・ガス・水道・廃棄物処理業', 2011: '4.電気・ガス・水道・廃棄物処理業', 2005: '(5)電気・ガス・水道業', 2000: '(5)電気・ガス・水道業' },
   electronics: { 2020: '(10)電子部品・デバイス', 2015: '(10)電子部品・デバイス', 2011: '(10)電子部品・デバイス' },
   finance: { 2020: '10.金融・保険業', 2015: '10.金融・保険業', 2011: '10.金融・保険業', 2005: '(7)金融・保険業', 2000: '(7)金融・保険業' },
+  // field-expansion-v1（docs/提案/分野の拡張-v1.md の3）。2005・2000基準は教育・保健衛生・専門サービス・その他のサービスを1つの「サービス業」にまとめていて
+  // 分けられないので入れない（別の定義の行を代わりに使わず、つながない）。その分野の候補は2011・2015・2020基準だけ。
+  agriculture: { 2020: '1.農林水産業', 2015: '1.農林水産業', 2011: '1.農林水産業', 2005: '(1)農林水産業', 2000: '(1)農林水産業' },
+  construction: { 2020: '5.建設業', 2015: '5.建設業', 2011: '5.建設業', 2005: '(4)建設業', 2000: '(4)建設業' },
+  realEstate: { 2020: '11.不動産業', 2015: '11.不動産業', 2011: '11.不動産業', 2005: '(8)不動産業', 2000: '(8)不動産業' },
+  education: { 2020: '14.教育', 2015: '14.教育', 2011: '14.教育' },
+  health: { 2020: '15.保健衛生・社会事業', 2015: '15.保健衛生・社会事業', 2011: '15.保健衛生・社会事業' },
+  manufacturing: { 2020: '3.製造業', 2015: '3.製造業', 2011: '3.製造業', 2005: '(3)製造業', 2000: '(3)製造業' },
+  commerce: { 2020: '6.卸売・小売業', 2015: '6.卸売・小売業', 2011: '6.卸売・小売業', 2005: '(6)卸売・小売業', 2000: '(6)卸売・小売業' },
+  professional: { 2020: '12.専門・科学技術、業務支援サービス業', 2015: '12.専門・科学技術、業務支援サービス業', 2011: '12.専門・科学技術、業務支援サービス業' },
+  otherServices: { 2020: '16.その他のサービス', 2015: '16.その他のサービス', 2011: '16.その他のサービス' },
 };
 const snaVsGdp = (key: SnaKey): PairOption[] => SNA_BASES.flatMap(base => {
   const activity = SNA_NAMES[key][base];
@@ -145,7 +160,7 @@ const noControl = (indicator: string, field: string, unused: string, reason: str
  * triage の指標 → 取得済みの系列。結果を見る前に固定する（docs/indicator-control-table.md の考え方）。
  * 比較群は「その分野の値」対「経済全体の同じ種類の値」（付加価値なら GDP、就業者なら就業者総数、物価なら総合指数）。
  */
-export const INDICATOR_MAP: Mapping[] = [
+const BASE_MAP: Mapping[] = [
   {
     indicator: '不良債権比率', field: '金融', match: '直接',
     target: null, economy: null, share: [],
@@ -260,6 +275,36 @@ export const INDICATOR_MAP: Mapping[] = [
   none('電子申請率', '行政のデジタル化', '総務省の報道資料から国の行政手続のオンライン利用率（2007〜2015年度、日本のみ。2009年度は定義が変わる）を取得した（gap-stats/egov_online_rate.csv）が、系列なしのままにする。理由は3つ。国内にも国際にも比べる相手（比較群）がなく、日本の率だけでは差の差が作れない。2016年度以降は同じ定義で続く値が資料に無い。評価対象の6本のうち、施行が2005年の1本は開始前の値がなく、2016年以降の5本は開始後の値がない（開始前3年と開始後2年が要る）'),
   none('行政手続きの時間', '行政のデジタル化', '行政手続きの所要時間の公式系列がない'),
 ];
+
+/**
+ * field-expansion-v1 の新分野（docs/提案/分野の拡張-v1.md の3、承認項目 B1・B3・B4 の推奨）の指標。水道・廃棄物は作らない（B3）。
+ * 国内は、その産業の実質付加価値（連鎖方式）対「合計」の指数（開始前最後の年=100）。基準ごとに候補を作り、つながない。GDP比は名目の産業÷「合計」。
+ * 経済全体の指標（economy）は、独立に確かめられる系列を固定していないので置かない（労働力調査の就業者は産業の括りが SNA と一致しない行があり、採用後に決める）。
+ * そのため判定は段階1までで、損失額は参考として出るだけになる。
+ * 直接の語に当たった法律はその産業の指標そのまま、代理の語に当たった法律は「（代理）」付きの別の指標（reference）。
+ */
+const expansion = (indicator: string, field: string, key: SnaKey, label: string, match: '直接' | '代理', reason: string): Mapping => ({
+  indicator: match === '代理' ? indicator + PROXY_SUFFIX : indicator, field, match,
+  target: { definition: `${label}の実質付加価値指数と実質GDP指数（開始前最後の年=100）`, better: 'higher', options: snaVsGdp(key) },
+  economy: null, share: snaShare(key), intl: null, reference: match === '代理',
+  reason: `${reason}。国民経済計算の「${label}」を「合計」と比べる（高いほど良いとみなす。向きは機械的な仮定）。経済全体の指標は固定していないため段階1まで。国際比較は OECD 産業別付加価値（損失額の段階、loss-batch.ts）${match === '代理' ? '。代理：題名の語が法律の対象と産業の括りを直接には結ばないため、向きを決めない参考（上昇／低下）。合計に入れず、公開せず、議員への配分に使わない' : ''}`,
+});
+/** 新分野 → SNA の経済活動のキーと、指標名から「の付加価値」を除いた呼び方。 */
+const EXPANSION_SNA: Record<NewField, SnaKey> = {
+  '農林水産': 'agriculture', '建設': 'construction', '住宅・不動産': 'realEstate', '教育': 'education', '医療・福祉': 'health',
+  '製造業': 'manufacturing', '商業': 'commerce', '専門サービス・研究開発': 'professional', '文化・娯楽・生活サービス': 'otherServices',
+};
+export const EXPANSION_MAP: Mapping[] = NEW_FIELDS.flatMap(field => {
+  const { indicator, direct } = NEW_FIELD_WORDS[field];
+  const label = indicator.replace(/の付加価値$/, ''), reason = `field-expansion-v1 の新分野「${field}」`;
+  return [
+    ...(direct.length ? [expansion(indicator, field, EXPANSION_SNA[field], label, '直接', reason)] : []),
+    expansion(indicator, field, EXPANSION_SNA[field], label, '代理', reason),
+  ];
+});
+
+/** triage の指標 → 取得済みの系列（既存8分野＋field-expansion-v1 の新分野）。 */
+export const INDICATOR_MAP: Mapping[] = [...BASE_MAP, ...EXPANSION_MAP];
 
 // ---- CSV ----
 
@@ -479,7 +524,7 @@ export function evaluateLaw(tables: Tables, law: Law, mappings: Mapping[] = INDI
       const j = judgeImpact(built.series);
       // 新しく配線した系列の開始が施行より後で、開始前が足りないときは、元の判定（系列なし）を保つ。
       const verdict = keep && j.stage === null && j.preYears < MIN_PRE_YEARS ? keep : stageLabel(j.stage);
-      result = { series: built.label, verdict, direction: dirLabel(j.direction), effect: j.effect, spread: j.spread };
+      result = { series: built.label, verdict, direction: (mapping.reference ? refDirLabel : dirLabel)(j.direction), effect: j.effect, spread: j.spread };
       reasons.push(`国内：${j.preYears < 3 || j.effect === null ? '期間が足りない。' : ''}${j.reason}`);
     }
   } else if (mapping.match === '比較群なし') reasons.push(`比較群なし：国内に影響を受けない比較群がない。${mapping.reason}`);
@@ -505,6 +550,7 @@ export function evaluateLaw(tables: Tables, law: Law, mappings: Mapping[] = INDI
     }
     if (!result.series) result = { ...result, series: `国際：${spec.label}` };
   }
+  if (mapping.reference) reasons.push('参考：代理の語に当たった法律なので、向きは決めず「上昇／低下」と書く（貢献・悪影響とは読まない）');
   if (mapping.match === '代理') reasons.push(`代理系列：${mapping.reason}`);
   const overlap = pandemicOverlap(law.start);
   if (overlap.length) reasons.push(`注意：判定に使う開始後2〜5年目（${startYear(law.start) + 1}〜${startYear(law.start) + 4}年）に新型コロナの${overlap.join('・')}年を含む。判定ルールは同時期の別の出来事を除かない`);
@@ -518,7 +564,7 @@ export const MAP_HEADER = ['指標', '分野', '対応', '国内_対象と比較
 /** 指標ごとの向きの扱い。国内の系列があればその向き、無ければ国際の向き。決められないものは「参考」（議員への配分に使わない）。 */
 export const directionOf = (m: Mapping) => {
   if (m.match === '系列なし') return '';
-  if (m.intl?.reference) return '参考（向きは決めない。議員への配分に使わない）';
+  if (m.reference || m.intl?.reference) return '参考（向きは決めない。議員への配分に使わない）';
   const better = m.target?.better ?? (m.titleRules ? 'higher' : m.intl?.better);
   return better === undefined ? '' : better === 'higher' ? '高いほど良い' : '低いほど良い';
 };
