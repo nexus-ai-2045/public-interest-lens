@@ -60,12 +60,12 @@ class TriageLine2Test(unittest.TestCase):
             self.assertEqual(r["系統2_判定"], "評価対象外" if out else "評価対象", r["id"])
 
     def test_disagreements_are_held_in_impact(self):
-        # impact-v1 の既定の振り分けは bill-triage-v2。両系統が評価対象外で一致した法律は影響の判定に回らず、それ以外は全て載る。
+        # impact-v1-triage-v2 の振り分けは bill-triage-v2。両系統が評価対象外で一致した法律は影響の判定に回らず、それ以外は全て載る。
         agreement = {r["id"]: r for r in read(DERIVED / "bill-triage-v2" / "agreement.csv")}
         l1 = {r["id"]: r for r in read(DERIVED / "bill-triage-v2" / "labels-line1.csv")}
         l2 = {r["id"]: r for r in read(DERIVED / "bill-triage-v2" / "labels-line2.csv")}
-        impact = read(DERIVED / "impact-v1" / "impact.csv")
-        judged = {i for i in agreement if l1[i]["結果"] == "評価対象" or l2[i]["系統2_判定"] == "評価対象"}
+        impact = read(DERIVED / "impact-v1-triage-v2" / "impact.csv")
+        judged = {i for i in agreement if not (agreement[i]["結果"] == "採用" and l1[i]["結果"] == l2[i]["系統2_判定"] == "評価対象外")}
         self.assertEqual({r["id"] for r in impact}, judged)
         for r in impact:
             if agreement[r["id"]]["結果"] == "保留":

@@ -4,7 +4,7 @@
  *
  * - 入力は「題名」と、各系統の AI が付けた「種類」「分野」だけ。第1条の原文・付託委員会・統計の値は読まない。
  * - 語の一致は、題名の文字列にその語がそのまま含まれるかだけで決める（意味の解釈をしない）。
- * - 分野の割り当ては AI の判断のまま（D1 は「題名に8分野のどの語も無いのに8分野と付けた」ときだけ対応表なしに直す）。
+ * - 分野は D1 により題名で最初に現れる語の分野へ決め直す。AI の入力分野は来歴として保持する。
  *   種類も AI の判断のままだが、D3・D4 で組織手続を直す。
  * - 純関数。系統1と系統2の両方がこの同じ規則を当てる（scripts/triage_v2_line2.py は同じ文書から別に書き起こした実装で、
  *   tests/test_triage_v2.py が全題名でこの実装と出力が同じことを確かめる）。
@@ -60,7 +60,7 @@ export const PICK_TABLES: Record<Field, PickTable> = {
 
 /**
  * D1：分野を決める題名の語（`data/derived/bill-triage-v1-line2/criteria.md` の2の表の語に、PICK_TABLES の語を足したもの）。
- * 題名にこの語が1つも無いのに8分野と付けられていれば、対応表なしに直す。「脱炭素」「温室効果ガス」「資源循環」「環境」は含めない。
+ * 全分野の語のうち題名の最初の位置で分野を決め、語が無ければ対応表なし。「脱炭素」「温室効果ガス」「資源循環」「環境」は含めない。
  * 末尾の語（社債・振替・割賦・信託・ツーリズム・交通・移動・データ活用）は、一致していた142本が誤って対応表なしにならないよう
  * 170本を見て足した語（学習内）。
  */
@@ -111,7 +111,7 @@ export type TriageOutput = {
 };
 
 /**
- * 1本分の振り分け。種類・分野は各系統の AI の判断を入力にし、D1〜D5 と指標の表で直す。
+ * 1本分の振り分け。AI の種類・分野を来歴として受け、D1 で分野を決め直し D2〜D5 と指標の表を当てる。
  * D5：種類か分野が定義にない値（迷い・空）なら、評価対象外にも評価対象にもせず保留。
  */
 export function triageV2(input: TriageInput): TriageOutput {
@@ -128,11 +128,16 @@ export function triageV2(input: TriageInput): TriageOutput {
     if (NEW_CORPORATION.test(seg)) { kind = '新規'; rules.push('D3'); notes.push('D3：新設法人の根拠法は新規'); }
     else if (AMEND_CORPORATION.test(seg)) { kind = '実質改正'; rules.push('D4'); notes.push('D4：機構法などの改正は実質改正'); }
   }
-  // D1：8分野と付けられていても、題名に8分野の語が1つも無ければ対応表なし
-  if (field !== NO_FIELD) {
-    const hit = (FIELDS as readonly string[]).some(f => matchedWord(seg, FIELD_WORDS[f as Field]) !== null);
-    if (!hit) { field = NO_FIELD; rules.push('D1'); notes.push('D1：題名に8分野の語が無い'); }
+  // D1：全分野の語を探し、題名の最初の位置の分野を採用する。
+  const hits = FIELDS.flatMap(f => FIELD_WORDS[f].map(word => ({ field: f, word, pos: seg.indexOf(word) })))
+    .filter(hit => hit.pos >= 0).sort((a, b) => a.pos - b.pos);
+  const first = hits[0];
+  if (first && hits.some(hit => hit.pos === first.pos && hit.field !== first.field)) {
+    return { kind, field: '', indicator: '', verdict: '保留', rules: [...rules, 'D5'], reason: 'D5：最初の語の位置で複数の分野が競合するため保留' };
   }
+  field = first?.field ?? NO_FIELD;
+  rules.push('D1');
+  notes.push(first ? `D1：題名で最初の語「${first.word}」の分野` : 'D1：題名に8分野の語が無い');
   let indicator = '';
   if (field !== NO_FIELD) {
     const p = pickIndicator(field as Field, seg);

@@ -40,7 +40,10 @@ class TriageV2Test(unittest.TestCase):
         for name, cols in (("labels-line1.csv", ("結果", "種類", "分野", "指標")), ("labels-line2.csv", ("系統2_判定", "系統2_種類", "系統2_分野", "系統2_指標"))):
             for r in read(V2 / name):
                 verdict, kind, field, indicator = (r[c] for c in cols)
-                self.assertIn(verdict, {"評価対象", "評価対象外"}, r["id"])
+                self.assertIn(verdict, {"評価対象", "評価対象外", "保留"}, r["id"])
+                if verdict == "保留":
+                    self.assertEqual(indicator, "", r["id"])
+                    continue
                 self.assertIn(kind, py.KINDS, r["id"])
                 if field == py.NO_FIELD:
                     self.assertEqual(indicator, "", r["id"])
@@ -55,13 +58,26 @@ class TriageV2Test(unittest.TestCase):
         self.assertEqual(len(ag), 170)
         for r in ag:
             a, b = l1[r["id"]], l2[r["id"]]
-            same = (a["結果"], a["分野"], a["指標"]) == (b["系統2_判定"], b["系統2_分野"], b["系統2_指標"])
+            same = a["結果"] != "保留" and (a["結果"], a["分野"], a["指標"]) == (b["系統2_判定"], b["系統2_分野"], b["系統2_指標"])
             self.assertEqual(r["結果"], "採用" if same else "保留", r["id"])
 
     def test_v1_agreement_is_left_untouched(self):
         # 版を切り替えても、bill-triage-v1 の一致の表は 142/170 のまま（旧版の結果は上書きしない）
         ag = read(ROOT / "data" / "derived" / "bill-triage-v1" / "agreement.csv")
         self.assertEqual((len(ag), sum(r["結果"] == "採用" for r in ag)), (170, 142))
+
+    def test_d1_uses_first_keyword_not_ai_field(self):
+        for title, ai, expected in [
+            ("特定高度情報通信技術活用システムの開発供給及び導入の促進に関する法律案", "通信・ネット", "行政のデジタル化"),
+            ("道路と銀行に関する法律案", "金融", "交通・移動"),
+            ("銀行と道路に関する法律案", "交通・移動", "金融"),
+            ("労働基準法案", "対応表なし", "労働市場"),
+        ]:
+            with self.subTest(title=title):
+                self.assertEqual(py.triage(title, "新規", ai)["field"], expected)
+
+    def test_d5_holds_equal_position_field_conflicts(self):
+        self.assertEqual(py.triage("電子商取引法案", "新規", "通信・ネット")["verdict"], "保留")
 
     def test_first_law_title(self):
         self.assertEqual(py.first_law("出入国管理及び難民認定法及び法務省設置法の一部を改正する法律案"), "出入国管理及び難民認定法の一部を改正する法律案")

@@ -2,8 +2,8 @@
 
 docs/提案/指標の選び方-v1.md の 3（指標の表）と 4-4（D1〜D5）を、app/src/indicator-pick.ts とは別に、この文書から書き起こした実装。
 系統1（app/scripts/run-triage-v2-line1.mjs が indicator-pick.ts を使う）と別のコード経路にして、実装の写し間違いを一致の確認で拾えるようにする。
-ただし規則の中身（語の表・D1〜D5）は同じ文書なので、指標の選び方そのものの一致は自明に近い。独立に確かめられるのは、
-系統ごとの AI の判断（種類・分野）が一致するかどうか。
+ただし規則の中身（語の表・D1〜D5）は同じ文書なので、指標の選び方そのものの一致は自明に近い。規則適用後の分野・指標の一致は独立の判断を示さない。
+入力のAI判断と決定的な規則適用後の結果は区別する。
 tests/test_triage_v2.py が、全題名で2つの実装の出力が同じことを確かめる。
 
 入力：data/derived/bill-triage-v1-line2/labels.csv（題名・系統2_種類・系統2_分野）。系統1の列は読まない。
@@ -93,10 +93,15 @@ def triage(title: str, kind: str, field: str) -> dict:
             kind = "実質改正"
             rules.append("D4")
             notes.append("D4：機構法などの改正は実質改正")
-    if field != NO_FIELD and not any(w in text for ws in _FIELD_WORDS.values() for w in _words(ws)):
-        field = NO_FIELD
-        rules.append("D1")
-        notes.append("D1：題名に8分野の語が無い")
+    hits = [(text.find(w), f, w) for f, ws in _FIELD_WORDS.items() for w in _words(ws) if w in text]
+    hits.sort(key=lambda hit: hit[0])
+    first = hits[0] if hits else None
+    if first and any(pos == first[0] and f != first[1] for pos, f, _ in hits):
+        return {"kind": kind, "field": "", "indicator": "", "verdict": "保留", "rules": [*rules, "D5"],
+                "reason": "D5：最初の語の位置で複数の分野が競合するため保留"}
+    field = first[1] if first else NO_FIELD
+    rules.append("D1")
+    notes.append(f"D1：題名で最初の語「{first[2]}」の分野" if first else "D1：題名に8分野の語が無い")
     indicator = ""
     if field != NO_FIELD:
         indicator, sign, word = pick(field, text)
