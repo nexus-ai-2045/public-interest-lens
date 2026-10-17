@@ -18,10 +18,46 @@
     }
   },
   "approval": {
-    "approvedAt": null,
-    "approvedLaws": []
+    "approvedAt": "2026-10-17",
+    "approvedLaws": [
+      "衆法-186-35"
+    ]
   },
-  "laws": [],
+  "laws": [
+    {
+      "id": "衆法-186-35",
+      "title": "サイバーセキュリティ基本法案",
+      "side": "benefit",
+      "field": "通信・ネット",
+      "indicator": "通信業の付加価値",
+      "stage": "段階3",
+      "enforcedOn": "2014-11-12",
+      "amountMedianYen": 19446249328385,
+      "amountLowYen": 9405880918004,
+      "amountHighYen": 22263659558556,
+      "lowerBound": true,
+      "window": "2014〜2019年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "GBR",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "安全（犯罪）：未測定／対応表外（安全保障）：未測定／経済（内包）：内包",
+      "group": "通信業の付加価値-1",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/45FA.htm",
+        "https://laws.e-gov.go.jp/law/426AC1000000104"
+      ]
+    }
+  ],
   "held": [
     {
       "id": "参法-145-9",
@@ -78,13 +114,6 @@
       "side": "loss",
       "reasonCode": "R1",
       "reason": "参考の行や保留の判定を含むため、額を公開しない"
-    },
-    {
-      "id": "衆法-186-35",
-      "title": "サイバーセキュリティ基本法案",
-      "side": "benefit",
-      "reasonCode": "APPROVAL",
-      "reason": "公開可の判定。公開の承認待ちのため、額は承認後に表示する"
     },
     {
       "id": "衆法-189-20",
@@ -164,6 +193,6 @@
     "staged": 33,
     "amounted": 6,
     "publishable": 1,
-    "published": 0
+    "published": 1
   }
 }
