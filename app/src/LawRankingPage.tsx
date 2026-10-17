@@ -15,6 +15,7 @@ const funnel: { key: keyof PublicRanking['counts']; label: string }[] = [
 ];
 const reasonTitles: Record<string, string> = {
   APPROVAL: '公開の承認待ち',
+  SOURCE: '出典チェックで食い違い（確認中）',
   R1: '参考の行・保留の判定を含む',
   R3: '新型コロナの時期と分けられない',
   R4: '便益を減らしうる項目が未測定',
@@ -44,7 +45,7 @@ export function LawRankingPage() {
   const groups = new Map<string, PublicRankingHeld[]>();
   for (const item of data?.held ?? []) groups.set(item.reasonCode, [...(groups.get(item.reasonCode) ?? []), item]);
   return <div className="app-shell research-page law-ranking" data-theme="light">
-    <ProductHeader title="法律ランキング" label="実データ" brandHref="/ranking"><nav aria-label="主なページ"><a href="/history">長期推移</a><a href="/policies">政策と結果</a><a href="/actors">人物・団体</a><a href="/ranking" className="nav-active">法律ランキング</a><a href="/members">議員ランキング</a><a href="/methodology">計算方法</a><a href="/demo">架空デモ</a></nav></ProductHeader>
+    <ProductHeader title="法律ランキング" label="実データ" brandHref="/ranking"><nav aria-label="主なページ"><a href="/history">長期推移</a><a href="/world">世界のGDP</a><a href="/policies">政策と結果</a><a href="/actors">人物・団体</a><a href="/ranking" className="nav-active">法律ランキング</a><a href="/members">議員ランキング</a><a href="/methodology">計算方法</a><a href="/demo">架空デモ</a></nav></ProductHeader>
     <main>
       <h2>法律ごとの損失と便益</h2>
       <p>一次資料（国会の議案情報、e-Gov 法令）と公的統計（OECD 国民経済計算など）だけを使い、決めたルールで機械的に出した額です。結果への責任を測るもので、提出者や賛成者の意図や予見を評価するものではありません。額は比較国と比べた推計上の値で、必ず幅を付けて読みます。</p>

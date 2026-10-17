@@ -11,7 +11,7 @@ export const distributionMembersUrl = '/distribution/members.json';
 export const correctionUrl = 'https://github.com/nexus-ai-2045/public-interest-lens/issues/new?template=correction.yml';
 
 export function SiteNav({ active }: { active: string }) {
-  const links: [string, string][] = [['/history', '長期推移'], ['/policies', '政策と結果'], ['/actors', '人物・団体'], ['/ranking', '法律ランキング'], ['/members', '議員ランキング'], ['/methodology', '計算方法'], ['/demo', '架空デモ']];
+  const links: [string, string][] = [['/history', '長期推移'], ['/world', '世界のGDP'], ['/policies', '政策と結果'], ['/actors', '人物・団体'], ['/ranking', '法律ランキング'], ['/members', '議員ランキング'], ['/methodology', '計算方法'], ['/demo', '架空デモ']];
   return <nav aria-label="主なページ">{links.map(([href, label]) => <a key={href} href={href} className={href === active ? 'nav-active' : undefined}>{label}</a>)}</nav>;
 }
 

@@ -1,0 +1,554 @@
+{
+  "method": "各国の成長要因は、国際機関・政府・研究機関の資料をもとにAIが要約し、別のAIが出典を開いて照合したものだけを載せています。要因の説明であり、因果関係を確定したものではありません。",
+  "countries": [
+    {
+      "code": "CHN",
+      "name": "中国",
+      "summary": "world-gdp.json の世界銀行の値で計算すると、実質GDP成長率の年平均（幾何平均）は1991〜2025年が約8.7%（日本は約0.8%）、2011〜2025年が約6.3%（日本は約0.7%）。一人あたりGDP（購買力平価、2021年国際ドル）は1990年の約1,667ドルから2010年に約10,476ドル、2025年に約25,067ドルへ伸び、1990年比で約15.0倍、2010年比で約2.4倍。日本は同じ期間に約36,138ドルから約48,283ドルへ（1990年比約1.34倍、2010年比約1.16倍）。中国の一人あたりGDPは日本の約4.6%（1990年）から約51.9%（2025年）まで縮まった。",
+      "claims": [
+        {
+          "id": "asia-fast-CHN-1",
+          "factor": "市場化改革と対外開放（経済特区・WTO加盟）",
+          "claim": "世界銀行の報告書『China 2030』は、家計請負制を含む農業改革をその後の持続的な改革の先駆けと位置づけ、経済特区の設置、鄧小平の南巡講話、WTO加盟を世界経済への統合の節目として挙げている。そのうえで、開放が投資・先進技術・経営の専門知識をもたらしたと説明している。同報告は、1978年に始まる改革以降の30年あまりの平均成長率を「10%近く」とし、貧困率が65%超から10%未満に下がったと記している。",
+          "japanContrast": "経済産業研究所（RIETI）の論考は、2023年末の対内直接投資残高のGDP比を日本8.5%（UNCTADデータで198か国・地域中192位）と紹介し、比較対象として中国の19.9%を挙げたうえで、日本の外資受け入れ規模は世界でも最小級だと述べている。理由については、競争の激しさ・人口動態（高齢化と少子化）・英語でのコミュニケーション・政府債務という仮説を挙げ、決定的な要因は特定されていないとしている。",
+          "sources": [
+            {
+              "title": "World Bank「China 2030: Building a Modern, Harmonious, and Creative Society」Overview",
+              "url": "https://www.worldbank.org/content/dam/Worldbank/document/China-2030-overview.pdf"
+            },
+            {
+              "title": "RIETI「Resolve Inhibiting Factors in the Medium and Long Term to Increase Foreign Direct Investment in Japan」",
+              "url": "https://www.rieti.go.jp/en/papers/contribution/kiyota/04.html"
+            }
+          ]
+        },
+        {
+          "factor": "高い貯蓄率と投資主導の成長",
+          "id": "asia-fast-CHN-2",
+          "claim": "『China 2030』は、中国の成長を、グローバル化の競争圧力のもとで進んだ「高貯蓄・投資主導」の成長だったと説明している。同報告の表1は、1995〜2010年期末の投資のGDP比を46.4%、消費のGDP比を48.6%としている。また、地方政府と地域のあいだで投資の誘致などをめぐる激しい競争があり、それが成長の強い原動力になったと述べている。",
+          "japanContrast": "",
+          "sources": [
+            {
+              "title": "World Bank「China 2030」Overview（表1）",
+              "url": "https://www.worldbank.org/content/dam/Worldbank/document/China-2030-overview.pdf"
+            }
+          ]
+        },
+        {
+          "id": "asia-fast-CHN-3",
+          "factor": "農業から工業への労働移動と増える労働力",
+          "claim": "『China 2030』の表1は、1995〜2010年の労働力の伸びを年0.9%、農業就業者の割合を38.1%と示している。同報告は、農業から工業への資源移動による成長の押し上げは「多くがすでに生じた」と述べ、生産年齢人口は2015年以降に減るとしている。",
+          "japanContrast": "総務省統計局によると、日本の生産年齢人口（15〜64歳）は1995年の8,726万人が最も多く、2018年には7,545万人と1,181万人減った。総人口に占める割合は1992年の69.8%がピークで、2018年は59.7%。",
+          "sources": [
+            {
+              "title": "World Bank「China 2030」Overview",
+              "url": "https://www.worldbank.org/content/dam/Worldbank/document/China-2030-overview.pdf"
+            },
+            {
+              "title": "総務省統計局 統計トピックスNo.119「統計が語る平成のあゆみ」1．人口",
+              "url": "https://www.stat.go.jp/data/topics/topi1191.htm"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "IND",
+      "name": "インド",
+      "summary": "world-gdp.json の世界銀行の値で計算すると、実質GDP成長率の年平均（幾何平均）は1991〜2025年が約6.1%（日本は約0.8%）、2011〜2025年が約6.0%（日本は約0.7%）。一人あたりGDP（購買力平価、2021年国際ドル）は1990年の約2,140ドルから2010年に約4,914ドル、2025年に約10,039ドルへ伸び、1990年比で約4.7倍、2010年比で約2.0倍（日本は1990年比約1.34倍、2010年比約1.16倍）。日本に対する比率は約5.9%（1990年）から約20.8%（2025年）に上がったが、水準ではまだ日本の5分の1ほど。",
+      "claims": [
+        {
+          "id": "asia-fast-IND-1",
+          "factor": "1991年の経済自由化（産業許認可の撤廃・関税引き下げ・外資の自由化）",
+          "claim": "全米経済研究所（NBER）の論文は、1991年以降の改革で産業許認可制度が廃止され、製造品の関税が平均約100%（最高ではほぼ400%）からまず平均約30%に下がり、直接投資の流入がGDP比0.35%（1992〜96年）から2.41%（2007〜10年）に増えたと説明している。同論文の表では、一人あたりGDPの伸びは1981〜90年の年3.25%から2000〜10年には年5.87%に高まった。ただし同論文は、成長の加速は1970年代半ばから徐々に始まっていて、特定の政策と結びつけるのは難しいとも指摘している。",
+          "japanContrast": "",
+          "sources": [
+            {
+              "title": "NBER Working Paper 19024「The 1991 Reforms, Indian Economic Growth, and Social Progress」",
+              "url": "https://www.nber.org/papers/w19024.pdf"
+            }
+          ]
+        },
+        {
+          "id": "asia-fast-IND-2",
+          "factor": "ITを中心としたサービス輸出",
+          "claim": "インド準備銀行（RBI）の報告によると、インドのサービス輸出は1993〜2022年に年率14%超で伸び、世界のサービス輸出に占める割合は0.5%から4.3%に上がった。通信・コンピュータ・情報サービスはサービス輸出の約47%（2022〜23年度）を占めた。この分野の世界シェアは15%（2022年）で、アイルランドに次ぐ2位だった。外国企業の拠点（GCC）は2022〜23年度に1,580か所を超えた。",
+          "japanContrast": "総務省の令和7年版情報通信白書によると、日本のデジタル関連項目（コンピュータサービス・著作権等使用料・専門/経営コンサルティング）のサービス収支は、2024年に合計で約6.7兆円の赤字だった。赤字は前年より約0.9兆円増えた。2014年と比べた赤字額は、コンピュータサービスで約3.3倍だった。",
+          "sources": [
+            {
+              "title": "RBI Bulletin「What Drives India's Services Exports?」（2024年4月）",
+              "url": "https://rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22524"
+            },
+            {
+              "title": "総務省 令和7年版情報通信白書「デジタル関連項目のサービス収支の動向」",
+              "url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r07/html/nd113220.html"
+            }
+          ]
+        },
+        {
+          "id": "asia-fast-IND-3",
+          "factor": "増え続ける生産年齢人口と制度改革（GST・公共投資）",
+          "claim": "IMFのインド2024年4条協議報告（2025年2月公表）は、2023/24年度に生産年齢人口が1,400万人、就業者が2,700万人増え、労働参加率が48.4%（2017/18年度）から56.4%に上がったとしている。同報告は、物品サービス税（GST）の導入とインフレ目標の採用を過去10年の重要な構造改革に挙げている。また報告の財政表では、中央政府の資本支出はGDP比3.1～3.4%で、2023/24年度の実績は3.2%となっている。",
+          "japanContrast": "総務省統計局によると、日本の生産年齢人口（15～64歳）は1995年の8,726万人をピークに減り、2018年は7,545万人だった。",
+          "sources": [
+            {
+              "title": "IMF Country Report No. 25/54「India: 2024 Article IV Consultation」",
+              "url": "https://www.imf.org/-/media/files/publications/cr/2025/english/1indea2025001-print-pdf.pdf"
+            },
+            {
+              "title": "総務省統計局 統計トピックスNo.119「統計が語る平成のあゆみ」1．人口",
+              "url": "https://www.stat.go.jp/data/topics/topi1191.htm"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "VNM",
+      "name": "ベトナム",
+      "summary": "world-gdp.json の世界銀行の値で計算すると、実質GDP成長率の年平均（幾何平均）は1991〜2025年が約6.7%（日本は約0.8%）、2011〜2025年が約6.2%（日本は約0.7%）。一人あたりGDP（購買力平価、2021年国際ドル）は1990年の約2,468ドルから2010年に約7,275ドル、2025年に約15,457ドルへ伸び、1990年比で約6.3倍、2010年比で約2.1倍（日本は1990年比約1.34倍、2010年比約1.16倍）。日本に対する比率は約6.8%（1990年）から約32.0%（2025年）に上がった。",
+      "claims": [
+        {
+          "id": "asia-fast-VNM-1",
+          "factor": "ドイモイ（1986年）以降の市場化とWTO加盟（2007年）",
+          "claim": "世界銀行の報告書『Viet Nam 2045』は、ベトナムの発展が1980年代後半のドイモイ（1986年開始）の土地・価格改革に始まり、2007年のWTO加盟に伴う大幅な自由化・開放で続いたとしている。同報告によると、一人あたりGDP（2015年基準の実質ドル）は1986年の600ドル未満から3,650ドル超へと、40年足らずで約6倍になった。世界銀行のベトナム概況ページは、2025年の一人あたりGDPを5,066ドル（名目、current US$）としている。",
+          "japanContrast": "",
+          "sources": [
+            {
+              "title": "World Bank「Viet Nam 2045: Trading Up in a Changing World」報告書PDF",
+              "url": "https://documents1.worldbank.org/curated/en/099111424204523679/pdf/P1787841e077190d919b24181b4dcb14765.pdf"
+            },
+            {
+              "title": "World Bank「Viet Nam Overview」",
+              "url": "https://www.worldbank.org/en/country/vietnam/overview"
+            }
+          ]
+        },
+        {
+          "id": "asia-fast-VNM-3",
+          "factor": "貿易協定網と高い貿易依存",
+          "claim": "『Viet Nam 2045』によると、ベトナムの貿易協定は世界GDPのほぼ90%をカバーし、輸出は過去20年に年平均12.7%伸びて2023年にはGDPの100%近くに達した。世界銀行の概況ページは、2025年の貿易額のGDP比を約190%としている。また、報告書の紹介ページは、GDPの約半分と雇用の2つに1つが直接・間接に輸出に依存していると説明している。",
+          "japanContrast": "",
+          "sources": [
+            {
+              "title": "World Bank「Viet Nam 2045: Trading Up in a Changing World」報告書PDF",
+              "url": "https://documents1.worldbank.org/curated/en/099111424204523679/pdf/P1787841e077190d919b24181b4dcb14765.pdf"
+            },
+            {
+              "title": "World Bank プレスリリース（2024年11月21日）",
+              "url": "https://www.worldbank.org/en/news/press-release/2024/11/21/world-bank-report-outlines-path-to-high-income-for-viet-nam-through-higher-value-trade-and-economic-reforms"
+            },
+            {
+              "title": "World Bank「Viet Nam Overview」",
+              "url": "https://www.worldbank.org/en/country/vietnam/overview"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "IDN",
+      "name": "インドネシア",
+      "summary": "world-gdp.json の世界銀行の値で計算すると、実質GDP成長率の年平均（幾何平均）は1991〜2025年が約4.6%（1998年のアジア通貨危機によるマイナス成長を含む。日本は約0.8%）、2011〜2025年が約4.7%（日本は約0.7%）。一人あたりGDP（購買力平価、2021年国際ドル）は1990年の約4,873ドルから2010年に約8,848ドル、2025年に約15,091ドルへ伸び、1990年比で約3.1倍、2010年比で約1.7倍（日本は1990年比約1.34倍、2010年比約1.16倍）。日本に対する比率は約13.5%（1990年）から約31.3%（2025年）に上がった。",
+      "claims": [
+        {
+          "id": "asia-fast-IDN-1",
+          "factor": "資源の国内加工（ニッケル鉱石の輸出禁止と製錬への投資）",
+          "claim": "米国際貿易委員会（USITC）の作業論文によると、インドネシアは2014年にニッケル鉱石の輸出を禁じ、2017年に一時緩和したあと、2020年1月に全面禁止へ戻した。ニッケルの製錬所は2014年以前は2か所しかなかったが、2021年には少なくとも29か所の精製所が稼働していた。ニッケル製品の輸出は2015年の10億ドル未満から2022年には200億ドル近くになった。IMF理事会は、ニッケルなど川下産業への注力を歓迎し、輸出の付加価値向上と外資誘致を促す一方で、輸出規制の段階的な撤廃を検討し、規制を他の品目に広げないよう求めている。",
+          "japanContrast": "",
+          "sources": [
+            {
+              "title": "USITC Working Paper ICA-104「Export Restrictions on Minerals and Metals: Indonesia's Export Ban of Nickel」",
+              "url": "https://www.usitc.gov/publications/332/working_papers/ermm_indonesia_export_ban_of_nickel.pdf"
+            },
+            {
+              "title": "IMF Press Release No. 23/229（インドネシア2023年4条協議）",
+              "url": "https://imf.org/en/News/Articles/2023/06/22/pr23229-indonesia-imf-executive-board-concludes-2023-article-iv-consultation-with-indonesia"
+            }
+          ]
+        },
+        {
+          "id": "asia-fast-IDN-2",
+          "factor": "通貨危機後の財政規律（財政赤字GDP比3%・債務60%の上限）",
+          "claim": "IMFのセミナーで示された資料（2014年）は、インドネシアが国家財政法で財政赤字をGDP比3%、中央・地方政府の債務を60%以内に抑えるルールを設けていると説明している。資料によると、公的債務は2000年のGDP比100%から下がり、今は上限を大きく下回っている。IMFの2023年4条協議は、赤字3%の上限を予定より1年早く達成したとしていて、2022年の一般政府債務をGDP比40.1%としている。",
+          "japanContrast": "RIETIの論考は、IMFの数字として日本の公的債務を2023年にGDP比240%（192か国中2番目の高さ）と紹介している。そのうえで、対内直接投資が少ない理由の仮説の一つに高い政府債務を挙げている（仮説が正しいかどうかは、さらに研究が必要だとしている）。",
+          "sources": [
+            {
+              "title": "IMF セミナー資料「Making Fiscal Rules Enforceable」（2014年）",
+              "url": "https://www.imf.org/external/np/seminars/eng/2014/oapfad/pdf/3-1_MI.pdf"
+            },
+            {
+              "title": "IMF Press Release No. 23/229（インドネシア2023年4条協議）",
+              "url": "https://imf.org/en/News/Articles/2023/06/22/pr23229-indonesia-imf-executive-board-concludes-2023-article-iv-consultation-with-indonesia"
+            },
+            {
+              "title": "RIETI「Resolve Inhibiting Factors in the Medium and Long Term to Increase Foreign Direct Investment in Japan」",
+              "url": "https://www.rieti.go.jp/en/papers/contribution/kiyota/04.html"
+            }
+          ]
+        },
+        {
+          "id": "asia-fast-IDN-3",
+          "factor": "大きな若い労働力と内需（消費・投資）",
+          "claim": "IMFのインドネシア2024年4条協議報告は、中期的な約5%の成長を、旺盛な民間消費と投資によるものと見ている。2023年の総投資（在庫変動を含む）はGDPの約30%（30.5%）、人口は2億7,700万人。世界銀行の概況ページによると、労働力は約1億4,300万人。1999〜2019年に貧困率は半分以下になり、コロナ禍の直前には10%を下回った。",
+          "japanContrast": "総務省統計局によると、日本の生産年齢人口（15〜64歳）は1995年の8,726万人をピークに減り、2018年は7,545万人だった。",
+          "sources": [
+            {
+              "title": "IMF「Indonesia: 2024 Article IV Consultation」Staff Report",
+              "url": "https://imf.org/-/media/Files/Publications/CR/2024/English/1idnea2024001-print-pdf.ashx"
+            },
+            {
+              "title": "World Bank「Indonesia Overview」",
+              "url": "https://www.worldbank.org/en/country/indonesia/overview"
+            },
+            {
+              "title": "総務省統計局 統計トピックスNo.119「統計が語る平成のあゆみ」1．人口",
+              "url": "https://www.stat.go.jp/data/topics/topi1191.htm"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "KOR",
+      "name": "韓国",
+      "summary": "world-gdp.json（世界銀行WDI）によると、韓国の実質成長率は1991〜2025年の平均（幾何平均）が年4.5%で、日本の0.8%を大きく上回る。2011〜2025年でも年2.6%で、日本の0.7%の約3.5倍。一人あたりGDP（購買力平価、2021年国際ドル）は1990年の14,378ドルから2025年の55,697ドルへ約3.9倍に増えた（日本は36,138ドルから48,283ドルで約1.3倍）。2014年に日本を上回り、2010〜2025年も韓国は約1.41倍、日本は約1.16倍。ただし韓国の成長率も1990年代より明らかに下がっている。",
+      "claims": [
+        {
+          "id": "asia-rich-KOR-1",
+          "factor": "輸出向け製造業（半導体・自動車）への集中",
+          "claim": "IMFの資料は、韓国が2023年に世界8位の輸出国で、輸出がGDPの約40%を占めると説明している。最大の輸出品は半導体（輸出全体の約20%）、次が自動車・部品（約12%）で、韓国経済は国際的なサプライチェーンに深く組み込まれているとしている。",
+          "japanContrast": "IMFの2024年対日審査報告は、日本は長年かけて生産を海外へ移してきたため、円安が進んでも輸出があまり増えなかったと説明している（ただし、自動車輸出の急増で一部打ち消されたとも書いている）。",
+          "sources": [
+            {
+              "title": "IMF Selected Issues Paper SIP/2025/014「Korea in a Changing Global Trade Landscape」(2025年2月)",
+              "url": "https://www.imf.org/-/media/files/publications/selected-issues-papers/2025/english/sipea2025014.pdf"
+            },
+            {
+              "title": "IMF Country Report No. 24/118 Japan: 2024 Article IV Consultation",
+              "url": "https://www.imf.org/-/media/files/publications/cr/2024/english/1jpnea2024010.pdf"
+            }
+          ]
+        },
+        {
+          "factor": "研究開発（R&D）投資の急拡大",
+          "id": "asia-rich-KOR-2",
+          "claim": "米国科学財団（NCSES）の国際比較によると、韓国の研究開発費がGDPに占める割合（R&D集約度）は1991年の1.71%から2010年に3.32%、2022年には5.21%に上がった。資料が比べた国・地域の中では、イスラエル（6.0%）に次いで2番目に高い。",
+          "japanContrast": "同じ資料で、日本は1990年の2.66%から2022年の3.41%への上昇にとどまる（日本の1996年以降のデータは方法の変更で以前と連続しない可能性があると注記されている）。日本も3〜4%台で高い方だが、伸びは韓国よりずっと小さく、2010年には韓国（3.32%）が日本（3.10%）を上回った。",
+          "sources": [
+            {
+              "title": "NCSES Science and Engineering Indicators「Discovery: R&D Activity and Research Publications」(NSB-2025-7)",
+              "url": "https://ncses.nsf.gov/pubs/nsb20257/global-r-d-and-international-comparisons-2"
+            }
+          ]
+        },
+        {
+          "id": "asia-rich-KOR-3",
+          "factor": "国による半導体産業への長期の設備投資支援",
+          "claim": "経済産業省「半導体戦略（概略）」（2021年6月）は、「韓国・台湾・中国は、研究開発のみならず、大規模な補助金・減税等で長期に亘って国内企業の設備投資・支援して育成してきた」と書いている。",
+          "japanContrast": "同じ資料によると、日本はバブル経済崩壊後の平成の長期不況で将来に向けた思い切った投資ができず、国内企業のビジネスが縮小した。世界の半導体市場で日本が占める割合は1988年の50.3%から2019年の10.0%に下がったとしている。",
+          "sources": [
+            {
+              "title": "経済産業省「半導体戦略（概略）」2021年6月",
+              "url": "https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital/20210603008-4.pdf"
+            }
+          ]
+        },
+        {
+          "id": "asia-rich-KOR-4",
+          "factor": "成長の鈍化と急速な高齢化（日本と同じ課題に近づいている）",
+          "claim": "IMFの資料は、韓国がほぼどの国よりも速く高齢化していると説明している。高齢化によって潜在成長率が年平均0.67ポイント下がるという試算を示している。そのうえで、女性の就労の男女差を半分に縮めれば2050年までに影響の約5分の1を相殺でき、AIの活用で潜在成長率を最大0.44ポイント押し上げられるとしている。world-gdp.json でも、韓国の平均実質成長率は1991年以降の約4.6%から、2011年以降は約2.6%に下がっている。",
+          "japanContrast": "IMFは日本について、高齢化と人口減少が中長期の大きな課題であり続けるとしている。潜在成長率は中期的に0.5%前後（2024年の報告書では0.5%をやや下回る）と見ている。2022年の出生率は1.26で、G7で最も低い水準の一つだとも書いている。日本が先に直面している高齢化による成長の下押しが、韓国でも急速に強まっていると読むこともできる（この部分はIMFの記述ではなく、比較からの解釈）。",
+          "sources": [
+            {
+              "title": "IMF「Korea's Rapid Aging Doesn't Have to Be Economic Destiny」(2025年4月)",
+              "url": "https://www.imf.org/en/news/articles/2025/04/03/cf-koreas-rapid-aging-doesnt-have-to-be-economic-destiny"
+            },
+            {
+              "title": "IMF「Japan: Staff Concluding Statement of the 2025 Article IV Mission」",
+              "url": "https://www.imf.org/en/news/articles/2025/02/07/mcs-020725-japan-staff-concluding-statement-of-the-2025-article-iv-mission"
+            },
+            {
+              "title": "IMF Country Report No. 24/118 Japan: 2024 Article IV Consultation",
+              "url": "https://www.imf.org/-/media/files/publications/cr/2024/english/1jpnea2024010.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TWN",
+      "name": "台湾",
+      "summary": "world-gdp.json（台湾はIMF World Economic Outlook、最新年は推計を含む）によると、台湾の実質成長率は1991〜2025年の平均（幾何平均）が年4.7%で、日本の0.8%を大きく上回る。2011〜2025年でも年3.6%で、日本の0.7%の約5倍。2025年は8.8%だった。名目GDP（米ドル）は1990年の1,666億ドルから2025年の9,206億ドルへ約5.5倍になり、日本に対する規模は約5%から約21%に上がった。一人あたりGDP（購買力平価）は同じ基準のデータがないため比べていない。",
+      "claims": [
+        {
+          "id": "asia-rich-TWN-1",
+          "factor": "公的研究機関から生まれた半導体受託製造（ファウンドリ）",
+          "claim": "工業技術研究院（ITRI）の資料によると、ITRIは1980年に台湾初の専業ウエハー製造会社UMCを設立し、1987年にTSMCを分社化して設立した。TSMCは世界で初めて半導体の受託製造の仕組みを始め、設計会社は自前で高価な工場を持たずにTSMCに製造を任せられるようになったと説明している。国家科学技術委員会によると、新竹サイエンスパークは1980年に設立が決まり、TSMCは1987年に政府主導でそこに設立された。",
+          "japanContrast": "経済産業省の資料は、1990年代後半から設計と製造を分ける水平分離（ファブレスとファウンドリ）が新しい流れになった一方、日本の半導体メーカーは親会社の電機・情報通信機器メーカーが競争力を失うなかで製造部門の切り出しや統合が難航したと説明している。そのうえで「設計と製造の水平分離の失敗」を、日本の半導体が衰えた主な要因の一つに挙げている。",
+          "sources": [
+            {
+              "title": "ITRI 50周年サイト「Developing Semiconductors From Scratch」",
+              "url": "https://50th.itri.org.tw/en/history/semiconductors/2/"
+            },
+            {
+              "title": "NSTC「Taiwan is a Reliable Partner in the Democratic Semiconductor Supply Chain」",
+              "url": "https://www.nstc.gov.tw/la/en/detail/7c69f898-3b46-458e-aba7-a1a1dccf77b0"
+            },
+            {
+              "title": "経済産業省「半導体戦略（概略）」2021年6月",
+              "url": "https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital/20210603008-4.pdf"
+            }
+          ]
+        },
+        {
+          "id": "asia-rich-TWN-3",
+          "factor": "研究開発（R&D）投資の拡大",
+          "claim": "米国科学財団（NCSES）の国際比較は、台湾の研究開発費がGDPに占める割合が1995年の1.69%から2010年に2.82%、2022年に3.96%へと2倍以上に上がったとしている。",
+          "japanContrast": "同じ資料で、日本は1990年の2.66%から2022年の3.41%への上昇にとどまり、2022年には台湾を下回っている。",
+          "sources": [
+            {
+              "title": "NCSES Science and Engineering Indicators「Discovery: R&D Activity and Research Publications」(NSB-2025-7)",
+              "url": "https://ncses.nsf.gov/pubs/nsb20257/global-r-d-and-international-comparisons-2"
+            }
+          ]
+        },
+        {
+          "id": "asia-rich-TWN-4",
+          "factor": "海外に出た台湾企業の国内回帰を促す政策",
+          "claim": "台湾の国家発展委員会は、2019年に始めた3年計画「海外台湾企業の国内回帰投資を歓迎する行動計画」で、254社の回帰企業を呼び込み、合計1兆台湾ドル（約375億米ドル）超の投資を承認し、8万人超の雇用が生まれたと説明している。",
+          "japanContrast": "IMFの2024年対日審査報告は、日本は長年かけて生産を海外へ移してきたため、円安が進んでも輸出があまり増えなかったと説明している。経済産業省の資料も、バブル崩壊後の長い不況のため、日本の国内企業は将来に向けた思い切った投資ができず、事業が縮小したとしている。",
+          "sources": [
+            {
+              "title": "国家発展委員会「Action Plan for Welcoming Overseas Taiwanese Businesses to Return to Invest in Taiwan」",
+              "url": "https://www.ndc.gov.tw/en/Content_List.aspx?n=286FD0E985C0EA44"
+            },
+            {
+              "title": "IMF Country Report No. 24/118 Japan: 2024 Article IV Consultation",
+              "url": "https://www.imf.org/-/media/files/publications/cr/2024/english/1jpnea2024010.pdf"
+            },
+            {
+              "title": "経済産業省「半導体戦略（概略）」2021年6月",
+              "url": "https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital/20210603008-4.pdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "USA",
+      "name": "アメリカ",
+      "summary": "world-gdp.json（世界銀行WDI）から計算。実質成長率の年平均（幾何平均）は1991〜2025年が約2.5%（日本は約0.8%）、2011〜2025年が約2.4%（日本は約0.7%）。一人あたりGDP（購買力平価、2021年国際ドル）は1990年44,384→2010年59,797→2025年76,931で、1990年比+73.3%、2010年比+28.7%（日本は36,138→41,647→48,283で+33.6%、+15.9%）。2025年の水準は日本の約1.59倍で、アメリカ・オランダ・ノルウェー・ドイツ・イギリスと日本の中で2010年以降の一人あたりの伸びが最も大きい。",
+      "claims": [
+        {
+          "id": "west-USA-1",
+          "factor": "IT（情報技術）投資と生産性の伸び",
+          "claim": "米連邦準備制度理事会（FRB）の論文は、民間非農業部門の多要素生産性（全要素生産性）の伸びが1995〜2000年の年約1.1%から2000〜2004年の年約2.3%に高まり、IT資本は1995〜2000年に産出の伸びへ約1.0ポイント寄与したと説明している。1990年代後半にトレンドを上回ってIT投資を伸ばした業種ほど、その後の生産性の伸びが高まった。論文はこの関係を統計的に有意としつつ、業種間の差のごく一部しか説明しないとも述べている。",
+          "japanContrast": "総務省の情報通信白書（平成30年版）によると、名目ICT投資額は日本では1994年の14.6兆円から1997年まで増えたあと微減か横ばいが続き、2016年は15.8兆円だった。米国は同じ期間に2,024億ドルから5,755億ドルへ約3倍に増えた。米国/日本の比率は約1.4倍から約4.0倍に広がっている。",
+          "sources": [
+            {
+              "title": "FRB FEDS 2007-24「Sectoral Productivity in the United States: Recent Developments and the Role of IT」",
+              "url": "https://www.federalreserve.gov/pubs/feds/2007/200724/index.html"
+            },
+            {
+              "title": "総務省 平成30年版情報通信白書「日米のICT投資額の推移」",
+              "url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/h30/html/nd113110.html"
+            }
+          ]
+        },
+        {
+          "id": "west-USA-2",
+          "factor": "移民による人口・労働力の増加",
+          "claim": "サンフランシスコ連銀の論文（2024年7月）は、米議会予算局（CBO）の見通しとして2023年・2024年の純移民がそれぞれ約330万人で、2010年代の年平均（100万人未満）を大きく上回ったと紹介している。同論文は、2023年の労働市場の逼迫緩和のおよそ5分の1が移民の急増によるものと推計している。",
+          "japanContrast": "総務省統計局の人口推計では、日本の総人口は2024年10月1日時点で1億2,380万2千人、前年から55万人減（14年連続減少）。出入国在留管理庁によると、在留外国人は2024年6月末で358万8,956人と過去最高を更新した。",
+          "sources": [
+            {
+              "title": "FRBSF Economic Letter「Recent Spike in Immigration and Easing Labor Markets」",
+              "url": "https://www.frbsf.org/research-and-insights/publications/economic-letter/recent-spike-in-immigration-and-easing-labor-markets"
+            },
+            {
+              "title": "総務省統計局 人口推計（2024年10月1日現在）",
+              "url": "https://www.stat.go.jp/data/jinsui/2024np/index.html"
+            },
+            {
+              "title": "出入国在留管理庁 令和6年6月末現在における在留外国人数について",
+              "url": "https://www.moj.go.jp/isa/publications/press/13_00047.html"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "NLD",
+      "name": "オランダ",
+      "summary": "world-gdp.json（世界銀行WDI）から計算。実質成長率の年平均（幾何平均）は1991〜2025年が約2.0%（日本は約0.8%）、2011〜2025年が約1.6%（日本は約0.7%）。一人あたりGDP（購買力平価、2021年国際ドル）は1990年43,128→2010年61,519→2025年71,378で、1990年比+65.5%、2010年比+16.0%（日本は+33.6%、+15.9%）。差が開いたのは主に1990〜2010年で、2010年以降の一人あたりの伸び率は日本とほぼ同じ。2025年の水準は日本の約1.48倍。",
+      "claims": [
+        {
+          "id": "west-NLD-1",
+          "factor": "政労使合意（ワッセナー合意）による賃金抑制と雇用拡大",
+          "claim": "オランダ中央統計局（CBS）は、1982年11月24日に労使がワッセナー合意を結び、1970年代に年5〜15%だった賃上げが、合意後は労使交渉で決まる分で5%を超えなくなったと説明している。CBSは、合意後にフルタイムの労働時間が平均5%短くなり、就業者は2006年までに1982年比で250万人増えたとしている。",
+          "japanContrast": "",
+          "sources": [
+            {
+              "title": "CBS「Wassenaar Agreement marks turning point for labour market」（2007年）",
+              "url": "https://www.cbs.nl/en-gb/news/2007/47/wassenaar-agreement-marks-turning-point-for-labour-market"
+            }
+          ]
+        },
+        {
+          "id": "west-NLD-2",
+          "factor": "パートタイム就労の拡大（とくに女性の就労増）",
+          "claim": "OECDの報告書『Part-time and Partly Equal』は、オランダで働く女性の6割近くがパートタイムで、OECD平均の女性のおよそ3倍だと説明している。CBSも2007年の時点で、仕事の2つに1つがパートタイムで、その一因は女性の労働参加の増加だとしている。",
+          "japanContrast": "労働政策研究・研修機構（JIL）の国際比較では、フルタイム＝100としたパートタイムの賃金水準は2014年に日本64.9、オランダ76.6だった。2022年は日本72.3、オランダ73.8で、差は縮まっている。",
+          "sources": [
+            {
+              "title": "OECD「Part-time and Partly Equal: Gender and Work in the Netherlands」",
+              "url": "https://oecd.org/en/publications/part-time-and-partly-equal-gender-and-work-in-the-netherlands_204235cf-en/full-report/component-3.html"
+            },
+            {
+              "title": "CBS「Wassenaar Agreement marks turning point for labour market」（2007年）",
+              "url": "https://www.cbs.nl/en-gb/news/2007/47/wassenaar-agreement-marks-turning-point-for-labour-market"
+            },
+            {
+              "title": "JIL データブック国際労働比較2025 第5-5表 パートタイム労働者の賃金水準",
+              "url": "https://www.jil.go.jp/kokunai/statistics/databook/2025/05/d2025_5T-04_5T-05.pdf"
+            }
+          ]
+        },
+        {
+          "id": "west-NLD-3",
+          "factor": "輸出への高い依存（開かれた貿易経済）",
+          "claim": "CBSは、2023年にオランダのGDPの35.2%が財・サービスの輸出から生まれ、雇用の31.4%（フルタイム換算260万人分）が輸出に関わっていると示している。",
+          "japanContrast": "",
+          "sources": [
+            {
+              "title": "CBS「Dutch trade in facts and figures 2025: Dutch earnings from exports」",
+              "url": "https://longreads.cbs.nl/dutch-trade-in-facts-and-figures-2025/dutch-earnings-from-exports"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "NOR",
+      "name": "ノルウェー",
+      "summary": "world-gdp.json（世界銀行WDI）から計算。実質成長率の年平均（幾何平均）は1991〜2025年が約2.3%（日本は約0.8%）、2011〜2025年が約1.7%（日本は約0.7%）。一人あたりGDP（購買力平価、2021年国際ドル）は1990年56,608→2010年84,605→2025年95,173で、1990年比+68.1%、2010年比+12.5%（日本は+33.6%、+15.9%）。2010年以降の一人あたりの伸び率は日本より低いが、2025年の水準は日本の約1.97倍でこのページの国・地域の中で最も高い。",
+      "claims": [
+        {
+          "id": "west-NOR-1",
+          "factor": "石油・天然ガス資源",
+          "claim": "ノルウェー政府の資料は、石油産業を最も重要な輸出部門としている。石油・天然ガスは2000年に輸出の46%（3,120億クローネ超）を占め、1980年の28%から増えたと説明している。同じ資料は、民間サービスと石油生産を、過去20年のGDP成長に最も大きく寄与したものに挙げている（資料は2000年頃のもの）。",
+          "japanContrast": "資源エネルギー庁によると、日本のエネルギー自給率は2022年度に12.6%で、他のOECD諸国と比べても低い水準。原油は中東地域に90%以上依存している。",
+          "sources": [
+            {
+              "title": "ノルウェー政府「Business and industry in Norway - The structure of the Norwegian economy」",
+              "url": "https://www.regjeringen.no/en/dokumenter/Business-and-industry-in-Norway---the-structure-of-the-Norwegian-economy/id419326/"
+            },
+            {
+              "title": "資源エネルギー庁「日本のエネルギー 2024年度版」エネルギーの今を知る",
+              "url": "https://www.enecho.meti.go.jp/about/pamphlet/energy2024/02.html"
+            }
+          ]
+        },
+        {
+          "id": "west-NOR-2",
+          "factor": "資源収入を積み立てる政府年金基金と財政ルール",
+          "claim": "ノルウェー政府は、2001年から財政ルールで石油収入による基金（政府年金基金グローバル）からの支出を期待実質収益率に合わせており、2017年にその見込みを4%から3%に下げた。2025年に基金の価値は21兆2,680億クローネになり、2026年の中央政府予算の約27%を基金からの繰り入れでまかなう見込みだと説明している。",
+          "japanContrast": "",
+          "sources": [
+            {
+              "title": "ノルウェー政府「Increased equity share in the Government Pension Fund Global and adjustment to the expected rate of return in the fiscal policy guidelines」（2017年）",
+              "url": "https://www.regjeringen.no/en/aktuelt/increased-equity-share-in-the-government-pension-fund-global-and-adjustment-to-the-expected-rate-of-return-in-the-fiscal-policy-guidelines/id2539299"
+            },
+            {
+              "title": "ノルウェー政府 Meld. St. 7 (2025–2026) 1 Executive summary",
+              "url": "https://www.regjeringen.no/en/documents/meld.-st.-7-2025-2026/id3155109/?ch=1"
+            },
+            {
+              "title": "ノルウェー経済大学（NHH）「When Norway rewrote the fiscal rule」",
+              "url": "https://nhh.no/en/research/impact-cases/when-norway-rewrote-the-fiscal-rule/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "DEU",
+      "name": "ドイツ",
+      "summary": "world-gdp.json（世界銀行WDI）から計算。実質成長率の年平均（幾何平均）は1991〜2025年が約1.3%（日本は約0.8%）、2011〜2025年が約1.1%（日本は約0.7%）。2025年は0.24%と低い。一人あたりGDP（購買力平価、2021年国際ドル）は1990年42,355→2010年54,826→2025年62,824で、1990年比+48.3%、2010年比+14.6%（日本は+33.6%、+15.9%）。2010年以降の一人あたりの伸び率は日本をやや下回る。2025年の水準は日本の約1.30倍。",
+      "claims": [
+        {
+          "id": "west-DEU-1",
+          "factor": "分権的な賃金交渉による競争力の回復",
+          "claim": "Dustmann らの論文（CReAM ディスカッションペーパー 2014年、後に Journal of Economic Perspectives 28巻1号、2014年に掲載）は、ドイツが「欧州の病人」から競争力の高い経済へ変わった主な要因を、政府の労働市場改革よりも賃金交渉の分権化だと説明している。",
+          "japanContrast": "",
+          "sources": [
+            {
+              "title": "IAB「From sick man of Europe to economic superstar. Germany's resurgent economy」（Dustmann ほか、JEP 2014）",
+              "url": "https://iab.de/en/publications/publication/?id=3945041"
+            }
+          ]
+        },
+        {
+          "id": "west-DEU-2",
+          "factor": "労働市場改革（ハルツIV、2005年）",
+          "claim": "IMFのワーキングペーパー（2013/042）は、2005年のハルツIV改革（長期失業者向け給付の削減など失業保険制度の見直し）が、景気循環によらない長期的な失業率を1.4ポイント下げたと推計している。同論文は、就業者世帯の厚生は上がり、失業者世帯の厚生は下がったとも示している。",
+          "japanContrast": "",
+          "sources": [
+            {
+              "title": "IMF Working Paper「Macroeconomic Evaluation of Labor Market Reform in Germany」",
+              "url": "https://imf.org/en/Publications/WP/Issues/2016/12/31/Macroeconomic-Evaluation-of-Labor-Market-Reform-in-Germany-40318"
+            }
+          ]
+        },
+        {
+          "id": "west-DEU-3",
+          "factor": "近年の停滞：エネルギー価格ショックと高齢化",
+          "claim": "IMFの2025年対独4条協議声明は、2022年半ばのエネルギー価格ショックと急な金融引き締めで2023〜24年に2年続けてマイナス成長となり、その後も通商面の逆風、生産性の伸びの弱さ、輸出競争の激化で回復が遅れていると説明している。声明は2025年の成長率を0.2%とし、今後5年の生産年齢人口の減り方はG7で最も速いとしている。",
+          "japanContrast": "日本もエネルギー自給率が低く、高齢化が進んでいる。エネルギー自給率は2022年度12.6%で、他のOECD諸国と比べても低い（資源エネルギー庁）。65歳以上の割合は2024年に29.3%と過去最高（総務省統計局）。",
+          "sources": [
+            {
+              "title": "IMF「Germany: Staff Concluding Statement of the 2025 Article IV Mission」",
+              "url": "https://www.imf.org/en/news/articles/2025/11/26/mcs-112625-germany-staff-concluding-statement-of-the-2025-article-iv-mission"
+            },
+            {
+              "title": "資源エネルギー庁「日本のエネルギー 2024年度版」",
+              "url": "https://www.enecho.meti.go.jp/about/pamphlet/energy2024/02.html"
+            },
+            {
+              "title": "総務省統計局 人口推計（2024年10月1日現在）",
+              "url": "https://www.stat.go.jp/data/jinsui/2024np/index.html"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "GBR",
+      "name": "イギリス",
+      "summary": "world-gdp.json（世界銀行WDI）から計算。実質成長率の年平均（幾何平均）は1991〜2025年が約1.9%（日本は約0.8%）、2011〜2025年が約1.5%（日本は約0.7%）。一人あたりGDP（購買力平価、2021年国際ドル）は1990年33,531→2010年47,683→2025年53,993で、1990年比+61.0%、2010年比+13.2%（日本は+33.6%、+15.9%）。1990年には日本を下回っていたが、2025年は日本の約1.12倍。ただし2010年以降の一人あたりの伸び率は日本より低い。",
+      "claims": [
+        {
+          "id": "west-GBR-2",
+          "factor": "純移民による人口・労働力の増加",
+          "claim": "英政府の移民諮問委員会（MAC）は、2004〜2022年の英国の人口増加の60%を純移民が占め、純移民は2023年6月までの1年間に過去最高の90万6千人になったと示している。同報告が引く予算責任局（OBR）の試算（2024年3月）では、純移民が年20万人増えるとGDPは1.5%増えるが、一人あたりGDPは0.1%しか増えない。",
+          "japanContrast": "出入国在留管理庁によると、日本の在留外国人は2024年6月末で358万8,956人（前年末比5.2%増）。総務省統計局によると総人口は2024年に55万人減り、14年続けて減っている。",
+          "sources": [
+            {
+              "title": "英政府 Migration Advisory Committee「Net migration report」",
+              "url": "https://www.gov.uk/government/publications/migration-advisory-committee-report-on-net-migration/net-migration-report-accessible"
+            },
+            {
+              "title": "出入国在留管理庁 令和6年6月末現在における在留外国人数について",
+              "url": "https://www.moj.go.jp/isa/publications/press/13_00047.html"
+            },
+            {
+              "title": "総務省統計局 人口推計（2024年10月1日現在）",
+              "url": "https://www.stat.go.jp/data/jinsui/2024np/index.html"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
