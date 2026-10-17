@@ -48,8 +48,12 @@ class BenefitLine2Test(unittest.TestCase):
 class TriageLine2Test(unittest.TestCase):
     def test_labels_cover_laws_with_enforcement_date_and_follow_spec(self):
         labels = read(DERIVED / "bill-triage-v1-line2" / "labels.csv")
-        dated = [r["id"] for r in read(ROOT / "data" / "acquired" / "enforcement-dates" / "enforcement.csv") if r["施行日"].strip()]
-        self.assertEqual([r["id"] for r in labels], dated)
+        ledger = read(ROOT / "data" / "acquired" / "enforcement-dates" / "enforcement.csv")
+        dated = [r["id"] for r in ledger if r["施行日"].strip()]
+        # 施行日の取得を待つ行にも先に付けてよい。施行日のある行は漏らさず、並びは施行日台帳の順。
+        ids = [r["id"] for r in labels]
+        self.assertEqual(ids, [r["id"] for r in ledger if r["id"] in set(ids)])
+        self.assertTrue(set(dated) <= set(ids))
         for r in labels:
             self.assertIn(r["系統2_種類"], KINDS)
             if r["系統2_分野"] == "対応表なし":
