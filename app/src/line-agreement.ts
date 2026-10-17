@@ -88,6 +88,9 @@ export function compareTriage(id: string, line1Row: Row | undefined, line2Row: R
   const line2 = line2Row ? { verdict: line2Row['系統2_判定'], field: line2Row['系統2_分野'], indicator: line2Row['系統2_指標'] } : null;
   if (!line1) return { id, agreed: false, line1, line2, reason: '系統1の振り分けが無い' };
   if (!line2) return { id, agreed: false, line1, line2, reason: '系統2の振り分けが無い' };
+  if (![line1.verdict, line2.verdict].every(v => v === '評価対象' || v === '評価対象外')) {
+    return { id, agreed: false, line1, line2, reason: '振り分けに保留または未定義の判定がある' };
+  }
   const diff: string[] = [];
   if (line1.verdict !== line2.verdict) diff.push(`判定（系統1：${line1.verdict}、系統2：${line2.verdict}）`);
   if (line1.field !== line2.field) diff.push(`分野（系統1：${line1.field}、系統2：${line2.field}）`);
@@ -98,10 +101,12 @@ export function compareTriage(id: string, line1Row: Row | undefined, line2Row: R
 export const HELD_BY_TRIAGE = '保留（2系統の振り分けが一致しない）';
 
 /** 振り分けが一致しない法律の impact-v1 の行を保留にする。判定ルールの計算結果は理由欄に残すが、段階・向きは採用しない。 */
-export function holdByTriage(r: LawResult, ag: TriageAgreement): LawResult {
+export function holdByTriage(r: LawResult, ag: TriageAgreement, referenceSource: '系統1' | '系統2' | '入力' = '系統1'): LawResult {
   if (ag.agreed) return r;
+  const reference = referenceSource === '入力' ? '参考計算なし：両系統の分野・指標が無い'
+    : `参考：${referenceSource}の分野・指標での判定は${r.verdict}${r.direction ? '・' + r.direction : ''}`;
   return { ...r, verdict: HELD_BY_TRIAGE, direction: '', cross: r.cross === '系列なし' ? r.cross : `保留（参考：${r.cross}）`,
-    reason: `設計決定0007：${ag.reason}。採用しない（参考：系統1の分野・指標での判定は${r.verdict}${r.direction ? '・' + r.direction : ''}）／${r.reason}` };
+    reason: `設計決定0007：${ag.reason}。採用しない（${reference}）／${r.reason}` };
 }
 
 export const TRIAGE_AGREEMENT_HEADER = ['id', '題名', '系統1_判定', '系統1_分野', '系統1_指標', '系統2_判定', '系統2_分野', '系統2_指標', '結果', '理由'];
