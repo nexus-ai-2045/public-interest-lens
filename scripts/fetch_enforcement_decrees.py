@@ -53,6 +53,7 @@ RAW_REL = "../enforcement-decrees/raw/"
 METHOD_DECREE = "施行期日政令"
 METHOD_REV = "改正履歴（law_revisions）の amendment_law_num 一致"
 MARK = "施行期日政令の照合"
+REV_GUESS = "推定（改正履歴の期間内で一つだけ残る日。原文で未確認）"
 ERA_RE = r"(?:明治|大正|昭和|平成|令和)"
 DATE_PAT = rf"{ERA_RE}{NUM}年{NUM}月{NUM}日"
 LAW_NUM_RE = re.compile(rf"{ERA_RE}{NUM}年法律第{NUM}号")
@@ -436,9 +437,12 @@ def resolve_row(fetcher: Fetcher, row: dict, cache: dict) -> dict:
             picks = {revision_main_date(v, quote, row["公布日"]) for v in revs_dates.values() if v}
             ok = {p[0] for p in picks if p[0]}
             if len(ok) == 1 and all(p[0] for p in picks):
+                # 期間内で一つだけ残る日は推定なので、施行日にせず候補に回す（原文で確認した日だけ使う）
                 d, note = next(iter(picks))
-                got.update(date=d, method=METHOD_REV)
-                got["notes"].append(note)
+                got["notes"].append(f"{REV_GUESS}。{note}")
+                if d not in got["cands"]:
+                    got["cands"].append(d)
+                got["reason"] = REV_GUESS
             else:
                 reasons = sorted({p[1] for p in picks if not p[0]})
                 got["notes"].append("改正履歴で一つに絞れない: " + "／".join(reasons))
