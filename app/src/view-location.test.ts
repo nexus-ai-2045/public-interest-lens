@@ -13,11 +13,11 @@ const read = (url: string, fixture = data) => {
 };
 describe('短い表示URL契約', () => {
   it('既定は順位ページだけで、先頭人物をURLへ昇格させない', () => {
-    const initial = read('/ranking');
+    const initial = read('/demo');
     expect(initial.invalid).toBeNull();
     expect(initial.page).toBe('ranking');
     expect(initial.state.selectedPersonId).toBe('fiction-a');
-    expect(serializeViewLocation(initial.state, data, initial.page)).toBe('/ranking');
+    expect(serializeViewLocation(initial.state, data, initial.page)).toBe('/demo');
   });
   it('説明文を含む旧URLを明示IDへ移行する', () => {
     const params = new URLSearchParams({ person: 'fiction-a', action: actionKey(data.involvements[1]), policy: 'policy-harm-e', evidence: 'e-action-a-vote' });
@@ -36,7 +36,7 @@ describe('短い表示URL契約', () => {
     expect(serializeViewLocation({ ...restored.state, selectedEvidenceId: '' }, updated, 'action')).toBe('/actions/fiction-a-bill');
   });
   it('総合の全重み0・非既定条件を保持する', () => {
-    const restored = read('/ranking?domain=overall&view=benefit&years=8&economy=0&technology=0&assessment=outlook&history=all&tab=policy');
+    const restored = read('/demo?domain=overall&view=benefit&years=8&economy=0&technology=0&assessment=outlook&history=all&tab=policy');
     expect(restored.state.options.weights).toEqual({ economy: 0, technology: 0 });
     const url = serializeViewLocation(restored.state, data, 'ranking');
     expect(read(url).state).toEqual(restored.state);
@@ -45,7 +45,7 @@ describe('短い表示URL契約', () => {
   });
   it('分野別表示には結果に使わない重み・一時検索を入れない', () => {
     const state = readViewState('?economy=0&technology=0&q=検索', data.asOf);
-    expect(serializeViewLocation(state, data, 'ranking')).toBe('/ranking');
+    expect(serializeViewLocation(state, data, 'ranking')).toBe('/demo');
   });
   it('条件外の明示行動と旧リンクは全履歴で復元する', () => {
     for (const url of ['/actions/fiction-b-decision', `/?person=fiction-b&action=${encodeURIComponent(actionKey(data.involvements[2]))}`]) {
@@ -56,7 +56,7 @@ describe('短い表示URL契約', () => {
     }
   });
   it('人物・行動・根拠・版が不明な場合は代替対象を開かない', () => {
-    for (const url of ['/people/missing', '/actions/missing', '/ranking?version=missing', '/actions/fiction-a-bill?evidence=e-action-b', '/missing']) {
+    for (const url of ['/people/missing', '/actions/missing', '/demo?version=missing', '/actions/fiction-a-bill?evidence=e-action-b', '/missing']) {
       expect(read(url).invalid).not.toBeNull();
     }
   });
@@ -73,7 +73,7 @@ describe('短い表示URL契約', () => {
     expect(() => serializeViewLocation(state, legacy, 'action')).toThrow('行動ID');
   });
   it('共有時のみ既知の評価版を固定する', () => {
-    const initial = read('/ranking');
+    const initial = read('/demo');
     const pinned = serializeViewLocation(initial.state, data, 'ranking', viewDataVersion(data));
     expect(read(pinned).invalid).toBeNull();
     expect(pinned).toContain('version=');
@@ -85,8 +85,8 @@ describe('短い表示URL契約', () => {
     changed.policies[0].impact = 1;
     expect(changed.asOf).toBe(data.asOf);
     expect(() => viewDataVersion(changed)).toThrow('データ内容');
-    expect(read(`/ranking?version=${encodeURIComponent(original)}`, changed).invalid).not.toBeNull();
-    expect(() => serializeViewLocation(read('/ranking', changed).state, changed, 'ranking', original)).toThrow('データ内容');
+    expect(read(`/demo?version=${encodeURIComponent(original)}`, changed).invalid).not.toBeNull();
+    expect(() => serializeViewLocation(read('/demo', changed).state, changed, 'ranking', original)).toThrow('データ内容');
     expect(viewDataVersion(structuredClone(data))).toBe(original);
   });
   it('登録ハッシュを全データと算定契約から既存のハッシュ処理で検証する', async () => {
