@@ -260,7 +260,7 @@ def check(ranking: dict, ctx: dict) -> tuple[list[dict[str, str]], dict]:
 
 
 def check_members(members: dict, ranking: dict) -> list[dict[str, str]]:
-    """議員ページ：法律の額が公開ランキングと同じか、証拠が一次資料か、個人の配分の合計が額×帰属率を超えないか。"""
+    """議員ページ：法律の額が公開ランキングと同じか、証拠が一次資料か、個人・会派・名前不明の賛成票の配分の合計が額に一致するか。"""
     rows: list[dict[str, str]] = []
 
     def add(subject: str, item: str, published, primary, result: str, note: str = "") -> None:
@@ -281,12 +281,13 @@ def check_members(members: dict, ranking: dict) -> list[dict[str, str]]:
     for member in members["members"]:
         for law in member["laws"]:
             shares.setdefault(law["lawId"], []).append(abs(law["share"]["median"]))
-            bad_urls += sum(not is_primary(e["url"]) for e in law["evidence"])
+            bad_urls += sum(not is_primary(e["url"]) for e in law["evidence"] + law.get("context", []))
     add("議員ページ", "証拠URL", "一次資料以外の URL の数", bad_urls, OK if bad_urls == 0 else NG, "国会会議録・衆参の議案情報だけ")
-    amounts = {law["id"]: abs(law["amount"]["median"]) for law in members["laws"]}
-    for law_id, values in shares.items():
-        cap = amounts.get(law_id, 0) * members["rate"]
-        add(law_id, "個人の配分の合計", sum(values), f"{cap:.0f} 以下", OK if sum(values) <= cap + len(values) else NG, "額×帰属率を超えない（丸め誤差は1人1円まで）")
+    for law in members["laws"]:
+        persons = sum(shares.get(law["id"], []))
+        game = law["game"]
+        total = persons + game["party"]["median"] + game["unidentified"]["median"]
+        add(law["id"], "配分の合計", total, law["amount"]["median"], OK if total == law["amount"]["median"] else NG, "個人＋衆議院の賛成会派＋名前不明の賛成票＝法律の額（Shapley 値の合計は1）")
     return rows
 
 
