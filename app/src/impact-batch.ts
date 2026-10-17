@@ -209,7 +209,13 @@ const BASE_MAP: Mapping[] = [
     reason: '観光庁 宿泊旅行統計の延べ宿泊者数（2011〜2025年）。比較は経済全体の活動量として実質GDP。国際統計に宿泊数（Eurostat）が未取得のため国際比較なし',
   },
   none('宿泊業の付加価値', '宿泊・観光', '施行日のある評価対象に該当がなく、対応を固定していない（国民経済計算は宿泊・飲食サービス業で、宿泊業だけの系列はない）'),
-  none('客室数', '宿泊・観光', '取得済みの統計に客室数（旅館業法の施設数・客室数など）がない'),
+  {
+    indicator: '客室数', field: '宿泊・観光', match: '代理',
+    target: { definition: '宿泊・飲食サービス業の実質付加価値指数と実質GDP指数（開始前最後の年=100）', better: 'higher', options: snaVsGdp('lodging') },
+    economy: { definition: '延べ宿泊者数の指数と実質GDP指数（開始前最後の年=100）', better: 'higher', options: [{ name: '宿泊旅行統計「延べ宿泊者数」対 国民経済計算2020基準 実質「合計」', treated: { file: 'domestic-stats/kanko_lodging_annual.csv', where: { 指標: '延べ宿泊者数' } }, control: snaReal('2020', '合計') }] },
+    share: snaShare('lodging'), intl: null,
+    reason: '客室数（旅館業法の施設数・客室数など）の統計は取得していないため、取得済みの宿泊・飲食サービス業の実質付加価値で代える（飲食を含み、客室の数そのものではないため代理）。向きは「付加価値が高いほど良い」という機械的な仮定。経済全体の指標には延べ宿泊者数（2011〜2025年）を使う。国際統計に産業別付加価値がないため国際比較なし',
+  },
   {
     indicator: '通信業の付加価値', field: '通信・ネット', match: '直接',
     target: { definition: '情報通信業の実質付加価値指数と実質GDP指数（開始前最後の年=100）', better: 'higher', options: snaVsGdp('ict') },

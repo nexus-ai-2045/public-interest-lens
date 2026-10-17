@@ -107,6 +107,20 @@ export const LOSS_SOURCES: LossSource[] = [
     note: `損失額は付加価値で測るため、宿泊者数ではなく宿泊・飲食サービス業の付加価値を使う（飲食を含むため代理）。${OECD_NOTE}`,
   },
   {
+    indicator: '旅客輸送の付加価値', definition: '運輸・保管業（ISIC Rev.4 H）の実質付加価値（旅客輸送の代理）',
+    sector: sna({ 2020: '7.運輸・郵便業', 2015: '7.運輸・郵便業', 2011: '7.運輸・郵便業' }),
+    oecd: { industry: 'H', label: '運輸・保管（H）', excludeIfCrossing: [ITA_BREAK], countryNotes: { AUS: AUS_NOTE } },
+    intl: null, reference: false,
+    note: `代理：損失額は付加価値で測るが、旅客輸送だけの付加価値は国民経済計算にも OECD 表6にもないので、運輸・保管業（H）全体の付加価値を使う。貨物・倉庫・郵便・宅配を含み旅客輸送より広いため、額は旅客輸送の損失ではなく運輸・保管業全体の伸びの差である。${OECD_NOTE}`,
+  },
+  {
+    indicator: '客室数', definition: '宿泊・飲食サービス業（ISIC Rev.4 I）の実質付加価値（客室数の代理）',
+    sector: sna({ 2020: '8.宿泊・飲食サービス業', 2015: '8.宿泊・飲食サービス業', 2011: '8.宿泊・飲食サービス業' }),
+    oecd: { industry: 'I', label: '宿泊・飲食サービス（I）', excludeIfCrossing: [ITA_BREAK], countryNotes: { AUS: AUS_NOTE }, missing: { KOR: 'KOR は宿泊・飲食（I）の系列が無いため比較国に入れない（補わない）' } },
+    intl: null, reference: false,
+    note: `代理：客室数の統計は取得していないので、宿泊者数と同じく宿泊・飲食サービス業（I）の付加価値を使う。飲食を含み客室の数そのものではない。${OECD_NOTE}`,
+  },
+  {
     indicator: '貸出残高', definition: '預金銀行の民間向け国内与信（GDP比%、世界銀行 FD.AST.PRVT.GD.ZS）',
     sector: null,
     intl: { code: 'WB:FD.AST.PRVT.GD.ZS', label: '世界銀行 預金銀行の民間向け国内与信（GDP比%）', rebase: false, better: 'higher', source: { file: 'more-stats/worldbank_extra.csv', countryColumn: '区分', where: { 備考: '世界銀行 WDI FD.AST.PRVT.GD.ZS' } } },
