@@ -14,8 +14,10 @@ from urllib.parse import parse_qsl, urlparse
 
 try:
     from scripts.cloudflare_material_transfer import OFFICIAL_HOSTS, SCHEMA, check_target, private_output, write_json
+    from scripts.path_guard import inside_without_links
 except ModuleNotFoundError:
     from cloudflare_material_transfer import OFFICIAL_HOSTS, SCHEMA, check_target, private_output, write_json
+    from path_guard import inside_without_links
 
 
 INDEX_SCHEMA = 'cloudflare-material-index/v1'
@@ -155,17 +157,15 @@ def public_output(path):
     allowed = root / 'data' / 'cloudflare'
     if '..' in path.parts:
         raise IndexError('public_output_escape')
-    requested = path.absolute()
-    if not requested.is_relative_to(allowed) or requested == allowed:
-        raise IndexError('public_output_escape')
-    for current in (requested, *requested.parents):
-        if current == root:
-            break
-        if current.is_symlink() or getattr(current, 'is_junction', lambda: False)():
-            raise IndexError('public_output_symlink')
     resolved_allowed = allowed.resolve()
-    resolved = requested.resolve()
-    if not resolved_allowed.is_relative_to(root) or not resolved.is_relative_to(resolved_allowed) or resolved.is_dir():
+    if not resolved_allowed.is_relative_to(root):
+        raise IndexError('public_output_escape')
+    resolved = path.resolve()
+    if resolved == resolved_allowed or not resolved.is_relative_to(resolved_allowed):
+        raise IndexError('public_output_escape')
+    if inside_without_links(root, path) is None:
+        raise IndexError('public_output_symlink')
+    if resolved.is_dir():
         raise IndexError('public_output_escape')
     return resolved
 

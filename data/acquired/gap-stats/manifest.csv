@@ -1,0 +1,15 @@
+url,path,sha256,http,fetched_at
+"https://sdmx.oecd.org/public/rest/data/OECD.ELS.SAE,DSD_TENURE@DF_TENURE_FREQ,1.0/JPN+USA+GBR+FRA+DEU+ITA+CAN+KOR+NLD+NOR+SWE+ESP+AUS.TENURE_EMP+TENURE_EMP_DEP..F+M+_T._T.M_LT12+Y_GE10.A?startPeriod=1990",.local/gap-stats/raw/oecd-tenure.csv,1e2dbdcda2d156016dc2731890720ec449fd99fda20b5fb70945e5945251f80c,200,2026-10-17T03:50:07+00:00
+"https://sdmx.oecd.org/public/rest/data/OECD.ELS.SAE,DSD_EARNINGS@AV_AN_WAGE,1.0/?startPeriod=1990",.local/gap-stats/raw/oecd-wages.csv,32faea5f58c48ecc76d521c24cb8a11fea148cee73a067add313c7cbe474cd55,200,2026-10-17T03:50:08+00:00
+"https://sdmx.oecd.org/public/rest/data/OECD.STI.DEP,DSD_BB_DATABASE@DF_BB_TEL_DATABASE,2.0/?startPeriod=1990",.local/gap-stats/raw/oecd-broadband.csv,03d4a76f8080b91f756c28647ceab6b5331c7d92f3f8418d99bef2dcab4118cf,200,2026-10-17T03:50:10+00:00
+https://api.worldbank.org/v2/country/JPN;USA;GBR;FRA;DEU;ITA;CAN;KOR;NLD;NOR;SWE;ESP;AUS/indicator/IT.NET.BBND.P2?format=json&per_page=2000&date=1960:2025,.local/gap-stats/raw/wb-IT.NET.BBND.P2.json,1d439e1aa4657084768207b224013a7248f9dcf8d6514794c97f127cf1354762,200,2026-10-17T03:50:12+00:00
+https://api.worldbank.org/v2/country/JPN;USA;GBR;FRA;DEU;ITA;CAN;KOR;NLD;NOR;SWE;ESP;AUS/indicator/GFDD.SI.02?format=json&per_page=2000&date=1960:2025,.local/gap-stats/raw/wb-GFDD.SI.02.json,0affc459e7238731274aafc622a7a5ed1f22a9b3773441339e7f30094893955e,200,2026-10-17T03:50:14+00:00
+https://www.mlit.go.jp/common/001475245.xls,.local/gap-stats/raw/airport-h19-h28.xls,22821d1d6272a1f3527266967a8496501ef35869fd6f56abbec4cdd717c7be84,200,2026-10-17T03:50:16+00:00
+https://www.mlit.go.jp/koku/content/002018023.xlsx,.local/gap-stats/raw/airport-h28-r7.xlsx,f014e55ff484b2c7972bb6ea6fa088ac6837505d24103dc1eb3ab985e63a2fcb,200,2026-10-17T03:50:17+00:00
+https://www.mlit.go.jp/tetudo/content/001977439.xls,.local/gap-stats/raw/rail-unyu-seiseki.xls,4061e1d1a762038ba7a4e3dfe63920d35746cda8f38b920cbee236d744e59879,200,2026-10-17T03:50:35+00:00
+https://www.soumu.go.jp/main_content/000031924.pdf,.local/gap-stats/raw/egov-h20.pdf,659422938b730b5fcf27918e826ffe46c61fd23484c868c0f66f9c12fc886a1e,200,2026-10-17T03:50:36+00:00
+https://www.soumu.go.jp/main_content/000151031.pdf,.local/gap-stats/raw/egov-h22.pdf,6f12ca6c06e496cb484ce4942e14c8f22eb1d2519735c68c13988a317a5f91b8,200,2026-10-17T03:50:39+00:00
+https://www.soumu.go.jp/main_content/000265974.pdf,.local/gap-stats/raw/egov-h24.pdf,a57d331d36d2450c83732d673d4f1aa71a789f5b19a00383f0dc649fc92e8318,200,2026-10-17T03:50:41+00:00
+https://www.soumu.go.jp/main_content/000328257.pdf,.local/gap-stats/raw/egov-h25.pdf,4ede730c46c02a85b2a7af88834dd1811f3a699ff0e8fd41c61c5a0db687965c,200,2026-10-17T03:50:43+00:00
+https://www.soumu.go.jp/main_content/000391722.pdf,.local/gap-stats/raw/egov-h26.pdf,6772b96410899165b521f2055c42313c0063bf7d879f253ce92347ec0759b747,200,2026-10-17T03:50:44+00:00
+https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/h29/html/nc262610.html,.local/gap-stats/raw/egov-whitepaper-h29.html,87b4b3291b97de89ed345c7e319c04f5b919943d51418318636bb05bc8702638,200,2026-10-17T03:50:46+00:00

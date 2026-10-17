@@ -2,9 +2,10 @@
 import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { readFile, realpath, lstat, mkdir, writeFile } from 'node:fs/promises';
-import { dirname, join, relative, resolve, isAbsolute } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runEvidencePipeline, writeReviewPacket } from './evidence_pipeline.mjs';
+import { isStrictlyInside as inside } from './path_guard.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const digest = value => createHash('sha256').update(value).digest('hex');
@@ -13,10 +14,6 @@ const canonical = value => Array.isArray(value)
   : value && typeof value === 'object'
     ? `{${Object.keys(value).filter(k => value[k] !== undefined).sort().map(k => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`
     : JSON.stringify(value);
-const inside = (root, file) => {
-  const rel = relative(root, file);
-  return rel && rel !== '..' && !rel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) && !isAbsolute(rel);
-};
 const compact = value => value.replace(/\s+/gu, '');
 const textOnly = value => value.replace(/<[^>]*>/gu, '');
 const requireThat = (condition, reason) => { if (!condition) throw new Error(reason); };
