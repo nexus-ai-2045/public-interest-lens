@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight, Info } from 'lucide-react';
 import { ProductHeader } from './ProductHeader';
 import { formatYen } from './LawRankingPage';
+import { RankBars, type RankBarItem } from './motion';
 import { ACTION_LABEL, POSITION_LABEL, type PublicMember, type PublicMemberLaw, type PublicMembers } from './members-build';
 
 export const distributionMembersUrl = '/distribution/members.json';
@@ -62,6 +63,16 @@ function MemberDetail({ member, laws, rate, weights }: { member: PublicMember; l
   </div>;
 }
 
+/** 上位の横棒。値は純額の大きさ、幅は小さい方から並べ直す。 */
+export function topBars(members: PublicMember[], side: 'loss' | 'benefit', count = 10): RankBarItem[] {
+  const picked = side === 'loss' ? members.filter(m => m.net.median < 0).slice(0, count) : members.filter(m => m.net.median > 0).reverse().slice(0, count);
+  return picked.map(m => {
+    const ends = [Math.abs(m.net.low), Math.abs(m.net.high)].sort((a, b) => a - b);
+    const crosses = m.net.low < 0 && m.net.high > 0;
+    return { id: m.name, label: m.name, value: Math.abs(m.net.median), low: crosses ? 0 : ends[0], high: ends[1], side, note: `${m.rank}位・${m.laws.length}本の法律から`, href: `/members?name=${encodeURIComponent(m.name)}` };
+  });
+}
+
 export function MembersPage() {
   const [data, setData] = useState<PublicMembers | null>(null);
   const [error, setError] = useState('');
@@ -103,7 +114,14 @@ export function MembersPage() {
           </li>)}</ul>
           <p className="fine-note">確かさの印が「コロナ期と重なる」「未測定」の法律は、法律ランキングでは額を公開判定にしていないものです。ここでは印を付けたまま配分に含めています。参考扱いの額（段階1・貸出残高）は配分していません。額が出た法律が増えると、このページも同じ計算で更新されます。</p>
         </section>
+        <section aria-label="上位の議員" className="members-top">
+          <h3>国賊側の上位10人</h3>
+          <RankBars caption="国賊側の純額の大きい順" format={formatYen} items={topBars(data.members, 'loss')} />
+          <h3>国士側の上位10人</h3>
+          <RankBars caption="国士側の純額の大きい順" format={formatYen} items={topBars(data.members, 'benefit')} />
+        </section>
         <section aria-label="議員の一覧">
+          <h3>全員の一覧</h3>
           <div className="members-controls">
             <div role="group" aria-label="側で絞る">
               {([['all', '全員（国賊側が上）'], ['loss', '国賊側'], ['benefit', '国士側']] as const).map(([key, label]) => <button key={key} type="button" aria-pressed={side === key} onClick={() => setSide(key)}>{label}</button>)}
@@ -112,7 +130,7 @@ export function MembersPage() {
           </div>
           <p className="fine-note" role="status">{shown.length}人を表示</p>
           <ol className="members-list">{shown.map(member => <li key={member.name} className={`member-card ${member.net.median < 0 ? 'loss' : 'benefit'}`}>
-            <details>
+            <details open={shown.length === 1}>
               <summary>
                 <span className="member-rank">{member.rank}位</span>
                 <span className="member-name">{member.name}</span>
