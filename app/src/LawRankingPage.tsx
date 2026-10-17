@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, Info } from 'lucide-react';
 import { ProductHeader } from './ProductHeader';
+import { CountUp, FunnelSteps, RankBars, Reveal, ShareButton } from './motion';
 import { distributionRankingUrl, parsePublicRanking, type PublicRanking, type PublicRankingHeld } from './public-distribution';
 
 const funnel: { key: keyof PublicRanking['counts']; label: string }[] = [
@@ -51,17 +52,22 @@ export function LawRankingPage() {
       {error && <p className="state-banner" role="alert">{error}</p>}
       {data && <>
         <section aria-label="件数の絞り込み" className="law-funnel">
-          <p className="law-funnel-lead">{data.counts.enacted.toLocaleString('ja-JP')}本のうち、額を公開できたのは{data.counts.published}本です。</p>
-          <ol>{funnel.map(step => <li key={step.key}><span>{step.label}</span><strong>{data.counts[step.key].toLocaleString('ja-JP')}本</strong></li>)}</ol>
-          <p className="fine-note">途中で外れた法律は「影響なし」ではありません。資料や統計が足りず、まだ測れていないだけです。</p>
+          <p className="law-funnel-lead"><CountUp value={data.counts.enacted} format={value => `${Math.round(value).toLocaleString('ja-JP')}本`} />のうち、額を公開できたのは<CountUp className="law-funnel-hit" value={data.counts.published} format={value => `${Math.round(value)}本`} />です。</p>
+          <FunnelSteps caption="件数の絞り込み" steps={funnel.map(step => ({ key: step.key, label: step.label, count: data.counts[step.key] }))} />
+          <p className="fine-note">途中で外れた法律は「影響なし」ではありません。資料や統計が足りず、まだ測れていないだけです。棒の長さは桁の違いが見えるよう対数でそろえています。</p>
         </section>
+        {data.laws.length > 0 && <section aria-label="額の大きい順">
+          <h3>額の大きい順</h3>
+          <RankBars caption="公開している法律の額の大きい順" format={formatYen} items={[...data.laws].sort((a, b) => b.amountMedianYen - a.amountMedianYen).map(law => ({ id: law.id, label: law.title, value: law.amountMedianYen, low: law.amountLowYen, high: law.amountHighYen, side: law.side, note: `${law.side === 'loss' ? '国賊側（損失）' : '国士側（便益）'}・${law.field}${law.lowerBound ? '・下限' : ''}`, href: `#${encodeURIComponent(law.id)}` }))} />
+          <p className="fine-note">太い棒は中央値、細い線は幅（比較国の伸びの四分位）です。</p>
+        </section>}
         <section aria-label="公開している法律">
           <h3>公開している法律</h3>
           {!data.laws.length && <p className="empty-state" role="status">公開の判定が出た法律は{data.counts.publishable}本ありますが、公開の承認待ちです。承認されるまで額は表示しません。</p>}
-          {data.laws.map((law, index) => <article key={law.id} className={`law-card ${law.side}`}>
+          {data.laws.map((law, index) => <Reveal as="article" key={law.id} tone={law.side} delay={index * 60} className={`law-card ${law.side}`}><span id={law.id} className="law-anchor" />
             <p className="law-card-side">{index + 1}. {law.side === 'loss' ? '国賊側（損失）' : '国士側（便益）'}・{law.id}</p>
             <h4>{law.title}</h4>
-            <p className="law-amount"><strong>{law.lowerBound ? '少なくとも ' : ''}{formatYen(law.amountMedianYen)}</strong><span>幅 {formatYen(law.amountLowYen)}〜{formatYen(law.amountHighYen)}（比較国の伸びの四分位）</span></p>
+            <p className="law-amount"><strong>{law.lowerBound ? '少なくとも ' : ''}<CountUp value={law.amountMedianYen} format={formatYen} /></strong><span>幅 {formatYen(law.amountLowYen)}〜{formatYen(law.amountHighYen)}（比較国の伸びの四分位）</span></p>
             <dl className="policy-metrics">
               <div><dt>指標</dt><dd>{law.field}・{law.indicator}</dd></div>
               <div><dt>影響の段階</dt><dd>{law.stage}</dd></div>
@@ -72,7 +78,8 @@ export function LawRankingPage() {
             {law.lowerBound && <p className="fine-note">未測定の便益を0として数えた下限です。未測定の項目：{law.benefitStatus}</p>}
             <p className="fine-note">同じ観測グループ（{law.group}）の額は足しません。推計上の額で、確定した損害額や効果額ではありません。</p>
             <ul className="law-sources">{law.sources.map(url => <li key={url}><a href={url} target="_blank" rel="noopener noreferrer">{new URL(url).hostname === 'laws.e-gov.go.jp' ? 'e-Gov 法令' : '国会の議案情報'} <ArrowUpRight size={13} /></a></li>)}</ul>
-          </article>)}
+            <ShareButton title={`${law.title}｜法律ランキング`} text={`${law.title}：${law.side === 'loss' ? '損失' : '便益'}の推計 ${formatYen(law.amountMedianYen)}（幅 ${formatYen(law.amountLowYen)}〜${formatYen(law.amountHighYen)}）`} url={`${window.location.origin}/ranking#${encodeURIComponent(law.id)}`} />
+          </Reveal>)}
         </section>
         <section aria-label="保留の法律">
           <h3>額を出していない法律（{data.held.length}本）</h3>
