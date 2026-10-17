@@ -41,7 +41,16 @@ REASONS = {
     "R3": "損失の窓が新型コロナの時期と重なり、分けて測れない",
     "R4": "便益を減らしうる項目が未測定で、純額を出せない",
     "APPROVAL": "公開可の判定。公開の承認待ちのため、額は承認後に表示する",
+    "SOURCE": "出典チェックで一次資料と食い違いがあったため、確認がとれるまで額を公開しない",
 }
+# 出典チェック（scripts/source_check.py）が公開から外した法律。承認済みでも額を出さない。
+SOURCE_HELD = DERIVED / "source-check" / "summary.json"
+
+
+def source_held() -> set[str]:
+    if not SOURCE_HELD.exists():
+        return set()
+    return set(json.loads(SOURCE_HELD.read_text(encoding="utf-8"))["heldOut"])
 
 
 def _rows(name: str) -> list[dict[str, str]]:
@@ -117,7 +126,7 @@ def _law(row: dict[str, str], loss_row: dict[str, str], sources: list[str], enfo
     }
 
 
-def build(approved: list[str], approved_at: str) -> dict:
+def build(approved: list[str], approved_at: str, held_by_check: set[str] | None = None) -> dict:
     if approved and not DATE.fullmatch(approved_at):
         raise ValueError("承認日は YYYY-MM-DD で渡してください")
     if len(set(approved)) != len(approved) or any(not LAW_ID.fullmatch(item) for item in approved):
@@ -130,6 +139,8 @@ def build(approved: list[str], approved_at: str) -> dict:
         raise ValueError(f"公開可でない法律は承認できません: {unknown}")
     enacted = {f"{row['種別']}-{row['提出回次']}-{row['番号']}": row for row in _rows("enacted")}
     enforcement = {row["id"]: row for row in _rows("enforcement")}
+    held_by_check = source_held() if held_by_check is None else held_by_check
+    approved = [law_id for law_id in approved if law_id not in held_by_check]
     laws, held = [], []
     for row in publish:
         if row["公開可否"] == "公開可" and row["id"] in approved:
@@ -138,7 +149,9 @@ def build(approved: list[str], approved_at: str) -> dict:
                 raise ValueError(f"施行日がありません: {row['id']}")
             laws.append(_law(row, loss[row["id"]], _sources(row["id"], enacted, enforcement), enforced))
             continue
-        code = "APPROVAL" if row["公開可否"] == "公開可" else row["判定表の行"]
+        code = row["判定表の行"]
+        if row["公開可否"] == "公開可":
+            code = "SOURCE" if row["id"] in held_by_check else "APPROVAL"
         if code not in REASONS:
             raise ValueError(f"理由コードが不明です: {row['id']} {code}")
         held.append({
