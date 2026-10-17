@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseCsv, toCsv, type Tables } from './impact-batch';
 import {
-  LOSS_HEADER, LOSS_SOURCES, alignControls, buildLossInput, evaluateLosses, lossRow, lossWindow, observationGroups, qualifies, toLossLaw, type LossSource,
+  LOSS_HEADER, LOSS_SOURCES, OECD_FILE, alignControls, buildLossInput, evaluateLosses, lossRow, lossWindow, observationGroups, qualifies, toLossLaw, type LossSource,
 } from './loss-batch';
 
 // すべて人工の表です。実在の統計ではありません。
@@ -76,7 +76,8 @@ describe('1法律の入力と判定ルールの呼び出し', () => {
   });
 
   it('比較国の同じ定義の系列が無い分野は、比較国0か国として判定ルールに渡し、保留になる（0で埋めない）', () => {
-    const [row] = evaluateLosses(tables, [impactRow('T1', '通信業の付加価値', '2015-04-01', '段階3', '貢献')], LOSS_SOURCES);
+    const snaOnly: LossSource = { ...LOSS_SOURCES[0], oecd: undefined };
+    const [row] = evaluateLosses(tables, [impactRow('T1', '通信業の付加価値', '2015-04-01', '段階3', '貢献')], [snaOnly]);
     expect(row.built!.input.controls).toEqual([]);
     expect(row.built!.input.baseNominalYen).toBe(25000 * 1e9);
     expect(row.result!.lossYen).toBeNull();
@@ -87,6 +88,67 @@ describe('1法律の入力と判定ルールの呼び出し', () => {
     const [row] = evaluateLosses(tables, [impactRow('Z', '対応なし', '2015-04-01', '段階2', '貢献')], [loanSource()]);
     expect(row.built).toBeNull();
     expect(lossRow(row)[LOSS_HEADER.indexOf('理由')]).toContain('対応がない');
+  });
+});
+
+// OECD 表6の形の人工データ。LR は比較国が毎年2%前後伸び、日本は2014年から横ばい。L はわざと違う値にし、使われないことを確かめる。
+const oecdYears = Array.from({ length: 26 }, (_, i) => 2000 + i);
+const oecdRows = (country: string, industry: string, f: (y: number) => number, opts: { from?: number; to?: number } = {}) =>
+  oecdYears.filter(y => y >= (opts.from ?? 2000) && y <= (opts.to ?? 2025)).flatMap(y => [
+    [country, industry, '総付加価値（B1G）', 'LR', y, f(y), '百万X', 2020, 'https://example.invalid'],
+    [country, industry, '総付加価値（B1G）', 'L', y, f(y) * (y % 2 ? 3 : 0.5), '百万X', 2015, 'https://example.invalid'],
+    [country, industry, '総付加価値（B1G）', 'V', y, f(y) * 1.1, '百万X', '', 'https://example.invalid'],
+  ]);
+const grow = (r: number) => (y: number) => 1000 * r ** (y - 2000);
+const oecdTables = (rows: (string | number)[][]): Tables => new Map([...tables, [OECD_FILE, csv('国,産業,指標,価格,年,値,単位,基準年,出典URL', rows)]]);
+const jpFlat = (y: number) => 1000 * 1.02 ** (Math.min(y, 2013) - 2000);
+const oecd = oecdTables([
+  ...oecdRows('JPN', 'J', jpFlat), ...oecdRows('JPN', 'I', jpFlat),
+  ...['AUS', 'FRA', 'ITA', 'KOR'].flatMap((c, i) => oecdRows(c, 'J', grow(1.018 + i * 0.002))),
+  ...['AUS', 'FRA', 'ITA'].flatMap((c, i) => oecdRows(c, 'I', grow(1.018 + i * 0.002))),
+  ...oecdRows('CAN', 'J', grow(1.02), { from: 2007 }),
+]);
+
+describe('OECD 表6の産業別付加価値で計算する分野', () => {
+  it('日本も比較国も LR（2020年基準）で比べ、名目は日本の V（百万円）で換算する。L は使わない', () => {
+    const [row] = evaluateLosses(oecd, [impactRow('T1', '通信業の付加価値', '2015-04-01', '段階3', '悪影響')]);
+    const b = row.built!;
+    expect(b.input.treated.find(p => p.asOf === '2012-12-31')!.value).toBeCloseTo(jpFlat(2012), 6);
+    expect(b.input.baseNominalYen).toBeCloseTo(jpFlat(2014) * 1.1 * 1e6, 0);
+    expect(b.input.controls.map(c => c.country)).toEqual(['AUS', 'CAN', 'FRA', 'ITA', 'KOR']);
+    expect(b.input.controls[0].points.at(-1)!.value).toBeCloseTo(grow(1.018)(2024), 6);
+    expect(row.result!.lossYen!.median).toBeGreaterThan(0);
+    expect(row.result!.publishable).toBe(false);
+    expect(lossRow(row)[LOSS_HEADER.indexOf('計算式の要素')]).toContain('AUS は年度');
+  });
+
+  it('窓が2010年をまたぐ法律では ITA を比較国から外す（またがなければ使う）', () => {
+    const [crossing] = evaluateLosses(oecd, [impactRow('T2', '通信業の付加価値', '2014-04-01', '段階3', '悪影響')]);
+    expect(crossing.built!.input.controls.map(c => c.country)).toEqual(['AUS', 'CAN', 'FRA', 'KOR']);
+    expect(crossing.built!.elements.join('／')).toContain('除外：ITA');
+    const [notCrossing] = evaluateLosses(oecd, [impactRow('T3', '通信業の付加価値', '2015-04-01', '段階3', '悪影響')]);
+    expect(notCrossing.built!.input.controls.map(c => c.country)).toContain('ITA');
+  });
+
+  it('窓の年をすべて持たない国は使わない（CAN は2007年から）', () => {
+    const [row] = evaluateLosses(oecd, [impactRow('T4', '通信業の付加価値', '2011-04-01', '段階3', '悪影響')]);
+    expect(row.built!.input.controls.map(c => c.country)).toEqual(['AUS', 'FRA', 'KOR']);
+  });
+
+  it('宿泊・飲食（I）は系列の無い KOR を補わずに外し、3か国に足りなければ判定ルールが保留にする', () => {
+    const [row] = evaluateLosses(oecd, [impactRow('S1', '宿泊者数', '2014-04-01', '段階3', '悪影響')]);
+    // ITA は2010年をまたぐので外れ、KOR は系列が無いので AUS・FRA の2か国だけ。
+    expect(row.built!.input.controls.map(c => c.country)).toEqual(['AUS', 'FRA']);
+    expect(row.built!.elements.join('／')).toContain('KOR は宿泊・飲食（I）の系列が無い');
+    expect(row.result!.lossYen).toBeNull();
+    expect(row.result!.reason).toContain('比較国が2か国で、3か国に足りません');
+    expect(lossRow(row)[LOSS_HEADER.indexOf('損失または便益の額')]).toBe('');
+  });
+
+  it('額の向きが影響段階の向きと逆なら、判定ルールのとおり保留にする', () => {
+    const [row] = evaluateLosses(oecd, [impactRow('T5', '通信業の付加価値', '2015-04-01', '段階3', '貢献')]);
+    expect(row.result!.lossYen).toBeNull();
+    expect(row.result!.reason).toContain('一致しない');
   });
 });
 

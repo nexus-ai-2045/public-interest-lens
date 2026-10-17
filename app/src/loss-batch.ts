@@ -20,14 +20,18 @@ const sna = (names: Partial<Record<(typeof SNA_BASES)[number], string>>): Sna[] 
 /**
  * 指標ごとの損失額の入力。loss-rule-v1 は「分野の実質付加価値」を日本と比較国で比べる。
  * - sector：日本の分野の実質・名目付加価値（国民経済計算。基準ごとに候補、つながない）。
- * - intl：比較国の同じ定義の系列。取得済みの統計に無ければ null（比較国0か国として判定ルールに渡し、保留になる）。
+ * - oecd：日本と比較国の同じ定義の分野の付加価値（OECD 表6）。あればこれで計算し、sector は名目の差を示す比較用にだけ使う。
+ * - intl：比較国の同じ定義の系列。どちらも無ければ比較国0か国として判定ルールに渡し、保留になる。
  * - reference：参考扱い（合計に入れない）。
  * 貸出残高だけは付加価値ではなく、世界銀行の与信のGDP比を日本と比較国で比べ、名目GDPで円に直す（下の LOAN_NOTE）。
  */
 export type LossSource = {
   indicator: string;
   definition: string;
+  /** 日本の国民経済計算（基準ごとの候補）。oecd があるときは比較用（差を計算式の要素に書くだけ）。 */
   sector: Sna[] | null;
+  /** 日本と比較国の同じ定義の分野の付加価値（OECD 表6）。実質は LR（全国2020年基準の連鎖実質）、名目は V。L は国で基準年が違うので使わない。 */
+  oecd?: OecdSpec;
   intl: IntlSpec | null;
   /** 名目GDP（与信のGDP比を円に直すときの分母）。sector が null のときに使う。 */
   gdp?: Sna[];
@@ -37,20 +41,47 @@ export type LossSource = {
   breaks?: { year: number; evidence: string }[];
 };
 
+/** OECD 表6の産業（ISIC Rev.4）。excludeIfCrossing の国は、損失額の窓がその年をまたぐ法律で比較国から外す。 */
+export type OecdSpec = {
+  industry: string;
+  label: string;
+  excludeIfCrossing?: { country: string; year: number; evidence: string }[];
+  /** 比較国に使ったときに計算式の要素へ書く注記（国ごと）。 */
+  countryNotes?: Record<string, string>;
+  /** 系列の無い国の注記（補わない）。 */
+  missing?: Record<string, string>;
+};
+
+export const OECD_FILE = 'oecd-industry/industry_va.csv';
+const oecdRef = (industry: string, price: 'LR' | 'V', country: string): Ref => ({ file: OECD_FILE, where: { 国: country, 産業: industry, 価格: price } });
+/** OECD 表6の国ごとの系列（価格 LR または V）。 */
+export function oecdByCountry(tables: Tables, industry: string, price: 'LR' | 'V'): Map<string, Map<number, number>> {
+  const rows = tables.get(OECD_FILE);
+  if (!rows) throw new Error(`未読込のファイル: ${OECD_FILE}`);
+  const countries = [...new Set(rows.filter(r => r['産業'] === industry && r['価格'] === price).map(r => r['国']))].sort();
+  return new Map(countries.map(c => [c, extractSeries(tables, oecdRef(industry, price, c))]));
+}
+
+const ITA_BREAK = { country: 'ITA', year: 2010, evidence: 'ITA は2010年の観測に系列の断絶フラグ（原本の OBS_STATUS=B）があるため、窓が2010年をまたぐ法律では比較国から外す' };
+const AUS_NOTE = 'AUS は年度（7〜6月）の可能性が高い（OECD は年で記録）。そのまま使う';
+const OECD_NOTE = '日本・比較国とも OECD 国民経済計算 表6（総付加価値 B1G、ISIC Rev.4）。実質は連鎖実質・2020年基準（LR）、名目は V。国により基準年の違う連鎖実質（L）は使わない。単位は自国通貨なので伸び（比）だけを比べる';
+
 const LOAN_NOTE = '参考：影響段階は日本銀行の国内銀行の総貸出で判定したが、損失額は比較国と同じ定義が要るので世界銀行の与信のGDP比で測る。「貸出が多いほど良い」という向きは機械的な仮定で、1999〜2001年施行の6本はほぼ同じ窓の同じ系列（実質的に1つの観測）。合計に入れない。損失額は付加価値の損失ではなく、与信残高（GDP比）の比較国との差を毎年の名目GDPではなく開始前最後の年の名目GDPで円に直して足した「残高の差の累積」';
 
 export const LOSS_SOURCES: LossSource[] = [
   {
-    indicator: '通信業の付加価値', definition: '情報通信業の実質付加価値',
+    indicator: '通信業の付加価値', definition: '情報通信業（ISIC Rev.4 J）の実質付加価値',
     sector: sna({ 2020: '9.情報通信業', 2015: '9.情報通信業', 2011: '9.情報通信業', 2005: '(10)情報通信業' }),
+    oecd: { industry: 'J', label: '情報通信（J）', excludeIfCrossing: [ITA_BREAK], countryNotes: { AUS: AUS_NOTE } },
     intl: null, reference: false,
-    note: '比較国の情報通信業の実質付加価値（国際の産業別付加価値。OECD 国民経済計算の産業別表など）は取得していない',
+    note: OECD_NOTE,
   },
   {
-    indicator: '宿泊者数', definition: '宿泊・飲食サービス業の実質付加価値',
+    indicator: '宿泊者数', definition: '宿泊・飲食サービス業（ISIC Rev.4 I）の実質付加価値',
     sector: sna({ 2020: '8.宿泊・飲食サービス業', 2015: '8.宿泊・飲食サービス業', 2011: '8.宿泊・飲食サービス業' }),
+    oecd: { industry: 'I', label: '宿泊・飲食サービス（I）', excludeIfCrossing: [ITA_BREAK], countryNotes: { AUS: AUS_NOTE }, missing: { KOR: 'KOR は宿泊・飲食（I）の系列が無いため比較国に入れない（補わない）' } },
     intl: null, reference: false,
-    note: '損失額は付加価値で測るため、宿泊者数ではなく宿泊・飲食サービス業の付加価値を使う（飲食を含むため代理）。比較国の宿泊・飲食サービス業の実質付加価値は取得していない',
+    note: `損失額は付加価値で測るため、宿泊者数ではなく宿泊・飲食サービス業の付加価値を使う（飲食を含むため代理）。${OECD_NOTE}`,
   },
   {
     indicator: '貸出残高', definition: '預金銀行の民間向け国内与信（GDP比%、世界銀行 FD.AST.PRVT.GD.ZS）',
@@ -121,6 +152,41 @@ export function buildLossInput(tables: Tables, law: LossLaw, sources: LossSource
   const { from, to } = lossWindow(law.start);
   const elements: string[] = [];
   const judgement = { stage: law.stage, direction: law.direction };
+
+  if (source.oecd) {
+    const { industry, label, excludeIfCrossing = [], countryNotes = {}, missing = {} } = source.oecd;
+    const real = oecdByCountry(tables, industry, 'LR'), nominalAll = oecdByCountry(tables, industry, 'V');
+    const jpReal = real.get('JPN') ?? new Map<number, number>();
+    const excluded = excludeIfCrossing.filter(e => e.year > from && e.year <= to);
+    const excludedSet = new Set(excluded.map(e => e.country));
+    const candidates: CountrySeries[] = [...real.entries()].filter(([c]) => c !== 'JPN' && !excludedSet.has(c))
+      .map(([country, m]) => ({ country, points: toPoints(m, from, to) }));
+    const aligned = alignControls(toPoints(jpReal, from, to), candidates, law.start);
+    const tr = aligned.treated;
+    const pre = tr.filter(p => p.asOf < law.start);
+    const baseYear = pre.length ? Number(pre[pre.length - 1].asOf.slice(0, 4)) : null;
+    const nominal = baseYear !== null ? nominalAll.get('JPN')?.get(baseYear) ?? null : null;
+    // OECD の単位は百万円。
+    const baseNominalYen = nominal === null ? 0 : nominal * 1e6;
+    elements.push(`日本：OECD 表6 JPN ${label} 連鎖実質（LR、2020年基準）${tr.length ? `${tr[0].asOf.slice(0, 4)}〜${tr[tr.length - 1].asOf.slice(0, 4)}年` : 'なし'}`);
+    let nominalLabel = baseYear !== null && nominal !== null ? `開始前最後の年（${baseYear}年）の名目付加価値 ${nominal}百万円（OECD V）` : '開始前最後の年の名目付加価値なし';
+    const snaChosen = source.sector && baseYear !== null ? chooseSna(tables, source.sector, law.start) : null;
+    const snaNom = snaChosen && baseYear !== null ? snaChosen.nominal.get(baseYear) : undefined;
+    if (nominal !== null && snaNom !== undefined) {
+      const diff = nominal / (snaNom * 1e3) - 1;
+      nominalLabel += `。国民経済計算${snaChosen!.option.base}基準「${snaChosen!.option.activity}」の名目は${snaNom}十億円（${Math.abs(diff) < 5e-7 ? '同じ値' : `差${(diff * 100).toFixed(2)}%`}）`;
+    }
+    elements.push(nominalLabel);
+    const used = aligned.controls.map(c => c.country);
+    elements.push(`比較国：${used.length}か国（${used.join('・')}）。OECD 表6の同じ産業の LR で、日本の窓の年をすべて持つ国だけ`);
+    for (const e of excluded) elements.push(`除外：${e.evidence}`);
+    for (const [c, why] of Object.entries(missing)) if (!real.has(c)) elements.push(`除外：${why}`);
+    for (const c of used) if (countryNotes[c]) elements.push(`注記：${countryNotes[c]}`);
+    const lastPost = tr.length ? Number(tr[tr.length - 1].asOf.slice(0, 4)) : null;
+    if (lastPost !== null && lastPost < Math.min(to, Math.max(...jpReal.keys()))) elements.push(`比較国をそろえるため開始後は${lastPost}年まで`);
+    elements.push('規制の便益：未測定');
+    return { input: { definition: source.definition, start: law.start, judgement, treated: tr, controls: aligned.controls, baseNominalYen, regulationBenefitYen: null }, elements, note: source.note, reference: source.reference, baseYear };
+  }
 
   if (source.sector) {
     const chosen = chooseSna(tables, source.sector, law.start);
