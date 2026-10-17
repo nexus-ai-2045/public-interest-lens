@@ -121,6 +121,18 @@ describe('振り分け：系統1と系統2の比較（設計決定0007）', () =
     expect(holdByTriage(law, ag).verdict).toBe(HELD_BY_TRIAGE);
   });
 
+  it('新分野（field-expansion-v1）の法律で系統2の行がまだ無ければ、系統1が評価対象でも保留にする（新しい法律は系統2のラベル付けまで入らない）', () => {
+    const newLaw: LawResult = { ...law, field: '建設', indicator: '建設業の付加価値' };
+    const line1 = { id: 'x', 結果: '評価対象', 分野: '建設', 指標: '建設業の付加価値' };
+    const ag = compareTriage('x', line1, undefined);
+    expect(ag).toMatchObject({ agreed: false, reason: '系統2の振り分けが無い' });
+    expect(holdByTriage(newLaw, ag).verdict).toBe(HELD_BY_TRIAGE);
+    // 系統2が同じ新分野・同じ指標に決めれば一致する
+    expect(compareTriage('x', line1, { id: 'x', 系統2_判定: '評価対象', 系統2_分野: '建設', 系統2_指標: '建設業の付加価値' }).agreed).toBe(true);
+    // 直接と代理で指標が違えば不一致
+    expect(compareTriage('x', line1, { id: 'x', 系統2_判定: '評価対象', 系統2_分野: '建設', 系統2_指標: '建設業の付加価値（代理）' }).agreed).toBe(false);
+  });
+
   it('どちらかの系統が無ければ不一致（保留）', () => {
     expect(compareTriage('x', l1, undefined).agreed).toBe(false);
     expect(compareTriage('x', undefined, l2).reason).toBe('系統1の振り分けが無い');

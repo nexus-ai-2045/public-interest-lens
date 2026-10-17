@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FIELDS, PICK_TABLES, firstLawTitle, pickIndicator, triageV2 } from './indicator-pick';
+import { FIELDS, FIELD_WORDS, NEW_FIELDS, NEW_FIELD_WORDS, PROXY_SUFFIX, PICK_TABLES, firstLawTitle, newIndicator, pickIndicator, triageV2 } from './indicator-pick';
 
 // 提案 docs/提案/指標の選び方-v1.md の 4-1（指標の選び方の食い違い22本）と 4-2（評価対象の食い違い6本）の表をそのまま期待値にする。
 const PICK_CASES: [string, string, string, string][] = [
@@ -136,5 +136,67 @@ describe('triageV2：D1〜D5', () => {
   it('純関数：同じ入力は同じ出力', () => {
     const input = { title: '労働安全衛生法等の一部を改正する法律案', kind: '実質改正', field: '労働市場' };
     expect(triageV2(input)).toEqual(triageV2({ ...input }));
+  });
+});
+
+// field-expansion-v1（docs/提案/分野の拡張-v1.md）：新分野の語は、既存8分野の語が無い題名にだけ当てる。代理の語は「（代理）」付きの別の指標（参考扱い）。
+describe('triageV2：field-expansion-v1 の新分野', () => {
+  const t = (title: string, kind: string, field: string) => triageV2({ title, kind, field });
+
+  it('新分野は9つ。水道・廃棄物は作らない（承認項目 B3 の推奨）', () => {
+    expect(NEW_FIELDS).toHaveLength(9);
+    expect(NEW_FIELDS as string[]).not.toContain('水道・廃棄物');
+    expect(t('下水道法の一部を改正する法律案', '実質改正', '対応表なし')).toMatchObject({ field: '対応表なし', verdict: '評価対象外' });
+  });
+
+  it('新分野の語は既存8分野の語と重ならない', () => {
+    const existing = new Set(Object.values(FIELD_WORDS).flat());
+    const shared = NEW_FIELDS.flatMap(f => [...NEW_FIELD_WORDS[f].direct, ...NEW_FIELD_WORDS[f].proxy]).filter(w => existing.has(w));
+    expect(shared).toEqual([]);
+  });
+
+  it('既存優先：既存8分野の語が題名にあれば、新分野の語が前にあっても既存の規則どおり', () => {
+    // 「保険」は金融の語。「介護」（医療・福祉）が前にあっても金融。
+    expect(t('介護保険法の一部を改正する法律案', '実質改正', '対応表なし')).toMatchObject({ field: '金融', indicator: '貸出残高' });
+    // 既存8分野で決まる題名の結果は、新分野を足す前と同じ（D5 の保留も含む）
+    expect(t('電子商取引法案', '新規', '通信・ネット')).toMatchObject({ verdict: '保留' });
+    expect(t('労働基準法の一部を改正する法律案', '実質改正', '労働市場')).toMatchObject({ field: '労働市場', indicator: '賃金' });
+  });
+
+  it('既存の語が無いときだけ新分野の語を当て、題名で最も前の語の分野に決める', () => {
+    expect(t('農業経営基盤強化促進法の一部を改正する法律案', '実質改正', '対応表なし')).toMatchObject({ field: '農林水産', indicator: '農林水産業の付加価値', verdict: '評価対象' });
+    expect(t('農業のための大学の整備に関する法律案', '新規', '対応表なし').field).toBe('農林水産');
+    expect(t('大学のための農業の整備に関する法律案', '新規', '対応表なし').field).toBe('教育');
+  });
+
+  it('直接の語は指標名そのまま、代理の語は「（代理）」付きの別の指標', () => {
+    const direct = t('建設業法の一部を改正する法律案', '実質改正', '対応表なし');
+    expect(direct).toMatchObject({ field: '建設', indicator: '建設業の付加価値', rules: ['D1', '建設直接'] });
+    const proxy = t('河川法の一部を改正する法律案', '実質改正', '対応表なし');
+    expect(proxy).toMatchObject({ field: '建設', indicator: '建設業の付加価値' + PROXY_SUFFIX, rules: ['D1', '建設代理'] });
+    expect(newIndicator('建設', '代理')).toBe('建設業の付加価値（代理）');
+    // 代理の語しか持たない分野は常に（代理）付き
+    for (const f of NEW_FIELDS.filter(f => NEW_FIELD_WORDS[f].direct.length === 0)) {
+      expect(t(`${NEW_FIELD_WORDS[f].proxy[0]}法案`, '新規', '対応表なし').indicator).toBe(NEW_FIELD_WORDS[f].indicator + PROXY_SUFFIX);
+    }
+  });
+
+  it('同じ位置の語が別の語の一部なら長い語を採る（建築 → 建築士）', () => {
+    expect(t('建築士法の一部を改正する法律案', '実質改正', '対応表なし')).toMatchObject({ field: '専門サービス・研究開発', indicator: '専門・科学技術、業務支援サービス業の付加価値' });
+    expect(t('土地改良法の一部を改正する法律案', '実質改正', '対応表なし').field).toBe('農林水産');
+  });
+
+  it('D2：設置法の部分にだけ新分野の語があっても、最初の法律で決める', () => {
+    expect(t('公職選挙法及び農林水産省設置法の一部を改正する法律案', '実質改正', '対応表なし').field).toBe('対応表なし');
+  });
+
+  it('種類が定型改正・組織手続なら新分野でも評価対象外。AI の入力分野に新分野名があっても受け付ける', () => {
+    expect(t('農業振興法の一部を改正する法律案', '定型改正', '対応表なし')).toMatchObject({ field: '農林水産', verdict: '評価対象外' });
+    expect(t('農業法案', '新規', '農林水産').verdict).toBe('評価対象');
+    expect(t('農業法案', '新規', '水道・廃棄物')).toMatchObject({ verdict: '保留', rules: ['D5'] });
+  });
+
+  it('語が当たらなければ対応表なしのまま', () => {
+    expect(t('公職選挙法の一部を改正する法律案', '実質改正', '対応表なし')).toMatchObject({ field: '対応表なし', indicator: '', verdict: '評価対象外' });
   });
 });

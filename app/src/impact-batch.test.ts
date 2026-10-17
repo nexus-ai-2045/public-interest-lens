@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   FISCAL_YEAR_FILES, INDICATOR_MAP, asOfYear, buildCrossCountry, buildImpactSeries, buildPairPoints, chooseOption, evaluateLaw, extractSeries, intlByCountry,
-  chooseIntlSpec, directionOf, matchTitleRule, mapRow, neededYears, resolveMapping, USAGE_TITLE_RULES, pandemicOverlap, parseCsv, startPeriod, toCsv, MAP_HEADER, type Mapping, type Tables,
+  EXPANSION_MAP, chooseIntlSpec, directionOf, matchTitleRule, mapRow, neededYears, resolveMapping, USAGE_TITLE_RULES, pandemicOverlap, parseCsv, startPeriod, toCsv, MAP_HEADER, type Mapping, type Tables,
 } from './impact-batch';
 
 // すべて人工の表です。実在の統計ではありません。
@@ -114,7 +114,8 @@ describe('対応表と1法律の判定', () => {
     const triageIndicators = ['不良債権比率', '貸出残高', '企業倒産件数', '旅客輸送の付加価値', '利用件数', '就業者数', '宿泊者数', '宿泊業の付加価値', '客室数',
       '通信業の付加価値', 'ブロードバンド普及率', 'ネット企業の時価総額', '世界輸出シェア', '生産額', '電力価格', '発電構成', 'エネルギー効率', '労働生産性', '賃金', '雇用の流動性',
       '電子申請率', '行政手続きの時間'];
-    expect(INDICATOR_MAP.map(m => m.indicator).sort()).toEqual([...triageIndicators].sort());
+    const expansion = new Set(EXPANSION_MAP.map(m => m.indicator));
+    expect(INDICATOR_MAP.map(m => m.indicator).filter(i => !expansion.has(i)).sort()).toEqual([...triageIndicators].sort());
     for (const m of INDICATOR_MAP) {
       expect(m.reason.length).toBeGreaterThan(10);
       if (m.match === '系列なし') expect(m.target ?? m.intl ?? m.titleRules ?? null).toBeNull();
@@ -209,6 +210,55 @@ describe('対応表と1法律の判定', () => {
     const r = evaluateLaw(synthetic, { id: 'x', title: 't', field: '人工', indicator: '人工', start: '2009-04-01' }, [mapping]);
     expect(r).toMatchObject({ verdict: '保留', effect: null });
     expect(r.reason).toContain('期間が足りない');
+  });
+});
+
+describe('field-expansion-v1 の新分野の指標', () => {
+  const byName = new Map(INDICATOR_MAP.map(m => [m.indicator, m]));
+
+  it('9分野から14本（直接5本＋代理9本）。水道・廃棄物は無い', () => {
+    expect(EXPANSION_MAP).toHaveLength(14);
+    expect(EXPANSION_MAP.filter(m => m.match === '直接')).toHaveLength(5);
+    expect(EXPANSION_MAP.filter(m => m.match === '代理')).toHaveLength(9);
+    expect(EXPANSION_MAP.some(m => m.field === '水道・廃棄物')).toBe(false);
+  });
+
+  it('代理は参考（向きは決めない）、直接は高いほど良い。国内は産業の実質付加価値対「合計」、GDP比は名目の産業÷「合計」', () => {
+    for (const m of EXPANSION_MAP) {
+      expect(m.reference === true).toBe(m.match === '代理');
+      expect(directionOf(m)).toBe(m.match === '代理' ? '参考（向きは決めない。議員への配分に使わない）' : '高いほど良い');
+      expect(m.indicator.endsWith('（代理）')).toBe(m.match === '代理');
+      expect(m.economy).toBeNull();
+      for (const o of m.target!.options) { expect(o.control.where).toMatchObject({ 価格: '実質(連鎖方式)', 経済活動: '合計' }); expect(o.treated.where['価格']).toBe('実質(連鎖方式)'); }
+      for (const o of m.share) { expect(o.sector.where['価格']).toBe('名目'); expect(o.total.where).toMatchObject({ 価格: '名目', 経済活動: '合計' }); }
+    }
+  });
+
+  it('2005・2000基準で分けられない分野（教育・保健衛生・専門サービス・その他のサービス）は2011基準以降の候補だけ。つなげない', () => {
+    const bases = (i: string) => byName.get(i)!.target!.options.map(o => o.name.match(/国民経済計算(\d+)基準/)![1]);
+    for (const i of ['教育の付加価値（代理）', '保健衛生・社会事業の付加価値（代理）', '専門・科学技術、業務支援サービス業の付加価値', 'その他のサービス業の付加価値（代理）']) expect(bases(i)).toEqual(['2020', '2015', '2011']);
+    for (const i of ['建設業の付加価値', '農林水産業の付加価値', '製造業の付加価値', '卸売・小売業の付加価値', '不動産業の付加価値（代理）']) expect(bases(i)).toEqual(['2020', '2015', '2011', '2005', '2000']);
+    expect(byName.get('建設業の付加価値')!.target!.options.map(o => o.treated.where['経済活動'])).toEqual(['5.建設業', '5.建設業', '5.建設業', '(4)建設業', '(4)建設業']);
+  });
+
+  const tables: Tables = new Map([
+    ['domestic-stats/sna_gdp_by_industry_2020base.csv', csv('価格,経済活動,年,値', [
+      ...[100, 100, 100, 100, 100, 101, 110, 120, 130, 140].flatMap((v, i) => [['実質(連鎖方式)', '5.建設業', 2000 + i, v], ['実質(連鎖方式)', '合計', 2000 + i, 100], ['名目', '5.建設業', 2000 + i, 5], ['名目', '合計', 2000 + i, 100]]),
+    ])],
+    ...['2015', '2011', '2005', '2000'].map(base => [`domestic-stats/sna_gdp_by_industry_${base}base.csv`, []] as [string, never[]]),
+  ]);
+
+  it('直接の指標は貢献／悪影響、同じ系列の代理の指標は上昇／低下と書く（貢献・悪影響とは読まない）', () => {
+    const law = { id: 'x', title: 't', field: '建設', start: '2005-04-01' };
+    const direct = evaluateLaw(tables, { ...law, indicator: '建設業の付加価値' });
+    const proxy = evaluateLaw(tables, { ...law, indicator: '建設業の付加価値（代理）' });
+    expect(direct.direction).toBe('貢献');
+    expect(proxy.direction).toBe('上昇');
+    expect(proxy.effect).toBe(direct.effect);
+    expect(proxy.reason).toContain('参考：代理の語に当たった法律');
+    expect(direct.verdict).toBe(proxy.verdict);
+    // 経済全体の指標を固定していないので、段階1まで
+    expect(direct.verdict).toBe('段階1');
   });
 });
 

@@ -14,7 +14,14 @@ class UrlTests(unittest.TestCase):
         url = f.build_url('JPN')
         key = url.split('/')[-1].split('?')[0]
         self.assertEqual(len(key.split('.')), 12)
-        self.assertTrue(key.startswith('A.JPN.S1.S1.B1G._Z._T+J+I+K+H._Z.XDC.V+L+LR.N.'))
+        self.assertTrue(key.startswith('A.JPN.S1.S1.B1G._Z._T+J+I+K+H+A+C+F+G+L+M+N+P+Q+R+S+T._Z.XDC.V+L+LR.N.'))
+
+
+    def test_new_sections_are_listed_and_water_waste_is_not(self):
+        # field-expansion-v1：新分野の節を足す。水道・廃棄物（D・E）は承認項目 B3 の推奨で足さない。
+        self.assertEqual(list(f.ACTIVITIES), ['_T', 'J', 'I', 'K', 'H', 'A', 'C', 'F', 'G', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T'])
+        self.assertNotIn('D', f.ACTIVITIES)
+        self.assertNotIn('E', f.ACTIVITIES)
 
 
 class UnitTests(unittest.TestCase):
@@ -32,7 +39,7 @@ class ParseTests(unittest.TestCase):
             line(year='2016', val='110'),
             line(year='2015', val='100'),
             line(price='V', year='2015', val='90'),
-            line(act='C', val='5'),
+            line(act='Z9', val='5'),
             line(tr='D1', val='7'),
             line(val=''),
             line(year='2017', val='', price='LR'),
@@ -41,6 +48,8 @@ class ParseTests(unittest.TestCase):
         self.assertEqual([(r['価格'], r['年'], r['値']) for r in rows], [('L', '2015', '100'), ('L', '2016', '110'), ('V', '2015', '90')])
         self.assertEqual(rows[0]['基準年'], '2020')
         self.assertEqual(rows[2]['基準年'], '')
+        self.assertEqual(f.parse_table(HEAD + '\n' + line(act='C', val='5'), 'U')[0]['産業'], 'C')  # 新しい節は表に出る
+        self.assertEqual(f.parse_table(HEAD + '\n' + line(act='D', val='5'), 'U'), [])  # D は取得しない
         self.assertEqual(rows[0]['単位'], '百万JPY')
         self.assertEqual(rows[0]['出典URL'], 'U')
 
