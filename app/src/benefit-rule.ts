@@ -1,5 +1,8 @@
 /**
- * 規制の便益の判定ルール（判定ルール版 benefit-rule-v1）。提案は docs/提案/便益ルール-v1.md。
+ * 規制の便益の判定ルール（判定ルール版 benefit-rule-v1.1）。提案は docs/提案/便益ルール-v1.md。
+ * v1.1 の改定（R4 だけ）：測った結果が既に便益の側（影響段階が貢献で、測った純額も便益）の法律では、
+ * 足されても便益を増やすだけの未測定（下の UNMEASURED_SIGN が「加算のみ」）は公開を止めず、額を「下限（未測定の便益あり）」として出す。
+ * 便益を減らしうる未測定（費用を含む種類、符号が定まらない種類）は今までどおり止める。損失の側（悪影響）の法律は変えない。
  * 便益の状態（内包・円換算済み・検出されず・検出・未換算・未測定）と、公開の判定表（R1〜R6）、新型コロナの窓の扱いをここだけに置きます。
  * 便益の指標の差の判定は impact-rule-v1（app/src/impact-rule.ts の judgeImpact）をそのまま使い、ここでは判定しません。
  * 損失額は loss-rule-v1（app/src/loss-rule.ts）が出し、ここではその結果と便益を組み合わせるだけです。
@@ -12,7 +15,7 @@
 import { judgeImpact, type ImpactPoint } from './impact-rule';
 import type { LossResult } from './loss-rule';
 
-export const BENEFIT_RULE_VERSION = 'benefit-rule-v1';
+export const BENEFIT_RULE_VERSION = 'benefit-rule-v1.1';
 
 /** 便益の種類（提案 2-4 の対応表。事前に固定）。「対応表外（…）」は表に無い種類で、指標と比較群が決まっていないので未測定になる。 */
 export const BENEFIT_KINDS = ['経済（内包）', '経済（付加価値の外）', '消費者保護', '金融の安定', '安全（事故）', '安全（犯罪）', 'プライバシー', '環境', '移転'] as const;
@@ -31,6 +34,8 @@ export type BenefitMeasurement = {
   effect: number | null;
   spread: number | null;
   reason: string;
+  /** 「検出・未換算」のとき、判定の向き（円換算した額の向きが判定と食い違ったものは付けない）。 */
+  detected?: 'benefit' | 'harm';
 };
 
 /** 表示の文言。既定1：「検出されず」は「便益は検出されず」と書く。 */
@@ -88,7 +93,7 @@ export function measureBenefit(input: BenefitSeriesInput): BenefitMeasurement {
   if (j.effect === null) return { ...base, ...facts, state: '未測定', yen: null, reason: `${input.series}：${j.reason}` };
   if (j.stage === null) return { ...base, ...facts, state: '検出されず', yen: ZERO, reason: `${input.series}：${j.reason}。既定1により便益0（便益は検出されず）` };
   const dir = j.direction === 'benefit' ? '改善' : '悪化';
-  if (!input.unit) return { ...base, ...facts, state: '検出・未換算', yen: null, reason: `${input.series}：段階${j.stage}（${dir}）。公的機関が公表した単価が無いため円にしない（既定3）` };
+  if (!input.unit) return { ...base, ...facts, state: '検出・未換算', yen: null, detected: j.direction ?? undefined, reason: `${input.series}：段階${j.stage}（${dir}）。公的機関が公表した単価が無いため円にしない（既定3）` };
   const prePts = points.filter(p => p.asOf < input.start).slice(-MAX_PRE_YEARS);
   const preGap = mean(prePts.map(p => p.treated - p.control));
   const post = points.filter(p => p.asOf >= input.start).slice(0, input.maxYears);
@@ -117,6 +122,41 @@ export function combineBenefits(ms: BenefitMeasurement[]): YenRange | null {
   }
   return sum;
 }
+
+// ---- 未測定の符号（v1.1。種類ごとに事前に固定する） ----
+
+/**
+ * 未測定（または検出・未換算）の便益が、測れたときに便益を減らしうるか。
+ * - 加算のみ：防いだ被害だけを数える種類で、規制の費用の項目を同じ種類に含まない。測れても便益を増やす（または0）だけ。
+ * - 減らしうる：費用・悪化の面を同じ種類に含む、または指標・向きが事前に固定されていない。
+ * 法律ごとの調整はしない（種類だけで決める）。表の当てはめは AI の解釈で、採用には人の確認が要る。
+ */
+export type UnmeasuredSign = '加算のみ' | '減らしうる';
+export const UNMEASURED_SIGN: Record<string, { sign: UnmeasuredSign; why: string }> = {
+  '安全（犯罪）': { sign: '加算のみ', why: '指標は罪種別の認知・検挙件数で、防いだ被害だけを数える（費用の項目を含まない）' },
+  '安全（事故）': { sign: '加算のみ', why: '指標は事故・災害の件数で、防いだ被害だけを数える（費用の項目を含まない）' },
+  'プライバシー': { sign: '加算のみ', why: '指標は漏えい等の報告件数で、防いだ被害だけを数える（費用の項目を含まない）' },
+  '環境': { sign: '加算のみ', why: '指標は排出量・測定値で、防いだ被害だけを数える（費用の項目を含まない）' },
+  '消費者保護': { sign: '減らしうる', why: '供給・取引の制限で、消費者が利用できる商品・融資が減る面（費用）を同じ種類に含む' },
+  '金融の安定': { sign: '減らしうる', why: '規制による貸出の抑制や、救済の期待による危険の増加（モラルハザード）で、破綻・不良債権が増える向きもありうる' },
+  '経済（付加価値の外）': { sign: '減らしうる', why: '海外の出資先から得る所得は、出資の損失（減損）で負になりうる。出資に使った資金の機会費用も損失額の系列の外' },
+};
+export function unmeasuredSign(m: BenefitMeasurement): { sign: UnmeasuredSign; why: string } {
+  if (m.kind === '目的の分類') return { sign: '減らしうる', why: '目的の分類が保留で、種類が決まっていない' };
+  if (/^対応表外（.+）$/.test(m.kind)) return { sign: '減らしうる', why: '対応表に無い種類で、指標・比較群・向きが事前に固定されていない' };
+  const t = UNMEASURED_SIGN[m.kind];
+  if (!t) return { sign: '減らしうる', why: '符号の表に無い種類' };
+  if (t.sign === '加算のみ' && m.state === '検出・未換算' && m.detected !== 'benefit') {
+    return { sign: '減らしうる', why: m.detected === 'harm' ? '指標が悪化の向きで検出された' : '円換算した額の向きが判定の向きと一致しない' };
+  }
+  return t;
+}
+
+/** 下限の表示（v1.1）。 */
+export const LOWER_BOUND_LABEL = '下限（未測定の便益あり）';
+
+/** 法律の側（影響段階の向き）。国士側＝貢献、国賊側＝悪影響。法律についての表示で、人物には付けない。 */
+export const sideLabel = (d: 'benefit' | 'harm' | null | undefined) => d === 'benefit' ? '国士側（貢献）' : d === 'harm' ? '国賊側（悪影響）' : '保留（向きなし）';
 
 // ---- 新型コロナの窓（既定2） ----
 
@@ -171,10 +211,12 @@ export type PublishInput = {
   benefits: BenefitMeasurement[];
   /** 判定に使う窓（新型コロナの規則で切った窓、または元の窓）での、便益を差し引く前の額。 */
   grossLoss: LossResult | null;
-  /** 同じ窓で、便益（regulationBenefitYen）を渡した loss-rule-v1 の結果。 */
+  /** 同じ窓で、便益（regulationBenefitYen）を渡した loss-rule-v1 の結果。下限で出す場合は、測った便益だけの合計を渡したもの。 */
   finalLoss: LossResult | null;
+  /** impact-rule-v1 の影響段階の向き（v1.1 の R4 で使う）。省略は null（緩めない）。 */
+  direction?: 'benefit' | 'harm' | null;
 };
-export type PublishDecision = { row: PublishRow; publishable: boolean; reason: string; net: YenRange | null };
+export type PublishDecision = { row: PublishRow; publishable: boolean; reason: string; net: YenRange | null; lowerBound: boolean };
 
 /**
  * 純額の幅。向きが厳しい側で組む：下限＝損失の下限−便益の上限、上限＝損失の上限−便益の下限。
@@ -183,19 +225,31 @@ export const netRange = (loss: YenRange, benefit: YenRange): YenRange => ({ low:
 
 /** 上から順に当てはめ、最初に当たった行で決める。「公開可」は公開の候補で、実際の公開は人が一括で承認する（設計決定0007 §6）。 */
 export function decidePublication(p: PublishInput): PublishDecision {
-  const no = (row: PublishRow, reason: string, net: YenRange | null = null): PublishDecision => ({ row, publishable: false, reason, net });
+  const no = (row: PublishRow, reason: string, net: YenRange | null = null, lowerBound = false): PublishDecision => ({ row, publishable: false, reason, net, lowerBound });
   if (p.reference) return no('R1', '公開不可：参考の行（貸出残高）は合計に入れず公開の対象にしない');
   if (p.lossBlocked) return no('R1', `公開不可：loss-rule-v1 が保留（${p.lossBlocked}）`);
   if (!p.originalLoss?.lossYen) return no('R1', `公開不可：loss-rule-v1 が保留（${p.originalLoss?.reason ?? '入力なし'}）`);
   if (p.directionConflict) return no('R2', '保留（向きの矛盾）：目的が損失額の指標を抑えることなので、その減少を損失に数えない');
   if (p.covid.applies && !p.covid.separable) return no('R3', `公開不可：${p.covid.reason}`);
   const missing = p.benefits.filter(b => b.yen === null);
-  if (missing.length) return no('R4', `公開不可（便益を差し引けない）：${missing.map(b => `${b.kind}が${b.state}（${b.reason}）`).join('／')}`);
-  const benefit = combineBenefits(p.benefits)!;
+  const measured = p.benefits.filter(b => b.yen !== null);
   const gross = p.grossLoss?.lossYen;
+  let lowerBound = false;
+  if (missing.length) {
+    const block = (extra = '') => no('R4', `公開不可（便益を差し引けない）：${missing.map(b => `${b.kind}が${b.state}（${b.reason}）`).join('／')}${extra}`);
+    // v1.1：貢献の法律で、測った分だけの純額が便益の側なら、加算のみの未測定は止めない（額は下限）。
+    const measuredNet = gross ? netRange(gross, combineBenefits(measured)!) : null;
+    if (p.direction !== 'benefit' || !measuredNet || measuredNet.median >= 0) return block();
+    const signs = missing.map(b => ({ b, ...unmeasuredSign(b) }));
+    const reducing = signs.filter(s => s.sign === '減らしうる');
+    if (reducing.length) return block(`。v1.1：便益の側だが、便益を減らしうる未測定がある（${reducing.map(s => `${s.b.kind}：${s.why}`).join('／')}）`);
+    lowerBound = true;
+  }
+  const benefit = combineBenefits(measured)!;
   if (!gross || !p.finalLoss?.lossYen || !p.finalLoss.publishable) return no('R1', `公開不可：判定に使う窓で loss-rule-v1 が保留（${p.finalLoss?.reason ?? p.grossLoss?.reason ?? '入力なし'}）`);
   const net = netRange(gross, benefit);
-  if (net.low <= 0 && net.high >= 0) return no('R5', `公開不可：純額の幅（${net.low}〜${net.high}円）が0をまたぎ、向きが定まらない`, net);
+  if (net.low <= 0 && net.high >= 0) return no('R5', `公開不可：純額の幅（${net.low}〜${net.high}円）が0をまたぎ、向きが定まらない`, net, lowerBound);
   const kind = net.median > 0 ? '純損失' : '純便益';
-  return { row: 'R6', publishable: true, reason: `公開可（公開の候補。実際の公開は人が一括で承認する）：${kind}。便益は${p.benefits.map(b => `${b.kind}＝${stateLabel(b.state)}`).join('・')}`, net };
+  const lb = lowerBound ? `。${LOWER_BOUND_LABEL}：加算のみの未測定（${missing.map(b => `${b.kind}：${unmeasuredSign(b).why}`).join('／')}）を0として出した便益の下限` : '';
+  return { row: 'R6', publishable: true, reason: `公開可（公開の候補。実際の公開は人が一括で承認する）：${kind}${lb}。便益は${p.benefits.map(b => `${b.kind}＝${stateLabel(b.state)}`).join('・')}`, net, lowerBound };
 }

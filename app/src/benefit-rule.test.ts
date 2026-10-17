@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseCsv, toCsv, type Tables } from './impact-batch';
 import type { LossResult } from './loss-rule';
 import {
-  combineBenefits, cutAtCovid, decidePublication, includedBenefit, judgeCovidSeparation, measureBenefit, netRange, overlapsCovid, stateLabel, unmeasuredBenefit,
+  combineBenefits, cutAtCovid, decidePublication, includedBenefit, judgeCovidSeparation, LOWER_BOUND_LABEL, measureBenefit, netRange, overlapsCovid, sideLabel, stateLabel, unmeasuredBenefit, unmeasuredSign,
   type BenefitMeasurement, type BenefitSeriesInput, type CovidCheck, type PublishInput,
 } from './benefit-rule';
 import { classifyA, classifyLaw, pickPurposes, preprocessA } from './benefit-classification';
@@ -128,6 +128,57 @@ describe('公開の判定表 R1〜R6（上から順に、最初に当たった�
   });
   it('R6 の純便益（損失額が負）', () => {
     expect(decidePublication({ ...ok, originalLoss: loss(-100), grossLoss: loss(-100), finalLoss: loss(-100, -80, -120, true) }).reason).toMatch(/純便益/);
+  });
+});
+
+describe('v1.1 の R4：便益の側では、加算のみの未測定は止めず下限として出す', () => {
+  const noCovid: CovidCheck = { applies: false, separable: true, reason: '' };
+  // 便益の側：影響段階が貢献で、損失額が負（得た額）。
+  const benefitSide: PublishInput = {
+    reference: false, lossBlocked: null, originalLoss: loss(-100), directionConflict: false, covid: noCovid,
+    benefits: [includedBenefit('経済（内包）', ''), unmeasuredBenefit('安全（犯罪）', '系列なし')],
+    grossLoss: loss(-100), finalLoss: loss(-100, -80, -120, true), direction: 'benefit',
+  };
+  it('便益の側で、未測定が加算のみ（安全（犯罪））だけなら公開可。額は「下限（未測定の便益あり）」', () => {
+    const d = decidePublication(benefitSide);
+    expect(d).toMatchObject({ row: 'R6', publishable: true, lowerBound: true });
+    expect(d.net).toEqual({ low: -120, median: -100, high: -80 });
+    expect(d.reason).toContain(LOWER_BOUND_LABEL);
+    expect(d.reason).toMatch(/純便益/);
+  });
+  it('加算のみの種類が改善の向きで検出・未換算なら、それも止めない', () => {
+    const m = measureBenefit({ ...series([80, 80, 80, 80, 80]), kind: '安全（事故）' });
+    expect([m.state, m.detected]).toEqual(['検出・未換算', 'benefit']);
+    expect(unmeasuredSign(m).sign).toBe('加算のみ');
+    expect(decidePublication({ ...benefitSide, benefits: [m] })).toMatchObject({ row: 'R6', lowerBound: true });
+  });
+  it('便益の側でも、符号が定まらない未測定（対応表外・海外所得）や費用を含む種類（消費者保護）があれば止める', () => {
+    for (const kind of ['対応表外（安全保障）', '経済（付加価値の外）', '消費者保護', '金融の安定']) {
+      const d = decidePublication({ ...benefitSide, benefits: [unmeasuredBenefit('安全（犯罪）', ''), unmeasuredBenefit(kind, '系列なし')] });
+      expect(d).toMatchObject({ row: 'R4', publishable: false, lowerBound: false });
+      expect(d.reason).toMatch(new RegExp(`便益を減らしうる未測定がある（${kind.replace(/[()（）]/g, '.')}`));
+    }
+    expect(unmeasuredSign(unmeasuredBenefit('目的の分類', '保留')).sign).toBe('減らしうる');
+  });
+  it('加算のみの種類でも、悪化の向きで検出されたものは止める', () => {
+    const m = measureBenefit({ ...series([120, 120, 120, 120, 120]), kind: '安全（犯罪）' });
+    expect([m.state, m.detected]).toEqual(['検出・未換算', 'harm']);
+    expect(decidePublication({ ...benefitSide, benefits: [m] }).row).toBe('R4');
+  });
+  it('損失の側（悪影響）の法律は今までどおり：未測定があれば加算のみでも止める', () => {
+    const lossSide: PublishInput = { ...benefitSide, originalLoss: loss(100), grossLoss: loss(100), finalLoss: loss(100, 80, 120, true), direction: 'harm' };
+    expect(decidePublication(lossSide)).toMatchObject({ row: 'R4', publishable: false, lowerBound: false });
+    expect(decidePublication({ ...lossSide, benefits: [unmeasuredBenefit('対応表外（安全保障）', '')] }).row).toBe('R4');
+  });
+  it('向きが無い（省略）か、貢献でも測った純額が損失の側なら止める', () => {
+    expect(decidePublication({ ...benefitSide, direction: undefined }).row).toBe('R4');
+    expect(decidePublication({ ...benefitSide, originalLoss: loss(100), grossLoss: loss(100) }).row).toBe('R4');
+  });
+  it('下限でも純額の幅が0をまたげば R5', () => {
+    expect(decidePublication({ ...benefitSide, grossLoss: loss(-10, -30, 10) })).toMatchObject({ row: 'R5', publishable: false });
+  });
+  it('側の表示は法律の影響段階の向きから付ける', () => {
+    expect([sideLabel('benefit'), sideLabel('harm'), sideLabel(null)]).toEqual(['国士側（貢献）', '国賊側（悪影響）', '保留（向きなし）']);
   });
 });
 
