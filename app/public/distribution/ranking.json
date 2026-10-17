@@ -10,11 +10,11 @@
     "inputs": {
       "enacted": "f8ec2d1b14c988aad522dafcee33037e6288d0972613eed18a938b7616c8c94b",
       "triage": "62bc7a90ee69c95359f3ad79be8346c05fa811d7f1bf8251227f2d42b4e8a6fb",
-      "dated": "0dea3397ba16a1ec812f7451824bd170958005c6e8ee8fa79aad20a608db7157",
-      "impact": "ba521f6c30593411076496edba058c1463929fad4eb6cc634adfc889431ff242",
-      "loss": "78ef505b4cfe6e60a8be3a1b8adb9e9efd3b88d329b9dc42779ee404eab1f0fb",
-      "publish": "e5edb38ef2b0f853ba17543670b213795b6c077a401160bee5fcff4600fd975d",
-      "enforcement": "15e5877e6d057ab73d4494c59549273ec964298b765363191ab46458338b7509"
+      "dated": "9bc40be099cf60cb54f9109ca5fb342ffed82de43a6f552deaa3ca49fc0af5d7",
+      "impact": "78a3d87a1d07ad02f7c516e67eec93c3f4e72fd81d56752150ec48d2d0259159",
+      "loss": "2f7c4191a8bfbfec14716d3ce7b7f91a81ebcfd4387bbd1a0424341442e9da89",
+      "publish": "0c5320c7e9bd2f6701c8ecd4d82ae7dd38ee71608047c22ae52961309d07cafb",
+      "enforcement": "1730f6b38926eb00a2b6cc1243be5bd45e22352665579814305d5dddb24c0869"
     }
   },
   "approval": {
@@ -59,6 +59,13 @@
     }
   ],
   "held": [
+    {
+      "id": "閣法-142-117",
+      "title": "金融業者の貸付業務のための社債の発行等に関する法律案",
+      "side": "loss",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
     {
       "id": "参法-145-9",
       "title": "特定融資枠契約に関する法律案",
@@ -144,6 +151,20 @@
       "reason": "参考の行や保留の判定を含むため、額を公開しない"
     },
     {
+      "id": "閣法-164-11",
+      "title": "運輸の安全性の向上のための鉄道事業法等の一部を改正する法律案",
+      "side": "benefit",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
+    {
+      "id": "閣法-174-30",
+      "title": "エネルギー環境適合製品の開発及び製造を行う事業の促進に関する法律案",
+      "side": "loss",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
+    {
       "id": "衆法-185-2",
       "title": "特定地域における一般乗用旅客自動車運送事業の適正化及び活性化に関する特別措置法等の一部を改正する法律案",
       "side": "loss",
@@ -172,6 +193,13 @@
       "reason": "参考の行や保留の判定を含むため、額を公開しない"
     },
     {
+      "id": "閣法-193-38",
+      "title": "銀行法等の一部を改正する法律案",
+      "side": "benefit",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
+    {
       "id": "閣法-193-59",
       "title": "通訳案内士法及び旅行業法の一部を改正する法律案",
       "side": "loss",
@@ -193,6 +221,13 @@
       "reason": "損失の窓が新型コロナの時期と重なり、分けて測れない"
     },
     {
+      "id": "閣法-198-36",
+      "title": "放送法の一部を改正する法律案",
+      "side": "benefit",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
+    {
       "id": "閣法-201-24",
       "title": "株式会社日本政策投資銀行法の一部を改正する法律案",
       "side": "benefit",
@@ -207,8 +242,22 @@
       "reason": "参考の行や保留の判定を含むため、額を公開しない"
     },
     {
+      "id": "閣法-201-28",
+      "title": "電気通信事業法及び日本電信電話株式会社等に関する法律の一部を改正する法律案",
+      "side": "benefit",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
+    {
       "id": "閣法-204-2",
       "title": "国立研究開発法人情報通信研究機構法の一部を改正する法律案",
+      "side": "benefit",
+      "reasonCode": "R1",
+      "reason": "参考の行や保留の判定を含むため、額を公開しない"
+    },
+    {
+      "id": "閣法-204-38",
+      "title": "特定電気通信役務提供者の損害賠償責任の制限及び発信者情報の開示に関する法律の一部を改正する法律案",
       "side": "benefit",
       "reasonCode": "R1",
       "reason": "参考の行や保留の判定を含むため、額を公開しない"
@@ -231,8 +280,8 @@
   "counts": {
     "enacted": 3415,
     "evaluated": 349,
-    "dated": 197,
-    "staged": 47,
+    "dated": 281,
+    "staged": 63,
     "amounted": 6,
     "publishable": 1,
     "published": 1

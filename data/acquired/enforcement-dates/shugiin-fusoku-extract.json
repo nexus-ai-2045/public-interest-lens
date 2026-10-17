@@ -833,6 +833,76 @@
    "出典URL": "https://www.fsa.go.jp/news/29/syouken/20171227.html",
    "出典の種類": "金融庁の報道発表（施行日を定める政令の閣議決定・公布に関するお知らせ）",
    "メモ": "法律名は報道発表の表記では「金融商品取引法の一部を改正する法律」。政令本文そのものではなく金融庁の公表文による。同文に施行を定める政令は平成29年12月22日に閣議決定・公布とある。"
+  },
+  {
+   "系統": "A（1回目、2026-10-17 夜の追加取得）",
+   "id": "閣法-166-82",
+   "施行日": "2008-07-01",
+   "判定": "確定",
+   "原文の引用": "平成20年7月1日から施行されました。",
+   "出典URL": "https://www.mhlw.go.jp/bunya/roudoukijun/saiteichingin02/",
+   "出典の種類": "省庁の発表・通知",
+   "メモ": "厚労省ページが改正法の施行日を平成20年7月1日と記載。ページは関連する法令をまとめて記述しているため、本法単独の政令名・日付は未確認。"
+  },
+  {
+   "系統": "A（1回目、2026-10-17 夜の追加取得）",
+   "id": "閣法-171-27",
+   "施行日": "2009-10-01",
+   "判定": "確定",
+   "原文の引用": "特定地域における一般乗用旅客自動車運送事業の適正化及び活性化に関する特別措置法（平成２１年法律第６４号）について （平成２１年１０月１日施行）",
+   "出典URL": "https://www.mlit.go.jp/common/000050418.pdf",
+   "出典の種類": "省庁の発表・通知",
+   "メモ": "国交省資料の見出しで施行日を平成21年10月1日と記載。施行期日を定める政令の名称・日付は未確認。"
+  },
+  {
+   "系統": "A（1回目、2026-10-17 夜の追加取得）",
+   "id": "閣法-213-62",
+   "施行日": "2025-12-18",
+   "判定": "確定",
+   "原文の引用": "同法は、令和７年12月18日に全面施行です。",
+   "出典URL": "https://www.jftc.go.jp/msca/",
+   "出典の種類": "省庁の発表・通知",
+   "メモ": "公正取引委員会の記載による全面施行日。規制事業者の指定に関する規定は令和6年12月19日に先行施行。施行期日を定める政令の名称・日付はページになし。"
+  },
+  {
+   "系統": "A（1回目、2026-10-17 夜の追加取得）",
+   "id": "衆法-156-41",
+   "施行日": "2004-01-01",
+   "判定": "確定",
+   "原文の引用": "貸金業の規制等に関する法律及び出資の受入れ、預り金及び金利等の取締りに関する法律の一部を改正する法律の施行日は平成16年１月１日とする。",
+   "出典URL": "https://www.fsa.go.jp/news/newsj/15/f-20031006-1.html",
+   "出典の種類": "省庁の発表・通知",
+   "メモ": "FSA news article (2003-10-06) states the 施行日. Quote obtained via WebFetch summary; verify wording on the page. Partial ただし provisions exist and are not covered."
+  },
+  {
+   "系統": "A（1回目、2026-10-17 夜の追加取得）",
+   "id": "閣法-201-48",
+   "施行日": "2022-04-01",
+   "判定": "確定",
+   "原文の引用": "令和２年改正法の施行期日を令和４年４月１日としております。",
+   "出典URL": "https://www.ppc.go.jp/personalinfo/legal/kaiseihogohou/",
+   "出典の種類": "省庁の発表・通知",
+   "メモ": "Personal Information Protection Commission (ppc.go.jp) states the 施行期日 of the 2020 amendment. Quote obtained via WebFetch summary; verify wording. ただし partial provisions (公布日 items) are excluded."
+  },
+  {
+   "系統": "A（1回目、2026-10-17 夜の追加取得）",
+   "id": "閣法-143-10",
+   "施行日": "1999-12-01",
+   "判定": "確定",
+   "原文の引用": "平成11年政令第366号)により、平成11年12月1日から施行されることとなったところである。",
+   "出典URL": "https://www.mhlw.go.jp/web/t_doc?dataId=00tb2305&dataType=1&pageNo=1",
+   "出典の種類": "省庁の発表・通知",
+   "メモ": "厚生労働省の施行通知（平成11年11月17日 女発第325号 職発第814号）。法律全体に1条で施行日を付与。政令366号が根拠。"
+  },
+  {
+   "系統": "A（1回目、2026-10-17 夜の追加取得）",
+   "id": "閣法-156-77",
+   "施行日": "2004-01-01",
+   "判定": "確定",
+   "原文の引用": "平成１６年１月１日から、改正労働基準法が施行されます。",
+   "出典URL": "https://www.mhlw.go.jp/topics/2003/11/tp1111-1.html",
+   "出典の種類": "省庁の発表・通知",
+   "メモ": "厚生労働省の報道資料。施行期日政令への言及はなく、法律全体か一部かは未確認。"
   }
  ],
  "候補の再取得": [
@@ -907,6 +977,69 @@
    "date": "2018-04-01",
    "law_matches": true,
    "note": "WebFetch returned a summary, not verbatim page text; the quote is the summarizer's rendering of the page's sentence and should be checked against the original page. The page also says the enforcement-date cabinet order was decided on 2017-12-22 and promulgated the same day. The date 2018-04-01 comes from the page, not an inference."
+  },
+  {
+   "系統": "B（2回目、別のエージェント）",
+   "id": "閣法-166-82",
+   "fetched": true,
+   "law_matches": true,
+   "date": "2008-07-01",
+   "quote": "が平成２０年７月１日から施行されました。",
+   "note": "Page is the MHLW minimum wage page; the quote is an excerpt, the full sentence was over the length limit."
+  },
+  {
+   "系統": "B（2回目、別のエージェント）",
+   "id": "閣法-171-27",
+   "fetched": true,
+   "law_matches": true,
+   "date": "2009-10-01",
+   "quote": "特定地域における一般乗用旅客自動車運送事業の適正化及び活性化に関する特別措置法（平成２１年法律第６４号）について （平成２１年１０月１日施行）",
+   "note": "MLIT PDF cites law title and number 平成21年法律第64号."
+  },
+  {
+   "系統": "B（2回目、別のエージェント）",
+   "id": "閣法-213-62",
+   "fetched": true,
+   "law_matches": true,
+   "date": "2025-12-18",
+   "quote": "同法は、令和７年12月18日に全面施行です。",
+   "note": "JFTC page on the smartphone act (MSCA); page does not state the law number in the fetched text, match is by title."
+  },
+  {
+   "系統": "B（2回目、別のエージェント）",
+   "id": "衆法-156-41",
+   "fetched": true,
+   "law_matches": true,
+   "date": "2004-01-01",
+   "quote": "貸金業の規制等に関する法律及び出資の受入れ、預り金及び金利等の取締りに関する法律の一部を改正する法律の施行日は平成16年１月１日とする。",
+   "note": "FSA page cites 平成15年法律第136号 in 別紙１; the quote is the effective-date sentence for the amending law."
+  },
+  {
+   "系統": "B（2回目、別のエージェント）",
+   "id": "閣法-201-48",
+   "fetched": true,
+   "law_matches": true,
+   "date": "2022-04-01",
+   "quote": "「令和２年改正法の施行期日を令和４年４月１日としております。」",
+   "note": "PPC page names the 2020 amendment by title but not the number 令和二年法律第四十四号; date is the full-enforcement date."
+  },
+  {
+   "系統": "B（2回目、別のエージェント）",
+   "id": "閣法-143-10",
+   "fetched": true,
+   "law_matches": true,
+   "date": "1999-12-01",
+   "quote": "により、平成11年12月1日から施行されることとなったところである。",
+   "note": "MHLW page; quote is the portion containing the date (full sentence over the length limit)."
+  },
+  {
+   "系統": "B（2回目、別のエージェント）",
+   "id": "閣法-156-77",
+   "fetched": true,
+   "law_matches": true,
+   "date": "2004-01-01",
+   "quote": "平成１５年７月４日に公布されました「労働基準法の一部を改正する法律（平成１５年法律第１０４号）」が、平成１６年１月１日から施行されます。",
+   "note": "MHLW page cites 平成15年法律第104号 with 施行 on 2004-01-01."
   }
  ]
 }
