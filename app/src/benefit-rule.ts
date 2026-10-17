@@ -1,5 +1,6 @@
 /**
- * 規制の便益の判定ルール（判定ルール版 benefit-rule-v1.1）。提案は docs/提案/便益ルール-v1.md。
+ * 規制の便益の判定ルール（判定ルール版 benefit-rule-v1.2）。提案は docs/提案/便益ルール-v1.md。
+ * v1.2 の改定（未測定の符号だけ）：貢献の側の法律で、第1条の原文に「安全保障」か「セキュリティ」を含むとき、未測定の「対応表外（安全保障）」を「加算のみ」に数える。固定の規則で、法律ごとの調整はしない。
  * v1.1 の改定（R4 だけ）：測った結果が既に便益の側（影響段階が貢献で、測った純額も便益）の法律では、
  * 足されても便益を増やすだけの未測定（下の UNMEASURED_SIGN が「加算のみ」）は公開を止めず、額を「下限（未測定の便益あり）」として出す。
  * 便益を減らしうる未測定（費用を含む種類、符号が定まらない種類）は今までどおり止める。損失の側（悪影響）の法律は変えない。
@@ -15,7 +16,7 @@
 import { judgeImpact, type ImpactPoint } from './impact-rule';
 import type { LossResult } from './loss-rule';
 
-export const BENEFIT_RULE_VERSION = 'benefit-rule-v1.1';
+export const BENEFIT_RULE_VERSION = 'benefit-rule-v1.2';
 
 /** 便益の種類（提案 2-4 の対応表。事前に固定）。「対応表外（…）」は表に無い種類で、指標と比較群が決まっていないので未測定になる。 */
 export const BENEFIT_KINDS = ['経済（内包）', '経済（付加価値の外）', '消費者保護', '金融の安定', '安全（事故）', '安全（犯罪）', 'プライバシー', '環境', '移転'] as const;
@@ -141,7 +142,14 @@ export const UNMEASURED_SIGN: Record<string, { sign: UnmeasuredSign; why: string
   '金融の安定': { sign: '減らしうる', why: '規制による貸出の抑制や、救済の期待による危険の増加（モラルハザード）で、破綻・不良債権が増える向きもありうる' },
   '経済（付加価値の外）': { sign: '減らしうる', why: '海外の出資先から得る所得は、出資の損失（減損）で負になりうる。出資に使った資金の機会費用も損失額の系列の外' },
 };
-export function unmeasuredSign(m: BenefitMeasurement): { sign: UnmeasuredSign; why: string } {
+/** v1.2：安全保障の既定。第1条の原文にこの語があるとき（貢献の側の法律の未測定だけ）、加算のみに数える。 */
+export const SECURITY_KIND = '対応表外（安全保障）';
+export const SECURITY_PURPOSE_PATTERN = /安全保障|セキュリティ/;
+export type SignContext = { direction?: 'benefit' | 'harm' | null; purposeText?: string };
+export function unmeasuredSign(m: BenefitMeasurement, ctx: SignContext = {}): { sign: UnmeasuredSign; why: string } {
+  if (m.kind === SECURITY_KIND && m.state === '未測定' && ctx.direction === 'benefit' && SECURITY_PURPOSE_PATTERN.test(ctx.purposeText ?? '')) {
+    return { sign: '加算のみ', why: '安全保障：第1条の原文に「安全保障」か「セキュリティ」があり、防ぐ被害だけを数える目的（v1.2。貢献の側の未測定だけ。費用の面は損失額の側にある）' };
+  }
   if (m.kind === '目的の分類') return { sign: '減らしうる', why: '目的の分類が保留で、種類が決まっていない' };
   if (/^対応表外（.+）$/.test(m.kind)) return { sign: '減らしうる', why: '対応表に無い種類で、指標・比較群・向きが事前に固定されていない' };
   const t = UNMEASURED_SIGN[m.kind];
@@ -215,6 +223,8 @@ export type PublishInput = {
   finalLoss: LossResult | null;
   /** impact-rule-v1 の影響段階の向き（v1.1 の R4 で使う）。省略は null（緩めない）。 */
   direction?: 'benefit' | 'harm' | null;
+  /** 第1条の原文（v1.2。安全保障の既定に使う）。省略は空。 */
+  purposeText?: string;
 };
 export type PublishDecision = { row: PublishRow; publishable: boolean; reason: string; net: YenRange | null; lowerBound: boolean };
 
@@ -240,7 +250,7 @@ export function decidePublication(p: PublishInput): PublishDecision {
     // v1.1：貢献の法律で、測った分だけの純額が便益の側なら、加算のみの未測定は止めない（額は下限）。
     const measuredNet = gross ? netRange(gross, combineBenefits(measured)!) : null;
     if (p.direction !== 'benefit' || !measuredNet || measuredNet.median >= 0) return block();
-    const signs = missing.map(b => ({ b, ...unmeasuredSign(b) }));
+    const signs = missing.map(b => ({ b, ...unmeasuredSign(b, { direction: p.direction, purposeText: p.purposeText }) }));
     const reducing = signs.filter(s => s.sign === '減らしうる');
     if (reducing.length) return block(`。v1.1：便益の側だが、便益を減らしうる未測定がある（${reducing.map(s => `${s.b.kind}：${s.why}`).join('／')}）`);
     lowerBound = true;
@@ -250,6 +260,6 @@ export function decidePublication(p: PublishInput): PublishDecision {
   const net = netRange(gross, benefit);
   if (net.low <= 0 && net.high >= 0) return no('R5', `公開不可：純額の幅（${net.low}〜${net.high}円）が0をまたぎ、向きが定まらない`, net, lowerBound);
   const kind = net.median > 0 ? '純損失' : '純便益';
-  const lb = lowerBound ? `。${LOWER_BOUND_LABEL}：加算のみの未測定（${missing.map(b => `${b.kind}：${unmeasuredSign(b).why}`).join('／')}）を0として出した便益の下限` : '';
+  const lb = lowerBound ? `。${LOWER_BOUND_LABEL}：加算のみの未測定（${missing.map(b => `${b.kind}：${unmeasuredSign(b, { direction: p.direction, purposeText: p.purposeText }).why}`).join('／')}）を0として出した便益の下限` : '';
   return { row: 'R6', publishable: true, reason: `公開可（公開の候補。実際の公開は人が一括で承認する）：${kind}${lb}。便益は${p.benefits.map(b => `${b.kind}＝${stateLabel(b.state)}`).join('・')}`, net, lowerBound };
 }
