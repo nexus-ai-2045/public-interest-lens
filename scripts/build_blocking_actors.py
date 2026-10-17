@@ -70,6 +70,8 @@ def clean(header: list[str], rows: list[dict[str, str]]) -> tuple[list[str], lis
 def build(src: Path, out: Path = OUT) -> list[dict[str, str]]:
     manifest = []
     for path in sorted(src.glob("*/*.csv")):
+        if path.parent.name.startswith("_"):
+            continue  # _verify などの作業用フォルダは取り込まない
         header, rows = load_rows(path)
         kept, cleaned, dropped = clean(header, rows)
         rel = Path(path.parent.name) / path.name
