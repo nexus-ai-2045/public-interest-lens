@@ -11,6 +11,7 @@ import { EconomyPage } from './EconomyPage';
 import { PoliciesPage } from './PoliciesPage';
 import { ActorsPage } from './CaseChain';
 import { LawRankingPage } from './LawRankingPage';
+import { MembersPage, MethodologyPage } from './MembersPage';
 
 function Quotes({ quotes, release }: { quotes: QuoteRef[]; release: RealRelease }) {
   return <ul className="real-quotes">{quotes.map((q, index) => {
@@ -89,6 +90,8 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   if (window.location.pathname === '/policies') return <PoliciesPage />;
   if (window.location.pathname === '/actors') return <ActorsPage />;
   if (['/ranking', '/ranking/'].includes(window.location.pathname)) return <LawRankingPage />;
+  if (['/members', '/members/'].includes(window.location.pathname)) return <MembersPage />;
+  if (['/methodology', '/methodology/'].includes(window.location.pathname)) return <MethodologyPage />;
   if (PUBLIC_SITE && (route.dataset === 'real' || window.location.pathname === '/records')) return <PublicUnavailablePage />;
   if (!PUBLIC_SITE && route.dataset === 'real') return <RealEvaluationPanel route={route} navigate={navigate} />;
   if (window.location.pathname === '/history' || (window.location.pathname === '/' && !window.location.search)) return <EconomyPage />;
