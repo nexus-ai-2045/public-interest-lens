@@ -63,3 +63,11 @@
 .member-chain > li > strong { display: inline-block; min-width: 7em; margin-right: 0.5rem; }
 .member-chain a { margin-left: 0.4rem; white-space: nowrap; }
 .member-context summary { cursor: pointer; font-size: 0.85rem; }
+
+.members-knobs { display: grid; gap: 0.8rem; margin: 1.2rem 0; padding: 1rem; border: 1px solid var(--line, #d0d5dd); border-radius: 12px; }
+.members-knobs h3 { margin: 0; }
+.knob { display: grid; gap: 0.25rem; }
+.knob > span { display: flex; justify-content: space-between; gap: 0.5rem; font-weight: 600; }
+.members-knobs .knob input[type="range"] { width: 100%; max-width: none; min-width: 0; }
+.knob small { color: var(--muted, #667085); }
+.knob-check { display: flex; align-items: center; gap: 0.5rem; }

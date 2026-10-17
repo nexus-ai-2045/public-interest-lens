@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocateLaw, gameShares, quota, vetoShare } from './causal-allocation';
+import { allocateLaw, DEFAULT_KNOBS, gameShares, knobShares, quota, readKnobs, vetoShare, writeKnobs } from './causal-allocation';
 
 /** 並び順をすべて試す Shapley 値（小さいゲームの検算用）。 */
 function bruteVeto(k: number, Y: number, q: number): number {
@@ -40,5 +40,31 @@ describe('成立への寄与（Shapley 値）', () => {
     const out = allocateLaw({ low: 999, median: 1000, high: 1001 }, game, 'chair_veto');
     expect(out.rows.reduce((a, r) => a + r.share.median, 0) + out.party.median + out.unidentified.median).toBe(1000);
     expect(out.rows.find(r => r.personId === '乙')!.roles).toHaveProperty('vote');
+  });
+});
+
+describe('見え方のつまみ', () => {
+  const game = { proposers: ['甲', '乙'], voters: ['乙', '丙', '丁'], chairs: ['戊'], yes: 5, no: 3 };
+  const sum = (r: ReturnType<typeof knobShares>) => [...r.persons.values()].flatMap(x => Object.values(x)).reduce((a, b) => a + (b ?? 0), 0) + r.party + r.unidentified + r.unattributed;
+  it('初期値は基準の Shapley 値と同じ', () => {
+    const base = gameShares(game, 'base');
+    const k = knobShares(game, DEFAULT_KNOBS);
+    expect(k.persons.get('甲')!.proposer).toBeCloseTo(base.persons.get('甲')!.proposer!, 12);
+    expect(k.party).toBeCloseTo(base.party, 12);
+  });
+  it('どの値でも合計は1（額を超えない）', () => {
+    for (const proposer of [0, 0.3, 1]) for (const party of ['party', 'voters'] as const) for (const chairVeto of [false, true]) for (const rate of [0.1, 0.5, 1]) {
+      expect(sum(knobShares(game, { proposer, party, chairVeto, rate }))).toBeCloseTo(1, 12);
+    }
+  });
+  it('提出者の重みを下げると提出者は減り、賛成票は増える', () => {
+    const k = knobShares(game, { ...DEFAULT_KNOBS, proposer: 0.5 });
+    expect(k.persons.get('甲')!.proposer).toBeCloseTo(gameShares(game, 'base').persons.get('甲')!.proposer! / 2, 12);
+    expect(k.persons.get('丙')!.vote!).toBeGreaterThan(gameShares(game, 'base').vote);
+  });
+  it('URL に入れて読み戻せる', () => {
+    const k = { proposer: 0.4, party: 'voters' as const, chairVeto: true, rate: 0.5 };
+    expect(readKnobs(writeKnobs(new URLSearchParams('name=x'), k))).toEqual(k);
+    expect(writeKnobs(new URLSearchParams('name=x'), DEFAULT_KNOBS).toString()).toBe('name=x');
   });
 });

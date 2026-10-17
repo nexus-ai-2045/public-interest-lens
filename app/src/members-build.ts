@@ -51,6 +51,8 @@ export type PublicMemberLaw = {
   game: {
     proposers: number; proposerKind: string; vetoShare: number; voteShare: number; yes: number; no: number; quota: number; voters: number;
     voteUrl: string; voteDate: string; chairs: number;
+    /** つまみで画面側が計算し直すための名前の一覧。 */
+    names: { proposers: string[]; voters: string[]; chairs: string[] };
     /** 衆議院の賛成会派（起立採決で個人の賛否が残らないので党に置く）。 */
     parties: string[]; party: Range; unidentified: Range;
   };
@@ -115,6 +117,7 @@ export function buildMembers(input: MemberInputs): PublicMembers {
 
   // 便益は額が負で入っているので、配分の符号をそのまま使い、損失・貢献に分ける。
   type Tot = { loss: Range; credit: Range; groups: Map<string, number>; laws: { entry: Entry; fraction: number; roles: Partial<Record<CausalRole, number>>; share: Range }[] };
+  const blank = (): Tot => ({ loss: zero(), credit: zero(), groups: new Map(), laws: [] });
   const totals = new Map<CausalVariant, Map<string, Tot>>();
   const lawOut: PublicMemberLaw[] = [];
   for (const variant of CAUSAL_VARIANTS) {
@@ -122,7 +125,7 @@ export function buildMembers(input: MemberInputs): PublicMembers {
     for (const entry of entries) {
       const out = allocateLaw(entry.law.amount, entry.game, variant);
       for (const r of out.rows) {
-        const t = byPerson.get(r.personId) ?? { loss: zero(), credit: zero(), groups: new Map(), laws: [] };
+        const t = byPerson.get(r.personId) ?? blank();
         const mag = magnitude(r.share);
         if (entry.law.side === 'loss') t.loss = add(t.loss, mag); else t.credit = add(t.credit, mag);
         if (r.fraction > 0) t.groups.set(entry.law.group, (t.groups.get(entry.law.group) ?? 0) + 1);
@@ -136,13 +139,13 @@ export function buildMembers(input: MemberInputs): PublicMembers {
           confidence: confidenceLabel(row['判定表の行'], text), judgement: row['判定表の行'], reason: row['理由'], group: law.group,
           persons: out.rows.length, attributed, source: bill['経過URL'], enactedOn: warekiDate(bill['公布日']),
           game: { proposers: game.proposers.length, proposerKind: law.lawId.startsWith('閣法') ? '内閣（閣議決定に関わった大臣）' : '発議者', vetoShare: out.shares.veto, voteShare: out.shares.vote,
-            yes: game.yes, no: game.no, quota: out.shares.q, voters: game.voters.length, voteUrl: vote.URL, voteDate: vote['日付'], chairs: game.chairs.length,
+            yes: game.yes, no: game.no, quota: out.shares.q, voters: game.voters.length, voteUrl: vote.URL, voteDate: vote['日付'], chairs: game.chairs.length, names: { proposers: game.proposers, voters: game.voters, chairs: game.chairs },
             parties: (bill['賛成会派_衆'] ?? '').split(';').map(s => s.trim()).filter(Boolean), party: magnitude(out.party), unidentified: magnitude(out.unidentified) } });
       }
     }
     // 成立を左右しない行動（質疑・修正案など）だけの人も、0円として載せる。
     for (const entry of entries) for (const name of new Set(counted.filter(r => r['法律ID'] === entry.law.lawId).map(r => r['氏名']))) {
-      const t = byPerson.get(name) ?? { loss: zero(), credit: zero(), groups: new Map(), laws: [] };
+      const t = byPerson.get(name) ?? blank();
       if (!t.laws.some(l => l.entry === entry)) t.laws.push({ entry, fraction: 0, roles: {}, share: zero() });
       byPerson.set(name, t);
     }

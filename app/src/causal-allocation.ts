@@ -114,3 +114,51 @@ export function allocateLaw(amount: Range, game: LawGame, variant: CausalVariant
     .map(p => ({ personId: p.id, fraction: p.fraction, roles: shares.persons.get(p.id)!, share: pick(p.id) }));
   return { shares, rows, party: pick(PARTY_ID), unidentified: pick(UNIDENTIFIED_ID) };
 }
+
+/**
+ * 見え方のつまみ。どの値でも、人・党・名前不明・未帰属の割合の合計は1のままで、配る額の合計は法律の額を超えない。
+ * - proposer：提出者の組の重み（0〜1）。減らした分は、衆議院の賛成会派と参議院の賛成票に、いまの割合どおりに回す。
+ * - party：衆議院の分を党（会派）に置くか、参議院の賛成議員で分けるか。
+ * - chairVeto：委員長も拒否権者にするか。
+ * - rate：帰属率（0〜1）。残りは誰にも配らない（未帰属）。
+ */
+export type Knobs = { proposer: number; party: 'party' | 'voters'; chairVeto: boolean; rate: number };
+export const DEFAULT_KNOBS: Knobs = { proposer: 1, party: 'party', chairVeto: false, rate: 1 };
+export const isDefaultKnobs = (k: Knobs): boolean => k.proposer === 1 && k.party === 'party' && !k.chairVeto && k.rate === 1;
+
+export function knobShares(game: LawGame, knobs: Knobs): { persons: Map<string, Partial<Record<CausalRole, number>>>; party: number; unidentified: number; unattributed: number } {
+  const s = gameShares(game, knobs.chairVeto ? 'chair_veto' : 'base');
+  const proposerTotal = s.veto;
+  const moved = (1 - knobs.proposer) * proposerTotal;
+  const voteTotal = s.vote * game.yes;
+  let party = s.party + moved * s.party / (s.party + voteTotal);
+  let votes = voteTotal + moved * voteTotal / (s.party + voteTotal);
+  if (knobs.party === 'voters') { votes += party; party = 0; }
+  const perVote = votes / game.yes;
+  const persons = new Map<string, Partial<Record<CausalRole, number>>>();
+  for (const [name, roles] of s.persons) {
+    const out: Partial<Record<CausalRole, number>> = {};
+    if (roles.proposer !== undefined) out.proposer = roles.proposer * knobs.proposer * knobs.rate;
+    if (roles.chair !== undefined) out.chair = roles.chair * knobs.rate;
+    if (roles.vote !== undefined) out.vote = perVote * knobs.rate;
+    persons.set(name, out);
+  }
+  const voters = new Set(game.voters).size;
+  return { persons, party: party * knobs.rate, unidentified: perVote * (game.yes - voters) * knobs.rate, unattributed: 1 - knobs.rate };
+}
+
+/** URL の値からつまみを読む。範囲外や読めない値は初期値にする。 */
+export function readKnobs(params: URLSearchParams): Knobs {
+  const num = (key: string, d: number) => { const v = Number(params.get(key)); return params.has(key) && Number.isFinite(v) && v >= 0 && v <= 100 ? v / 100 : d; };
+  return { proposer: num('p', 1), party: params.get('house') === 'voters' ? 'voters' : 'party', chairVeto: params.get('chair') === '1', rate: Math.max(num('r', 1), 0.1) };
+}
+
+export function writeKnobs(params: URLSearchParams, k: Knobs): URLSearchParams {
+  const out = new URLSearchParams(params);
+  for (const key of ['p', 'house', 'chair', 'r']) out.delete(key);
+  if (k.proposer !== 1) out.set('p', String(Math.round(k.proposer * 100)));
+  if (k.party !== 'party') out.set('house', k.party);
+  if (k.chairVeto) out.set('chair', '1');
+  if (k.rate !== 1) out.set('r', String(Math.round(k.rate * 100)));
+  return out;
+}

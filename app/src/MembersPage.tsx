@@ -5,7 +5,8 @@ import { formatYen } from './LawRankingPage';
 import { RankBars, type RankBarItem } from './motion';
 import { distributionActivityUrl, readActivity, type MemberActivity, type MemberActivityEntry } from './member-activity';
 import { ROLE_LABEL as CAUSAL_ROLE_LABEL, type MemberEvidence, type MemberLaw, type PublicMember, type PublicMemberLaw, type PublicMembers } from './members-build';
-import type { CausalRole } from './causal-allocation';
+import { DEFAULT_KNOBS, isDefaultKnobs, readKnobs, writeKnobs, type CausalRole, type Knobs } from './causal-allocation';
+import { adjustMembers } from './members-knobs';
 
 export const distributionMembersUrl = '/distribution/members.json';
 export const correctionUrl = 'https://github.com/nexus-ai-2045/public-interest-lens/issues/new?template=correction.yml';
@@ -74,7 +75,7 @@ function EvidenceLink({ ev }: { ev: MemberEvidence }) {
 }
 
 /** 1本の法律について、行動 → 成立 → 損失（便益）の鎖と、この人の分の式。 */
-function CausalChain({ entry, law }: { entry: MemberLaw; law: PublicMemberLaw }) {
+function CausalChain({ entry, law, adjusted }: { entry: MemberLaw; law: PublicMemberLaw; adjusted: boolean }) {
   const g = law.game;
   const verb = law.side === 'loss' ? '失わせた' : '生んだ';
   const roles = Object.entries(entry.roles) as [CausalRole, number][];
@@ -94,13 +95,15 @@ function CausalChain({ entry, law }: { entry: MemberLaw; law: PublicMemberLaw })
         <a href={law.source} target="_blank" rel="noopener noreferrer">衆議院の議案情報（審議経過） <ArrowUpRight size={13} /></a></li>
       <li><strong>{law.side === 'loss' ? '損失' : '便益'}</strong>施行の前後で「{law.group}」を比較国と比べた差が {formatYen(law.amount.median)}（幅 {formatYen(law.amount.low)}〜{formatYen(law.amount.high)}）。確かさの印：{law.confidence}</li>
     </ol>
-    {roles.length > 0 && <p className="member-formula">この人が{verb}額 ＝ 法律の額 {formatYen(law.amount.median)} × {formula} ＝ {formatYen(entry.share.median)}</p>}
+    {roles.length > 0 && (adjusted
+      ? <p className="member-formula">つまみで調整した値：この人が{verb}額 ＝ 法律の額 {formatYen(law.amount.median)} × {pct(entry.fraction)} ＝ {formatYen(entry.share.median)}（上の割合は初期値の計算）</p>
+      : <p className="member-formula">この人が{verb}額 ＝ 法律の額 {formatYen(law.amount.median)} × {formula} ＝ {formatYen(entry.share.median)}</p>)}
     {entry.context.length > 0 && <details className="member-context"><summary>額に入れていない行動（{entry.context.length}件）</summary>
       <ul className="member-evidence">{entry.context.map(ev => <EvidenceLink key={ev.url + ev.action} ev={ev} />)}</ul></details>}
   </>;
 }
 
-function MemberDetail({ member, laws, activity }: { member: PublicMember; laws: Map<string, PublicMemberLaw>; activity: MemberActivity | null }) {
+function MemberDetail({ member, laws, activity, adjusted }: { member: PublicMember; laws: Map<string, PublicMemberLaw>; activity: MemberActivity | null; adjusted: boolean }) {
   return <div className="member-detail">
     {member.laws.map(entry => {
       const law = laws.get(entry.lawId)!;
@@ -108,7 +111,7 @@ function MemberDetail({ member, laws, activity }: { member: PublicMember; laws: 
         <p className="law-card-side">{entry.side === 'loss' ? '国賊側（損失）' : '国士側（便益）'}・{law.id}</p>
         <h5>{law.title}</h5>
         <p className="member-law-share"><span>{entry.side === 'loss' ? 'この法律で失わせた額' : 'この法律で生んだ額'}</span><strong>{formatYen(entry.share.median)}</strong><span>幅 {formatYen(entry.share.low)}〜{formatYen(entry.share.high)}・法律の額の{pct(entry.fraction)}</span></p>
-        <CausalChain entry={entry} law={law} />
+        <CausalChain entry={entry} law={law} adjusted={adjusted} />
       </section>;
     })}
     <dl className="policy-metrics member-sensitivity">
@@ -119,6 +122,28 @@ function MemberDetail({ member, laws, activity }: { member: PublicMember; laws: 
     {activity && <ActivityPanel entry={activity.members[member.name]} fetchedAt={activity.fetchedAt} />}
     <p className="fine-note"><a href={`${correctionUrl}&title=${encodeURIComponent(`[訂正] ${member.name}`)}`} target="_blank" rel="noopener noreferrer">この人の記録の訂正・反論を送る（GitHub）</a></p>
   </div>;
+}
+
+/** 見え方のつまみ。動かすとその場で並べ替え、値は URL に入る。 */
+export function KnobsPanel({ knobs, onChange }: { knobs: Knobs; onChange: (k: Knobs) => void }) {
+  const slider = (key: 'proposer' | 'rate', label: string, min: number, note: string) => <label className="knob">
+    <span>{label}<strong>{Math.round(knobs[key] * 100)}%</strong></span>
+    <input type="range" min={min} max={100} step={5} value={Math.round(knobs[key] * 100)} onChange={e => onChange({ ...knobs, [key]: Number(e.target.value) / 100 })} />
+    <small>{note}</small>
+  </label>;
+  return <section className="members-knobs" aria-label="見え方のつまみ">
+    <h3>つまみ（見え方の調整）</h3>
+    {slider('proposer', '提出者（大臣・発議者）の重み', 0, '下げた分は、衆議院の賛成会派と参議院の賛成票に、いまの割合どおりに回します。')}
+    <label className="knob"><span>衆議院の分</span>
+      <select value={knobs.party} onChange={e => onChange({ ...knobs, party: e.target.value as Knobs['party'] })}>
+        <option value="party">党（賛成会派）に置く</option>
+        <option value="voters">参議院の賛成議員で分ける</option>
+      </select>
+      <small>衆議院は起立採決で個人の賛否が残らないため、初期値は党に置きます。</small></label>
+    <label className="knob knob-check"><input type="checkbox" checked={knobs.chairVeto} onChange={e => onChange({ ...knobs, chairVeto: e.target.checked })} /><span>委員長も拒否権者にする</span></label>
+    {slider('rate', '帰属率（人と党に配る割合）', 10, '残りは誰にも配りません（組織や外部の要因）。')}
+    <p className="fine-note">どの設定でも、配る額の合計は法律の額を超えません。{!isDefaultKnobs(knobs) && <> <button type="button" onClick={() => onChange(DEFAULT_KNOBS)}>初期値に戻す</button></>}</p>
+  </section>;
 }
 
 /** 上位の横棒。値は純額の大きさ、幅は小さい方から並べ直す。 */
@@ -155,13 +180,21 @@ export function MembersPage() {
       .then(r => r.ok ? r.text() : Promise.reject(new Error('missing'))).then(text => setActivity(readActivity(text))).catch(() => undefined);
     return () => controller.abort();
   }, []);
+  const [knobs, setKnobsState] = useState<Knobs>(() => readKnobs(new URLSearchParams(window.location.search)));
+  const setKnobs = (k: Knobs) => {
+    setKnobsState(k);
+    const params = writeKnobs(new URLSearchParams(window.location.search), k).toString();
+    window.history.replaceState(null, '', `${window.location.pathname}${params ? `?${params}` : ''}`);
+  };
+  const adjusted = !isDefaultKnobs(knobs);
+  const members = useMemo(() => data ? adjustMembers(data, knobs) : [], [data, knobs]);
   const laws = useMemo(() => new Map((data?.laws ?? []).map(l => [l.id, l])), [data]);
   const shown = useMemo(() => {
-    const all = data?.members ?? [];
+    const all = members;
     const bySide = side === 'loss' ? all.filter(m => m.net.median < 0) : side === 'benefit' ? [...all].filter(m => m.net.median > 0).reverse() : all;
     const q = query.trim();
     return q ? bySide.filter(m => m.name.includes(q)) : bySide;
-  }, [data, side, query]);
+  }, [members, side, query]);
   return <div className="app-shell research-page law-ranking members-page" data-theme="light">
     <ProductHeader title="議員ランキング" label="実データ・実名" brandHref="/members"><SiteNav active="/members" /></ProductHeader>
     <main>
@@ -179,11 +212,12 @@ export function MembersPage() {
           </li>)}</ul>
           <p className="fine-note">確かさの印が「コロナ期と重なる」「未測定」の法律は、法律ランキングでは額を公開判定にしていないものです。ここでは印を付けたまま配分に含めています。参考扱いの額（段階1・貸出残高）は配分していません。衆議院は起立採決で個人の賛否が記録に残らないため、衆議院の分は個人ではなく賛成した会派に置いています。額が出た法律が増えると、このページも同じ計算で更新されます。</p>
         </section>
+        <KnobsPanel knobs={knobs} onChange={setKnobs} />
         <section aria-label="上位の議員" className="members-top">
           <h3>失わせた額の上位10人（国賊側）</h3>
-          <RankBars caption="国賊側の純額の大きい順" format={formatYen} items={topBars(data.members, 'loss')} />
+          <RankBars caption="国賊側の純額の大きい順" format={formatYen} items={topBars(members, 'loss')} />
           <h3>生んだ額の上位10人（国士側）</h3>
-          <RankBars caption="国士側の純額の大きい順" format={formatYen} items={topBars(data.members, 'benefit')} />
+          <RankBars caption="国士側の純額の大きい順" format={formatYen} items={topBars(members, 'benefit')} />
         </section>
         <section aria-label="議員の一覧">
           <h3>全員の一覧</h3>
@@ -202,7 +236,7 @@ export function MembersPage() {
                 <span className="member-net"><strong>{signedYen(member.net.median)}</strong><small>幅 {signedYen(member.net.low)}〜{signedYen(member.net.high)}</small></span>
                 <span className="member-from">{member.laws.map(l => laws.get(l.lawId)!.id).join('・')}</span>
               </summary>
-              <MemberDetail member={member} laws={laws} activity={activity} />
+              <MemberDetail member={member} laws={laws} activity={activity} adjusted={adjusted} />
             </details>
           </li>)}</ol>
         </section>
@@ -241,6 +275,7 @@ export function MethodologyPage() {
         <li>質疑・修正案は成立したかどうかを変えないため配らない。記録として各議員の欄に出す。反対票は成立を決めていないため0円。</li>
         <li>数えるのは、行動（会議録・投票結果）→ 成立（議案の審議経過）→ 額（公的統計）がすべて一次資料でつながるものだけ。円の端数は最大剰余法で配り、人・会派・名前不明の賛成票の合計が法律の額にぴったり一致する。</li>
       </ol>
+      <p>議員ランキングのページには見え方のつまみがあります。初期値は上の計算そのものです。提出者の重み（下げた分は衆議院の賛成会派と参議院の賛成票に今の割合で回す）、衆議院の分を党に置くか参議院の賛成議員で分けるか、委員長を拒否権者にするか、帰属率（残りは未帰属）を変えられます。どの設定でも割合の合計は1のままで、円は切り捨てるため、配る額の合計は法律の額を超えません。つまみの値は URL に入るので、その見え方のまま共有できます。</p>
       <p className="fine-note">例：参議院で賛成214・反対16（可決に116票）、拒否権者2つのとき、提出者の組は35.4%、賛成1票は0.137%。提出者が3人なら1人11.8%。</p>
       <h3>3. 点数</h3>
       <p>点数（純額）＝ 国士側の法律からの配分の合計 − 国賊側の法律からの配分の合計。マイナスが国賊側、プラスが国士側。同じ統計（観測グループ）の動きを複数の法律で数えている人は、合計が重なりを含むため、その旨を表示する。</p>
