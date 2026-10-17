@@ -83,7 +83,7 @@ export function readRealRoute(search: string, pathname = ''): RealRoute {
   return { dataset: ['/evaluation', '/policies', '/actors'].includes(url.pathname) || p.get('dataset') === 'real' ? 'real' : 'fiction', release: p.get('release') ?? '', person: p.get('realPerson') ?? '' };
 }
 export function realRouteLocation(route: RealRoute): string {
-  if (route.dataset !== 'real') return '/ranking';
+  if (route.dataset !== 'real') return '/demo';
   const p = new URLSearchParams();
   if (route.release) p.set('release', route.release);
   if (route.person) p.set('realPerson', route.person);

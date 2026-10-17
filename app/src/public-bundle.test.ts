@@ -2,7 +2,7 @@
 // @ts-nocheck
 // @vitest-environment node
 import { build } from 'vite';
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, expect, it } from 'vitest';
@@ -23,4 +23,11 @@ it('公開版バンドルに端末専用APIとローカルファイル読込の�
   expect(code.length).toBeGreaterThan(0);
   expect(code).not.toContain('__local__');
   expect(code).not.toContain('ローカル評価データJSONを開く');
+  const files = (folder: string): string[] => readdirSync(folder).flatMap(name => statSync(join(folder, name)).isDirectory() ? files(join(folder, name)) : [join(folder, name)]);
+  for (const file of files(outDir)) expect(readFileSync(file, 'latin1').includes('private-m2'), file).toBe(false);
+  const ranking = JSON.parse(readFileSync(join(outDir, 'distribution', 'ranking.json'), 'utf8'));
+  expect(Object.keys(ranking)).not.toContain('people');
+  const approved = new Set(ranking.approval.approvedLaws);
+  for (const law of ranking.laws) expect(approved.has(law.id)).toBe(true);
+  for (const item of ranking.held) expect(JSON.stringify(item)).not.toMatch(/Yen|中央値|四分位/);
 }, 60_000);
