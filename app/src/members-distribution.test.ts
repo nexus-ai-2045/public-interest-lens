@@ -15,12 +15,14 @@ it('配布している members.json は、いまの派生データから同じ�
     publish: read('data/derived/publish-v1-triage-v2/publish.csv'),
     loss: read('data/derived/loss-v1-triage-v2/loss.csv'),
     enacted: read('data/acquired/bill-census-full/enacted.csv'),
+    votes: read('data/derived/allocation-v1/votes.csv'),
   });
   const { inputs, ...published } = JSON.parse(read('app/public/distribution/members.json'));
-  expect(Object.keys(inputs).sort()).toEqual(['enacted', 'involvements', 'loss', 'publish']);
+  expect(Object.keys(inputs).sort()).toEqual(['enacted', 'involvements', 'loss', 'publish', 'votes']);
   expect(published).toEqual(JSON.parse(JSON.stringify(built)));
   for (const member of published.members) for (const law of member.laws) {
-    expect(law.evidence.length).toBeGreaterThan(0);
-    for (const ev of law.evidence) expect(ev.url).toMatch(/^https:\/\/(kokkai\.ndl\.go\.jp|www\.sangiin\.go\.jp|www\.shugiin\.go\.jp)\//);
+    // 額が付く人は、配分に入った行動の一次資料が必ずある。0円の人は配らない行動の記録がある。
+    expect(law.fraction > 0 ? law.evidence.length : law.context.length).toBeGreaterThan(0);
+    for (const ev of [...law.evidence, ...law.context]) expect(ev.url).toMatch(/^https:\/\/(kokkai\.ndl\.go\.jp|www\.sangiin\.go\.jp|www\.shugiin\.go\.jp)\//);
   }
 });

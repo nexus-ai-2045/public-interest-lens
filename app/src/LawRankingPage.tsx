@@ -90,7 +90,7 @@ export function LawRankingPage() {
           </details>)}
         </section>
         <section className="lower-panel" aria-label="この画面の読み方">
-          <p><Info size={16} /> 議員ごとの配分額は<a href="/members">議員ランキング</a>にあります。幅つきの「推計上の配分額」で、計算のしかたは<a href="/methodology">計算方法</a>にあります。</p>
+          <p><Info size={16} /> 議員ごとの「この人が失わせた額・生んだ額」は<a href="/members">議員ランキング</a>にあります。幅つきの推計で、計算のしかたは<a href="/methodology">計算方法</a>にあります。</p>
           <p className="fine-note">ルール：{data.generatedFrom.rules.join('・')}。入力データの照合値（SHA-256）は配布データ ranking.json に記録しています。</p>
         </section>
       </>}
