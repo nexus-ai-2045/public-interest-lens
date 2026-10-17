@@ -12,9 +12,29 @@ from __future__ import annotations
 
 import argparse
 import csv
+import html
+import re
 from pathlib import Path
 
 CODE = {'賛成': 'Y', '反対': 'N', '投票なし': 'A'}
+
+
+STANDING_RE = re.compile(r'起立採決により[^<]*')
+TITLE_RE = re.compile(r'案件名：.*?<TD[^>]*>(.*?)</TD>', re.S | re.I)
+
+
+def standing(raw_root: Path, vid: str) -> tuple[str, str] | None:
+    """起立採決のページなら（議案名, 結果の文）を返す。個人別の記録はない。"""
+    path = raw_root / vid.split('-')[0] / f'{vid}.htm'
+    if not path.exists():
+        return None
+    page = path.read_text(encoding='utf-8', errors='replace')
+    m = STANDING_RE.search(page)
+    if not m:
+        return None
+    t = TITLE_RE.search(page)
+    title = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', '', t.group(1)))).strip() if t else ''
+    return title, m.group(0).strip()
 
 
 def vote_id(url: str) -> str:
@@ -25,6 +45,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--in-dir', type=Path, required=True)
     ap.add_argument('--out-dir', type=Path, required=True)
+    ap.add_argument('--raw-root', type=Path, help='原本の raw/ 。指定すると、読めなかった投票が起立採決かどうかを確かめる')
     ns = ap.parse_args(argv)
     out = ns.out_dir
     (out / 'ballots').mkdir(parents=True, exist_ok=True)
@@ -33,9 +54,17 @@ def main(argv: list[str] | None = None) -> int:
         summary = list(csv.DictReader(fh))
     with (out / 'votes_index.csv').open('w', encoding='utf-8', newline='') as fh:
         w = csv.writer(fh)
-        w.writerow(['投票ID', *summary[0].keys()])
+        w.writerow(['投票ID', *summary[0].keys(), '採決方法'])
         for r in summary:
-            w.writerow([vote_id(r['出典URL']), *r.values()])
+            vid = vote_id(r['出典URL'])
+            method = '押しボタン'
+            if r['照合'] != 'OK' and ns.raw_root:
+                st = standing(ns.raw_root, vid)
+                if st:
+                    r['議案名'] = r['議案名'] or st[0]
+                    r['照合'] = '個人別なし'
+                    method = st[1]
+            w.writerow([vid, *r.values(), method])
 
     members: dict[tuple[str, str, str], int] = {}
     total = 0
