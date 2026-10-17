@@ -162,6 +162,31 @@ export function MembersPage() {
   const [activity, setActivity] = useState<MemberActivity | null>(null);
   const [side, setSide] = useState<'all' | 'loss' | 'benefit'>('all');
   const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get('name') ?? '');
+  // 名前を選んだら、その人の欄を開いて画面に出す（ページの下の方に開くだけだと、押しても何も起きないように見える）。
+  const [focus, setFocus] = useState(() => new URLSearchParams(window.location.search).get('name') ?? '');
+  const openMember = (name: string) => {
+    setQuery(name);
+    setFocus(name);
+    const params = new URLSearchParams(window.location.search);
+    params.set('name', name);
+    window.history.pushState(null, '', `${window.location.pathname}?${params}`);
+  };
+  useEffect(() => {
+    if (!focus || !data) return;
+    requestAnimationFrame(() => document.getElementById(`member-${focus}`)?.scrollIntoView({ block: 'start' }));
+  }, [focus, data]);
+  useEffect(() => {
+    const restore = () => { const name = new URLSearchParams(window.location.search).get('name') ?? ''; setQuery(name); setFocus(name); };
+    window.addEventListener('popstate', restore);
+    return () => window.removeEventListener('popstate', restore);
+  }, []);
+  const onTopClick = (event: React.MouseEvent) => {
+    const link = (event.target as HTMLElement).closest('a');
+    const name = link ? new URL(link.href).searchParams.get('name') : null;
+    if (!name || new URL(link!.href).pathname !== '/members') return;
+    event.preventDefault();
+    openMember(name);
+  };
   useEffect(() => { document.title = '議員ランキング｜国賊／国士ランキング'; }, []);
   useEffect(() => {
     const controller = new AbortController();
@@ -213,7 +238,7 @@ export function MembersPage() {
           <p className="fine-note">確かさの印が「コロナ期と重なる」「未測定」の法律は、法律ランキングでは額を公開判定にしていないものです。ここでは印を付けたまま配分に含めています。参考扱いの額（段階1・貸出残高）は配分していません。衆議院は起立採決で個人の賛否が記録に残らないため、衆議院の分は個人ではなく賛成した会派に置いています。額が出た法律が増えると、このページも同じ計算で更新されます。</p>
         </section>
         <KnobsPanel knobs={knobs} onChange={setKnobs} />
-        <section aria-label="上位の議員" className="members-top">
+        <section aria-label="上位の議員" className="members-top" onClick={onTopClick}>
           <h3>失わせた額の上位10人（国賊側）</h3>
           <RankBars caption="国賊側の純額の大きい順" format={formatYen} items={topBars(members, 'loss')} />
           <h3>生んだ額の上位10人（国士側）</h3>
@@ -226,10 +251,11 @@ export function MembersPage() {
               {([['all', '全員（国賊側が上）'], ['loss', '国賊側'], ['benefit', '国士側']] as const).map(([key, label]) => <button key={key} type="button" aria-pressed={side === key} onClick={() => setSide(key)}>{label}</button>)}
             </div>
             <label>名前で探す <input type="search" value={query} onChange={event => setQuery(event.target.value)} /></label>
+            {query && <button type="button" onClick={() => { setQuery(''); setFocus(''); const params = new URLSearchParams(window.location.search); params.delete('name'); window.history.replaceState(null, '', `${window.location.pathname}${params.toString() ? `?${params}` : ''}`); }}>全員を表示</button>}
           </div>
           <p className="fine-note" role="status">{shown.length}人を表示</p>
-          <ol className="members-list">{shown.map(member => <li key={member.name} className={`member-card ${member.net.median < 0 ? 'loss' : 'benefit'}`}>
-            <details open={shown.length === 1}>
+          <ol className="members-list">{shown.map(member => <li key={member.name} id={`member-${member.name}`} className={`member-card ${member.net.median < 0 ? 'loss' : 'benefit'}`}>
+            <details open={shown.length === 1 || member.name === focus}>
               <summary>
                 <span className="member-rank">{member.rank}位</span>
                 <span className="member-name">{member.name}</span>
