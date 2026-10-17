@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseCsv, toCsv, type Tables } from './impact-batch';
 import {
-  LOSS_HEADER, LOSS_SOURCES, OECD_FILE, alignControls, buildLossInput, evaluateLosses, lossRow, lossWindow, observationGroups, qualifies, toLossLaw, type LossSource,
+  LOSS_HEADER, LOSS_SOURCES, OECD_FILE, alignControls, buildLossInput, evaluateLosses, lossRow, lossWindow, observationGroups, qualifies, toLossLaw, listed, STAGE1_REFERENCE_REASON, type LossSource,
 } from './loss-batch';
 
 // すべて人工の表です。実在の統計ではありません。
@@ -35,6 +35,11 @@ describe('対象の選び方', () => {
     expect(rows.map(toLossLaw).filter(qualifies).map(l => [l.id, l.stage, l.direction])).toEqual([['a', 3, 'harm'], ['b', 2, 'benefit']]);
   });
 
+  it('参考として額を出す対象には、向きのある段階1も入る（向きの無い段階1・保留は入らない）', () => {
+    const rows = [impactRow('a', 'x', '2015-04-01', '段階1', '貢献'), impactRow('b', 'x', '2015-04-01', '段階1', ''), impactRow('c', 'x', '2015-04-01', '保留', '貢献')];
+    expect(rows.map(toLossLaw).filter(listed).map(l => l.id)).toEqual(['a']);
+  });
+
   it('損失額の窓は開始年の5年前から開始後10年目（開始年が1年目）まで', () => {
     expect(lossWindow('2015-04-01')).toEqual({ from: 2010, to: 2024 });
   });
@@ -65,6 +70,32 @@ describe('1法律の入力と判定ルールの呼び出し', () => {
     expect(cells[LOSS_HEADER.indexOf('参考フラグ')]).toBe('参考');
     expect(cells[LOSS_HEADER.indexOf('損失または便益の額')]).toMatch(/^損失：中央値=\d+;第1四分位=\d+;第3四分位=\d+$/);
     expect(cells[LOSS_HEADER.indexOf('理由')]).toContain('新型コロナ');
+  });
+
+  it('段階1の行は、段階2以上と同じ方法・同じ入力で額が出るが、必ず参考の印が付き、公開には使わない', () => {
+    const source = { ...loanSource(), reference: false };
+    const stage2 = evaluateLosses(tables, [impactRow('L1', '人工の与信', '2015-04-01', '段階2', '悪影響')], [source])[0];
+    const rows = [impactRow('L1', '人工の与信', '2015-04-01', '段階1', '悪影響')];
+    const [row] = evaluateLosses(tables, rows, [source], { includeStage1: true });
+    expect(row.result!.lossYen).toEqual(stage2.result!.lossYen);
+    expect(row.built!.reference).toBe(true);
+    expect(row.built!.stage1Reference).toBe(true);
+    const cells = lossRow(row);
+    expect(cells[LOSS_HEADER.indexOf('段階')]).toBe('段階1');
+    expect(cells[LOSS_HEADER.indexOf('参考フラグ')]).toBe('参考');
+    expect(cells[LOSS_HEADER.indexOf('理由')]).toMatch(/^参考（段階1）：/);
+    expect(cells[LOSS_HEADER.indexOf('理由')]).toContain(STAGE1_REFERENCE_REASON);
+    expect(cells[LOSS_HEADER.indexOf('損失または便益の額')]).toMatch(/^損失：/);
+    // 段階2の行には参考の印が付かない。振り分けv1の出力（includeStage1 なし）には段階1を載せない。
+    expect(lossRow(stage2)[LOSS_HEADER.indexOf('参考フラグ')]).toBe('');
+    expect(evaluateLosses(tables, rows, [source])).toEqual([]);
+  });
+
+  it('対応の無い指標の段階1は、参考の印は付くが額は出ない（保留）', () => {
+    const [row] = evaluateLosses(tables, [impactRow('Z', '対応なし', '2015-04-01', '段階1', '貢献')], [loanSource()], { includeStage1: true });
+    const cells = lossRow(row);
+    expect(cells[LOSS_HEADER.indexOf('損失または便益の額')]).toBe('');
+    expect(cells[LOSS_HEADER.indexOf('参考フラグ')]).toBe('参考');
   });
 
   it('系列の定義が変わる年を窓がまたげば、判定ルールを呼ばずに保留にする', () => {

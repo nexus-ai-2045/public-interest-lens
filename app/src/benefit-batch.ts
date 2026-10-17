@@ -141,14 +141,14 @@ export function evaluateBenefit(tables: Tables, row: LossRow, purposes: Row[], l
   const passed = benefitYen ?? lowerBoundYen;
   const finalLoss = usedInput && grossLoss?.lossYen ? estimateLoss({ ...usedInput, regulationBenefitYen: passed ? passed.median : null }) : null;
   const decision = decidePublication({
-    reference: built?.reference ?? false, lossBlocked: built ? built.blocked ?? null : '損失額の入力の対応がない指標',
+    reference: built?.reference ?? false, stage1Reference: built?.stage1Reference ?? false, lossBlocked: built ? built.blocked ?? null : '損失額の入力の対応がない指標',
     originalLoss: result, directionConflict: classification.directionConflict, covid, benefits, grossLoss, finalLoss, direction: law.direction, purposeText: purposeTextOf(line1),
   });
   return { row, classification, line1, agreement, benefits, covid, usedInput, grossLoss, finalLoss, benefitYen, decision, recomputed };
 }
 
-export function evaluateBenefits(tables: Tables, impactRows: ImpactRow[], purposes: Row[], line2: Map<string, BenefitLine2>): BenefitLawResult[] {
-  return evaluateLosses(tables, impactRows).map(r => evaluateBenefit(tables, r, purposes, line2));
+export function evaluateBenefits(tables: Tables, impactRows: ImpactRow[], purposes: Row[], line2: Map<string, BenefitLine2>, options: { includeStage1?: boolean } = {}): BenefitLawResult[] {
+  return evaluateLosses(tables, impactRows, undefined, options).map(r => evaluateBenefit(tables, r, purposes, line2));
 }
 
 /** 同じ便益の系列で窓が重なる法律のまとまり（足さない）。測った系列のある種類だけ。 */

@@ -21,6 +21,8 @@ export type Law = {
   /** loss は損失（国賊側）、benefit は便益（国士側）。 */
   side: 'loss' | 'benefit';
   publishable: boolean;
+  /** loss.csv の参考フラグが「参考」（貸出残高、または経済全体の指標で確認できていない段階1）。配分しない。 */
+  reference?: boolean;
   group: string;
   /** publish.csv の額そのもの（円）。便益は負。low は第1四分位、high は第3四分位。 */
   amount: Range;
@@ -68,9 +70,12 @@ export function allocateExact(amount: Range, involvements: Involvement[], rate: 
   return base.map(a => ({ personId: a.personId, weight: a.weight, share: { low: low.get(a.personId)!, median: median.get(a.personId)!, high: high.get(a.personId)! } }));
 }
 
+/** 参考の行（貸出残高・段階1）は議員に配分しない。 */
+export const allocatable = (laws: Law[]): Law[] => laws.filter(l => !l.reference);
+
 export function allocateAll(laws: Law[], involvementsByLaw: Map<string, Involvement[]>): AllocationRow[] {
   const rows: AllocationRow[] = [];
-  for (const law of laws) {
+  for (const law of allocatable(laws)) {
     const inv = involvementsByLaw.get(law.lawId) ?? [];
     for (const variant of VARIANTS) {
       for (const rate of RATES) {
@@ -91,7 +96,7 @@ export type LawTotal = { lawId: string; variant: Variant; rate: number; persons:
 /** 法律ごとの帰属額（個人の配分の合計）と未帰属額（額 − 帰属額）。 */
 export function lawTotals(laws: Law[], rows: AllocationRow[]): LawTotal[] {
   const out: LawTotal[] = [];
-  for (const law of laws) for (const variant of VARIANTS) for (const rate of RATES) {
+  for (const law of allocatable(laws)) for (const variant of VARIANTS) for (const rate of RATES) {
     const mine = rows.filter(r => r.lawId === law.lawId && r.variant === variant && r.rate === rate);
     const attributed = mine.reduce((s, r) => add(s, r.share), zero());
     out.push({ lawId: law.lawId, variant, rate, persons: mine.length, attributed,

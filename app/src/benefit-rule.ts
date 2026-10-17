@@ -209,6 +209,8 @@ export type PublishRow = 'R1' | 'R2' | 'R3' | 'R4' | 'R5' | 'R6';
 export type PublishInput = {
   /** 参考の行（貸出残高）。 */
   reference: boolean;
+  /** 参考の理由が「段階1（経済全体の指標で確認できていない）」。reference も true にする。省略は false（貸出残高など）。 */
+  stage1Reference?: boolean;
   /** loss-v1 で入力を作れなかった理由（系列の断絶など）。 */
   lossBlocked: string | null;
   /** loss-rule-v1 の元の結果（便益は未測定のまま）。 */
@@ -236,6 +238,7 @@ export const netRange = (loss: YenRange, benefit: YenRange): YenRange => ({ low:
 /** 上から順に当てはめ、最初に当たった行で決める。「公開可」は公開の候補で、実際の公開は人が一括で承認する（設計決定0007 §6）。 */
 export function decidePublication(p: PublishInput): PublishDecision {
   const no = (row: PublishRow, reason: string, net: YenRange | null = null, lowerBound = false): PublishDecision => ({ row, publishable: false, reason, net, lowerBound });
+  if (p.reference && p.stage1Reference) return no('R1', '公開不可：参考（段階1）の行は、経済全体の指標で確認できていないため、合計に入れず公開の対象にしない');
   if (p.reference) return no('R1', '公開不可：参考の行（貸出残高）は合計に入れず公開の対象にしない');
   if (p.lossBlocked) return no('R1', `公開不可：loss-rule-v1 が保留（${p.lossBlocked}）`);
   if (!p.originalLoss?.lossYen) return no('R1', `公開不可：loss-rule-v1 が保留（${p.originalLoss?.reason ?? '入力なし'}）`);

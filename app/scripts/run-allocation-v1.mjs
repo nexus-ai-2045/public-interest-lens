@@ -14,19 +14,23 @@ for (const k of ['involvements', 'publish', 'loss', 'laws', 'out-dir']) if (!arg
 const read = p => parseCsv(readFileSync(p, 'utf8'));
 const csv = (header, objs) => toCsv(header, objs.map(o => header.map(h => String(o[h] ?? ''))));
 
-const want = args.laws.split(',');
+const wantAll = args.laws.split(',');
 const publish = new Map(read(args.publish).map(r => [r.id, r]));
 const lossRows = new Map(read(args.loss).map(r => [r.id, r]));
-const laws = want.map(id => {
+const allLaws = wantAll.map(id => {
   const p = publish.get(id), l = lossRows.get(id);
   if (!p || !l) throw new Error(`${id} が publish.csv か loss.csv にありません`);
   const amount = A.parseAmount(p['損失または便益']);
   if (!amount) throw new Error(`${id} の額を読めません`);
   const side = p['側'].startsWith('国士側') ? 'benefit' : 'loss';
   if ((side === 'benefit') !== (amount.median < 0)) throw new Error(`${id} の側と額の符号が合いません`);
-  return { lawId: id, title: p['題名'], side, publishable: p['公開可否'] === '公開可', group: l['観測グループ'] ?? '', amount,
+  return { lawId: id, title: p['題名'], side, publishable: p['公開可否'] === '公開可', reference: l['参考フラグ'] === '参考', group: l['観測グループ'] ?? '', amount,
     rule: p['判定表の行'], lossCsvAmount: A.parseAmount(l['損失または便益の額'] ?? '') };
 });
+// 参考の行（貸出残高・段階1）は配分しない。
+const laws = A.allocatable(allLaws);
+const want = laws.map(l => l.lawId);
+for (const l of allLaws) if (l.reference) console.log(`配分しない（参考）：${l.lawId}`);
 
 const invRows = read(args.involvements);
 const byLaw = new Map();
