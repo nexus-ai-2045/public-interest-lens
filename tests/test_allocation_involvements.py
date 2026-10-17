@@ -94,6 +94,32 @@ class AllocationInvolvementsTest(unittest.TestCase):
         self.assertIn('立場の判定ファイルが無い', rows[('丙山次郎', 'question')]['除外理由'])
         self.assertTrue(any(n['種類'] == '立場の判定なし' for n in notes))
 
+    def test_aliases_map_variant_spellings_to_the_canonical_name(self):
+        path = self.collect / '閣法-151-9.json'
+        d = json.loads(path.read_text(encoding='utf-8'))
+        d['involvements'][2]['氏名'] = 'へいざん 次郎'  # 架空の表記ゆれ（ひらがな）
+        path.write_text(json.dumps(d, ensure_ascii=False), encoding='utf-8')
+        # 別名が無ければ、別人として照合できず立場の記録も見つからない。
+        rows, _ = self.build()
+        self.assertIn('立場の判定に本人の記録が無い', rows[('へいざん次郎', 'question')]['除外理由'])
+        aliases_csv = Path(self.tmp.name) / 'aliases.csv'
+        write_csv(aliases_csv, ['別名', '正名'], [['へいざん　次郎', '丙山次郎']])
+        aliases = m.load_aliases(aliases_csv)
+        built, _ = m.build(self.collect, self.stance, self.votes, self.cabinet, aliases)
+        rows = {(r['氏名'], r['行動']): r for r in built}
+        self.assertEqual(rows[('丙山次郎', 'question')]['算入'], 'はい')
+        self.assertEqual(rows[('丙山次郎', 'question')]['氏名_原表記'], 'へいざん 次郎')
+
+    def test_alias_table_rejects_conflicts_and_chains(self):
+        path = Path(self.tmp.name) / 'a.csv'
+        write_csv(path, ['別名', '正名'], [['あ', '甲'], ['あ', '乙']])
+        with self.assertRaises(ValueError):
+            m.load_aliases(path)
+        write_csv(path, ['別名', '正名'], [['あ', '甲'], ['甲', '乙']])
+        with self.assertRaises(ValueError):
+            m.load_aliases(path)
+        self.assertEqual(m.load_aliases(None), {})
+
 
 if __name__ == '__main__':
     unittest.main()

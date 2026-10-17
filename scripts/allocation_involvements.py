@@ -13,6 +13,7 @@
 - 参議院本会議で反対（N）した人は、その法律では反対者として何も数えない。
 - 証拠URLが http(s) で始まらない行動は数えない。
 - 名寄せは空白（半角・全角）と敬称を除いた文字列の一致だけで行い、一致しない・複数に一致するものは推測せず一覧に残す。
+  表記ゆれは --aliases <csv>（列：別名,正名）で明示した対応だけを、正規化の後に正名へ置き換える（推測はしない）。表そのものは人名を含むので非公開に置く。
 """
 from __future__ import annotations
 
@@ -42,6 +43,22 @@ def normalize_name(name: str) -> str:
     return s
 
 
+def load_aliases(path: Path | None) -> dict[str, str]:
+    """別名,正名 の表を読み、正規化した別名 → 正規化した正名 の辞書にする。同じ別名に違う正名があれば誤りとして止める。"""
+    if path is None:
+        return {}
+    out: dict[str, str] = {}
+    for r in read_csv(path):
+        a, c = normalize_name(r['別名']), normalize_name(r['正名'])
+        if not a or not c or a == c:
+            continue
+        if out.setdefault(a, c) != c:
+            raise ValueError(f'別名に複数の正名があります：{a}')
+    if any(c in out for c in out.values()):
+        raise ValueError('別名の連鎖があります（正名がさらに別名になっている）')
+    return out
+
+
 def read_csv(path: Path) -> list[dict]:
     with path.open(encoding='utf-8', newline='') as f:
         return list(csv.DictReader(f))
@@ -65,8 +82,8 @@ def find_plenary_votes(index_rows: list[dict], title: str, min_session: int) -> 
 
 
 class Cabinet:
-    def __init__(self, rows: list[dict]):
-        self.rows = [dict(r, _n=normalize_name(r['氏名'])) for r in rows]
+    def __init__(self, rows: list[dict], norm=normalize_name):
+        self.rows = [dict(r, _n=norm(r['氏名'])) for r in rows]
 
     def position_at(self, name: str, date: str) -> tuple[str, str]:
         """(立場区分, 根拠)。同じ日に複数あれば重い方。"""
@@ -93,12 +110,12 @@ class Cabinet:
         return best
 
 
-def stance_map(path: Path) -> dict[str, list[str]]:
+def stance_map(path: Path, norm=normalize_name) -> dict[str, list[str]]:
     if not path.exists():
         return {}
     out: dict[str, list[str]] = {}
     for x in json.loads(path.read_text(encoding='utf-8')):
-        out.setdefault(normalize_name(x['氏名']), []).append(x['立場'])
+        out.setdefault(norm(x['氏名']), []).append(x['立場'])
     return out
 
 
@@ -114,9 +131,16 @@ def stance_reason(a: list[str], b: list[str]) -> str:
     return f"2系統とも{'／'.join(sorted(set(a)))}（支持ではない）"
 
 
-def build(collect_dir: Path, stance_dir: Path, votes_dir: Path, cabinet_csv: Path) -> tuple[list[dict], list[dict]]:
-    """(関与の行, 注記の行)。注記は名寄せの不一致・投票の特定・立場の欠落など、人が確かめる事項。"""
-    cabinet = Cabinet(read_csv(cabinet_csv))
+def build(collect_dir: Path, stance_dir: Path, votes_dir: Path, cabinet_csv: Path, aliases: dict[str, str] | None = None) -> tuple[list[dict], list[dict]]:
+    """(関与の行, 注記の行)。注記は名寄せの不一致・投票の特定・立場の欠落など、人が確かめる事項。
+    aliases は 正規化した別名 → 正規化した正名。名前を読む箇所（収集・立場・投票名簿・内閣名簿）のすべてで正規化の後に適用する。"""
+    aliases = aliases or {}
+
+    def norm(name: str) -> str:
+        n = normalize_name(name)
+        return aliases.get(n, n)
+
+    cabinet = Cabinet(read_csv(cabinet_csv), norm)
     index = read_csv(votes_dir / 'votes_index.csv')
     members = read_csv(votes_dir / 'members.csv')
     rows: list[dict] = []
@@ -130,7 +154,7 @@ def build(collect_dir: Path, stance_dir: Path, votes_dir: Path, cabinet_csv: Pat
         law, title = d['id'], d['title']
         session = int(re.search(r'-(\d+)-', law).group(1))
         a_path, b_path = stance_dir / f'{law}.lineA.json', stance_dir / f'{law}.lineB.json'
-        sa, sb = stance_map(a_path), stance_map(b_path)
+        sa, sb = stance_map(a_path, norm), stance_map(b_path, norm)
         if not a_path.exists() or not b_path.exists():
             note(law, '立場の判定なし', '系統A・Bの立場ファイルがそろわないため、質疑は1件も数えない')
 
@@ -141,7 +165,7 @@ def build(collect_dir: Path, stance_dir: Path, votes_dir: Path, cabinet_csv: Pat
         if len(votes) == 1:
             vote_row = votes[0]
             vs = vote_row['回次']
-            mem = {m['議員ID']: normalize_name(m['議員名']) for m in members if m['回次'] == vs}
+            mem = {m['議員ID']: norm(m['議員名']) for m in members if m['回次'] == vs}
             # 同じ回次で会派が変わると、同じ表記の議員IDが複数ある。この投票に記録のあるIDが1つだけなら同じ人とみなし、
             # 2つ以上あるとき（同姓同名の別人の可能性）は推測せず使わない。
             cast: dict[str, list[str]] = {}
@@ -158,9 +182,9 @@ def build(collect_dir: Path, stance_dir: Path, votes_dir: Path, cabinet_csv: Pat
             note(law, '参院本会議の投票', f'議案名で特定できない（候補{len(votes)}件）。採決の関与は作らない')
 
         collected_names = set()
-        chairs = {normalize_name(v['氏名']) for v in d['involvements'] if v['行動'] == 'chair'}
+        chairs = {norm(v['氏名']) for v in d['involvements'] if v['行動'] == 'chair'}
         for v in d['involvements']:
-            n = normalize_name(v['氏名'])
+            n = norm(v['氏名'])
             collected_names.add(n)
             act, date, url = v['行動'], v.get('日付') or '', v.get('証拠URL') or ''
             pos, why = cabinet.position_at(n, date) if date else ('other', '')
@@ -189,7 +213,7 @@ def build(collect_dir: Path, stance_dir: Path, votes_dir: Path, cabinet_csv: Pat
             # 収集の関与にあるが、参議院の名簿にも内閣名簿にも無い名前（ひらがな表記など）は、照合できなかったとして残す。
             for n in sorted(collected_names):
                 in_cab = any(r['_n'] == n for r in cabinet.rows)
-                if n not in ballots and not in_cab and any(v['院'] == '参議院' and normalize_name(v['氏名']) == n and v['行動'] == 'question' for v in d['involvements']):
+                if n not in ballots and not in_cab and any(v['院'] == '参議院' and norm(v['氏名']) == n and v['行動'] == 'question' for v in d['involvements']):
                     note(law, '名寄せ（不一致）', f'参議院の会議で質疑した人が、第{vote_row["回次"]}回の参議院の投票記録に見つからない（衆議院議員か、表記の違い）：{n}')
             for n, yn in sorted(ballots.items()):
                 if yn != 'Y':
@@ -217,10 +241,15 @@ def main(argv=None) -> int:
     p.add_argument('--stance-dir', required=True, type=Path)
     p.add_argument('--votes-dir', required=True, type=Path)
     p.add_argument('--cabinet', required=True, type=Path)
+    p.add_argument('--aliases', type=Path, help='別名,正名 の CSV（非公開に置く）')
     p.add_argument('--out', required=True, type=Path)
     p.add_argument('--notes-out', type=Path)
     a = p.parse_args(argv)
-    rows, notes = build(a.collect_dir, a.stance_dir, a.votes_dir, a.cabinet)
+    aliases = load_aliases(a.aliases)
+    rows, notes = build(a.collect_dir, a.stance_dir, a.votes_dir, a.cabinet, aliases)
+    if aliases:
+        applied = sorted({(r['氏名_原表記'], r['氏名']) for r in rows if normalize_name(r['氏名_原表記']) in aliases})
+        notes.append({'法律ID': '', '種類': '別名の適用', '内容': f'別名表 {len(aliases)} 件、関与の行に適用 {len(applied)} 件'})
     write_csv(a.out, HEADER, rows)
     if a.notes_out:
         write_csv(a.notes_out, ['法律ID', '種類', '内容'], notes)

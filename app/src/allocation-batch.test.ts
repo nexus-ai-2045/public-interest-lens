@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allocateAll, applyVariant, lawTotals, parseAmount, personTotals, rankSensitivity, ranks, toLossCredit, type Law } from './allocation-batch';
+import { allocateAll, allocateExact, applyVariant, distributeLargestRemainder, lawTotals, parseAmount, personTotals, rankSensitivity, ranks, toLossCredit, type Law } from './allocation-batch';
 import { allocateLoss, type Involvement } from './loss-rule';
 
 // 名前はすべて架空。
@@ -27,10 +27,11 @@ describe('allocation-v1', () => {
     expect(parseAmount('保留')).toBeNull();
   });
 
-  it('基準の変種は allocateLoss をそのまま呼んだ結果と同じ', () => {
+  it('基準の変種は allocateLoss と同じ重み・順で、1円以内の差だけ', () => {
     const rows = allocateAll(laws, inv).filter(r => r.lawId === '閣法-1-1' && r.variant === 'base' && r.rate === 0.5);
     const direct = allocateLoss(lossLaw.amount, inv.get('閣法-1-1')!, 0.5);
-    expect(rows.map(r => [r.personId, r.weight, r.share])).toEqual(direct.map(a => [a.personId, a.weight, a.shareYen]));
+    expect(rows.map(r => [r.personId, r.weight])).toEqual(direct.map(a => [a.personId, a.weight]));
+    rows.forEach((r, i) => expect(Math.abs(r.share.median - direct[i].shareYen.median)).toBeLessThanOrEqual(1));
     // 甲野 5×2=10、乙川 3×1.5=4.5（最大の行動だけ）、丙山 1、丁田は証拠URLが無いので数えない。
     expect(direct.map(a => [a.personId, a.weight])).toEqual([['甲野太郎', 10], ['乙川花子', 4.5], ['丙山次郎', 1]]);
   });
@@ -46,7 +47,9 @@ describe('allocation-v1', () => {
     for (const t of totals) {
       const law = laws.find(l => l.lawId === t.lawId)!;
       expect(t.attributed.median + t.unattributed.median).toBe(law.amount.median);
-      expect(Math.abs(t.attributed.median - law.amount.median * t.rate)).toBeLessThanOrEqual(t.persons);
+      expect(t.attributed.median).toBe(Math.round(law.amount.median * t.rate));
+      expect(t.attributed.low).toBe(Math.round(law.amount.low * t.rate));
+      expect(t.attributed.high).toBe(Math.round(law.amount.high * t.rate));
     }
   });
 
@@ -64,5 +67,28 @@ describe('allocation-v1', () => {
     const r = ranks(totals, 'base', 0.5);
     expect(r.get('甲野太郎')).toBe(1);
     expect(rankSensitivity(totals).every(x => x.flagged === x.maxMove >= 5)).toBe(true);
+  });
+
+  it('最大剰余法：合計がぴったり一致し、負の額でも符号を保つ', () => {
+    const items = [{ personId: 'あ', weight: 1 }, { personId: 'い', weight: 1 }, { personId: 'う', weight: 1 }];
+    const d = distributeLargestRemainder(100, items);
+    expect([...d.values()].reduce((a, b) => a + b, 0)).toBe(100);
+    expect([...d.values()].sort()).toEqual([33, 33, 34]);
+    expect(d.get('あ')).toBe(34); // 余りが同じなら氏名順
+    const n = distributeLargestRemainder(-100, items);
+    expect([...n.values()].reduce((a, b) => a + b, 0)).toBe(-100);
+    expect(distributeLargestRemainder(10, [{ personId: 'あ', weight: 4.5 }, { personId: 'い', weight: 1 }]).get('あ')).toBe(8);
+    expect(distributeLargestRemainder(5, []).size).toBe(0);
+  });
+
+  it('多数の関与者でも、各法律・変種・帰属率の配分合計が帰属額と一致する', () => {
+    const many: Involvement[] = Array.from({ length: 213 }, (_, i) => ({ personId: `架空${String(i).padStart(3, '0')}`, action: i % 7 === 0 ? 'question' : 'vote', position: i % 11 === 0 ? 'minister_or_party_exec' : 'other', evidenceUrl: url }));
+    const amount = { low: -22263659558556, median: -19446249328385, high: -9405880918004 };
+    for (const rate of [0.3, 0.5, 0.7]) {
+      const rows = allocateExact(amount, many, rate);
+      expect(rows.reduce((s, r) => s + r.share.median, 0)).toBe(Math.round(amount.median * rate));
+      expect(rows.reduce((s, r) => s + r.share.low, 0)).toBe(Math.round(amount.low * rate));
+      expect(rows.reduce((s, r) => s + r.share.high, 0)).toBe(Math.round(amount.high * rate));
+    }
   });
 });

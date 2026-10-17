@@ -41,14 +41,41 @@ export function applyVariant(involvements: Involvement[], variant: Variant): Inv
   return involvements;
 }
 
+/**
+ * 最大剰余法で整数の円に配る。合計は target にぴったり一致する。
+ * 重みは 0.5 刻みなので 2 倍して整数にし、BigInt で厳密に割る。余りが同じなら重みの大きい方、それも同じなら氏名順。
+ */
+export function distributeLargestRemainder(target: number, items: { personId: string; weight: number }[]): Map<string, number> {
+  const out = new Map<string, number>();
+  if (items.length === 0) return out;
+  const sign = target < 0 ? -1n : 1n;
+  const t = BigInt(Math.abs(target));
+  const ws = items.map(i => BigInt(Math.round(i.weight * 2)));
+  const total = ws.reduce((a, b) => a + b, 0n);
+  const parts = items.map((it, k) => ({ it, base: (t * ws[k]) / total, rem: (t * ws[k]) % total }));
+  let left = t - parts.reduce((s, p) => s + p.base, 0n);
+  const order = [...parts].sort((a, b) => (a.rem === b.rem ? 0 : a.rem > b.rem ? -1 : 1) || b.it.weight - a.it.weight || a.it.personId.localeCompare(b.it.personId));
+  for (const p of order) if (left > 0n) { p.base += 1n; left -= 1n; }
+  for (const p of parts) out.set(p.it.personId, Number(sign * p.base));
+  return out;
+}
+
+/** 帰属額（額 × 帰属率を円に丸めたもの）を、allocateLoss の重みどおりに最大剰余法で配る。 */
+export function allocateExact(amount: Range, involvements: Involvement[], rate: number): { personId: string; weight: number; share: Range }[] {
+  const base = allocateLoss(amount, involvements, rate);
+  const dist = (x: number) => distributeLargestRemainder(Math.round(x * rate), base);
+  const low = dist(amount.low), median = dist(amount.median), high = dist(amount.high);
+  return base.map(a => ({ personId: a.personId, weight: a.weight, share: { low: low.get(a.personId)!, median: median.get(a.personId)!, high: high.get(a.personId)! } }));
+}
+
 export function allocateAll(laws: Law[], involvementsByLaw: Map<string, Involvement[]>): AllocationRow[] {
   const rows: AllocationRow[] = [];
   for (const law of laws) {
     const inv = involvementsByLaw.get(law.lawId) ?? [];
     for (const variant of VARIANTS) {
       for (const rate of RATES) {
-        for (const a of allocateLoss(law.amount, applyVariant(inv, variant), rate)) {
-          rows.push({ lawId: law.lawId, variant, rate, personId: a.personId, weight: a.weight, share: a.shareYen });
+        for (const a of allocateExact(law.amount, applyVariant(inv, variant), rate)) {
+          rows.push({ lawId: law.lawId, variant, rate, personId: a.personId, weight: a.weight, share: a.share });
         }
       }
     }
