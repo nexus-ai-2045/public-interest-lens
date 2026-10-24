@@ -767,12 +767,17 @@ def line_b_attribution(directory: Path) -> dict[str, str]:
     return out
 
 
-NAME_FOLDS = str.maketrans({"髙": "高", "﨑": "崎", "德": "徳", "濵": "浜", "邊": "辺", "邉": "辺", "齋": "斎", "齊": "斉"})
+NAME_FOLDS = str.maketrans({"壯": "壮", "濱": "浜", "髙": "高", "﨑": "崎", "德": "徳", "濵": "浜", "邊": "辺", "邉": "辺", "齋": "斎", "齊": "斉"})
 
 
 def reader_name(name: str) -> str:
     """AI の読み手が写した名前の表記をそろえる（NFKC で ㈱→(株)、異体字を通用字に、空白を1つに）。"""
     return re.sub(r"\s+", " ", nfkc(name).translate(NAME_FOLDS)).strip()
+
+
+def fold_name(name: str) -> str:
+    """人名の異体字を通用字に寄せる（人物IDとの照合用）。"""
+    return nfkc(name or "").translate(NAME_FOLDS)
 
 
 def manifest_meta(manifest: list[dict[str, str]], index: list[dict[str, str]]) -> dict[str, dict[str, str]]:
@@ -880,7 +885,10 @@ def person_index(persons: list[dict[str, str]]) -> dict[str, list[str]]:
     by_name: dict[str, list[str]] = {}
     for p in persons:
         if p.get("人物ID"):
-            by_name.setdefault(canonical(p["氏名"]), []).append(p["人物ID"])
+            for name in {p["氏名"], *filter(None, re.split(r"[|;、,／/]", p.get("別表記", "")))}:
+                ids = by_name.setdefault(canonical(fold_name(name)), [])
+                if p["人物ID"] not in ids:
+                    ids.append(p["人物ID"])
     return by_name
 
 
@@ -986,22 +994,37 @@ def member_of(meta: dict[str, str], lookup: dict[tuple[str, str], dict[str, str]
     return next(iter(names.values())) if len(names) == 1 else ""
 
 
-def attribution_check(member: str, line_b_member: str | None) -> str:
-    """議員への帰属（系統A＝索引の関係議員名、系統B＝別の読み手の判定）の照合。「A・B一致」のときだけ人物IDを付ける。"""
-    from scripts.person_ids import canonical
-
+def attribution_check(member: str, line_b_member: str | None, line_a_member: str | None = None) -> str:
+    """議員への帰属の照合。索引（名簿）の関係議員名と、表紙を読んだ2つの読み手（系統B・AI の系統A）の判定を突き合わせ、2者が合えば採る。
+    「A・B一致」＝索引と系統B、「索引・読み手A一致」＝系統Bは違うが索引とAI の系統Aが一致、
+    「読み手A・B一致」＝索引に関係議員名が無く、2つの読み手の表紙の判定が一致。それ以外は人物IDを付けない。"""
     if not member:
+        if line_a_member and line_b_member and same_name(line_a_member, line_b_member):
+            return "読み手A・B一致"
         return "関係議員名なし"
     if line_b_member is None:
         return "系統Bの判定なし"
-    if canonical(member) != canonical(line_b_member):
-        return f"食い違い：B「{line_b_member}」"
-    return "A・B一致"
+    if same_name(member, line_b_member):
+        return "A・B一致"
+    if line_a_member and same_name(member, line_a_member):
+        return "索引・読み手A一致"
+    return f"食い違い：B「{line_b_member}」"
+
+
+LINKED_CHECKS = {"A・B一致", "索引・読み手A一致", "読み手A・B一致"}
+
+
+def same_name(a: str, b: str) -> bool:
+    """同じ氏名か（人物IDの正規化に、報告書でよく出る異体字の寄せを足して比べる）。"""
+    from scripts.person_ids import canonical
+
+    return bool(a) and canonical(fold_name(a)) == canonical(fold_name(b))
 
 
 def link(rows: list[dict[str, str]], index_by_url: dict[str, dict[str, str]], persons: list[dict[str, str]],
-         attribution: dict[str, str] | None = None, members: list[dict[str, str]] | None = None) -> list[dict[str, str]]:
-    """報告団体の関係議員名を人物IDに結ぶ。帰属が系統A・Bで一致し、候補が1人のときだけ結ぶ。
+         attribution: dict[str, str] | None = None, members: list[dict[str, str]] | None = None,
+         cover_a: dict[str, str] | None = None) -> list[dict[str, str]]:
+    """報告団体の関係議員名を人物IDに結ぶ。帰属が2者で一致し（attribution_check）、候補が1人のときだけ結ぶ。
     一致しない・判定が無い・候補が0人か2人以上のものは空のまま（算入外、「帰属の照合」に理由）。"""
     from scripts.org_names import org_key
     from scripts.person_ids import canonical
@@ -1013,8 +1036,11 @@ def link(rows: list[dict[str, str]], index_by_url: dict[str, dict[str, str]], pe
     for row in rows:
         meta = index_by_url.get(row.get("PDF_URL", ""), {})
         member = member_of(meta, lookup)
-        check = attribution_check(member, attribution.get(row.get("sha256", "")))
-        ids = by_name.get(canonical(member), []) if check == "A・B一致" else []
+        sha = row.get("sha256", "")
+        check = attribution_check(member, attribution.get(sha), (cover_a or {}).get(sha))
+        if check == "読み手A・B一致":
+            member = attribution[sha]
+        ids = by_name.get(canonical(fold_name(member)), []) if check in LINKED_CHECKS else []
         out.append({**row, "相手方": public_name(row), "支払先キー": payee_key(row),
                     "団体名キー": "" if row.get("相手方種別") == "個人" else org_key(row.get("相手方", "")), "報告団体": row.get("報告団体") or meta.get("団体名", ""), "関係議員名": member,
                     "人物ID": ids[0] if len(ids) == 1 else "", "帰属の照合": check,
@@ -1216,7 +1242,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"一致 {len(agreed)}行・食い違い {len(disagreed)}行")
         elif phase == "link":
             index_by_url = {r["PDF_URL"]: r for r in read_csv(INDEX)}
-            rows = link(read_csv(WORK / "agreed.csv"), index_by_url, read_csv(PERSONS), line_b_attribution(args.line_b), read_csv(MEMBER_GROUPS))
+            rows = link(read_csv(WORK / "agreed.csv"), index_by_url, read_csv(PERSONS), line_b_attribution(args.line_b), read_csv(MEMBER_GROUPS), line_b_attribution(args.line_a_ai))
             write_csv(DERIVED / "relations.csv", RELATION_HEADER, rows)
             spending = spending_by_member(rows)
             (DERIVED / "spending-by-member.json").write_text(json.dumps({"説明": "議員ごとの関係政治団体の支出（政治資金収支報告書、系統A・B一致分）。点数には使わない。個人の支払先は公表期間（3年）の間だけ報告書どおりの名前を出し、住所は出さない。寄附者・パーティー券購入者の個人は名前を出さない。", "議員": spending}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

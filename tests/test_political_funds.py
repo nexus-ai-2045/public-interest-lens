@@ -186,6 +186,15 @@ class CompareAndLinkTests(unittest.TestCase):
         self.assertEqual(got["偏り"]["名前の分かる支払先の合計"], 1000000)
         self.assertEqual(got["年分"]["2023"]["合計"], 10000000)
 
+    def test_attribution_two_of_three(self):
+        self.assertEqual(pf.attribution_check("山口 壯", "山口壮"), "A・B一致")
+        self.assertEqual(pf.attribution_check("森 ゆうこ", "森 裕子", "森ゆうこ"), "索引・読み手A一致")
+        self.assertTrue(pf.attribution_check("森 ゆうこ", "森 裕子", "森裕子").startswith("食い違い"))
+        self.assertEqual(pf.attribution_check("", "山田一郎", "山田 一郎"), "読み手A・B一致")
+        self.assertEqual(pf.attribution_check("", "山田一郎", "山田二郎"), "関係議員名なし")
+        idx = pf.person_index([{"人物ID": "浜地雅一", "氏名": "浜地雅一", "別表記": "濵地雅一"}])
+        self.assertEqual(idx.get("浜地雅一"), ["浜地雅一"])
+
     def test_safe_url_encodes_spaces(self):
         self.assertEqual(pf.safe_url("https://x.go.jp/a/104060_0017 .pdf"), "https://x.go.jp/a/104060_0017%20.pdf")
         self.assertEqual(pf.safe_url("https://x.go.jp/a%20b.pdf?q=1"), "https://x.go.jp/a%20b.pdf?q=1")
