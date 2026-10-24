@@ -1,0 +1,30 @@
+{
+  "name": "public-interest-lens",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit -p tsconfig.app.json && vite build",
+    "test": "vitest run src",
+    "test:e2e": "playwright test",
+    "test:e2e:public": "playwright test -c playwright.public.config.ts",
+    "preview:check": "node scripts/local-preview-check.mjs"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^6.1.2",
+    "gsap": "3.15.0",
+    "katex": "0.18.8",
+    "lucide-react": "^1.59.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "vite": "^8.3.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}

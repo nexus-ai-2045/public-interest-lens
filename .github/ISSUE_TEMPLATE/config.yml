@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 脆弱性・秘密情報の報告
+    url: https://github.com/nexus-ai-2045/public-interest-lens/security
+    about: 公開の Issue には書かず、セキュリティ方針の窓口へ

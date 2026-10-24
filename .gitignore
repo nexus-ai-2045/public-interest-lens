@@ -1,0 +1,34 @@
+# Local/editor files
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*
+!.env.example
+
+# Generated runtime artifacts
+node_modules/
+dist/
+build/
+coverage/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# Private source captures and local intake records
+.local/
+test-results/
+playwright-report/
+
+# 取得の原本（Git に入れない）
+data/acquired/*/raw/
+
+# tsc -b が書き出す .ts の複製（vite が .ts より先に読んでしまうので入れない）
+app/vite.config.js
+app/vite.config.d.ts
+app/local-records-server.js
+app/local-records-server.d.ts
+data/db/*.sqlite

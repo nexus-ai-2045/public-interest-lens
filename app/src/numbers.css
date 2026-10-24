@@ -1,0 +1,71 @@
+/* /numbers（数字で見る）。色は国賊（損失）と国士（便益）の2色だけ。どちらも文字の印（凡例・吹き出し・表）でも読める。
+ * 2色は dataviz の検査（色覚の差・明るさ・背景との対比）を明るい背景 #fff と暗い背景 #151515 で通した値。 */
+.numbers-page{--c-loss:#e8495a;--c-benefit:#13a094;--c-seg1:#8a96a3;--c-seg2:#c7ced6}
+.numbers-page[data-theme=light]{--c-loss:#d2394b;--c-benefit:#0f9a8f;--c-seg1:#65717f;--c-seg2:#b8c2cc}
+.numbers-page main{max-width:980px;margin:0 auto;padding:24px 16px 64px}
+.nc-lead{margin:12px 0 18px;max-width:70ch;line-height:1.7}
+.nc-hero{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:8px 0 24px}
+.nc-hero>div{padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--quiet);display:flex;flex-direction:column;gap:2px}
+.nc-hero strong{font-size:34px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.1}
+.nc-hero>div>span{font-size:13px;color:var(--muted)}
+.nc-section{margin:32px 0}.nc-section>p{margin:0 0 10px;line-height:1.7;max-width:70ch}
+.nc-figure{position:relative}
+.nc-svg{display:block;width:100%;height:auto;overflow:visible}
+.nc-grid{stroke:var(--line);stroke-width:1;opacity:.6}
+.nc-base{stroke:var(--muted);stroke-width:1}
+.nc-axis{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.nc-bar{stroke:var(--bg);stroke-width:2;paint-order:stroke}
+.nc-bar.loss{fill:var(--c-loss)}.nc-bar.benefit{fill:var(--c-benefit)}
+.nc-hit{fill:transparent;cursor:pointer;outline:none}
+.nc-hit:focus-visible{stroke:var(--accent);stroke-width:2}
+/* 入場：棒が基線から伸びる。国賊（下向き）は沈み、国士（上向き）は浮く。 */
+.nc-svg .nc-bar{transform-box:fill-box;transform:scaleY(0);transition:transform 600ms var(--m-spring,cubic-bezier(.3,1.4,.5,1))}
+.nc-svg .nc-bar,.nc-svg .grow-up{transform-origin:bottom}.nc-svg .grow-down{transform-origin:top;transition-timing-function:var(--m-ease,cubic-bezier(.2,.8,.2,1))}
+.nc-svg.is-in .nc-bar{transform:scaleY(1)}
+.nc-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 8px;font-size:13px;color:var(--ink)}
+.nc-key{display:inline-flex;align-items:center;gap:6px}.nc-key i{width:14px;height:10px;border-radius:3px;display:inline-block}
+.nc-key.loss i{background:var(--c-loss)}.nc-key.benefit i{background:var(--c-benefit)}
+.nc-tip{position:absolute;z-index:5;transform:translate(-50%,calc(-100% - 10px));pointer-events:none;max-width:280px;padding:6px 10px;border-radius:6px;background:var(--ink);color:var(--bg);font-size:12px;line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.nc-switch{display:inline-flex;gap:0;margin:0 0 6px}.nc-switch button{border-radius:0;font-size:13px;padding:8px 12px;min-height:40px}
+.nc-switch button:first-child{border-radius:7px 0 0 7px}.nc-switch button:last-child{border-radius:0 7px 7px 0}
+.nc-switch button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.nc-certainty,.nc-party{width:100%;border-collapse:collapse;font-size:14px;margin-top:12px}
+.nc-certainty caption{text-align:left;font-size:13px;color:var(--muted);padding-bottom:4px}
+.nc-certainty th,.nc-certainty td,.nc-party th,.nc-party td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;font-weight:500}
+.nc-certainty thead th,.nc-party thead th{color:var(--muted);font-size:12px}
+.num{text-align:right!important;font-variant-numeric:tabular-nums}
+.nc-roles{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.nc-role{margin:0;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--quiet)}
+.nc-role figcaption{font-size:14px;margin-bottom:8px}.nc-role figcaption strong{font-size:18px;font-variant-numeric:tabular-nums}
+.nc-stack{display:flex;gap:2px;height:22px;border-radius:5px;overflow:hidden}
+.nc-seg{display:block;height:100%;transform-origin:left;transform:scaleX(0);transition:transform 700ms var(--m-ease,ease-out)}
+.nc-roles.is-in .nc-seg{transform:scaleX(1)}
+.nc-role.loss .s0,.nc-role.loss .nc-seg-key.s0{background:var(--c-loss)}.nc-role.benefit .s0,.nc-role.benefit .nc-seg-key.s0{background:var(--c-benefit)}
+.s1,.nc-seg-key.s1{background:var(--c-seg1)}.s2,.nc-seg-key.s2{background:var(--c-seg2)}
+.nc-role-list{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:4px;font-size:13px}
+.nc-role-list li{display:flex;align-items:center;gap:8px}.nc-role-list span{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.nc-seg-key{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+.nc-party th[scope=row]{font-size:13px;max-width:14em;overflow-wrap:anywhere}
+.nc-party td:last-child{width:50%}
+.nc-pbar{display:block;height:9px;border-radius:0 4px 4px 0;margin:3px 0 1px;transform-origin:left;transform:scaleX(0);transition:transform 650ms var(--m-ease,ease-out)}
+.nc-party.is-in .nc-pbar{transform:scaleX(1)}
+.nc-pbar.loss{background:var(--c-loss)}.nc-pbar.benefit{background:var(--c-benefit)}
+.nc-party small{display:block;font-size:11px;font-variant-numeric:tabular-nums}
+@media (max-width:640px){.nc-hero{grid-template-columns:1fr}.nc-hero strong{font-size:28px}.nc-roles{grid-template-columns:1fr}.nc-party td:last-child{width:45%}}
+@media (prefers-reduced-motion:reduce){.nc-svg .nc-bar,.nc-seg,.nc-pbar{transition:none;transform:none}}
+@media (forced-colors:active){.nc-bar,.nc-pbar,.nc-seg{forced-color-adjust:none}}
+/* /methodology の式（MethodFormulas.tsx） */
+.spec{margin-top:28px}.spec>p{max-width:70ch;line-height:1.7}
+.spec-section{margin:10px 0;border:1px solid var(--line);border-radius:9px;background:var(--quiet)}
+.spec-section.draft{border-style:dashed}
+.spec-section summary{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;padding:12px 14px;cursor:pointer;min-height:44px}
+.spec-version{font-size:12px;color:var(--muted);font-family:ui-monospace,monospace}
+.spec-section>p,.spec-section>ul,.spec-section>table,.spec-section>figure{margin:8px 14px}
+.spec-formula{margin:10px 14px}.spec-formula figcaption{font-size:13px;color:var(--muted)}
+.spec-tex{overflow-x:auto;overflow-y:hidden;padding:4px 0;font-size:1.05em}
+.spec-symbols{border-collapse:collapse;font-size:14px;width:calc(100% - 28px)}
+.spec-symbols th,.spec-symbols td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.spec-section ul{font-size:14px;line-height:1.7}
+/* スマホでは図の文字が小さくなりすぎないよう、図だけ横に動かせる（ページ全体は横にはみ出さない）。 */
+.nc-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media (max-width:640px){.nc-scroll .nc-svg{min-width:560px}}

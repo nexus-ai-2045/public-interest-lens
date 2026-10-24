@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "public-distribution-current/v1",
+  "snapshotId": "3348227bad4f6cda1379ad3fd72b4590da592f5c20fdef482d09655c4f22d649",
+  "economyPath": "generations/3348227bad4f6cda1379ad3fd72b4590da592f5c20fdef482d09655c4f22d649/economy.json",
+  "casePath": "generations/3348227bad4f6cda1379ad3fd72b4590da592f5c20fdef482d09655c4f22d649/case.json",
+  "databasePath": "generations/3348227bad4f6cda1379ad3fd72b4590da592f5c20fdef482d09655c4f22d649/catalog.sqlite3",
+  "scoringStatus": "held",
+  "personScores": 0
+}

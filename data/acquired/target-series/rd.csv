@@ -1,0 +1,25 @@
+系列ID,系列,年,値,単位,年の別,出典URL,備考
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2001,16527998000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2002,16675053000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2003,16804155000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2004,16937584000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2005,17845224000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2006,18463102000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2007,18943767000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2008,18800063000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2009,17246300000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2010,17109951000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2011,17379084000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2012,17324559000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2013,18133628000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2014,18971300000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2015,18939130000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2016,18432645000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2017,19050400000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2018,19526007000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2019,19575711000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2020,19236469000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2021,19740791000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2022,20703955000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2023,22049657000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）
+stat-kagaku:研究費総額,研究費の総額（科学技術研究調査）,2024,23792522000000,円,年度,https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N,百万円を円に。統計ダッシュボードの API（総務省統計局）

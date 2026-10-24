@@ -1,0 +1,9 @@
+系列ID,系列,年,値,単位,年の別,出典URL,備考
+maff:農林水産物・食品の輸出額,農林水産物・食品の輸出額,2018,906800000000,円,暦年,https://www.maff.go.jp/j/shokusan/export/e_info/attach/pdf/zisseki-166.pdf,少額貨物を含まない（当時の定義）
+maff:農林水産物・食品の輸出額,農林水産物・食品の輸出額,2019,912100000000,円,暦年,https://www.maff.go.jp/j/shokusan/export/e_info/attach/pdf/zisseki-220.pdf,少額貨物を含まない（当時の定義）
+maff:農林水産物・食品の輸出額,農林水産物・食品の輸出額,2020,986000000000,円,暦年,https://www.maff.go.jp/j/shokusan/export/e_info/attach/pdf/zisseki-284.pdf,2020年から少額貨物（1品目20万円以下）を含む
+maff:農林水産物・食品の輸出額,農林水産物・食品の輸出額,2021,1238200000000,円,暦年,https://www.maff.go.jp/j/shokusan/export/e_info/attach/pdf/zisseki-283.pdf,2020年から少額貨物（1品目20万円以下）を含む
+maff:農林水産物・食品の輸出額,農林水産物・食品の輸出額,2022,1413900000000,円,暦年,https://www.maff.go.jp/j/shokusan/export/e_info/attach/pdf/zisseki-285.pdf,2020年から少額貨物（1品目20万円以下）を含む
+maff:農林水産物・食品の輸出額,農林水産物・食品の輸出額,2023,1454100000000,円,暦年,https://www.maff.go.jp/j/shokusan/export/e_info/attach/pdf/zisseki-282.pdf,2020年から少額貨物（1品目20万円以下）を含む
+maff:農林水産物・食品の輸出額,農林水産物・食品の輸出額,2024,1507100000000,円,暦年,https://www.maff.go.jp/j/shokusan/export/e_info/attach/pdf/zisseki-281.pdf,2020年から少額貨物（1品目20万円以下）を含む
+maff:農林水産物・食品の輸出額,農林水産物・食品の輸出額,2025,1700500000000,円,暦年,https://www.maff.go.jp/j/shokusan/export/e_info/attach/pdf/zisseki-280.pdf,2020年から少額貨物（1品目20万円以下）を含む
