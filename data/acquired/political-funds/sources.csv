@@ -1,0 +1,52 @@
+区分,名前,始点URL,たどるパス,深さ,形式,備考
+総務省,総務省（中央分・定期公表）,https://www.soumu.go.jp/senkyo/seiji_s/seijishikin/,/senkyo/seiji_s/seijishikin/,,PDF,公表は3年。政党交付金使途等報告書も同じ木の下
+WARP,国立国会図書館WARP（総務省の過去分）,,,,,保存版の pid が分かりしだい始点を入れる（通信の許可待ちで未確認）
+都道府県選管,北海道,https://www.pref.hokkaido.lg.jp/hs/seijishikinkouhyou/,/hs/seijishikinkouhyou/,,,選管の政治資金ページ。年度別の公表資料あり 公表年分の手がかり：令和6年分（2025年11月28日公表）
+都道府県選管,青森県,https://www.pref.aomori.lg.jp/soshiki/senkan/seshikin_R6_teiki.html,/soshiki/senkan/,,PDF,定期公表と追加公表のページが複数 公表年分の手がかり：令和6年分（2025年11月26日公表）
+都道府県選管,岩手県,https://www.pref.iwate.jp/iinkai/senkyo/houkoku/1061581/index.html,/iinkai/senkyo/houkoku/,2,,www.pref.iwate.jp はクラウドから 403（2026-10-24 特定）
+都道府県選管,宮城県,https://www.pref.miyagi.jp/soshiki/senkyo/kaisan-tuika-syushi/80918syushi.html,/soshiki/senkyo/kaisan-tuika-syushi/,,,解散・追加分の公表ページが中心。定期公表の代表ページは未確認 公表年分の手がかり：令和5年分〜令和8年分（公表回ごと）
+都道府県選管,秋田県,https://www.pref.akita.lg.jp/pages/archive/91790,/pages/archive/91790,0,要旨のみ,令和6年分の要旨PDF（報告書そのものは公表ページに無い）（2026-10-24 特定）
+都道府県選管,山形県,https://www.pref.yamagata.jp/910001/kensei/senkyo/dantai/seijidantai/shushihokoku/kohyo/r6_teiki.html,/910001/kensei/senkyo/dantai/seijidantai/shushihokoku/kohyo/,2,PDF,www.pref.yamagata.jp はクラウドから 403（2026-10-24 特定）
+都道府県選管,福島県,https://www.pref.fukushima.lg.jp/sec/62010a/syushihoukokusyo-6teiki-seitou-ziyuuminsyu.html,/sec/62010a/,,PDF,政党支部・その他の政治団体ごとのページあり 公表年分の手がかり：令和6年分（2025年11月25日公表）
+都道府県選管,茨城県,https://www.pref.ibaraki.jp/somu/shichoson/senkyo/seijishikin_syushi_kohyo/r6_11release/r6_koumeito.html,/somu/shichoson/senkyo/seijishikin_syushi_kohyo/r6_11release/,,PDF,区分別（資金管理団体・その他など）のページ群 公表年分の手がかり：令和6年分（2025年11月28日公表）
+都道府県選管,栃木県,https://www.pref.tochigi.lg.jp/k05/pref/senkyo/jyouhou/kisei.html,/k05/pref/senkyo/jyouhou/houkokusho,2,PDF,公表年ごとの下位ページ（houkokusho01/r8.html など）（2026-10-24 特定）
+都道府県選管,群馬県,https://www.pref.gunma.jp/soshiki/218/,/soshiki/218/,2,PDF,www.pref.gunma.jp はクラウドから 403（2026-10-24 特定）
+都道府県選管,埼玉県,https://www.pref.saitama.lg.jp/e1701/seijishikin/seijidantai.html,/e1701/seijishikin/shushi/,3,PDF,令和6年分は shushi/r6/shuusi06.html。区分ごとの団体別ページ（2026-10-24 特定）
+都道府県選管,千葉県,https://www.pref.chiba.lg.jp/senkan/seijidantai/kouhyou/mokuji,/senkan/seijidantai/kouhyou/,,PDF,公表年ごとの目次ページ 公表年分の手がかり：令和5年分〜令和8年分（公表回ごと）
+都道府県選管,東京都,https://www.senkyo.metro.tokyo.lg.jp/organization/shuushihoukoku-syokan_this_is_branch,/organization/,2,,中身は未確認（2026-10-24 特定）
+都道府県選管,神奈川県,,,,,公表ページ未特定（不明）。手がかり： 報告書の公表ページ未発見。報道と資金管理団体の届出公表のみ 公表年分の手がかり：不明
+都道府県選管,新潟県,https://www.pref.niigata.lg.jp/site/senkyo/seijisikin-20251128.html,/site/senkyo/,,PDF,概要と政党支部PDFを掲載。要旨の県報公表は令和4年分まで 公表年分の手がかり：令和6年分（2025年11月28日公表）
+都道府県選管,富山県,https://www.pref.toyama.jp/500/kensei/kenseiunei/senkyo/iinkai/seijidantai-syushi/r6pddf-syushi/index.html,/500/kensei/kenseiunei/senkyo/iinkai/seijidantai-syushi/,2,PDF,www.pref.toyama.jp はクラウドから 403（2026-10-24 特定）
+都道府県選管,石川県,https://www.pref.ishikawa.lg.jp/senkan/syuushihoukoku/r06_syuushihoukoku.html,/senkan/syuushihoukoku/,1,PDF,令和6年分。団体区分ごとのページから PDF（2026-10-24 特定）
+都道府県選管,福井県,https://www.pref.fukui.lg.jp/doc/senkan/r6shuushi/seijihikinr6.html,/doc/senkan/r6shuushi/,1,PDF,令和6年分。区分別ページから団体ごとの PDF（2026-10-24 特定）
+都道府県選管,山梨県,https://www.pref.yamanashi.jp/senkyo/shushihoukoku/20251128teiki/shikinkanridantai.html,/senkyo/shushihoukoku/20251128teiki/,,,区分（政党支部・資金管理団体など）ごとのページ 公表年分の手がかり：令和6年分（2025年11月28日公表）
+都道府県選管,長野県,https://www.pref.nagano.lg.jp/senkan/syuushihoukoku/r06/071128.html,/senkan/syuushihoukoku/r06/,,,全団体の写しを掲載。令和7年分は未確認 公表年分の手がかり：令和6年分（2025年11月28日公表予定）
+都道府県選管,岐阜県,https://www.pref.gifu.lg.jp/page/458422.html,/page/,0,PDF,令和6年分・政党支部（2026-10-24 特定）
+都道府県選管,岐阜県,https://www.pref.gifu.lg.jp/page/458423.html,/page/,0,PDF,令和6年分・国会議員関係とその他（ア〜タ行）（2026-10-24 特定）
+都道府県選管,岐阜県,https://www.pref.gifu.lg.jp/page/458424.html,/page/,0,PDF,令和6年分・その他（ナ〜ワ行）（2026-10-24 特定）
+都道府県選管,静岡県,https://www.pref.shizuoka.jp/kensei/senkyo/seijishikinshushi/1067767/index.html,/kensei/senkyo/seijishikinshushi/1067767/,,PDF,掲載期間は要旨公表日から3年。令和6年分以降は未確認 公表年分の手がかり：令和5年分〜平成30年分（年ごと）
+都道府県選管,愛知県,https://www.pref.aichi.jp/soshiki/senkyo/0603292.html,/soshiki/senkyo/,,PDF,一覧ページ。追加公表分も掲載 公表年分の手がかり：令和6年分（2025年11月28日公表）
+都道府県選管,三重県,https://www.pref.mie.lg.jp/SENKAN/HP/0019100008_00004.htm,/SENKAN/HP/,,PDF,ページの年分・公表日の表記に不整合あり 公表年分の手がかり：令和7年分（解散分）ほか
+都道府県選管,滋賀県,https://www.pref.shiga.lg.jp/senkyo/seiji_shikin/104252.html,/senkyo/seiji_shikin/,,PDF,国会議員関係・その他の政治団体ごとのページ。令和6年分の一部は2026年5月29日更新 公表年分の手がかり：令和4年分〜令和6年分（定期公表）
+都道府県選管,京都府,https://www.pref.kyoto.jp/senkyo/shushihoukoku.html,/senkyo/,,PDF,収支報告書の公表の回ごとのページ群へのリンク元 公表年分の手がかり：令和4年分〜令和7年分（回ごと）
+都道府県選管,大阪府,https://www.pref.osaka.lg.jp/fuseiunei/senkyo/senkyonoshikumi/shuushihoukokusho/index.html,/fuseiunei/senkyo/senkyonoshikumi/shuushihoukokusho/,,要旨のみ（概要PDF）,概要PDF。定期外公表のページもあり 公表年分の手がかり：令和6年分（2025年11月28日公表）
+都道府県選管,兵庫県,https://web.pref.hyogo.lg.jp/si01/senkyo/r6shuushihoukoku/koumeitou.html,/si01/senkyo/r6shuushihoukoku/,,PDF,団体区分ごとのページ。定期外公表のページもあり 公表年分の手がかり：令和6年分
+都道府県選管,奈良県,https://www.pref.nara.jp/36642.htm,/,2,要旨のみ（概要PDF）,www.pref.nara.jp はクラウドから 403（2026-10-24 特定）
+都道府県選管,和歌山県,https://www.pref.wakayama.lg.jp/prefg/010600/wsenkan/kouhyou/r4teiki/itu.html,/prefg/010600/wsenkan/kouhyou/r4teiki/,,PDF,令和4年分ページのみ確認。令和6年分は2025年11月28日公表とのスニペット 公表年分の手がかり：令和4年分（令和5年・6年分も定期公表あり）
+都道府県選管,鳥取県,https://www.pref.tottori.lg.jp/326459.htm,/,1,PDF（スキャン）,令和6年分（令和7年12月22日公表）。令和4〜6年分のまとめは /325038.htm（2026-10-24 特定）
+都道府県選管,島根県,https://www.pref.shimane.lg.jp/admin/commission/senkyo/shimane_senkyo/sikin/R04_teiki/,/admin/commission/senkyo/shimane_senkyo/sikin/R04_teiki/,,PDF,令和5年分以降は未確認 公表年分の手がかり：令和4年分
+都道府県選管,岡山県,https://www.pref.okayama.jp/page/350095.html,/page/,1,PDF（スキャン）,www.pref.okayama.jp はクラウドから 403（2026-10-24 特定）
+都道府県選管,広島県,https://www.pref.hiroshima.lg.jp/site/sennkyokannriiinkai/shushihoukokusho.html,/site/sennkyokannriiinkai/,,PDF,令和5年公表分からネット公表。掲載は3年 公表年分の手がかり：令和6年分（2025年11月28日公表）
+都道府県選管,山口県,https://www.pref.yamaguchi.lg.jp/site/senkyo/list393-1151.html,/site/senkyo/,2,PDF,政治団体の収支報告書の索引（2026-10-24 特定）
+都道府県選管,徳島県,https://www.pref.tokushima.lg.jp/kenseijoho/senkyo/7306172,/kenseijoho/senkyo/73,1,PDF,令和6年分（令和7年11月28日公表）。接続リセットが出ることがある（2026-10-24 特定）
+都道府県選管,香川県,https://www.pref.kagawa.lg.jp/senkyoi/seijishikin/syushi_kouhyou.html,/senkyoi/seijishikin/,,PDF,報告書PDFを掲載。閲覧・写しの請求は3年 公表年分の手がかり：令和6年分（概要公表率98.5%）
+都道府県選管,愛媛県,https://www.pref.ehime.jp/page/127777.html,/page/,1,PDF,www.pref.ehime.jp はクラウドから 403（2026-10-24 特定）
+都道府県選管,高知県,https://www.pref.kochi.lg.jp/doc/2024091900016/,/doc/,2,PDF,政治団体・政治資金の索引。令和6年分は区分別ページ（2026-10-24 特定）
+都道府県選管,福岡県,https://www.pref.fukuoka.lg.jp/contents/seizishikinkouhyou.html,/contents/,,PDF,ページ更新は2026年3月27日 公表年分の手がかり：令和5年度〜令和7年度（公表年度ごと）
+都道府県選管,佐賀県,https://www.pref.saga.lg.jp/list02691.html,/kiji,2,PDF（スキャン）,要旨公表の索引。区分別ページから PDF（2026-10-24 特定）
+都道府県選管,長崎県,https://www.pref.nagasaki.lg.jp/doc/page-758119.html,/doc/,1,PDF,令和6年分（令和7年11月28日公表）（2026-10-24 特定）
+都道府県選管,熊本県,https://www.pref.kumamoto.jp/soshiki/147/249368.html,/soshiki/147/,,PDF,URLと年分の対応は未確認 公表年分の手がかり：令和6年分（報道資料では2025年11月27日公表）
+都道府県選管,大分県,https://www.pref.oita.jp/site/senkyo/list10173.html,/site/senkyo/,2,PDF,www.pref.oita.jp はクラウドから 403（2026-10-24 特定）
+都道府県選管,宮崎県,https://www.pref.miyazaki.lg.jp/senkyo/kense/senkyo/seijishikin/public/teiki/2024/index.html,/senkyo/kense/senkyo/seijishikin/public/teiki/2024/,1,要旨のみ（公報PDF）,令和6年分。報告書か要旨かは未確認（2026-10-24 特定）
+都道府県選管,鹿児島県,https://www.pref.kagoshima.jp/ka01/kensei/senkyo/shikin/seijishikin-r6.html,/ka01/kensei/senkyo/shikin/,,PDF, 公表年分の手がかり：令和6年分（2025年11月28日公表）
+都道府県選管,沖縄県,https://www.pref.okinawa.jp/kensei/senkyo/1004929/1004936.html,/kensei/senkyo/1004929/,,PDF,報告書本体と概要PDFを掲載 公表年分の手がかり：令和6年分（2025年11月28日公表）
