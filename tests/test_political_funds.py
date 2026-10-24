@@ -178,6 +178,18 @@ class CompareAndLinkTests(unittest.TestCase):
         self.assertEqual(got["上位1の割合"], 1.0)
         self.assertEqual(got["印"], ["偏りがある"])
 
+    def test_transfers_to_own_groups_are_not_concentration(self):
+        rows = [{"人物ID": "x", "年分": "2023", "区分": "出した寄附", "費目": "", "相手方": "x後援会", "支払先キー": "x後援会", "金額": "9000000", "報告団体": "会"},
+                {"人物ID": "x", "年分": "2023", "区分": "支出", "費目": "事務所費", "相手方": "株式会社A", "支払先キー": "株式会社A", "金額": "500000", "報告団体": "会"},
+                {"人物ID": "x", "年分": "2023", "区分": "支出", "費目": "事務所費", "相手方": "株式会社B", "支払先キー": "株式会社B", "金額": "500000", "報告団体": "会"}]
+        got = pf.spending_by_member(rows)["x"]
+        self.assertEqual(got["偏り"]["名前の分かる支払先の合計"], 1000000)
+        self.assertEqual(got["年分"]["2023"]["合計"], 10000000)
+
+    def test_safe_url_encodes_spaces(self):
+        self.assertEqual(pf.safe_url("https://x.go.jp/a/104060_0017 .pdf"), "https://x.go.jp/a/104060_0017%20.pdf")
+        self.assertEqual(pf.safe_url("https://x.go.jp/a%20b.pdf?q=1"), "https://x.go.jp/a%20b.pdf?q=1")
+
     def test_concentration_flags_only_facts(self):
         spread = {"株式会社A": [800_000, {"2021", "2022", "2023"}, {"一郎会"}], "B": [100_000, {"2023"}, {"党支部"}], "C": [100_000, {"2023"}, {"一郎会"}]}
         got = pf.concentration(spread)

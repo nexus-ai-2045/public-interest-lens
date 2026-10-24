@@ -39,7 +39,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import quote, urljoin, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -420,7 +420,13 @@ def download(index: list[dict[str, str]], manifest: list[dict[str, str]], storag
     return out
 
 
+def safe_url(url: str) -> str:
+    """索引の href に混じる空白などをパーセント符号にする（urllib は制御文字・空白入りの URL を開けない）。"""
+    return quote(url.strip(), safe=":/?&=%#~+,;@!$'()*[]")
+
+
 def _get_bytes(url: str) -> bytes:
+    url = safe_url(url)
     last = None
     for attempt in range(3):
         try:
@@ -1054,7 +1060,8 @@ def spending_by_member(relations: list[dict[str, str]], top: int = 20) -> dict:
         if not payee[3] or not label.startswith(INDIVIDUAL):  # 実名の年があれば実名を表示名にする
             payee[3] = label
         # 偏りも支払先キーでまとめる。キーの無い行（寄附者側で伏せたもの）は入れない。
-        if key:
+        # 出した寄附（自分の後援会・党支部への資金移動が大半）は支払いの偏りではないので入れない。
+        if key and row["区分"] == "支出":
             # 同じ人の公表期間内（実名）と期間後（伏せた名前）の年分を1つに数える。表示名は実名があれば実名。
             cell = spread[pid][key]
             cell[0] += amount
@@ -1075,8 +1082,8 @@ def spending_by_member(relations: list[dict[str, str]], top: int = 20) -> dict:
 FLAG_MIN_TOTAL = 1_000_000   # 名前の分かる支払先への支出の合計がこれ未満なら印を付けない（少額で割合が跳ねるため）
 FLAG_TOP1_SHARE = 0.30       # 1つの支払先が合計の30%以上
 FLAG_TOP3_SHARE = 0.60       # 上位3つの支払先で合計の60%以上
-FLAG_MULTI_YEARS = 3         # 同じ支払先に3年分以上、かつ合計の10%以上
-FLAG_MULTI_SHARE = 0.10
+FLAG_MULTI_YEARS = 3         # 同じ支払先に3年分以上、かつ合計の20%以上（ホテル・税理士など毎年使う先の1割程度は普通なので）
+FLAG_MULTI_SHARE = 0.20
 
 
 def concentration(spread: dict) -> dict:
