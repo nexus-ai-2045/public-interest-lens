@@ -4,7 +4,7 @@ import { pageCount, pageSlice } from './law-ranking-view';
 import type { PublicMember } from './members-build';
 import type { PublicMembersReference } from './members-reference';
 import { LawName, namingOf, useLawNames } from './law-name';
-import { distributionReferenceUrl, filterRows, joinConfirmed, partiesOf, SORT_LABEL, sortRows, type HouseFilter, type Row, type SortKey } from './all-members-view';
+import { filterRows, joinConfirmed, partiesOf, SORT_LABEL, sortRows, type HouseFilter, type Row, type SortKey } from './all-members-view';
 
 const signed = (v: number) => v === 0 ? '0円' : `${v < 0 ? '−' : '＋'}${formatYen(Math.abs(v))}`;
 const tone = (v: number | null) => v === null || v === 0 ? 'zero' : v < 0 ? 'loss' : 'benefit';
@@ -24,22 +24,13 @@ function RowDetail({ row }: { row: Row }) {
   </div>;
 }
 
-export function AllMembers({ confirmed }: { confirmed: PublicMember[] }) {
-  const [data, setData] = useState<PublicMembersReference | null>(null);
-  const [error, setError] = useState('');
+export function AllMembers({ confirmed, data, error }: { confirmed: PublicMember[]; data: PublicMembersReference | null; error: string }) {
   const [house, setHouse] = useState<HouseFilter>('all');
   const [party, setParty] = useState('');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('reference-loss');
   const [withAmount, setWithAmount] = useState(false);
   const [page, setPage] = useState(1);
-  useEffect(() => {
-    const controller = new AbortController();
-    void fetch(distributionReferenceUrl, { signal: controller.signal, cache: 'no-store' })
-      .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<PublicMembersReference>; })
-      .then(setData).catch(e => { if (!controller.signal.aborted) setError(`全議員の表を読み込めませんでした（${e instanceof Error ? e.message : e}）`); });
-    return () => controller.abort();
-  }, []);
   const rows = useMemo(() => data ? joinConfirmed(data.members, confirmed) : [], [data, confirmed]);
   const parties = useMemo(() => partiesOf(rows), [rows]);
   const shown = useMemo(() => sortRows(filterRows(rows, { house, party, query, withAmount }), sort), [rows, house, party, query, withAmount, sort]);

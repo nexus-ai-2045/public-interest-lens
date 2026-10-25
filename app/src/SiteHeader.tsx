@@ -4,7 +4,7 @@ import { toneTitle, useTone, type Tone } from './site-tone';
 import { usePrefersReducedMotion } from './motion';
 
 /**
- * ナビの並び。結論（誰が・何が）→ 根拠（比べる相手と推移）→ 事例 → 手順 → 架空の見本。
+ * ナビの並び。結論（誰が・何が）→ 根拠（比べる相手と推移）→ 事例 → 手順。テスト用の仮データの画面（/demo）は公開サイトにリンクしない。
  * 先頭は向きに合わせて「国賊ランキング」「国士ランキング」と名前が変わる。
  */
 export const SITE_LINKS: { href: string; label: string | ((tone: Tone) => string) }[] = [
@@ -17,7 +17,8 @@ export const SITE_LINKS: { href: string; label: string | ((tone: Tone) => string
   { href: '/policies', label: '政策と結果' },
   { href: '/actors', label: '人物・団体' },
   { href: '/methodology', label: '計算方法' },
-  { href: '/demo', label: '架空デモ' },
+  // テスト用の仮データの画面。公開サイトには出さない（端末内の確認用）。
+  ...(PUBLIC_SITE ? [] : [{ href: '/demo', label: '架空デモ' }]),
 ];
 
 export function SiteNav({ active, extra }: { active: string; extra?: ReactNode }) {
