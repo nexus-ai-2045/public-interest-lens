@@ -299,7 +299,7 @@ export function MembersPage() {
     requestAnimationFrame(() => document.getElementById(`member-${focus}`)?.scrollIntoView({ block: 'start' }));
   }, [focus, data]);
   useEffect(() => {
-    const restore = () => { const name = new URLSearchParams(window.location.search).get('name') ?? ''; setQuery(name); setFocus(name); };
+    const restore = () => { const q = new URLSearchParams(window.location.search); const name = q.get('name') ?? ''; setQuery(name); setFocus(name); setTab(q.get('tab') === 'party' && !name ? 'party' : 'members'); };
     window.addEventListener('popstate', restore);
     return () => window.removeEventListener('popstate', restore);
   }, []);
