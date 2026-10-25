@@ -15,6 +15,7 @@ from scripts import build_database, compare_db, query_db
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "app" / "public" / "distribution"
+from _data_gate import requires_data  # noqa: E402
 
 
 class DatabaseTest(unittest.TestCase):
@@ -155,6 +156,7 @@ class DatabaseTest(unittest.TestCase):
         self.assertIn("試算値", note)  # 2020〜2022年だけの注記も、年を付けて残す
         self.assertIn("確報", note)
 
+    @requires_data("industry_va")
     def test_series_have_points(self) -> None:
         self.assertEqual(self.one("SELECT COUNT(*) FROM series s WHERE NOT EXISTS (SELECT 1 FROM points p WHERE p.series_id = s.series_id)"), 0)
         self.assertGreater(self.one("SELECT COUNT(*) FROM points WHERE series_id LIKE 'oecd-t6:JPN:%'"), 100)

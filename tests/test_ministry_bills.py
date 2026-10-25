@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from scripts import build_ministry_bills as mb
+from _data_gate import requires_data  # noqa: E402
 
 
 class MinistryOfTest(unittest.TestCase):
@@ -42,6 +43,7 @@ class MinistryOfTest(unittest.TestCase):
 
 
 class CommittedTableTest(unittest.TestCase):
+    @requires_data("speeches")
     def test_committed_table_is_current(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             out, mb.OUT = mb.OUT, Path(tmp) / "cabinet-bills.csv"

@@ -32,3 +32,7 @@ app/vite.config.d.ts
 app/local-records-server.js
 app/local-records-server.d.ts
 data/db/*.sqlite
+
+# ビルド時に作る派生物（リポには置かない。CI とビルドで作る）
+app/public/distribution/members.json
+data/distribution/generated/generations/*/catalog.sqlite3

@@ -15,6 +15,7 @@ import split_shared_speeches as split  # noqa: E402
 SPEECHES = ROOT / "data" / "acquired" / "bill-speeches" / "speeches.csv"
 SEGMENTS = SPEECHES.parent / "segments.csv"
 OVERVIEWS = ROOT / "data" / "derived" / "law-overviews-v1" / "overviews.csv"
+from _data_gate import requires_data  # noqa: E402
 
 
 class LawOverviewsTest(unittest.TestCase):
@@ -23,6 +24,7 @@ class LawOverviewsTest(unittest.TestCase):
         self.overviews = list(csv.DictReader(OVERVIEWS.open(encoding="utf-8")))
         self.segments = {(row["id"], row["区分"]): row for row in csv.DictReader(SEGMENTS.open(encoding="utf-8"))}
 
+    @requires_data("speeches")
     def test_summaries_have_their_source(self):
         for row in self.overviews:
             source = self.speeches[row["id"]]
@@ -31,6 +33,7 @@ class LawOverviewsTest(unittest.TestCase):
             if row["反対側の心配"]:
                 self.assertTrue(source["反対の抜粋"], row["id"])
 
+    @requires_data("speeches")
     def test_bills_sharing_a_speech_use_only_their_own_segment(self):
         for url, columns, kind in (("説明のURL", ("何をする", "狙い"), "説明"), ("反対のURL", ("反対側の心配",), "反対")):
             uses = Counter(row[url] for row in self.speeches.values() if row[url])
@@ -42,18 +45,21 @@ class LawOverviewsTest(unittest.TestCase):
                 self.assertIn((source["id"], kind), self.segments, row["id"])
                 self.assertEqual(self.segments[(source["id"], kind)]["URL"], source[url], row["id"])
 
+    @requires_data("speeches")
     def test_bill_does_not_carry_the_summary_of_the_bill_explained_before_it(self):
         # 閣法-164-22（地方交付税法）は、同じ発言で先に説明された閣法-164-21（地方税法）の中身を載せない
         row = next(item for item in self.overviews if item["id"] == "閣法-164-22")
         for word in ("三兆円", "定率減税", "住民税"):
             self.assertNotIn(word, row["何をする"] + row["狙い"])
 
+    @requires_data("speeches")
     def test_segments_start_with_their_own_title(self):
         for (law_id, kind), segment in self.segments.items():
             title = self.speeches[law_id]["題名"].removesuffix("案")
             self.assertIn(title, segment["抜粋"][:400], law_id)
             self.assertGreaterEqual(len(segment["抜粋"]), 120, law_id)
 
+    @requires_data("speeches")
     def test_segment_starts_at_its_own_heading_not_a_passing_mention(self):
         # 閣法-150-12：民事再生法の説明の途中で「同時に提出いたしております外国倒産…法律案と相まって」と触れている所から切らない
         text = ("○大臣 民事再生法等の一部を改正する法律案につきまして、その趣旨を御説明いたします。"
@@ -65,18 +71,21 @@ class LawOverviewsTest(unittest.TestCase):
         if row:
             self.assertNotIn("住宅ローン", row["抜粋"][:200])
 
+    @requires_data("speeches")
     def test_bill_whose_speeches_describe_other_bills_is_left_blank(self):
         # 反対討論は別の法案（防衛庁設置法及び自衛隊法の一部を改正する法律案）のものなので空のまま
         row = next(item for item in self.overviews if item["id"] == "閣法-142-110")
         self.assertEqual(row["反対側の心配"], "")
         self.assertNotIn(("閣法-142-110", "反対"), self.segments)
 
+    @requires_data("speeches")
     def test_debate_about_another_bill_is_not_a_concern_of_this_law(self):
         # 閣法-169-6 は暫定税率の再議決の動議、閣法-171-10 は地方交付税法の改正、閣法-174-6 は予算への反対討論を拾っていた
         rows = {item["id"]: item for item in self.overviews}
         for law_id in ("閣法-169-6", "閣法-171-10", "閣法-174-6"):
             self.assertEqual(rows[law_id]["反対側の心配"], "", law_id)
 
+    @requires_data("speeches")
     def test_joint_heading_with_another_bill_is_not_this_laws_segment(self):
         # 閣法-155-47 の反対討論は「機構法並びに中小企業総合事業団法及び機械類信用保険法の廃止法案について」とまとめて述べていて、
         # 信用保険の廃止は別の法案（閣法-155-46）の中身なので、この法律の懸念にしない
@@ -87,6 +96,7 @@ class LawOverviewsTest(unittest.TestCase):
         row = next(item for item in self.overviews if item["id"] == "閣法-155-47")
         self.assertNotIn("信用保険", row["反対側の心配"])
 
+    @requires_data("speeches")
     def test_split_reads_the_speeches_fetched_in_parallel_too(self):
         # fetch_bill_speeches.py --out speeches-*.csv で並べて取った分も、概要づくりと同じく切り出しの対象にする
         with tempfile.TemporaryDirectory() as folder:
@@ -96,11 +106,13 @@ class LawOverviewsTest(unittest.TestCase):
             (Path(folder) / "segments.csv").write_text("id,区分\n", encoding="utf-8")
             self.assertEqual(sorted(row["id"] for row in split.read_speeches(Path(folder))), ["a", "b"])
 
+    @requires_data("speeches")
     def test_overviews_are_not_built_without_the_verification(self):
         # 別の読み手の照合結果が無いまま「照合した」印つきの台帳を作らない
         result = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_law_overviews.py"), "a", "b"], capture_output=True)
         self.assertEqual(result.returncode, 2)
 
+    @requires_data("speeches")
     def test_missing_or_empty_folders_do_not_overwrite_the_overviews(self):
         # 照合結果のフォルダが無い・空のときは、台帳を書かずに止める
         with tempfile.TemporaryDirectory() as folder:
@@ -133,6 +145,7 @@ class LawOverviewsTest(unittest.TestCase):
                     self.assertEqual(overviews.main(str(folder / "ov"), str(folder / "seg"), str(folder / "verify")), 2, text)
             self.assertFalse(out.exists())
 
+    @requires_data("speeches")
     def test_partial_verification_does_not_overwrite_the_overviews(self):
         # 照合が途中で止まり、行は正しいが件数が足りない出力では、台帳を書かずに止める
         with tempfile.TemporaryDirectory() as folder:
@@ -154,6 +167,7 @@ class LawOverviewsTest(unittest.TestCase):
                 self.assertEqual(overviews.main(str(folder / "ov"), str(folder / "seg"), str(folder / "verify")), 2)
             self.assertFalse(out.exists())
 
+    @requires_data("speeches")
     def test_partial_summaries_do_not_overwrite_the_overviews(self):
         # 要約が途中で止まり、材料のある法案の一部しか要約が無い出力では、台帳を書かずに止める
         with tempfile.TemporaryDirectory() as folder:
@@ -175,6 +189,7 @@ class LawOverviewsTest(unittest.TestCase):
                 self.assertEqual(overviews.main(str(folder / "ov"), str(folder / "seg"), str(folder / "verify")), 2)
             self.assertFalse(out.exists())
 
+    @requires_data("speeches")
     def test_partial_segment_summaries_do_not_overwrite_the_overviews(self):
         # 切り出しの要約が途中で止まり、切り出しのある法案の一部しか要約が無い出力では、台帳を書かずに止める
         with tempfile.TemporaryDirectory() as folder:
@@ -200,6 +215,7 @@ class LawOverviewsTest(unittest.TestCase):
                 self.assertEqual(overviews.main(str(folder / "ov"), str(folder / "seg"), str(folder / "verify")), 2)
             self.assertFalse(out.exists())
 
+    @requires_data("speeches")
     def test_found_speech_without_a_verdict_is_not_shown(self):
         # 要約が空の欄の発言は、別の読み手が「この法律の発言」と確かめたときだけ示す（照合結果が欠けていたら示さない）
         with tempfile.TemporaryDirectory() as folder:
@@ -236,6 +252,7 @@ class LawOverviewsTest(unittest.TestCase):
             # ほかの法案と共有する発言でも、照合が無ければ示さない（D と E は同じ発言 u6 を材料にしている）
             self.assertEqual(rows["D"]["確かめていない発言"], "説明")
 
+    @requires_data("speeches")
     def test_stale_verdict_does_not_approve_a_new_summary(self):
         # 照合結果は、読み手が見た要約の文と抜粋に結びつける。要約や抜粋が後で変わったら、古い "ok" で載せない
         with tempfile.TemporaryDirectory() as folder:
@@ -264,6 +281,7 @@ class LawOverviewsTest(unittest.TestCase):
             self.assertEqual(rows["B"]["何をする"], "")
             self.assertEqual(rows["C"]["何をする"], "")
 
+    @requires_data("speeches")
     def test_segment_from_an_old_speech_url_is_not_used(self):
         # 発言を取り直して URL が変わったら、前の URL から切り出した部分の要約は使わない
         with tempfile.TemporaryDirectory() as folder:
@@ -294,6 +312,7 @@ class LawOverviewsTest(unittest.TestCase):
             self.assertEqual(rows["A"]["何をする"], "")
             self.assertEqual(rows["B"]["何をする"], "Bをする")
 
+    @requires_data("speeches")
     def test_empty_fingerprint_does_not_match_any_excerpt(self):
         # 0字の指紋（空文字列の sha256）は、どの抜粋の頭とも同じになるので、照合したものとして受け入れない
         empty = overviews.digest("")
@@ -303,6 +322,7 @@ class LawOverviewsTest(unittest.TestCase):
         self.assertFalse(overviews.matches({"字数": 9, "指紋": overviews.digest("甲の説明")}, ["甲の説明"]))
         self.assertTrue(overviews.matches({"字数": 2, "指紋": overviews.digest("甲の")}, ["甲の説明"]))
 
+    @requires_data("speeches")
     def test_failed_fetch_keeps_the_previous_segment(self):
         # 発言の全文が一時的に取れなくても（例外・空の応答とも）、前回切り出した部分を消さない
         def fail(*_):

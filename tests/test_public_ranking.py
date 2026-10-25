@@ -2,6 +2,7 @@ import json
 import unittest
 
 from scripts.build_public_ranking import APPROVAL_NOTE, OUTCOMES, OUTPUT, build
+from _data_gate import requires_data  # noqa: E402
 
 
 class EnforcementDateSourceTest(unittest.TestCase):
@@ -17,6 +18,7 @@ class EnforcementDateSourceTest(unittest.TestCase):
         self.assertEqual(egov, ["https://laws.e-gov.go.jp/law/410AC0000000029"])
 
 
+@requires_data("industry_va")
 class PublicRankingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

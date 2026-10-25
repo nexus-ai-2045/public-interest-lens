@@ -19,9 +19,13 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - run: python -m unittest discover -s tests -v
       - run: npm ci
         working-directory: app
+      # Git に置かない派生物（members.json と今の世代の catalog.sqlite3）を、リポの中のデータだけから作る
+      - run: node scripts/build_public_members.mjs
+      - run: python -m scripts.build_public_distribution --input-root data/distribution/sources/world-bank --case data/distribution/case-source.json --output-root data/distribution/generated --public-dir app/public/distribution
+      # CSV（speeches・industry_va）に頼るテストは tests/data_gated_tests.txt の分だけ skip される。一覧に無い skip は赤
+      - run: python -m unittest discover -s tests -v
       - run: npm test
         working-directory: app
       - run: npm run build

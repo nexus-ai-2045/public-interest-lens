@@ -5,6 +5,7 @@ import re
 import unittest
 
 from scripts import build_public_ranking, source_check
+from _data_gate import requires_data  # noqa: E402
 
 
 class SourceCheckTests(unittest.TestCase):
@@ -25,11 +26,13 @@ class SourceCheckTests(unittest.TestCase):
         self.assertFalse(source_check.is_primary("https://example.com/go.jp"))
         self.assertFalse(source_check.is_primary("http://www.shugiin.go.jp/"))
 
+    @requires_data("industry_va")
     def test_published_laws_match_primary_sources(self):
         rows, summary = source_check.check(self.ranking, self.ctx)
         self.assertEqual(summary["mismatch"], 0, [r for r in rows if r["結果"] == source_check.NG])
         self.assertEqual(summary["heldOut"], [])
 
+    @requires_data("industry_va")
     def test_recompute_reproduces_every_oecd_loss_row(self):
         # 判定ルール（TypeScript）とは別に、元の表だけから同じ額が出ることを確かめる。
         enforcement = self.ctx["enforcement"]
@@ -48,6 +51,7 @@ class SourceCheckTests(unittest.TestCase):
                 checked += 1
         self.assertGreater(checked, 0)
 
+    @requires_data("industry_va")
     def test_tampered_numbers_are_held_out(self):
         self.assertTrue(self.ranking["laws"])
         for field, value in [("amountMedianYen", 1000), ("title", "別の題名"), ("enforcedOn", "2000-01-01"), ("sources", ["https://example.com/x"])]:
@@ -57,6 +61,7 @@ class SourceCheckTests(unittest.TestCase):
             _, summary = source_check.check(tampered, self.ctx)
             self.assertEqual(summary["heldOut"], [law["id"]], field)
 
+    @requires_data("industry_va")
     def test_held_law_moves_to_source_reason(self):
         law_id = self.ranking["laws"][0]["id"]
         payload = build_public_ranking.build(True, self.ranking["approval"]["approvedAt"], held_by_check={law_id})

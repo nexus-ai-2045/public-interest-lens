@@ -31,6 +31,7 @@ MEMBER_INPUTS = {
     "orgStances": ROOT / "data/derived/org-ledger-v1/org-stances.csv",
 }
 FIX = "python3 scripts/rebuild_public.py を回して、出たファイルを全部コミットしてください"
+from _data_gate import requires_data  # noqa: E402
 
 
 def _digest(path: Path) -> str:
@@ -91,6 +92,7 @@ class PublicSyncTest(unittest.TestCase):
                 self.assertLessEqual(r["low"], r["median"], m["id"])
                 self.assertLessEqual(r["median"], r["high"], m["id"])
 
+    @requires_data("industry_va", "speeches")
     def test_laws_catalog_is_built_from_current_ranking_and_members(self) -> None:
         self.assert_inputs("laws.json", self.laws["inputs"], build_laws_catalog.INPUTS)
 

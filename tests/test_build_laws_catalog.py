@@ -6,6 +6,7 @@ import json
 import unittest
 
 from scripts import build_laws_catalog as catalog
+from _data_gate import requires_data  # noqa: E402
 
 
 class BuildLawsCatalogTest(unittest.TestCase):
@@ -101,6 +102,7 @@ class BuildLawsCatalogTest(unittest.TestCase):
         if what and not what["text"]:
             self.assertEqual(what["withheld"], "unread")
 
+    @requires_data("speeches")
     def test_shared_speech_counts_as_split_only_with_a_segment_of_the_current_url(self):
         # 共有の発言を「区別できた（unread）」と言えるのは、いまの発言 URL から切り出した部分があるときだけ
         speeches = {row["id"]: row for row in csv.DictReader(catalog.INPUTS["speeches"].open(encoding="utf-8"))}
@@ -113,6 +115,7 @@ class BuildLawsCatalogTest(unittest.TestCase):
                 if quote.get("withheld") == "unread" and url and uses[url] > 1:
                     self.assertIn((law["id"], kind, url), split, law["id"])
 
+    @requires_data("speeches")
     def test_debate_about_another_topic_is_marked_as_such(self):
         # 閣法-174-6（子ども手当）の反対討論として拾った発言は予算への討論なので、この法律の反対討論とは示さない
         item = next(law for law in self.payload["laws"] if law["id"] == "閣法-174-6")
@@ -123,6 +126,7 @@ class BuildLawsCatalogTest(unittest.TestCase):
         self.assertNotIn("url", concern)
         self.assertNotIn("国会会議録（反対討論）", [source["label"] for source in item.get("sources", [])])
 
+    @requires_data("speeches")
     def test_supporting_speech_is_not_shown_as_an_opposition_debate(self):
         # 閣法-153-5 の候補の討論は法案に賛成し修正案にだけ反対するもの。要約が空でも「反対討論は見つかった」と示さない
         item = next(law for law in self.payload["laws"] if law["id"] == "閣法-153-5")
@@ -158,6 +162,7 @@ class BuildLawsCatalogTest(unittest.TestCase):
         self.assertEqual(items[0]["scale"], 1.2)
         self.assertTrue(all(not item["marks"] and "scale" not in item for item in items[1:]))
 
+    @requires_data("industry_va")
     def test_japan_value_added_uses_nominal_all_industry_only(self):
         value_added = catalog.japan_value_added()
         self.assertIn(1999, value_added)

@@ -4,6 +4,7 @@ import unittest
 
 from scripts import build_macro_amounts as macro
 from scripts.source_check import Oecd, recompute
+from _data_gate import requires_data  # noqa: E402
 
 
 class MacroAmountsTest(unittest.TestCase):
@@ -21,6 +22,7 @@ class MacroAmountsTest(unittest.TestCase):
                 self.assertTrue(r["理由"], r["id"])
                 self.assertEqual(r["中央値"], "", r["id"])
 
+    @requires_data("industry_va")
     def test_amounts_recompute_from_oecd(self):
         oecd = Oecd(macro.OECD)
         for r in [r for r in self.rows if r["結果"] == "額"][::50]:

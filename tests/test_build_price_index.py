@@ -6,6 +6,7 @@ from pathlib import Path
 from scripts import build_price_index as p
 
 HEADER = '国,産業,指標,価格,年,値,単位,基準年,出典URL\n'
+from _data_gate import requires_data  # noqa: E402
 
 
 class PriceIndexTests(unittest.TestCase):
@@ -27,6 +28,7 @@ class PriceIndexTests(unittest.TestCase):
         self.assertEqual(got['deflator'], {'2019': 110.0, '2020': 100.0})
         self.assertEqual(got['latestYear'], 2020)
 
+    @requires_data("industry_va")
     def test_committed_file_is_current(self):
         committed = json.loads(p.OUTPUT.read_text(encoding='utf-8'))
         self.assertEqual(committed, json.loads(json.dumps(p.build(), ensure_ascii=False)))
