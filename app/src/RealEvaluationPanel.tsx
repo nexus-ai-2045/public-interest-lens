@@ -97,6 +97,8 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   if (['/members', '/members/'].includes(window.location.pathname)) return <MembersPage />;
   if (['/methodology', '/methodology/'].includes(window.location.pathname)) return <MethodologyPage />;
   if (['/numbers', '/numbers/'].includes(window.location.pathname)) return <NumbersPage />;
+  // 仮データの画面は公開サイトでは開かない（ナビからもリンクしない）。
+  if (PUBLIC_SITE && /^\/demo(\/|$)/.test(window.location.pathname)) return <PublicUnavailablePage />;
   if (window.location.pathname === '/demo/motion') return <MotionGalleryPage />;
   if (PUBLIC_SITE && (route.dataset === 'real' || window.location.pathname === '/records')) return <PublicUnavailablePage />;
   if (!PUBLIC_SITE && route.dataset === 'real') return <RealEvaluationPanel route={route} navigate={navigate} />;

@@ -9,6 +9,9 @@ import { ROLE_LABEL as CAUSAL_ROLE_LABEL, type MemberEvidence, type MemberLaw, t
 import { DEFAULT_KNOBS, isDefaultKnobs, readKnobs, writeKnobs, type CausalRole, type Knobs } from './causal-allocation';
 import { adjustMembers } from './members-knobs';
 import { AllMembers } from './AllMembers';
+import { distributionReferenceUrl } from './all-members-view';
+import type { PublicMembersReference } from './members-reference';
+import { partyById, partyComparison, sortPartyRows, type PartySortKey } from './party-compare';
 import { LawName, lawNameText, namingOf, useLawNames } from './law-name';
 import { CORRECTION_EMAIL, correctionIssueUrl, correctionListUrl, correctionMailUrl, type CorrectionTarget } from './correction-link';
 const MethodFormulas = lazy(() => import('./MethodFormulas'));
@@ -240,6 +243,37 @@ export function PartyRankingPanel({ ranking }: { ranking: PartyRanking }) {
   </section>;
 }
 
+/** 一覧の所属政党の表示。現職は政党名、表がまだ読めていないときは空、それ以外（元職・当時）は「元職」。 */
+export function partyLabel(id: string, parties: ReadonlyMap<string, string>, loaded: boolean, former: ReadonlyMap<string, string> = new Map()): string {
+  const last = former.get(id);
+  return parties.get(id) ?? (loaded ? (last ? `元職・${last}` : '元職') : '');
+}
+
+const AFFILIATION_SORTS: { key: PartySortKey; label: string }[] = [{ key: 'perPerson', label: '1人あたり' }, { key: 'total', label: '合計' }, { key: 'people', label: '人数' }];
+
+/** 現職の所属政党ごとの比較。議員の確かな額を今の所属政党で足しただけで、新しい額ではない。 */
+export function PartyAffiliationPanel({ members, parties, loaded, error, adjusted }: { members: PublicMember[]; parties: ReadonlyMap<string, string>; loaded: boolean; error: string; adjusted: boolean }) {
+  const [by, setBy] = useState<PartySortKey>('perPerson');
+  const { rows, excluded } = useMemo(() => partyComparison(members, parties), [members, parties]);
+  const sorted = useMemo(() => sortPartyRows(rows, by), [rows, by]);
+  if (error) return <p className="state-banner" role="alert">{error}</p>;
+  if (!loaded) return <p className="fine-note" role="status">所属政党の表を読み込み中…</p>;
+  return <section aria-label="所属政党ごとの比較" className="members-party-ranking">
+    <h3>所属政党ごとの比較（現職の議員の、今の所属政党で集計）</h3>
+    <p className="fine-note">議員の額（上の「議員ランキング」と同じ純額）を、いまの所属政党ごとに足したものです。新しい額ではありません。過去に別の党にいたときの行動も、いまの党に入ります。元職・当時だけの{excluded}人（全{members.length}人のうち）は政党が決められないため入れていません。国賊側の上位は元職が多く、その分は下の「採決した時の会派」で見られます。政党名は名簿の表記（略称）のままです。党は大きいほど合計が大きくなるので、まず1人あたりで並べます。{adjusted && '見え方のつまみを変えた値で集計しています。'}</p>
+    <div className="party-sort" role="group" aria-label="並べ方">{AFFILIATION_SORTS.map(o => <button key={o.key} type="button" aria-pressed={by === o.key} onClick={() => setBy(o.key)}>{o.label}</button>)}</div>
+    <div className="ranking-scroll"><table className="party-table">
+      <caption className="sr-only">所属政党ごとの比較（{AFFILIATION_SORTS.find(o => o.key === by)!.label}。マイナスが国賊側）</caption>
+      <thead><tr><th scope="col">順位</th><th scope="col">政党</th><th scope="col">1人あたり</th><th scope="col">合計</th><th scope="col">人数</th><th scope="col">国賊側／国士側／0円</th></tr></thead>
+      <tbody>{sorted.map((r, i) => <tr key={r.party} className={r.total < 0 ? 'loss' : 'benefit'}>
+        <td>{i + 1}</td>
+        <th scope="row"><span className="party-side">{r.total < 0 ? '国賊側' : '国士側'}</span> {r.party}</th>
+        <td>{signedYen(r.perPerson)}</td><td>{signedYen(r.total)}</td><td>{r.people}人</td><td>{r.loss}人／{r.benefit}人／{r.zero}人</td>
+      </tr>)}</tbody>
+    </table></div>
+  </section>;
+}
+
 export function MembersPage() {
   const [data, setData] = useState<PublicMembers | null>(null);
   const [error, setError] = useState('');
@@ -253,6 +287,7 @@ export function MembersPage() {
   // 名前を選んだら、その人の欄を開いて画面に出す（ページの下の方に開くだけだと、押しても何も起きないように見える）。
   const [focus, setFocus] = useState(() => new URLSearchParams(window.location.search).get('name') ?? '');
   const openMember = (name: string) => {
+    setPartyFilter('');
     setQuery(name);
     setFocus(name);
     const params = new URLSearchParams(window.location.search);
@@ -264,7 +299,7 @@ export function MembersPage() {
     requestAnimationFrame(() => document.getElementById(`member-${focus}`)?.scrollIntoView({ block: 'start' }));
   }, [focus, data]);
   useEffect(() => {
-    const restore = () => { const name = new URLSearchParams(window.location.search).get('name') ?? ''; setQuery(name); setFocus(name); };
+    const restore = () => { const q = new URLSearchParams(window.location.search); const name = q.get('name') ?? ''; setQuery(name); setFocus(name); setTab(q.get('tab') === 'party' && !name ? 'party' : 'members'); };
     window.addEventListener('popstate', restore);
     return () => window.removeEventListener('popstate', restore);
   }, []);
@@ -293,6 +328,29 @@ export function MembersPage() {
       .then(r => r.ok ? r.text() : Promise.reject(new Error('missing'))).then(text => setActivity(readActivity(text))).catch(() => undefined);
     return () => controller.abort();
   }, []);
+  // 現職の所属政党と院は参考の表（members-reference.json）から人物IDで結ぶ。全議員の表も同じものを使う。
+  const [reference, setReference] = useState<PublicMembersReference | null>(null);
+  const [referenceError, setReferenceError] = useState('');
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch(distributionReferenceUrl, { signal: controller.signal, cache: 'no-store' })
+      .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<PublicMembersReference>; })
+      .then(setReference).catch(e => { if (!controller.signal.aborted) setReferenceError(`所属政党の表を読み込めませんでした（${e instanceof Error ? e.message : e}）`); });
+    return () => controller.abort();
+  }, []);
+  const partyMap = useMemo(() => reference ? partyById(reference.members) : new Map<string, string>(), [reference]);
+  // 元職の人は、参議院の投票記録に最後に出てくる会派を添える（あれば）。
+  const formerMap = useMemo(() => new Map((reference?.members ?? []).filter(r => !r.current && r.lastSangiinParty).map(r => [r.id, r.lastSangiinParty] as const)), [reference]);
+  const [partyFilter, setPartyFilter] = useState('');
+  const partyChoices = useMemo(() => { const c = new Map<string, number>(); for (const party of partyMap.values()) c.set(party, (c.get(party) ?? 0) + 1); return [...c].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ja')).map(([party]) => party); }, [partyMap]);
+  // 議員ランキング／政党ごとの比較。名前を指した URL は議員ランキングで開く。
+  const [tab, setTab] = useState<'members' | 'party'>(() => { const q = new URLSearchParams(window.location.search); return q.get('tab') === 'party' && !q.get('name') ? 'party' : 'members'; });
+  const switchTab = (next: 'members' | 'party') => {
+    setTab(next);
+    const params = new URLSearchParams(window.location.search);
+    if (next === 'party') { params.set('tab', 'party'); params.delete('name'); } else params.delete('tab');
+    window.history.replaceState(null, '', `${window.location.pathname}${params.toString() ? `?${params}` : ''}`);
+  };
   const [knobs, setKnobsState] = useState<Knobs>(() => readKnobs(new URLSearchParams(window.location.search)));
   const setKnobs = (k: Knobs) => {
     setKnobsState(k);
@@ -307,8 +365,9 @@ export function MembersPage() {
     const all = members;
     const bySide = side === 'loss' ? all.filter(m => m.net.median < 0) : side === 'benefit' ? [...all].filter(m => m.net.median > 0).reverse() : all;
     const q = query.trim();
-    return q ? bySide.filter(m => m.name.includes(q) || m.id.includes(q)) : bySide;
-  }, [members, side, query]);
+    const byParty = partyFilter ? bySide.filter(m => partyMap.get(m.id) === partyFilter) : bySide;
+    return q ? byParty.filter(m => m.name.includes(q) || m.id.includes(q)) : byParty;
+  }, [members, side, query, partyFilter, partyMap]);
   // 537人ぶんのカードを一度に描くと重いので、上から一定数だけ並べ、「さらに表示」で足す。名前で探した結果・URL で指した人は必ず並べる。
   const [limit, setLimit] = useState(MEMBERS_PAGE_SIZE);
   const visible = useMemo(() => visibleMembers(shown, limit, focus), [shown, limit, focus]);
@@ -318,11 +377,70 @@ export function MembersPage() {
   return <SiteShell active="/members" label="議員・実名・実データ" className="law-ranking members-page">
     <main>
       <h2>この人が失わせた額・生んだ額</h2>
+      <p>議員ごとに、その人の行動で日本が<strong>失った額（国賊側）・生んだ額（国士側）</strong>を並べています。理由（行動→成立→損失の鎖）は、行を開くと出ます。</p>
+      <details className="members-intro"><summary>この数字の意味と訂正窓口</summary>
       <p>法律が日本に与えた損失（国賊側）と便益（国士側）を、<strong>「この人の行動が無かったら、その法律は成立したか」</strong>で人に配りました。提出者が出さなければ、また参議院で賛成票が足りなければ、法律は成立せず、損失も便益も生まれません。成立のしくみ（拒否権者と過半数の投票）の中で、その人の行動が成立を決める場面の割合（Shapley 値）を出し、法律の分（ふつうは法律の額。同じ観測を共有する法律では観測の額を本数で割った分）に掛けたものが<strong>この人が失わせた額</strong>・<strong>生んだ額</strong>です。各人の欄に、行動 → 成立 → 損失のつながりを一次資料（国会会議録・参議院の投票結果・衆議院の議案情報）のリンクつきで示し、式も載せています。計算のしかたは<a href="/methodology">計算方法</a>にあります。</p>
       <p className="fine-note">記録や判定に誤りがあれば、<a href={correctionUrl} target="_blank" rel="noopener noreferrer">訂正・反論の窓口（GitHub の Issue）</a>から公開資料を添えて知らせてください。本人・関係者からの反論も同じ窓口で受け付け、確認できたものは記録と額に反映します。</p>
+      </details>
       {error && <p className="state-banner" role="alert">{error}</p>}
       {data && <>
         <ToneHero members={members} />
+        <div className="members-tabs" role="group" aria-label="表示を切り替える">
+          <button type="button" aria-pressed={tab === 'members'} onClick={() => switchTab('members')}>議員ランキング</button>
+          <button type="button" aria-pressed={tab === 'party'} onClick={() => switchTab('party')}>政党ごとの比較</button>
+        </div>
+        {tab === 'members' && <>
+        <section aria-label="上位の議員" className="members-top" onClick={onTopClick}>
+          {(tone === 'harm' ? ['loss', 'benefit'] as const : ['benefit', 'loss'] as const).map(key => <div key={key} className={`members-top-block ${key}`}>
+            <h3>{key === 'loss' ? '失わせた額の上位10人（国賊側）' : '生んだ額の上位10人（国士側）'}</h3>
+            <RankBars caption={key === 'loss' ? '国賊側の純額の大きい順' : '国士側の純額の大きい順'} format={formatYen} items={topBars(members, key)} />
+          </div>)}
+        </section>
+        <section aria-label="議員の一覧">
+          <h3>全員の一覧</h3>
+          <div className="members-controls">
+            <div role="group" aria-label="側で絞る">
+              {([['all', '全員（国賊側が上）'], ['loss', '国賊側'], ['benefit', '国士側']] as const).map(([key, label]) => <button key={key} type="button" aria-pressed={side === key} onClick={() => setSide(key)}>{label}</button>)}
+            </div>
+            <label>政党で絞る <select value={partyFilter} onChange={event => setPartyFilter(event.target.value)}><option value="">すべて</option>{partyChoices.map(p => <option key={p} value={p}>{p}</option>)}</select></label>
+            <label>名前で探す <input type="search" value={query} onChange={event => setQuery(event.target.value)} /></label>
+            {query && <button type="button" onClick={() => { setQuery(''); setFocus(''); const params = new URLSearchParams(window.location.search); params.delete('name'); window.history.replaceState(null, '', `${window.location.pathname}${params.toString() ? `?${params}` : ''}`); }}>全員を表示</button>}
+          </div>
+          <p className="fine-note" role="status">{shown.length}人を表示{visible.length < shown.length && `（順位の上から${visible.length}人を並べています）`}</p>
+          <ol className="members-list">{visible.map(member => <li key={member.id} id={`member-${member.id}`} className={`member-card ${member.net.median < 0 ? 'loss' : 'benefit'}`}>
+            {/* 検索・URL で自動で開いたカードは覚えない（覚えると、検索を消しても開いたまま中身が残る）。人が開いたものだけ覚える。 */}
+            <details open={shown.length === 1 || member.id === focus || opened.has(member.id)} onToggle={event => { if (shown.length !== 1 && member.id !== focus) toggleOpened(member.id, event.currentTarget.open); }}>
+              <summary>
+                <span className="member-rank">{member.rank}位</span>
+                <span className="member-name">{member.name}</span>
+                <span className="member-party">{partyLabel(member.id, partyMap, reference !== null, formerMap)}</span>
+                <span className="member-net"><strong>{signedYen(member.net.median)}</strong><small>幅 {signedYen(member.net.low)}〜{signedYen(member.net.high)}</small></span>
+              </summary>
+              {(shown.length === 1 || member.id === focus || opened.has(member.id)) && <MemberDetail member={member} laws={laws} activity={activity} adjusted={adjusted} />}
+            </details>
+          </li>)}</ol>
+          {visible.length < shown.length && <p className="members-more"><button type="button" onClick={() => setLimit(n => n + MEMBERS_PAGE_SIZE)}>さらに表示（残り{shown.length - visible.length}人）</button> <button type="button" onClick={() => setLimit(shown.length)}>全員を表示</button></p>}
+        </section>
+        <AllMembers confirmed={data.members} data={reference} error={referenceError} />
+        </>}
+        {tab === 'party' && <>
+          <PartyAffiliationPanel members={members} parties={partyMap} loaded={!!reference} error={referenceError} adjusted={adjusted} />
+        {/* 政党ランキングは初期の配分から作る。つまみを変えた後の議員の額とは合わないので、そのときは出さない。 */}
+        {data.partyRanking && data.partyRanking.blocs.length > 0 && (adjusted
+          ? <p className="fine-note">政党ランキングは初期の設定の配分で集計しています。見え方のつまみを初期値に戻すと表示されます。</p>
+          : <PartyRankingPanel ranking={data.partyRanking} />)}
+        {data.parties && data.parties.length > 0 && <section aria-label="会派の帳簿" className="members-parties">
+          <h3>会派の帳簿（衆議院の会派別の賛否）</h3>
+          <p className="fine-note">衆議院は起立採決で個人の賛否が残らないため、議案の経過に載った会派別の賛否で会派に置きます。賛成会派は衆議院の分を会派の数で等分、反対会派には賛成会派1つと同じ額を向きを逆にして置きます。議員の点数には足していません。会派別の賛否が載るのは第186回国会ごろからの法律だけです。与党は法案の大半に賛成するため、総額ではなく賛否を示した法律1本あたりの額の順に並べています。</p>
+          {/* 与党は法案の大半に賛成するので、総額で並べると会派の大きさと与党かどうかで偏る。賛否を示した法律1本あたりで並べる。 */}
+          <ol className="members-laws">{[...data.parties].sort((a, b) => a.net.median / a.laws.length - b.net.median / b.laws.length).map(p => <li key={p.name} className={p.net.median < 0 ? 'loss' : 'benefit'}>
+            <span>{p.net.median < 0 ? '国賊側' : '国士側'}</span>
+            <strong>{p.name}</strong>
+            <small>賛否を示した法律1本あたり {signedYen(Math.round(p.net.median / p.laws.length))}（{p.laws.length}本、純額 {signedYen(p.net.median)}）・{p.laws.map(l => `${l.lawId}（${l.direction === 'with' ? '賛成' : '反対'}）`).join('、')}</small>
+          </li>)}</ol>
+        </section>}
+        </>}
+        <details className="members-basis" open={adjusted || undefined}><summary>根拠と計算の前提（元になった法律・見え方のつまみ・各帳簿）</summary>
         <section aria-label="元になった法律" className="law-funnel">
           <p className="law-funnel-lead">{data.laws.length}本の法律、{data.counts.members}人（国賊側{data.counts.loss}人・国士側{data.counts.benefit}人・0円{data.counts.zero}人）。額を配った行動（提出・参議院の賛成）{data.counts.involvements.toLocaleString('ja-JP')}件、額に入れない行動（質疑・修正案・委員長）{data.counts.context}件、外した行動{data.counts.excluded}件。</p>
           <ul className="members-laws">{data.laws.map(law => <li key={law.id} className={law.side}>
@@ -341,50 +459,6 @@ export function MembersPage() {
           <p className="fine-note">点数は本人の行動（衆議院の発議者・参議院本会議の賛成と反対）だけで決めます。閣法を閣議決定した担当の大臣の分は「役職の帳簿」として別に見せ、点数に入れません。参議院本会議で反対した人には、賛成1票と同じ割合を向きを逆にして配ります（損失の法律に反対＝国士側、便益の法律に反対＝国賊側）。損失の窓がコロナ期と重なり分けて測れない法律（判定表の R3）は、額がコロナ期の落ち込みをそのまま含むので配りません。確かさの印が「未測定」の法律は、法律ランキングでは額を公開判定にしていないものです。ここでは印を付けたまま配分に含めています。参考扱いの額（段階1・貸出残高）は配分していません。衆議院は起立採決で個人の賛否が記録に残らないため、衆議院の分は個人ではなく会派に置いています（下の会派の帳簿）。会議録から関与を集めていない法律は、議案の提出者の欄と参議院の個人別の賛否だけで機械的に配ります（質疑・委員長の分は入りません）。</p>
         </section>
         <KnobsPanel knobs={knobs} onChange={setKnobs} />
-        <section aria-label="上位の議員" className="members-top" onClick={onTopClick}>
-          {(tone === 'harm' ? ['loss', 'benefit'] as const : ['benefit', 'loss'] as const).map(key => <div key={key} className={`members-top-block ${key}`}>
-            <h3>{key === 'loss' ? '失わせた額の上位10人（国賊側）' : '生んだ額の上位10人（国士側）'}</h3>
-            <RankBars caption={key === 'loss' ? '国賊側の純額の大きい順' : '国士側の純額の大きい順'} format={formatYen} items={topBars(members, key)} />
-          </div>)}
-        </section>
-        <section aria-label="議員の一覧">
-          <h3>全員の一覧</h3>
-          <div className="members-controls">
-            <div role="group" aria-label="側で絞る">
-              {([['all', '全員（国賊側が上）'], ['loss', '国賊側'], ['benefit', '国士側']] as const).map(([key, label]) => <button key={key} type="button" aria-pressed={side === key} onClick={() => setSide(key)}>{label}</button>)}
-            </div>
-            <label>名前で探す <input type="search" value={query} onChange={event => setQuery(event.target.value)} /></label>
-            {query && <button type="button" onClick={() => { setQuery(''); setFocus(''); const params = new URLSearchParams(window.location.search); params.delete('name'); window.history.replaceState(null, '', `${window.location.pathname}${params.toString() ? `?${params}` : ''}`); }}>全員を表示</button>}
-          </div>
-          <p className="fine-note" role="status">{shown.length}人を表示{visible.length < shown.length && `（順位の上から${visible.length}人を並べています）`}</p>
-          <ol className="members-list">{visible.map(member => <li key={member.id} id={`member-${member.id}`} className={`member-card ${member.net.median < 0 ? 'loss' : 'benefit'}`}>
-            {/* 検索・URL で自動で開いたカードは覚えない（覚えると、検索を消しても開いたまま中身が残る）。人が開いたものだけ覚える。 */}
-            <details open={shown.length === 1 || member.id === focus || opened.has(member.id)} onToggle={event => { if (shown.length !== 1 && member.id !== focus) toggleOpened(member.id, event.currentTarget.open); }}>
-              <summary>
-                <span className="member-rank">{member.rank}位</span>
-                <span className="member-name">{member.name}</span>
-                <span className="member-net"><strong>{signedYen(member.net.median)}</strong><small>幅 {signedYen(member.net.low)}〜{signedYen(member.net.high)}</small></span>
-                <span className="member-from">{member.laws.map(l => laws.get(l.lawId)!.id).join('・')}</span>
-              </summary>
-              {(shown.length === 1 || member.id === focus || opened.has(member.id)) && <MemberDetail member={member} laws={laws} activity={activity} adjusted={adjusted} />}
-            </details>
-          </li>)}</ol>
-          {visible.length < shown.length && <p className="members-more"><button type="button" onClick={() => setLimit(n => n + MEMBERS_PAGE_SIZE)}>さらに表示（残り{shown.length - visible.length}人）</button> <button type="button" onClick={() => setLimit(shown.length)}>全員を表示</button></p>}
-        </section>
-        {/* 政党ランキングは初期の配分から作る。つまみを変えた後の議員の額とは合わないので、そのときは出さない。 */}
-        {data.partyRanking && data.partyRanking.blocs.length > 0 && (adjusted
-          ? <p className="fine-note">政党ランキングは初期の設定の配分で集計しています。見え方のつまみを初期値に戻すと表示されます。</p>
-          : <PartyRankingPanel ranking={data.partyRanking} />)}
-        {data.parties && data.parties.length > 0 && <section aria-label="会派の帳簿" className="members-parties">
-          <h3>会派の帳簿（衆議院の会派別の賛否）</h3>
-          <p className="fine-note">衆議院は起立採決で個人の賛否が残らないため、議案の経過に載った会派別の賛否で会派に置きます。賛成会派は衆議院の分を会派の数で等分、反対会派には賛成会派1つと同じ額を向きを逆にして置きます。議員の点数には足していません。会派別の賛否が載るのは第186回国会ごろからの法律だけです。与党は法案の大半に賛成するため、総額ではなく賛否を示した法律1本あたりの額の順に並べています。</p>
-          {/* 与党は法案の大半に賛成するので、総額で並べると会派の大きさと与党かどうかで偏る。賛否を示した法律1本あたりで並べる。 */}
-          <ol className="members-laws">{[...data.parties].sort((a, b) => a.net.median / a.laws.length - b.net.median / b.laws.length).map(p => <li key={p.name} className={p.net.median < 0 ? 'loss' : 'benefit'}>
-            <span>{p.net.median < 0 ? '国賊側' : '国士側'}</span>
-            <strong>{p.name}</strong>
-            <small>賛否を示した法律1本あたり {signedYen(Math.round(p.net.median / p.laws.length))}（{p.laws.length}本、純額 {signedYen(p.net.median)}）・{p.laws.map(l => `${l.lawId}（${l.direction === 'with' ? '賛成' : '反対'}）`).join('、')}</small>
-          </li>)}</ol>
-        </section>}
         {data.ministries && data.ministries.length > 0 && <section aria-label="省庁の帳簿" className="members-parties">
           <h3>省庁の帳簿（閣法の所管の省庁）</h3>
           <p className="fine-note">閣法の原案は所管の省庁が書き、国会では所管の大臣が提案理由を説明します。閣法の提出者の組の分（議員の点数に入れない役職の帳簿と同じ額）を、説明した大臣の省庁に置きました。内閣と所管の省庁の組の分で、どちらか一方のせいではありません。議員の点数には足していません。所管する法律が多い省庁ほど総額が大きくなるため、法律1本あたりの額の順に並べています。2001年の再編の前の省庁は、今の名前に寄せています（例：通商産業省→経済産業省）。</p>
@@ -421,7 +495,7 @@ export function MembersPage() {
             <small>{o.kind}・条件付き賛成 {o.conditional}・賛成 {o.support}{o.technologies.length > 0 ? `・${o.technologies.join('、')}` : ''}</small>
           </li>)}</ol>
         </section>}
-        <AllMembers confirmed={data.members} />
+        </details>
         <section className="lower-panel" aria-label="この画面の読み方">
           <p><Info size={16} /> 点数は 純額 ＝ 生んだ額（国士側の法律から）− 失わせた額（国賊側の法律から）です。マイナスが国賊側、プラスが国士側。順位は純額の小さい順（国賊側が上）です。幅は比較国の伸びの四分位から来ています。</p>
           <p className="fine-note">結果で評価しており、提出者や賛成者の意図や予見は問いません。額は推計で、幅と確かさの印の範囲で読むものです。成立に欠かせない提出者には大きな割合が、多数の中の1票には小さな割合が付きます。参議院本会議で反対した人には、賛成1票と同じ割合を向きを逆にして配ります（成立しなかった法案は、額が出たら同じ式で数えます）。記録の無い人は対象外で、0円とは別です。ルール：{data.rules.join('・')}。</p>

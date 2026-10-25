@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { leadingNumber, watchPage } from './helpers';
 
+const openBasis = (page: import('@playwright/test').Page) => page.getByText(/^根拠と計算の前提/).click();
 const slider = (page: import('@playwright/test').Page, name: RegExp) => page.getByRole('slider', { name });
 
 test.describe('/members（議員ランキング）', () => {
@@ -12,6 +13,11 @@ test.describe('/members（議員ランキング）', () => {
     const cards = page.locator('ol.members-list > li');
     await expect(cards.first()).toBeVisible();
     expect(leadingNumber(await page.getByRole('status').filter({ hasText: '人を表示' }).textContent())).toBeGreaterThan(0);
+    // 最初は順位・名前・所属政党・額だけ。理由（元になった法律・つまみ）は折りたたみの中。
+    await expect(page.getByRole('region', { name: '見え方のつまみ' })).toBeHidden();
+    await expect(page.locator('.member-party').first()).not.toBeEmpty();
+    await expect(page.locator('ol.members-list > li summary .member-from')).toHaveCount(0);
+    await openBasis(page);
     await expect(page.getByRole('region', { name: '見え方のつまみ' })).toBeVisible();
     expect(watch.dataUrls.some(url => url.endsWith('/distribution/members.json'))).toBe(true);
     watch.expectClean();
@@ -22,6 +28,7 @@ test.describe('/members（議員ランキング）', () => {
     await page.goto('/members');
     const summaries = page.locator('ol.members-list > li summary');
     await expect(summaries.first()).toBeVisible();
+    await openBasis(page);
     const before = (await summaries.allInnerTexts()).join('|');
 
     await slider(page, /提出者/).fill('0');
@@ -63,5 +70,27 @@ test.describe('/members（議員ランキング）', () => {
     expect(leadingNumber(await status.textContent())).toBeGreaterThan(0);
     await expect(page.locator('.member-name').first()).toHaveText(name);
     watch.expectClean();
+  });
+});
+
+test.describe('/members 政党ごとの比較', () => {
+  test('切り替えると所属政党ごとの表が出て、URL に tab=party が入る', async ({ page }) => {
+    const watch = watchPage(page);
+    await page.goto('/members');
+    await page.getByRole('button', { name: '政党ごとの比較' }).click();
+    await expect(page).toHaveURL(/tab=party/);
+    const table = page.getByRole('region', { name: '所属政党ごとの比較' }).locator('table');
+    await expect(table.locator('tbody tr').first()).toBeVisible();
+    expect(await table.locator('tbody tr').count()).toBeGreaterThan(3);
+    await page.getByRole('button', { name: '議員ランキング' }).click();
+    await expect(page).not.toHaveURL(/tab=party/);
+    await expect(page.locator('ol.members-list > li').first()).toBeVisible();
+    watch.expectClean();
+  });
+  test('公開サイトにテスト用の仮データ画面へのリンクが無く、/demo は開けない', async ({ page }) => {
+    await page.goto('/members');
+    await expect(page.locator('a[href^="/demo"]')).toHaveCount(0);
+    await page.goto('/demo');
+    await expect(page.getByRole('heading', { level: 2, name: 'この機能は公開版に含まれていません' })).toBeVisible();
   });
 });
