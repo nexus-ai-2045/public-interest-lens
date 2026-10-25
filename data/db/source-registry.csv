@@ -9,25 +9,25 @@ OECD 物価・国際指標,指標,sdmx.oecd.org,https://sdmx.oecd.org/public/res
 消費者物価指数（総務省統計局・e-Stat）,指標,www.e-stat.go.jp,https://www.e-stat.go.jp/,series・points,取得済み,2026-10-24,data/acquired/domestic-stats/cpi_items_annual_*.csv
 国民経済計算（内閣府 経済社会総合研究所）,指標,www.esri.cao.go.jp,https://www.esri.cao.go.jp/jp/sna/menu.html,series・points,取得済み,2026-10-24,経済活動別 GDP。デフレーターは同じ表の名目÷実質で作れる
 労働力調査・毎月勤労統計（e-Stat）,指標,www.e-stat.go.jp,https://www.e-stat.go.jp/,series・points,取得済み,2026-10-24,雇用・賃金
-日銀 金融政策決定会合（決定・議事要旨・政策委員の賛否）,金融政策,www.boj.or.jp,https://www.boj.or.jp/mopo/mpmdeci/index.htm,decisions・decision_votes・decision_amounts,通信先の許可待ち,2026-10-24,CONNECT が 403（通信先の一覧に無い）
-日銀 時系列統計（政策金利・マネタリーベース・日銀の国債・ETF・REIT 保有）,金融政策,www.stat-search.boj.or.jp,https://www.stat-search.boj.or.jp/,series・points,通信先の許可待ち,2026-10-24,以前は貸出の系列を取得できた（more-stats）。CONNECT が 403
+日銀 金融政策決定会合（決定・議事要旨・政策委員の賛否）,金融政策,www.boj.or.jp,https://www.boj.or.jp/mopo/mpmdeci/index.htm,decisions・decision_votes・decision_amounts,取得済み,2026-10-24,data/acquired/monetary-stats/mpm-decisions.csv（1998年〜の321会合：決定の要旨・賛否の数・反対した委員）と mpm-votes.csv（委員ごと、姓のみ）。people と結べないので decision_votes は空。議事要旨は未取得
+日銀 時系列統計（政策金利・マネタリーベース・日銀の国債・ETF・REIT 保有）,金融政策,www.stat-search.boj.or.jp,https://www.stat-search.boj.or.jp/,series・points,取得済み,2026-10-24,data/acquired/monetary-stats/boj.csv（コールレート・基準貸付利率・マネタリーベース・日銀の国債・ETF・J-REIT・総資産）。API v1、月次を年にまとめる（率は12か月の平均、残高は12月）
 財務省 一般会計の公債金（決算。その年度に国債で賄った歳入）,国債,www.mof.go.jp,https://www.mof.go.jp/policy/budget/reference/statistics/data.htm,fiscal_flows,取得済み,2026-10-24,財政統計 第4表（昭和57年度以降）。data/acquired/fiscal/fiscal_flows.csv の 歳入（主要科目別）
 財務省 国債の発行額・残高,国債,www.mof.go.jp,https://www.mof.go.jp/jgbs/reference/gbb/index.htm,fiscal_flows,取得済み,2026-10-24,国債発行額の推移 hakkou02.pdf（昭和40年度〜、種類別・借換債・財投債・普通国債残高・国債費）と国債残高の推移 zandaka01.pdf。data/acquired/fiscal-more/jgb.csv（scripts/fetch_fiscal_more.py）。計＝小計＋各債・小計＝4条債＋特例債・残高の2表で照合
 財務省 予算・決算（一般会計・特別会計の主要経費別、補正）,予算,www.mof.go.jp,https://www.mof.go.jp/policy/budget/reference/statistics/data.htm,fiscal_flows・decision_amounts,取得済み,2026-10-24,一般会計の主要経費別：当初・補正は第19表（昭和24年度〜）、決算は第20表（昭和42年度〜）。data/acquired/fiscal/fiscal_flows.csv。特別会計は第21・22表（平成20年度〜）を data/acquired/fiscal-more/special-budget.csv（足し上げ＝合計の照合に通った年度だけ DB へ。平成24〜27年度は不一致で外す）
 財務省 外国為替平衡操作の実施状況（為替介入）,為替,www.mof.go.jp,https://www.mof.go.jp/policy/international_policy/reference/feio/index.html,decisions・decision_amounts,取得済み,2026-10-24,1991年4月以降の実施日ごと。data/acquired/fiscal/fx_interventions.csv（decisions の 為替）
-総務省 地方財政白書・地方財政計画（地方交付税・国庫支出金・地方債）,地方財政,www.soumu.go.jp,https://www.soumu.go.jp/menu_seisaku/hakusyo/,fiscal_flows,取得済み,2026-10-24,地方財政白書 歳入決算額の状況 その1 総括（令和3〜8年版、2018〜2024年度の純計額）。その2 推移（平成28〜31年版・令和3〜8年版）から 2009〜2017年度を data/acquired/fiscal-more/local-revenue.csv（重なる年度は fetch_fiscal.py と一致を照合）。地方財政計画は未取得（/iken/zaisei/ は 403）
+総務省 地方財政白書・地方財政計画（地方交付税・国庫支出金・地方債）,地方財政,www.soumu.go.jp,https://www.soumu.go.jp/menu_seisaku/hakusyo/,fiscal_flows,取得済み,2026-10-24,地方財政白書 歳入決算額の状況 その1 総括（令和3〜8年版、2018〜2024年度の純計額）。その2 推移（平成28〜31年版・令和3〜8年版）から 2009〜2017年度を data/acquired/fiscal-more/local-revenue.csv（重なる年度は fetch_fiscal.py と一致を照合）。地方財政計画は未取得（/iken/zaisei.html は 2026-10-24 に届くようになった）
 内閣府 経済財政諮問会議（骨太の方針）,国策,www5.cao.go.jp,https://www5.cao.go.jp/keizai-shimon/kaigi/cabinet/honebuto/,decisions・decision_targets,取得済み,2026-10-24,2015〜2026年の閣議決定日（PDF の1頁目）。data/acquired/fiscal/policies.csv。2013・2014年は一覧ページから data/acquired/fiscal-more/policies.csv。数値目標は AI の読み手2系統の一致を data/acquired/fiscal-more/policy-targets.csv（2018・2020年は PDF の文字が取れず OCR 待ち）
 首相官邸 閣議決定の戦略（成長戦略・e-Japan・IT 戦略など）,国策,www.kantei.go.jp,https://www.kantei.go.jp/jp/singi/,decisions・decision_targets,サイトが拒否（経路を探す）,2026-10-24,通信先としては届くが /jp/ が 404。個別の会議ページの URL で取る
 内閣府 総合科学技術・イノベーション会議（Society 5.0・科学技術基本計画）,国策,www8.cao.go.jp,https://www8.cao.go.jp/cstp/,decisions・decision_targets,取得できる（未取得）,2026-10-24,200 を確認
 経済産業省（半導体・デジタル産業戦略、クールジャパン）,国策,www.meti.go.jp,https://www.meti.go.jp/policy/mono_info_service/joho/conference/semicon_digital.html,decisions・decision_targets,サイトが拒否（経路を探す）,2026-10-24,通信先としては届くが 403（サイト側）。UA か別の経路
 デジタル庁（デジタル社会の実現に向けた重点計画）,国策,www.digital.go.jp,https://www.digital.go.jp/policies/priority-policy-program,decisions・decision_targets,取得済み,2026-10-24,2022〜2026年の重点計画（閣議決定日・本文 PDF）と数値目標。data/acquired/fiscal-more/policies.csv・policy-targets.csv
 行政事業レビュー,予算,www.gyoukaku.go.jp,https://www.gyoukaku.go.jp/review/,org_actions・decision_amounts,取得済み,2026-10-24,data/acquired/blocking-actors/5_budget-review/（一部）
-IMF（World Economic Outlook・IFS）,海外の政策,www.imf.org,https://www.imf.org/en/Publications/WEO,series・points,通信先の許可待ち,2026-10-24,CONNECT が 403
-米国 FRED（連銀の時系列）,海外の政策,fred.stlouisfed.org,https://fred.stlouisfed.org/,series・points,通信先の許可待ち,2026-10-24,CONNECT が 403
-BIS（各国の政策金利・実効為替レート）,海外の政策,www.bis.org,https://www.bis.org/statistics/,series・points,通信先の許可待ち,2026-10-24,CONNECT が 403
-EU の法令（EUR-Lex）,海外の政策,eur-lex.europa.eu,https://eur-lex.europa.eu/,decisions,通信先の許可待ち,2026-10-24,CONNECT が 403
-米国の連邦規則・法律（Federal Register・Congress.gov）,海外の政策,www.federalregister.gov,https://www.federalregister.gov/,decisions,通信先の許可待ち,2026-10-24,CONNECT が 403（congress.gov も同じ）
-英国の法令（legislation.gov.uk）,海外の政策,www.legislation.gov.uk,https://www.legislation.gov.uk/,decisions,通信先の許可待ち,2026-10-24,CONNECT が 403
+IMF（World Economic Outlook・IFS）,海外の政策,www.imf.org,https://www.imf.org/en/Publications/WEO,series・points,取得済み,2026-10-24,data/acquired/monetary-stats/imf.csv（datamapper API。物価・失業率・政府債務・財政収支、昨年までの実績のみ）。IFS は未取得
+米国 FRED（連銀の時系列）,海外の政策,fred.stlouisfed.org,https://fred.stlouisfed.org/,series・points,取得済み,2026-10-24,data/acquired/monetary-stats/fred.csv（OECD 長期金利の再配布 IRLTLT01、API キー不要の fredgraph.csv）
+BIS（各国の政策金利・実効為替レート）,海外の政策,www.bis.org,https://www.bis.org/statistics/,series・points,取得済み,2026-10-24,data/acquired/monetary-stats/bis.csv（stats.bis.org の SDMX：政策金利 CBPOL 12月値、実効為替 実質・名目の年平均）
+EU の法令（EUR-Lex）,海外の政策,eur-lex.europa.eu,https://eur-lex.europa.eu/,decisions,取得できる（未取得）,2026-10-24,2026-10-24 に通信を確認（202）
+米国の連邦規則・法律（Federal Register・Congress.gov）,海外の政策,www.federalregister.gov,https://www.federalregister.gov/,decisions,取得できる（未取得）,2026-10-24,2026-10-24 に通信を確認。congress.gov はサイト側で 403
+英国の法令（legislation.gov.uk）,海外の政策,www.legislation.gov.uk,https://www.legislation.gov.uk/,decisions,取得できる（未取得）,2026-10-24,2026-10-24 に通信を確認（200）
 OECD 産業政策（STAN・研究開発費・ベンチャー投資）,海外の政策,sdmx.oecd.org,https://sdmx.oecd.org/public/rest/,series・points,取得できる（未取得）,2026-10-24,原因の軸の作業で STAN を取得済み（共有フォルダ）。リポジトリへの取り込みは未
 内閣府 国民経済計算（四半期別GDP速報の年度・暦年）,数値目標の達成状況,www.esri.cao.go.jp,https://www.esri.cao.go.jp/jp/sna/sokuhou/sokuhou_top.html,series・decision_targets,取得済み,2026-10-24,支出側の名目・実質GDPと前年度比（1994年度〜）。data/acquired/target-series/sna.csv
 内閣府 中長期の経済財政に関する試算（国・地方の基礎的財政収支）,数値目標の達成状況,www5.cao.go.jp,https://www5.cao.go.jp/keizai2/keizai-syakai/shisan.html,series・decision_targets,取得済み,2026-10-24,計数表の国・地方 PB（実績の年度だけ、2002年度〜）。data/acquired/target-series/pb.csv
