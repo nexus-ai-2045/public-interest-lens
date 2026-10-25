@@ -381,6 +381,9 @@ def download(index: list[dict[str, str]], manifest: list[dict[str, str]], storag
                 if result is not None:
                     (text_dir or WORK / "text").joinpath(f"{digest}.txt").write_text(result[0], encoding="utf-8")
                 image = result is None or classify_text(*result) != "文字あり"
+                if image and keep == "none":
+                    # 文字の無い（画像の）PDF は OCR 用の原本が要る。残さない設定では取得済みにせず、失敗にして次回に回す
+                    raise OSError("文字の無い PDF（原本を残さない設定）")
                 keep_this = keep == "image" and image
             material = ""
             if keep_this and free_bytes(storage) <= MIN_FREE_BYTES:

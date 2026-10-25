@@ -389,6 +389,16 @@ class CompareAndLinkTests(unittest.TestCase):
                                   text_dir=root / "text", get_bytes=lambda url: b"X", free_bytes=lambda path: 10 ** 12)
             self.assertTrue(out[0]["状態"].startswith("失敗"))
 
+    def test_keep_none_image_pdf_is_retried(self):
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with mock.patch.object(pf, "WORK", root / "work"), mock.patch.object(pf, "pdf_text", return_value=("\f", 1)), \
+                 mock.patch.object(pf, "classify_text", return_value="文字なし"):
+                out = pf.download([{"PDF_URL": "https://a.example/x.pdf"}], [], storage=root / "store", wait=0, keep="none",
+                                  text_dir=root / "text", get_bytes=lambda url: b"X", free_bytes=lambda path: 10 ** 12)
+            self.assertTrue(out[0]["状態"].startswith("失敗"))
+
     def test_roster_failure_keeps_previous_table(self):
         from unittest import mock
         with tempfile.TemporaryDirectory() as tmp:
