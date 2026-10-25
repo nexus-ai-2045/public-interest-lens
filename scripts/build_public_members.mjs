@@ -26,6 +26,7 @@ const inputs = {
   ministries: join(root, 'data/derived/ministry-v1/cabinet-bills.csv'),
   // 税の帳簿（scripts/build_tax_ledger.py）。消費税率を変えた法律の額を政府のモデルの乗数で出した別の帳簿。
   taxLedger: join(root, 'data/derived/tax-v1/consumption-tax.csv'),
+  taxLedgerIncome: join(root, 'data/derived/tax-v1/income-corporate-tax.csv'),
   // 省庁の抵抗の件数と団体の立場（scripts/build_org_ledger.py）。原本照合済みの記録の件数だけで、額は付けない。
   resistance: join(root, 'data/derived/org-ledger-v1/ministry-resistance.csv'),
   orgStances: join(root, 'data/derived/org-ledger-v1/org-stances.csv'),

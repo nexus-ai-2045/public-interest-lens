@@ -108,12 +108,13 @@ export interface TaxLedgerLaw {
   lawId: string; title: string; kind: string; changes: string[]; years: { year: number; nth: number; amount: number }[];
   total: number; certainty: string; marks: string[]; notes: string[]; sources: string[] }
 
-export function taxLedgerOf(csv: string): TaxLedgerLaw[] {
+export function taxLedgerOf(...csvs: string[]): TaxLedgerLaw[] {
   const book = new Map<string, TaxLedgerLaw>();
-  for (const r of parseCsv(csv)) {
+  for (const r of csvs.flatMap(c => parseCsv(c))) {
     const t = book.get(r['法律ID']) ?? { lawId: r['法律ID'], title: r['題名'], kind: r['種類'], changes: [], years: [], total: 0, certainty: r['確かさ'], marks: r['印'].split('／'), notes: [], sources: [] };
     if (!t.changes.includes(r['内容'])) t.changes.push(r['内容']);
     if (r['注'] && !t.notes.includes(r['注'])) t.notes.push(r['注']);
+    for (const m of r['印'].split('／')) if (!t.marks.includes(m)) t.marks.push(m);
     for (const u of [r['出典URL'], r['乗数の出典']]) if (u && !t.sources.includes(u)) t.sources.push(u);
     const amount = Number(r['額_円']);
     t.years.push({ year: Number(r['年']), nth: Number(r['何年目']), amount });
@@ -181,6 +182,8 @@ export type MemberInputs = { involvements: string; publish: string; loss: string
   ministries?: string;
   /** 税の帳簿（scripts/build_tax_ledger.py の data/derived/tax-v1/consumption-tax.csv）。 */
   taxLedger?: string;
+  /** 税の帳簿の2本目（所得税・法人税など。data/derived/tax-v1/income-corporate-tax.csv）。 */
+  taxLedgerIncome?: string;
   /** 省庁の抵抗の件数（data/derived/org-ledger-v1/ministry-resistance.csv）。 */
   resistance?: string;
   /** 団体の立場（data/derived/org-ledger-v1/org-stances.csv）。 */
@@ -194,6 +197,8 @@ const normName = (s: string): string => s.replace(/[\s　]/g, '');
 
 /** 人物ID（無い古い一覧では氏名）。集計のキーはこれで、表示の氏名とは別に持つ。 */
 const personKey = (r: Record<string, string>): string => r['人物ID'] || r['氏名'];
+/** 算入しない質疑の除外理由から、審議での立場を記録の名前にする（2系統の一致か、読み直しで決まったものだけ）。 */
+const QUESTION_STANCE: [RegExp, string][] = [[/^(2系統とも|読み直しで)中立/, '質疑（中立）'], [/^(2系統とも|読み直しで)反対/, '質疑（反対）']];
 
 const zero = (): Range => ({ low: 0, median: 0, high: 0 });
 const sub = (a: Range, b: Range): Range => ({ low: a.low - b.low, median: a.median - b.median, high: a.high - b.high });
@@ -359,8 +364,11 @@ export function buildMembers(input: MemberInputs): PublicMembers {
     return new Map(list.map((x, i) => [x.name, { rank: i + 1, net: x.net }]));
   };
   const baseRank = rankOf(totals.get('base')!), chairRank = rankOf(totals.get('chair_veto')!);
-  const evidenceOf = (lawId: string, id: string) => counted.filter(v => v['法律ID'] === lawId && personKey(v) === id)
-    .map(v => ({ action: v['行動'] as Action, actionLabel: ACTION_LABEL[v['行動'] as Action], title: v['当時の肩書'], house: v['院'], date: v['日付'], url: v['証拠URL'] }))
+  // 行動の帳簿の記録：支持でない質疑（中立・反対）も、その法律で載っている議員には記録として出す（配分には入れない）。
+  const stanceOf = (v: Record<string, string>): string => v['算入'] === 'はい' ? ACTION_LABEL[v['行動'] as Action] : QUESTION_STANCE.find(([re]) => re.test(v['除外理由']))?.[1] ?? '';
+  const recorded = rows.filter(r => r['算入'] === 'はい' || (r['行動'] === 'question' && !r['除外理由'].includes('同姓同名') && stanceOf(r) !== ''));
+  const evidenceOf = (lawId: string, id: string) => recorded.filter(v => v['法律ID'] === lawId && personKey(v) === id)
+    .map(v => ({ action: v['行動'] as Action, actionLabel: stanceOf(v), title: v['当時の肩書'], house: v['院'], date: v['日付'], url: v['証拠URL'] }))
     .sort((a, b) => ACTION_WEIGHT[b.action] - ACTION_WEIGHT[a.action] || a.date.localeCompare(b.date));
   const nameOf = new Map(counted.map(r => [personKey(r), r['氏名']]));
   const members: PublicMember[] = [...totals.get('base')!].map(([id, t]) => {
@@ -368,7 +376,7 @@ export function buildMembers(input: MemberInputs): PublicMembers {
     const move = Math.abs(r.rank - c.rank);
     const laws = t.laws.map(({ entry, fraction, roles, share, office, direction }) => {
       const all = evidenceOf(entry.law.lawId, id);
-      const counts = (e: MemberEvidence) => { const role = ROLE_OF[e.action]; return role !== undefined && roles[role] !== undefined; };
+      const counts = (e: MemberEvidence) => { const role = ROLE_OF[e.action]; return role !== undefined && roles[role] !== undefined && e.actionLabel === ACTION_LABEL[e.action]; };
       const opposed: MemberEvidence[] = direction === 'against' ? [{ action: 'vote', actionLabel: '参議院本会議で反対', title: '', house: '参議院', date: entry.vote['日付'], url: entry.vote.URL }] : [];
       const effect: MemberLaw['effect'] = (entry.law.side === 'loss') === (direction === 'with') ? 'bad' : 'good';
       return { lawId: entry.law.lawId, side: entry.law.side, roles, fraction, share, direction, effect, office, evidence: [...opposed, ...all.filter(counts)], context: all.filter(e => !counts(e)) };
@@ -391,7 +399,7 @@ export function buildMembers(input: MemberInputs): PublicMembers {
     ...(partyRanking ? { partyRanking } : {}),
     ...(input.ministries ? { ministries: [...ministryBook.values()].map(t => ({ ...t, net: ordered({ low: t.good.low - t.bad.high, median: t.good.median - t.bad.median, high: t.good.high - t.bad.low }) }))
       .sort((a, b) => a.net.median / a.laws.length - b.net.median / b.laws.length || a.name.localeCompare(b.name)) } : {}),
-    ...(input.taxLedger ? { taxLedger: taxLedgerOf(input.taxLedger) } : {}),
+    ...(input.taxLedger ? { taxLedger: taxLedgerOf(input.taxLedger, ...(input.taxLedgerIncome ? [input.taxLedgerIncome] : [])) } : {}),
     ...(input.resistance ? { resistance: parseCsv(input.resistance).map(r => ({ ministry: r['省庁'], total: Number(r['抵抗の件数']), refusals: Number(r['対応不可']),
       answers: Number(r['ホットラインの回答']), hearings: Number(r['ヒアリングで反対・慎重']), followups: Number(r['フォローアップで反対・慎重・未措置']) })) } : {}),
     ...(input.orgStances ? { orgStances: parseCsv(input.orgStances).map(r => ({ name: r['団体'], kind: r['区分'], against: Number(r['反対']), careful: Number(r['慎重']),

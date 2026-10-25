@@ -27,6 +27,7 @@ MEMBER_INPUTS = {
     "voteParties": ROOT / "data/derived/allocation-v1/vote-parties.csv",
     "ministries": ROOT / "data/derived/ministry-v1/cabinet-bills.csv",
     "taxLedger": ROOT / "data/derived/tax-v1/consumption-tax.csv",
+    "taxLedgerIncome": ROOT / "data/derived/tax-v1/income-corporate-tax.csv",
     "resistance": ROOT / "data/derived/org-ledger-v1/ministry-resistance.csv",
     "orgStances": ROOT / "data/derived/org-ledger-v1/org-stances.csv",
 }
