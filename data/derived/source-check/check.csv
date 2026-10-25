@@ -11561,6 +11561,14 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-142-2,額の下端,50285076074074,50285076074074,一致,OECD 表6 K LR、比較国5か国
 閣法-142-2,額の中央値,65892072442027,65892072442027,一致,OECD 表6 K LR、比較国5か国
 閣法-142-2,額の上端,74394008359291,74394008359291,一致,OECD 表6 K LR、比較国5か国
+閣法-142-20,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/533A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/533A.htm,一致,
+閣法-142-20,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142029.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142029.htm,一致,
+閣法-142-20,題名,青年の就農促進のための資金の貸付け等に関する特別措置法の一部を改正する法律案,青年の就農促進のための資金の貸付け等に関する特別措置法の一部を改正する法律案,一致,
+閣法-142-20,施行日,1998-04-01,1998-04-01,一致,
+閣法-142-20,施行期日の原文,あり,あり,一致,
+閣法-142-20,公布日との順序,1998-04-01,1998-03-31,一致,施行日は公布日より前にならない
+閣法-142-20,公布日,1998-03-31,1998-03-31,一致,施行日台帳と議案台帳
+閣法-142-20,再計算,65892072442027,,対象外,OECD 表6 以外の指標は再計算が未対応
 閣法-142-26,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5322.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5322.htm,一致,
 閣法-142-26,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142104.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142104.htm,一致,
 閣法-142-26,出典URL,https://laws.e-gov.go.jp/law/410AC0000000104,https://laws.e-gov.go.jp/law/410AC0000000104,一致,
@@ -19148,17 +19156,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-142-19,額の下端,8443065720421,8443065720421,一致,OECD 表6 A LR、比較国5か国
 閣法-142-19,額の中央値,11852739550550,11852739550550,一致,OECD 表6 A LR、比較国5か国
 閣法-142-19,額の上端,14533049224633,14533049224633,一致,OECD 表6 A LR、比較国5か国
-閣法-142-20,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/533A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/533A.htm,一致,
-閣法-142-20,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142029.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142029.htm,一致,
-閣法-142-20,題名,青年の就農促進のための資金の貸付け等に関する特別措置法の一部を改正する法律案,青年の就農促進のための資金の貸付け等に関する特別措置法の一部を改正する法律案,一致,
-閣法-142-20,施行日,1998-04-01,1998-04-01,一致,
-閣法-142-20,施行期日の原文,あり,あり,一致,
-閣法-142-20,公布日との順序,1998-04-01,1998-03-31,一致,施行日は公布日より前にならない
-閣法-142-20,公布日,1998-03-31,1998-03-31,一致,施行日台帳と議案台帳
-閣法-142-20,名目付加価値（開始前最後の年）,7973800百万円,7973800百万円,一致,OECD 表6 JPN A V 1997年
-閣法-142-20,額の下端,8443065720421,8443065720421,一致,OECD 表6 A LR、比較国5か国
-閣法-142-20,額の中央値,11852739550550,11852739550550,一致,OECD 表6 A LR、比較国5か国
-閣法-142-20,額の上端,14533049224633,14533049224633,一致,OECD 表6 A LR、比較国5か国
 閣法-142-42,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/52E2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/52E2.htm,一致,
 閣法-142-42,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142030.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142030.htm,一致,
 閣法-142-42,題名,主要農作物種子法の一部を改正する法律案,主要農作物種子法の一部を改正する法律案,一致,

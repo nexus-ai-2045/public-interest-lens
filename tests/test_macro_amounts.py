@@ -46,14 +46,13 @@ class MacroAmountsTest(unittest.TestCase):
         self.assertEqual(macro.publication_field("金融", "", "保留"), ("金融", "振り分け", "K"))
         self.assertEqual(macro.publication_field("対応表なし", "農林水産", None), ("農林水産", "AI 2系統", "A"))
 
-    def test_kaku_142_20_publishes_the_agreed_agriculture_field(self):
-        row = next(r for r in self.rows if r["id"] == "閣法-142-20")
-        self.assertEqual(row["分野"], "農林水産")
-        self.assertEqual(row["分野の由来"], "AI 2系統")
-        self.assertEqual(row["産業"], "A")
-        self.assertEqual(row["施行日"], "1998-04-01")
-        self.assertNotIn("金融", row["分野"])
-
+    def test_kaku_142_20_follows_its_adopted_triage_like_the_other_amendments(self):
+        # 2026-10-23：振り分けの決着で v2 の2系統が一致（採用）になった。保留の間は AI 2系統の農林水産を出していたが（#144）、
+        # 採用後は振り分けの分野を使い、同じ法律の改正（閣法-147-31・159-51）と同じ金融・K になる
+        rows = {r["id"]: r for r in self.rows}
+        for law in ("閣法-142-20", "閣法-147-31", "閣法-159-51"):
+            self.assertEqual((rows[law]["分野"], rows[law]["分野の由来"], rows[law]["産業"]), ("金融", "振り分け", "K"), law)
+        self.assertEqual(rows["閣法-142-20"]["施行日"], "1998-04-01")
 
 if __name__ == "__main__":
     unittest.main()
