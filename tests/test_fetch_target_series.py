@@ -97,6 +97,42 @@ class Parsers(unittest.TestCase):
         self.assertNotIn(("排出・吸収量", 2013), out)
 
 
+    def test_era_year(self):
+        self.assertEqual((ts.era_year("令和7年度"), ts.era_year("令和元年度"), ts.era_year("平成30年度")), (2025, 2019, 2018))
+        self.assertIsNone(ts.era_year("2025年度"))
+
+    def test_generics_pages_and_share(self):
+        html = ('<a href="dl/157-1_R07.pdf">令和7年度</a><a href="dl/157-1_h29.pdf">平成29年度</a>'
+                '<a href="dl/157-1_h28.pdf">平成27年度</a>')
+        pages = ts.generics_pdfs(html, "https://www.mhlw.go.jp/toukei/list/157-1b.html")
+        self.assertEqual([y for y, _ in pages], [2025, 2017])  # 平成27年度（速報）は数量割合が無いので飛ばす
+        for text, value in (("２．後発医薬品の割合　数量割合：88.8％　金額割合：68.7％", 88.8), ("２．後発医薬品の数量割合 80.2％", 80.2),
+                            ("２．後発医薬品の数量割合 ： 78.3％", 78.3)):
+            self.assertEqual(ts.parse_generics(text, 2020, URL)["値"], value)
+        self.assertIsNone(ts.parse_generics("平均乖離率 約8.8％", 2015, URL))
+
+    def test_realwage_reads_both_deflators(self):
+        rows = [[None, "年月"], [None, "　　　2024年度", None, 3, 3.5] + [0] * 7 + [-0.5, 3.5, 0, 3], [None, "　　　2024年４月", None, 3] + [0] * 12]
+        out = {r["系列ID"]: r["値"] for r in ts.parse_realwage(rows, URL)}
+        self.assertEqual(out, {"mhlw-maikin:実質賃金:前年度比": -0.5, "mhlw-maikin:実質賃金:前年度比:総合": 0})
+
+    def test_kenshin_table(self):
+        text = ("2023年度   52,103,341   31,230,198   59.9%   5,190,914   16.6%   1,434,051   27.6%\n"
+                "2008年度   51,919,920   20,192,502   38.9%   4,010,717   19.9%    308,222    7.7%\n")
+        out = {(r["系列ID"].split(":")[1], r["年"]): r["値"] for r in ts.parse_kenshin(text, URL)}
+        self.assertEqual(out, {("特定健診", 2023): 59.9, ("特定保健指導", 2023): 27.6, ("特定健診", 2008): 38.9, ("特定保健指導", 2008): 7.7})
+
+    def test_5g_and_sports_headlines(self):
+        self.assertEqual(ts.parse_5g("● 全国の５Ｇ人口カバー率は、２０２３年３月末で９６．６％。", URL)["年"], 2022)  # 3月末＝前の年度末
+        r = ts.parse_5g("全国の5G人口カバー率は、2024年度末で98.4％", URL)
+        self.assertEqual((r["年"], r["値"]), (2024, 98.4))
+        r = ts.parse_sports("令和３年度「スポーツの実施状況等に関する世論調査」について(速報値)～成人の週１回以上のスポーツ実施率５６．４％～", URL)
+        self.assertEqual((r["年"], r["値"]), (2021, 56.4))
+        self.assertIn("速報値", r["備考"])
+        r = ts.parse_sports("令和6年度「スポーツの実施状況等に関する世論調査」… ○20歳以上の週1日以上の「運動・スポーツ実施率」（以下「スポーツ実施率」という。）は、52.5％", URL)
+        self.assertEqual((r["年"], r["値"]), (2024, 52.5))
+
+
 class Database(unittest.TestCase):
     def test_year_ranges(self):
         from scripts.build_database import year_ranges
@@ -159,6 +195,23 @@ class Judge(unittest.TestCase):
         r = ts.judge(target("国策-honebuto-2017", "名目GDP(600兆円経済)", 600, "兆円"), table)
         self.assertEqual((r["系列ID"], r["判定"], r["達成の年"]), (ts.GDP_FY, "期限なし（到達）", 2023))
 
+    def test_generics_link_only_september_deadlines(self):
+        sid = "mhlw-yakka:後発医薬品:数量割合"
+        table = series(sid, {2017: 65.8, 2020: 78.3})
+        sept = {**target("国策-honebuto-2017", "後発医薬品の使用割合", 80, "%", 2020, "年"), "原文": "2020 年(平成 32 年)9月までに、後発医薬品の使用割合を 80%とし"}
+        self.assertEqual((ts.judge(sept, table)["判定"], ts.judge(sept, table)["達成の値"]), ("未達", 78.3))
+        for text in ("2017 年(平成 29 年)央に 70%以上", "2020 年度(平成 32 年度)末までの間のなるべく早い時期に 80%以上"):
+            t = {**target("国策-honebuto-2015", "後発医薬品の数量シェア", 80, "%以上", 2020, "年度"), "原文": text}
+            self.assertEqual(ts.judge(t, table)["判定"], "結ばない", text)
+
+    def test_five_year_average_of_rates(self):
+        t = target("国策-honebuto-2026", "実質賃金の上昇率(年)", 1.0, "%程度", 2029, "年度")
+        sid = "mhlw-maikin:実質賃金:前年度比"
+        r = ts.judge(t, series(sid, {2024: 5.0, 2025: -0.5}))
+        self.assertEqual((r["判定"], r["達成の値"], r["達成の年"]), ("期限前（未到達）", -0.5, 2025))  # 2025〜2029年度の平均で、2024年度は入れない
+        r = ts.judge(t, series(sid, {y: 1.2 for y in range(2025, 2030)}))
+        self.assertEqual((r["判定"], r["達成の年"]), ("達成", 2029))
+
     def test_qualifier_over_needs_strictly_more(self):
         table = series("x", {2025: 150e12})
         self.assertFalse(ts.reached(150e12, 150e12, "兆円超", "level"))
@@ -168,7 +221,11 @@ class Judge(unittest.TestCase):
         for t in (target("国策-honebuto-2016", "政府研究開発投資の対GDP比", 1.0, "%"),
                   target("国策-honebuto-2013", "1人当たり名目国民総所得(名目GNI)の増加額", 150, "万円以上"),
                   target("国策-honebuto-2019", "温室効果ガス排出量の削減率", 80, "%", 2050, "年"),
-                  target("国策-honebuto-2015", "後発医薬品の数量シェア", 80, "%以上", 2020, "年度")):
+                  target("国策-honebuto-2021", "後発医薬品の数量シェア(全都道府県)", 80, "%以上", 2023, "年度"),
+                  target("国策-デジタル重点計画-2023-06-06", "光ファイバ世帯カバー率", 99.9, "%", 2027, "年度"),
+                  target("国策-honebuto-2023", "プライム市場上場企業の女性役員の比率", 30, "%以上", 2030, "年"),
+                  target("国策-honebuto-2025", "外国人留学生受入れ数", 40, "万人"),
+                  target("国策-honebuto-2018", "外国人リピーター数", 2400, "万人", 2020, "年")):
             r = ts.judge(t, {})
             self.assertEqual((r["判定"], r["系列ID"]), ("結ばない", ""), t["指標"])
             self.assertTrue(r["理由"])

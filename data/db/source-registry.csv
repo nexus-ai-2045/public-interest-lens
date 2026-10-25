@@ -38,3 +38,8 @@ OECD 産業政策（STAN・研究開発費・ベンチャー投資）,海外の�
 農林水産省 農林水産物・食品の輸出実績,数値目標の達成状況,www.maff.go.jp,https://www.maff.go.jp/j/shokusan/export/e_info/zisseki.html,series・decision_targets,取得済み,2026-10-24,年ごとの概要 PDF の年計（2018年〜。2017年以前は見出しの書き方が違い未取得）。data/acquired/target-series/exports.csv
 総務省 科学技術研究調査（統計ダッシュボード）,数値目標の達成状況,dashboard.e-stat.go.jp,https://dashboard.e-stat.go.jp/,series・decision_targets,取得済み,2026-10-24,研究費の総額（2001年度〜）。data/acquired/target-series/rd.csv
 国立環境研究所 日本の温室効果ガス排出量データ,数値目標の達成状況,www.nies.go.jp,https://www.nies.go.jp/gio/archive/ghgdata/index.html,series・decision_targets,取得済み,2026-10-24,総排出量と排出・吸収量（1990年度〜）。data/acquired/target-series/ghg.csv
+厚生労働省 薬価調査（後発医薬品の数量シェア）,数値目標の達成状況,www.mhlw.go.jp,https://www.mhlw.go.jp/toukei/list/157-1b.html,series・decision_targets,取得済み,2026-10-24,各年9月の取引分の数量シェア（全国、2017年〜）。data/acquired/target-series/generics.csv
+厚生労働省 毎月勤労統計調査（年度分結果確報の付表）,数値目標の達成状況,www.mhlw.go.jp,https://www.mhlw.go.jp/toukei/list/30-1a.html,series・decision_targets,取得済み,2026-10-24,実質賃金の前年度比（帰属家賃を除く総合・総合、2018年度〜）。data/acquired/target-series/realwage.csv
+厚生労働省 特定健診・特定保健指導の実施状況,数値目標の達成状況,www.mhlw.go.jp,https://www.mhlw.go.jp/content/12400000/001492020.pdf,series・decision_targets,取得済み,2026-10-24,全保険者の実施率（2008〜2023年度）。2024年度は厚労省が掲載を止めている。data/acquired/target-series/kenshin.csv
+総務省 5Gの整備状況（年度末）,数値目標の達成状況,www.soumu.go.jp,https://www.soumu.go.jp/menu_news/s-news/01kiban14_02000796.html,series・decision_targets,取得済み,2026-10-24,全国の5G人口カバー率（2021年度末〜）。報道資料ごとの別紙。data/acquired/target-series/5g.csv
+スポーツ庁 スポーツの実施状況等に関する世論調査,数値目標の達成状況,www.mext.go.jp,https://www.mext.go.jp/sports/b_menu/toukei/chousa04/sports/1402342.htm,series・decision_targets,取得済み,2026-10-24,20歳以上の週1日以上のスポーツ実施率（2018年度〜）。data/acquired/target-series/sports.csv

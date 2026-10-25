@@ -12,6 +12,11 @@
 - exports：農林水産省「農林水産物・食品の輸出額」（暦年。年ごとの概要 PDF の1頁目）。
 - rd：総務省「科学技術研究調査」の研究費の総額（年度。統計ダッシュボードの API）。
 - ghg：国立環境研究所 温室効果ガスインベントリオフィス「日本の温室効果ガス排出量データ」（年度。総排出量と、吸収量を差し引いた排出・吸収量）。
+- generics：厚生労働省「薬価調査」の結果の概要（後発医薬品の数量シェア、各年9月）。
+- realwage：厚生労働省「毎月勤労統計調査」の年度分結果確報の付表（実質賃金の前年度比）。
+- kenshin：厚生労働省「特定健診・特定保健指導の実施状況について」の全国の表（年度の実施率）。
+- 5g：総務省「5Gの整備状況（令和N年度末）の公表」の別紙（全国の5G人口カバー率、年度末）。
+- sports：スポーツ庁「スポーツの実施状況等に関する世論調査」の報道発表（20歳以上の週1日以上のスポーツ実施率、年度）。
 - link：手元の段。上の系列（と DB の消費者物価指数）から計算する系列を作り、目標ごとに「定義の合う系列」を結び付けて達成状況を出す。
   定義の合わない目標は無理に結ばず、理由を target-links.csv に残す（結び付けの規則は RULES）。
 - all：上の段を順に。
@@ -63,6 +68,13 @@ EXPORTS_PAGE = "https://www.maff.go.jp/j/shokusan/export/e_info/zisseki.html"
 RD_API = "https://dashboard.e-stat.go.jp/api/1.0/Json/getData?Lang=JP&IndicatorCode=1102010000000010000&MetaGetFlg=N"
 RD_PAGE = "https://www.stat.go.jp/data/kagaku/index.html"
 GHG_PAGE = "https://www.nies.go.jp/gio/archive/ghgdata/index.html"
+GENERICS_PAGE = "https://www.mhlw.go.jp/toukei/list/157-1b.html"
+MAIKIN_PAGE = "https://www.mhlw.go.jp/toukei/list/30-1a.html"
+# 報道資料（2023年度分）。2008年度からの全国の表がある。データのページ（newpage_03092.html）から報道資料へのリンクが無いので、新しい年度が出たら差し替える
+KENSHIN_PDF = "https://www.mhlw.go.jp/content/12400000/001492020.pdf"
+# 報道資料「5Gの整備状況（令和N年度末）の公表」。固定の一覧ページが無いので、新しい年度が出たら足す
+G5_PAGES = [f"https://www.soumu.go.jp/menu_news/s-news/01kiban14_{n}.html" for n in ("02000561", "02000612", "02000658", "02000731", "02000796")]
+SPORTS_PAGE = "https://www.mext.go.jp/sports/b_menu/toukei/chousa04/sports/1402342.htm"
 
 SERIES_HEADER = ["系列ID", "系列", "年", "値", "単位", "年の別", "出典URL", "備考"]
 LINK_HEADER = ["決定ID", "指標", "目標値", "単位", "目標年", "年の別", "系列ID", "達成の値", "達成の年", "判定", "理由"]
@@ -515,6 +527,146 @@ def fetch_ghg(fetcher: Fetcher) -> dict:
     return {"行": len(out)}
 
 
+# ---------- 後発医薬品の数量割合（厚生労働省 薬価調査） ----------
+
+def era_year(text: str) -> int | None:
+    """「令和7年度」「平成30年度」「令和元年」→ 西暦。"""
+    m = re.search(r"(令和|平成)(\d+|元)年", nfkc(text))
+    if not m:
+        return None
+    n = 1 if m.group(2) == "元" else int(m.group(2))
+    return (2018 if m.group(1) == "令和" else 1988) + n
+
+
+def generics_pdfs(html: str, base: str) -> list[tuple[int, str]]:
+    """薬価調査の結果の概要の一覧から (調査の年, PDF)。「平成27年度」は速報（平均乖離率だけ）で数量割合が無い。"""
+    out = []
+    for u, t in links(html, base):
+        if re.search(r"157-1_[Rh]\d+\.pdf$", u) and (y := era_year(t)) and y >= 2017:
+            out.append((y, u))
+    return out
+
+
+def parse_generics(text: str, year: int, url: str) -> dict | None:
+    """1頁目の「後発医薬品の（数量）割合 … 数量割合：88.8％」（年で書き方が違う）。"""
+    m = re.search(r"後発医薬品の(?:数量)?割合(?:数量割合)?[※:：]*(\d+\.\d)%", squash(text))
+    if not m:
+        return None
+    return row("mhlw-yakka:後発医薬品:数量割合", "後発医薬品の数量シェア（薬価調査、各年9月の取引分）", year, float(m.group(1)), "%", "暦年", url,
+               "後発医薬品の数量÷（後発医薬品のある先発医薬品の数量＋後発医薬品の数量）。全国だけ（都道府県別は無い）")
+
+
+def fetch_generics(fetcher: Fetcher) -> dict:
+    pdfs = generics_pdfs(fetcher.text(GENERICS_PAGE), GENERICS_PAGE)
+    out = [r for y, u in pdfs if (r := parse_generics(pdf_text(fetcher.file(u), 1), y, u))]
+    _not_empty("generics", out)
+    write_csv(OUT / "generics.csv", SERIES_HEADER, sorted(out, key=lambda r: r["年"]))
+    return {"行": len(out)}
+
+
+# ---------- 実質賃金（厚生労働省 毎月勤労統計調査） ----------
+
+def parse_realwage(rows: list[list], url: str) -> list[dict]:
+    """年度分結果確報の「付表」：B列の「2018年度」… の行の M列（持家の帰属家賃を除く総合で実質化）と O列（総合で実質化）。"""
+    out = []
+    for r in rows:
+        m = re.fullmatch(r"(\d{4})年度", squash(r[1] if len(r) > 1 else ""))
+        if not m or len(r) < 15:
+            continue
+        y = int(m.group(1))
+        if number(r[12]) is not None:
+            out.append(row("mhlw-maikin:実質賃金:前年度比", "実質賃金（現金給与総額）の前年度比", y, number(r[12]), "%", "年度", url,
+                           "事業所規模5人以上、調査産業計。消費者物価指数（持家の帰属家賃を除く総合）で実質化（毎月勤労統計の主系列）"))
+        if number(r[14]) is not None:
+            out.append(row("mhlw-maikin:実質賃金:前年度比:総合", "実質賃金（現金給与総額）の前年度比（総合で実質化）", y, number(r[14]), "%", "年度", url,
+                           "事業所規模5人以上、調査産業計。消費者物価指数（総合）で実質化（参考系列）"))
+    return out
+
+
+def fetch_realwage(fetcher: Fetcher) -> dict:
+    page = fetcher.text(MAIKIN_PAGE)
+    report = next((u for u, t in links(page, MAIKIN_PAGE) if "年度分結果確報" in t), None)  # 新しい順に並ぶ
+    if not report:
+        raise RuntimeError("realwage：年度分結果確報のページが見つからない")
+    url = next((u for u, t in links(fetcher.text(report), report) if u.endswith(".xlsx") and "付表" in t), None)
+    if not url:
+        raise RuntimeError("realwage：付表が見つからない")
+    out = parse_realwage(xlsx_rows(fetcher.file(url)), url)
+    _not_empty("realwage", out)
+    write_csv(OUT / "realwage.csv", SERIES_HEADER, out)
+    return {"行": len(out)}
+
+
+# ---------- 特定健診・特定保健指導の実施率（厚生労働省） ----------
+
+def parse_kenshin(text: str, url: str) -> list[dict]:
+    """報道資料「特定健診・特定保健指導の実施状況について」の全国の表：年度・対象者数・受診者数・実施率・…・終了者数・実施率。"""
+    out = []
+    for line in text.splitlines():
+        m = re.match(r"\s*(\d{4})年度\s+[\d,]+\s+[\d,]+\s+(\d+\.\d)%\s+[\d,]+\s+[\d.]+%\s+[\d,]+\s+(\d+\.\d)%", nfkc(line))
+        if m:
+            y = int(m.group(1))
+            out.append(row("mhlw-kenshin:特定健診:実施率", "特定健康診査の実施率", y, float(m.group(2)), "%", "年度", url, "受診者数÷対象者数。全保険者の合計"))
+            out.append(row("mhlw-kenshin:特定保健指導:実施率", "特定保健指導の実施率", y, float(m.group(3)), "%", "年度", url, "終了者数÷対象者数。全保険者の合計"))
+    return out
+
+
+def fetch_kenshin(fetcher: Fetcher) -> dict:
+    out = parse_kenshin(pdf_text(fetcher.file(KENSHIN_PDF), 2), KENSHIN_PDF)
+    _not_empty("kenshin", out)
+    write_csv(OUT / "kenshin.csv", SERIES_HEADER, out)
+    return {"行": len(out)}
+
+
+# ---------- 5G の人口カバー率（総務省） ----------
+
+def parse_5g(text: str, url: str) -> dict | None:
+    """別紙1頁目の「全国の5G人口カバー率は、2024年度末で98.1%」（古い年は「2023年3月末で96.6%」）。"""
+    m = re.search(r"全国の5G人口カバー率は、?(?:(\d{4})年度末|(\d{4})年3月末)で(\d+\.\d)%", squash(text))
+    if not m:
+        return None
+    year = int(m.group(1)) if m.group(1) else int(m.group(2)) - 1
+    return row("soumu:5G人口カバー率", "5G の人口カバー率（全国、年度末）", year, float(m.group(3)), "%", "年度", url,
+               "携帯電話事業者のエリアを重ね合わせた人口カバー率")
+
+
+def fetch_5g(fetcher: Fetcher) -> dict:
+    out = []
+    for page in G5_PAGES:
+        sheet = next((u for u, t in links(fetcher.text(page), page) if u.endswith(".pdf") and "別紙" in t), None)
+        if sheet and (r := parse_5g(pdf_text(fetcher.file(sheet), 1), sheet)):
+            out.append(r)
+    _not_empty("5g", out)
+    write_csv(OUT / "5g.csv", SERIES_HEADER, sorted(out, key=lambda r: r["年"]))
+    return {"行": len(out)}
+
+
+# ---------- 成人のスポーツ実施率（スポーツ庁） ----------
+
+def parse_sports(text: str, url: str) -> dict | None:
+    """報道発表の冒頭「令和7年度「スポーツの実施状況等に関する世論調査」… 20歳以上（成人）の週1日（回）以上のスポーツ実施率は、51.7%」。"""
+    t = squash(text)
+    y = re.search(r"((?:令和|平成)(?:\d+|元)年度)「スポーツの実施状況", t)
+    m = re.search(r"(?:20歳以上|成人)の週1(?:日|回)以上の「?(?:運動・)?スポーツ実施率」?(?:\(以下[^)]*\))?(?:は)?、?(\d+\.\d)%", t)
+    if not (y and m):
+        return None
+    note = "スポーツの実施状況等に関する世論調査（20歳以上、週1日以上の運動・スポーツ）" + ("。速報値" if "速報値" in t[:200] else "")
+    return row("mext-sports:週1日以上:20歳以上", "成人の週1日以上のスポーツ実施率", era_year(y.group(1)), float(m.group(1)), "%", "年度", url, note)
+
+
+def fetch_sports(fetcher: Fetcher) -> dict:
+    out = []
+    for page, text in links(fetcher.text(SPORTS_PAGE), SPORTS_PAGE):
+        if "世論調査" not in text or "調査）" not in text:
+            continue
+        pdf = next((u for u, _ in links(fetcher.text(page), page) if u.endswith(".pdf")), None)  # 年度のページの最初の PDF が報道発表
+        if pdf and (r := parse_sports(pdf_text(fetcher.file(pdf), 2), pdf)):
+            out.append(r)
+    _not_empty("sports", out)
+    write_csv(OUT / "sports.csv", SERIES_HEADER, sorted(out, key=lambda r: r["年"]))
+    return {"行": len(out)}
+
+
 # ---------- 計算する系列 ----------
 
 def series_table() -> dict[str, dict[int, dict]]:
@@ -562,9 +714,9 @@ def derive(table: dict[str, dict[int, dict]]) -> list[dict]:
 
 # ---------- 目標との結び付け ----------
 
-# (指標の正規表現, 単位の頭, 系列ID か None, 測り方, 理由・注記)。上から順に最初に当たった規則を使う。系列ID が None の規則は「結ばない」。
+# (指標の正規表現, 単位の頭, 系列ID か None, 測り方, 理由・注記[, 原文に要る語])。上から順に最初に当たった規則を使う。系列ID が None の規則は「結ばない」。
 # 測り方：level＝その年の値、surplus＝0以上で黒字化、avg10＝2013〜目標年度の平均成長率（額の幾何平均）、
-# rate＝毎年の率（成長率・物価上昇率・引上げ率）。目標年があればその年の率、無ければ決定の翌年から最新の年までの平均（1年だけの反動で「到達」としない）
+# avg5r＝目標年までの5年度の率の年平均、rate＝毎年の率（成長率・物価上昇率・引上げ率）。目標年があればその年の率、無ければ決定の翌年から最新の年までの平均（1年だけの反動で「到達」としない）
 GDP_FY, GDP_CY = "sna-qe:名目GDP:年度", "sna-qe:名目GDP:暦年"
 RULES = [
     (r"基礎的財政収支|プライマリーバランス|PB", "黒字化", "pb-cao:国・地方:兆円", "surplus",
@@ -597,6 +749,31 @@ RULES = [
     (r"温室効果ガス.*2013年度比", "%", "gio:温室効果ガス:排出・吸収量:2013年度比の削減率", "level",
      "吸収量を差し引いた排出・吸収量の2013年度の総排出量に対する削減率（環境省が46%目標と並べて示す測り方）"),
     (r"温室効果ガス", "", None, "", "削減率の基準の年が本文の範囲に無い"),
+    (r"後発医薬品.*全都道府県", "", None, "",
+     "都道府県別の数量シェアは NDB（レセプト情報）の集計で、厚労省の資料ではグラフだけ（数値が機械で読めない）。薬価調査は全国だけ"),
+    (r"後発医薬品の(?:数量シェア|使用割合)", "%", "mhlw-yakka:後発医薬品:数量割合", "level",
+     "薬価調査の後発医薬品の数量シェア（各年9月の取引分。目標の「9月」と同じ時点）", r"9月"),
+    (r"後発医薬品", "", None, "",
+     "目標の期限（年央・年度末）が薬価調査の時点（各年9月）と違い、期限の時点の値が無い（期限より前の9月の値では確定できない）"),
+    (r"実質賃金", "%", "mhlw-maikin:実質賃金:前年度比", "avg5r",
+     "毎月勤労統計の実質賃金（現金給与総額、5人以上、持家の帰属家賃を除く総合で実質化）の前年度比の年平均。"
+     "目標は物価の定義を書いていないので主系列を使う（総合で実質化した参考系列は mhlw-maikin:実質賃金:前年度比:総合）"),
+    (r"特定健診受診率|特定健康診査の?実施率", "%", "mhlw-kenshin:特定健診:実施率", "level", "特定健康診査の実施率（全保険者、年度）"),
+    (r"特定保健指導実施率|特定保健指導の実施率", "%", "mhlw-kenshin:特定保健指導:実施率", "level", "特定保健指導の実施率（全保険者、年度）"),
+    (r"5Gの全国人口カバー率|5G人口カバー率", "%", "soumu:5G人口カバー率", "level", "総務省の5G人口カバー率（全国、年度末）"),
+    (r"5G基盤展開率", "", None, "",
+     "5G基盤展開率は携帯電話事業者の開設計画の指標で、全国の値を年度ごとに並べた総務省の表を取り込んでいない（人口カバー率とは別の指標）"),
+    (r"スポーツ実施率", "%", "mext-sports:週1日以上:20歳以上", "level",
+     "スポーツの実施状況等に関する世論調査の20歳以上の週1日以上の実施率（目標の「成人」と同じ。2021年度は速報値）"),
+    (r"光ファイバ世帯カバー率", "", None, "",
+     "総務省のブロードバンド基盤整備率調査は2023年度末から推計方法を変え、前の年度の値と比べられない（新しい方法の値は2年分だけ）。"
+     "目標の99.9%が新しい方法で引き直されたかを確かめられていない"),
+    (r"女性役員", "", None, "",
+     "役員の定義が2024年から変わった（執行役員等を足した）。プライム市場の系列は2022年から。内閣府の公表はグラフの PDF で、30%の目標の役員の定義も本文に無い"),
+    (r"留学生受入れ|海外留学者数|日本人海外留学", "", None, "",
+     "目標は高校等の留学を含むが、JASSO の調査は大学・日本語学校等だけ。日本人の留学は長期（海外の機関の統計）も足す必要があり、同じ範囲の系列が無い"),
+    (r"リピーター", "", None, "",
+     "観光庁はリピーター数の公表を2020年分でやめた。消費動向調査の来訪回数の割合から自前で計算するしかなく、政府の数字と同じ定義と言い切れない"),
 ]
 DEFAULT_REASON = "定義の合う系列を取り込んでいない（所管の統計がこの取り込みの対象外）"
 
@@ -613,7 +790,9 @@ def scale(unit: str) -> float:
 def rule_for(target: dict) -> tuple | None:
     for rule in RULES:
         pattern, unit_head = rule[0], rule[1]
-        if re.search(pattern, nfkc(target["指標"])) and base_unit(target["単位"]).startswith(unit_head):
+        when = rule[5] if len(rule) > 5 else None  # 原文に要る語（観測の時点が目標の期限と合うときだけ結ぶ）
+        if (re.search(pattern, nfkc(target["指標"])) and base_unit(target["単位"]).startswith(unit_head)
+                and (when is None or re.search(when, squash(target.get("原文", ""))))):
             return rule
     return None
 
@@ -629,7 +808,7 @@ def judge(target: dict, table: dict[str, dict[int, dict]]) -> dict:
     rule = rule_for(target)
     if rule is None or rule[2] is None:
         return {**out, "系列ID": "", "達成の値": "", "達成の年": "", "判定": "結ばない", "理由": rule[4] if rule else DEFAULT_REASON}
-    _, _, sid, how, note = rule
+    _, _, sid, how, note = rule[:5]
     year = int(target["目標年"]) if target.get("目標年") else None
     if sid == "?gdp":
         sid = GDP_CY if target.get("年の別") == "年" else GDP_FY
@@ -647,6 +826,18 @@ def judge(target: dict, table: dict[str, dict[int, dict]]) -> dict:
             return {**out, "系列ID": sid, "達成の値": round(v, 2), "達成の年": last, "判定": "達成" if ok else "未達", "理由": note}
         return {**out, "系列ID": sid, "達成の値": "", "達成の年": "", "判定": "期限前", "理由": note}
     decided = int(m.group(1)) if (m := re.search(r"(\d{4})", target["決定ID"])) else 0
+    if how == "avg5r" and year is not None:  # 「2029年度までの5年間で年1%程度」：目標年までの5年度の率の年平均（途中は届いた年度までの平均）
+        first = year - 4
+        span = [y for y in sorted(s) if first <= y <= year]
+        if not span:
+            return {**out, "系列ID": sid, "達成の値": "", "達成の年": "", "判定": "期限前（未到達）", "理由": f"{note}。{first}年度からの値がまだ無い"}
+        v = (math.prod(1 + float(s[y]["値"]) / 100 for y in span) ** (1 / len(span)) - 1) * 100
+        ok = reached(v, goal, unit, how)
+        reason = f"{note}。{span[0]}〜{span[-1]}年度の平均"
+        if span[-1] == year:
+            return {**out, "系列ID": sid, "達成の値": round(v, 2), "達成の年": year, "判定": "達成" if ok else "未達", "理由": reason}
+        return {**out, "系列ID": sid, "達成の値": round(v, 2), "達成の年": span[-1], "判定": "期限前（到達）" if ok else "期限前（未到達）",
+                "理由": reason + "（目標の年までの途中）"}
     if how == "rate" and year is None:
         span = [y for y in sorted(s) if y > decided]
         if not span:
@@ -701,11 +892,13 @@ def link() -> dict:
 
 # ---------- 入口 ----------
 
-FETCH_PHASES = ["sna", "pb", "wage", "visitors", "spending", "lodging", "fdi", "exports", "rd", "ghg"]
+FETCH_PHASES = ["sna", "pb", "wage", "visitors", "spending", "lodging", "fdi", "exports", "rd", "ghg", "generics", "realwage", "kenshin", "5g", "sports"]
 PHASES = FETCH_PHASES + ["link"]
 STEPS = {"sna": fetch_sna, "pb": fetch_pb, "wage": fetch_wage, "visitors": fetch_visitors, "spending": fetch_spending, "lodging": fetch_lodging,
-         "fdi": fetch_fdi, "exports": fetch_exports, "rd": fetch_rd, "ghg": fetch_ghg}
-HOSTS = sorted({urlsplit(u).netloc for u in (SNA_TOP, SHISAN_PAGE, WAGE_PAGE, JNTO_PAGE, SPENDING_PAGE, IIP_XLS, EXPORTS_PAGE, RD_API, GHG_PAGE)})
+         "fdi": fetch_fdi, "exports": fetch_exports, "rd": fetch_rd, "ghg": fetch_ghg,
+         "generics": fetch_generics, "realwage": fetch_realwage, "kenshin": fetch_kenshin, "5g": fetch_5g, "sports": fetch_sports}
+HOSTS = sorted({urlsplit(u).netloc for u in (SNA_TOP, SHISAN_PAGE, WAGE_PAGE, JNTO_PAGE, SPENDING_PAGE, IIP_XLS, EXPORTS_PAGE, RD_API, GHG_PAGE,
+                                                   GENERICS_PAGE, MAIKIN_PAGE, KENSHIN_PDF, G5_PAGES[0], SPORTS_PAGE)})
 
 
 def main(argv: list[str] | None = None) -> int:
