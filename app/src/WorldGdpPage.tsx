@@ -135,6 +135,7 @@ export function WorldGdpPage() {
       <label>見る期間<select value={shown.period} onChange={event => change({ period: event.target.value as WorldPeriod })}>{WORLD_PERIODS.map(period => <option key={period} value={period}>{periodLabel(period)}</option>)}</select></label>
       {shown.metric !== 'realGrowth' && <label className="world-check"><input type="checkbox" checked={shown.indexed} onChange={event => change({ indexed: event.target.checked }, 'replace')} />期間の最初の年を100として伸びを比べる</label>}
       <label>表で色を付けて比べる国<select value={shown.focus} onChange={event => change({ focus: event.target.value }, 'replace')}><option value="">選ばない</option>{data?.countries.filter(country => country.code !== JAPAN).map(country => <option key={country.code} value={country.code}>{country.name}</option>)}</select></label>
+      {shown.period !== 'all' && Number(shown.period) >= 2020 && <p className="fine-note">直近の短い期間です。コロナ禍とその反動、為替の動きで年ごとのぶれが大きく、数年の平均は長期の実力を表しません。ここ数年の評価の仕方は、確定した統計が出るまで暫定として見てください。</p>}
     </section>
     {error && <p className="state-banner" role="alert">{error}</p>}
     {data && <>
