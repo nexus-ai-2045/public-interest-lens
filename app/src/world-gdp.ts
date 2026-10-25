@@ -61,7 +61,7 @@ export function parseWorldGdp(text: string): WorldGdpSnapshot {
   return value;
 }
 
-export const WORLD_PERIODS = ['all', '1980', '1990', '2000', '2010', '2015'] as const;
+export const WORLD_PERIODS = ['all', '1980', '1990', '2000', '2010', '2015', '2020', '2023'] as const;
 export type WorldPeriod = typeof WORLD_PERIODS[number];
 export const periodLabel = (period: WorldPeriod) => period === 'all' ? '全期間' : `${period}年以降`;
 

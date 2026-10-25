@@ -1,0 +1,27 @@
+/* 政党・議員の賛否（/votes）。スマホ幅を先に作る。 */
+.votes-page main{overflow-wrap:anywhere}
+.votes-controls{align-items:center}
+.votes-seg{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.votes-seg button{min-height:40px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:14px}
+.votes-seg button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.votes-recent{list-style:none;padding:0;margin:12px 0;display:grid;gap:10px}
+.votes-recent li{border:1px solid var(--line);border-radius:9px;padding:12px 14px;background:var(--quiet);line-height:1.7}
+.votes-recent h4{margin:2px 0 6px}
+.votes-date{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.votes-no{color:var(--accent)}
+.votes-links{display:flex;gap:14px;font-size:13px;margin-top:4px}
+.votes-summary{line-height:1.8;margin:8px 0}
+.votes-rows{list-style:none;padding:0;margin:10px 0;display:grid;gap:6px}
+.votes-rows>li{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.votes-title{font-weight:600}
+.votes-pill{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;width:fit-content}
+.votes-pill.is-yes{border-color:var(--accent)}
+.votes-pill.is-no,.votes-pill.is-san-no,.votes-pill.is-split{background:var(--accent);border-color:var(--accent);color:#fff}
+.votes-pill.is-none{color:var(--muted)}
+.votes-more{margin:8px 0}
+.votes-search{display:grid;gap:6px;max-width:420px;font-size:14px}
+.votes-member{padding:0!important}
+.votes-member>button{display:grid;gap:2px;width:100%;text-align:left;border:0;border-radius:8px;padding:10px 12px;background:transparent}
+.votes-member-detail{padding:0 12px 12px}
+.votes-member-detail ul{padding-left:1.2em;margin:6px 0;font-size:14px;line-height:1.7}
+@media(min-width:720px){.votes-rows>li:not(.votes-member){grid-template-columns:6.5em minmax(0,1fr) auto auto auto;align-items:center;gap:10px}.votes-member>button{grid-template-columns:8em minmax(0,1fr) auto;align-items:center;gap:12px}}

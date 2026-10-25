@@ -1,0 +1,77 @@
+/** 法律ごとの会派・議員の賛否（/votes）。配布ファイル votes.json は scripts/build_public_votes.py が作る。 */
+import { blocOf } from './members-build';
+
+export const distributionVotesUrl = '/distribution/votes.json';
+
+export type VoteLaw = {
+  id: string; title: string; kind: string; session: number; proposer: string; promulgated: string | null; url: string;
+  shu: { date: string | null; yes: string[]; no: string[] } | null;
+  san: { url: string; method: 'ballot' | 'standing'; date: string | null; groups?: Record<string, [number, number, number]>; no?: number[] } | null;
+};
+export type VoteMember = { name: string; group: string; yes: number; no: number; absent: number; last: string };
+export type PublicVotes = { schema: 'public-votes/v1'; notes: string[]; counts: Record<string, number>; laws: VoteLaw[]; members: VoteMember[] };
+
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** 形式が不正なら全体を読み込みません。 */
+export function parseVotes(text: string): PublicVotes {
+  if (text.length > 12_000_000) throw new Error('賛否データが大きすぎます。');
+  const v = JSON.parse(text) as unknown;
+  if (!isRecord(v) || v.schema !== 'public-votes/v1' || !Array.isArray(v.laws) || !Array.isArray(v.members) || !Array.isArray(v.notes) || !isRecord(v.counts)) throw new Error('賛否データの形式が不正です。');
+  const members = v.members as VoteMember[];
+  for (const law of v.laws as VoteLaw[]) {
+    if (!isRecord(law) || typeof law.id !== 'string' || typeof law.title !== 'string') throw new Error('法律の項目が不正です。');
+    if (!law.shu && !law.san) throw new Error('賛否の無い法律が混ざっています。');
+    for (const index of law.san?.no ?? []) if (!Number.isInteger(index) || index < 0 || index >= members.length) throw new Error('議員の番号が不正です。');
+    for (const url of [law.url, law.san?.url]) if (url && !/^https:\/\//.test(url)) throw new Error('出典の URL が不正です。');
+  }
+  return v as unknown as PublicVotes;
+}
+
+export const lawYear = (law: VoteLaw): number => Number((law.promulgated ?? law.shu?.date ?? law.san?.date ?? '0000').slice(0, 4));
+
+export const START_YEARS = ['all', '2015', '2020', '2023', '2025'] as const;
+export type StartYear = typeof START_YEARS[number];
+export const startLabel = (s: StartYear) => s === 'all' ? '全期間' : `${s}年以降`;
+export const fromYear = (laws: VoteLaw[], start: StartYear): VoteLaw[] => start === 'all' ? laws : laws.filter(l => lawYear(l) >= Number(start));
+
+/** 系統（自民・公明・立憲…）。会派名は合流・改称が多いので名前の一部で寄せる（議員ページの政党ランキングと同じ分け方）。 */
+export const BLOCS = ['自民', '公明', '立憲', '共産', '国民民主', '維新', 'れいわ', '社民', '参政', '民主系', 'その他'] as const;
+export type Bloc = typeof BLOCS[number];
+
+export type Stance = 'yes' | 'no' | 'split' | 'none';
+export type BlocStance = { shu: Stance; san: { yes: number; no: number; absent: number } | null; sanMethod: 'ballot' | 'standing' | null };
+
+/** 衆議院：その系統の会派が賛成側にあれば賛成、反対側にあれば反対、両方なら割れ。載っていなければ「なし」。 */
+export function blocStance(law: VoteLaw, bloc: Bloc): BlocStance {
+  let shu: Stance = 'none';
+  if (law.shu) {
+    const yes = law.shu.yes.some(p => blocOf(p) === bloc), no = law.shu.no.some(p => blocOf(p) === bloc);
+    shu = yes && no ? 'split' : yes ? 'yes' : no ? 'no' : 'none';
+  }
+  let san: BlocStance['san'] = null;
+  if (law.san?.groups) {
+    const total = { yes: 0, no: 0, absent: 0 };
+    for (const [group, [y, n, a]] of Object.entries(law.san.groups)) if (blocOf(group) === bloc) { total.yes += y; total.no += n; total.absent += a; }
+    if (total.yes + total.no + total.absent > 0) san = total;
+  }
+  return { shu, san, sanMethod: law.san?.method ?? null };
+}
+
+export type BlocSummary = { bloc: Bloc; shuYes: number; shuNo: number; shuLaws: number; sanYes: number; sanNo: number; sanLaws: number };
+export function blocSummary(laws: VoteLaw[], bloc: Bloc): BlocSummary {
+  const out: BlocSummary = { bloc, shuYes: 0, shuNo: 0, shuLaws: 0, sanYes: 0, sanNo: 0, sanLaws: 0 };
+  for (const law of laws) {
+    const s = blocStance(law, bloc);
+    if (law.shu) { out.shuLaws += 1; if (s.shu === 'yes' || s.shu === 'split') out.shuYes += 1; if (s.shu === 'no' || s.shu === 'split') out.shuNo += 1; }
+    if (s.san) { out.sanLaws += 1; out.sanYes += s.san.yes; out.sanNo += s.san.no; }
+  }
+  return out;
+}
+
+/** 議員ごとの、参議院で反対した法律（新しい順の配列の位置）。 */
+export function noLawsByMember(laws: VoteLaw[], memberCount: number): number[][] {
+  const out: number[][] = Array.from({ length: memberCount }, () => []);
+  laws.forEach((law, i) => { for (const m of law.san?.no ?? []) out[m].push(i); });
+  return out;
+}

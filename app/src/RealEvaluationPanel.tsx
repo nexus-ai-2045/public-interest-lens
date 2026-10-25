@@ -15,6 +15,7 @@ import { LawRankingPage } from './LawRankingPage';
 import { WorldGdpPage } from './WorldGdpPage';
 import { MembersPage, MethodologyPage } from './MembersPage';
 import { NumbersPage } from './NumbersPage';
+import { VotesPage } from './VotesPage';
 
 function Quotes({ quotes, release }: { quotes: QuoteRef[]; release: RealRelease }) {
   return <ul className="real-quotes">{quotes.map((q, index) => {
@@ -94,6 +95,7 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   if (window.location.pathname === '/actors') return <ActorsPage />;
   if (['/ranking', '/ranking/'].includes(window.location.pathname)) return <LawRankingPage />;
   if (['/world', '/world/'].includes(window.location.pathname)) return <WorldGdpPage />;
+  if (['/votes', '/votes/'].includes(window.location.pathname)) return <VotesPage />;
   if (['/members', '/members/'].includes(window.location.pathname)) return <MembersPage />;
   if (['/methodology', '/methodology/'].includes(window.location.pathname)) return <MethodologyPage />;
   if (['/numbers', '/numbers/'].includes(window.location.pathname)) return <NumbersPage />;
