@@ -16,6 +16,8 @@ export const SITE_LINKS: { href: string; label: string | ((tone: Tone) => string
   { href: '/policies', label: '政策と結果' },
   { href: '/actors', label: '人物・団体' },
   { href: '/methodology', label: '計算方法' },
+  // テスト用の仮データの画面。公開サイトには出さない（端末内の確認用）。
+  ...(PUBLIC_SITE ? [] : [{ href: '/demo', label: '架空デモ' }]),
 ];
 
 export function SiteNav({ active, extra }: { active: string; extra?: ReactNode }) {
