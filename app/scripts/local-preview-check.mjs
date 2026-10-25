@@ -16,7 +16,6 @@ const PAGES = {
   '/members': '議員・実名',
   '/world': '世界のGDP比較',
   '/methodology': '計算方法',
-  '/demo/motion': '見せ方の試作',
 };
 const out = resolve('..', '.local', 'preview', new Date().toISOString().slice(0, 10));
 

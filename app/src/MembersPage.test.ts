@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { signedYen, sortBlocs, topBars, visibleMembers } from './MembersPage';
+import { partyLabel, signedYen, sortBlocs, topBars, visibleMembers } from './MembersPage';
 import { blocOf, type PublicMember } from './members-build';
 
 const member = (name: string, rank: number, low: number, median: number, high: number, id = name) => ({ id, name, rank, net: { low, median, high }, laws: [{}] }) as unknown as PublicMember;
@@ -48,4 +48,13 @@ describe('政党ランキング', () => {
     expect(sortBlocs(ranking, 'total').map(x => x.bloc)).toEqual(['大', '小']);
     expect(sortBlocs(ranking, 'perPerson').map(x => x.bloc)).toEqual(['小', '大']);
   });
+});
+
+it('一覧の所属政党：現職は政党名、元職は参議院の最後の会派つきで「元職」、表が読めるまでは空', () => {
+  const now = new Map([['甲', '自民']]);
+  const last = new Map([['乙', '立憲']]);
+  expect(partyLabel('甲', now, true, last)).toBe('自民');
+  expect(partyLabel('乙', now, true, last)).toBe('元職・立憲');
+  expect(partyLabel('丙', now, true, last)).toBe('元職');
+  expect(partyLabel('甲', new Map(), false)).toBe('');
 });
