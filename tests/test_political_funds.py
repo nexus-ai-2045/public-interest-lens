@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from datetime import date
@@ -117,10 +118,10 @@ class ParseTests(unittest.TestCase):
 
 class CompareAndLinkTests(unittest.TestCase):
     def test_only_rows_both_lines_agree_on_are_taken(self):
-        a = [{"sha256": "x", "区分": "受けた寄附", "相手方": "株式会社A", "金額": "100", "年月日": "2023-01-01"},
-             {"sha256": "x", "区分": "受けた寄附", "相手方": "B連盟", "金額": "200", "年月日": "2023-01-02"}]
-        b = [{"sha256": "x", "区分": "受けた寄附", "相手方": "株式会社 A", "金額": "100", "年月日": "2023-01-01"},
-             {"sha256": "x", "区分": "受けた寄附", "相手方": "B連盟", "金額": "250", "年月日": "2023-01-02"}]
+        a = [{"sha256": "x", "区分": "受けた寄附", "相手方種別": "法人その他の団体", "相手方": "株式会社A", "金額": "100", "年月日": "2023-01-01", "頁": "3"},
+             {"sha256": "x", "区分": "受けた寄附", "相手方": "B連盟", "金額": "200", "年月日": "2023-01-02", "頁": "3"}]
+        b = [{"sha256": "x", "区分": "受けた寄附", "相手方種別": "法人その他の団体", "相手方": "株式会社 A", "金額": "100", "年月日": "2023-01-01", "頁": "3"},
+             {"sha256": "x", "区分": "受けた寄附", "相手方": "B連盟", "金額": "250", "年月日": "2023-01-02", "頁": "3"}]
         agreed, disagreed = pf.compare(a, b)
         self.assertEqual([r["相手方"] for r in agreed], ["株式会社A"])
         self.assertEqual(sorted(r["照合"] for r in disagreed), ["Aだけ", "Bだけ"])
@@ -133,6 +134,14 @@ class CompareAndLinkTests(unittest.TestCase):
                        {"s1": "山田一郎", "s2": "鈴木二郎"})
         self.assertEqual([r["人物ID"] for r in rows], ["山田一郎", ""])
         self.assertEqual([r["団体の種類"] for r in rows], ["業界団体", "宗教団体"])
+        self.assertEqual([r["団体名キー"] for r in rows], ["日本テスト医師連盟", "テスト教団"])
+
+    def test_org_key_aligns_spelling_without_merging_names(self):
+        from scripts.org_names import org_key
+        self.assertEqual(org_key("㈱ テスト商事"), org_key("株式会社テスト商事"))
+        self.assertEqual(org_key("一般社団法人　日本テスト協会"), "日本テスト協会")
+        self.assertNotEqual(org_key("日本テスト協会"), org_key("日本テスト協会東京支部"))
+        self.assertEqual(org_key(""), "")
 
     def test_link_needs_line_b_to_agree_on_the_member(self):
         persons = [{"人物ID": "山田一郎", "氏名": "山田一郎"}]
@@ -251,6 +260,176 @@ class CompareAndLinkTests(unittest.TestCase):
         pf.download(index, [], wait=0, get_bytes=get, save=lambda rows: saved.append(len(rows)), save_every=2)
         self.assertEqual(saved, [1])
 
+    def test_keep_image_stores_only_pdfs_without_text(self):
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            index = [{"PDF_URL": "https://a.example/text.pdf"}, {"PDF_URL": "https://b.example/scan.pdf"}]
+            texts = {b"T": ("あ" * 200 + "\f", 1), b"S": ("", 1)}
+            with mock.patch.object(pf, "WORK", root / "work"), \
+                 mock.patch.object(pf, "pdf_text", side_effect=lambda path: texts[path.read_bytes()]):
+                out = pf.download(index, [], storage=root / "store", wait=0, keep="image", text_dir=root / "text",
+                                  get_bytes=lambda url: b"T" if "text" in url else b"S", workers=2,
+                                  free_bytes=lambda path: 10 ** 12)
+            got = {m["PDF_URL"].split("/")[-1]: m for m in out}
+            self.assertEqual({k: v["状態"] for k, v in got.items()}, {"text.pdf": "取得済み", "scan.pdf": "取得済み"})
+            self.assertEqual(got["text.pdf"]["material_id"], "")
+            self.assertNotEqual(got["scan.pdf"]["material_id"], "")
+            self.assertTrue((root / "text" / f"{got['text.pdf']['sha256']}.txt").exists())
+            self.assertEqual(list((root / "work" / "download").iterdir()), [])
+
+    def test_low_disk_marks_failure_and_stops(self):
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            index = [{"PDF_URL": f"https://a.example/{i}.pdf"} for i in range(3)]
+            with mock.patch.object(pf, "WORK", root / "work"):
+                out = pf.download(index, [], storage=root / "store", wait=0, keep="all",
+                                  get_bytes=lambda url: b"S", free_bytes=lambda path: 0)
+            self.assertEqual(len(out), 1)
+            self.assertTrue(out[0]["状態"].startswith("失敗"))
+            self.assertEqual(list((root / "work" / "download").iterdir()), [])
+
+    def test_same_pdf_from_two_hosts_at_once(self):
+        import threading
+        from unittest import mock
+        barrier = threading.Barrier(2)
+        def get(url):
+            barrier.wait(timeout=5)  # 2本の取得を同時に走らせる
+            return b"SAME"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            index = [{"PDF_URL": "https://a.example/x.pdf"}, {"PDF_URL": "https://b.example/x.pdf"}]
+            with mock.patch.object(pf, "WORK", root / "work"):
+                out = pf.download(index, [], storage=root / "store", wait=0, keep="all", get_bytes=get, workers=2,
+                                  free_bytes=lambda path: 10 ** 12)
+            self.assertEqual([m["状態"] for m in out], ["取得済み", "取得済み"])
+            self.assertEqual(list((root / "work" / "download").iterdir()), [])
+
+    def test_page_forms_reads_marks_and_fills_gaps(self):
+        import types
+        marks = iter(["", "（その2）", "(その７)寄附の内訳", "読めない", "（そ の 14）", "政治資金監査報告書", "(別紙)\n様式 注釈番号", ""])
+        def run(args, **kwargs):
+            if args[0] == "pdfinfo":
+                return types.SimpleNamespace(args=args, returncode=0, stdout="Title: x\nPages:          8\n")
+            if args[0] == "pdftoppm":
+                return types.SimpleNamespace(args=args, returncode=0, stdout=b"png")
+            return types.SimpleNamespace(args=args, returncode=0, stdout=next(marks).encode("utf-8"))
+        self.assertEqual(pf.page_forms(Path("x.pdf"), run), ["1", "2", "7", "7", "14", "監査", "別紙", "別紙"])
+
+    def test_ocr_failure_is_not_saved_as_classified(self):
+        import types
+        def run(args, **kwargs):
+            if args[0] == "pdfinfo":
+                return types.SimpleNamespace(args=args, returncode=0, stdout="Pages: 2\n")
+            return types.SimpleNamespace(args=args, returncode=1, stdout=b"")
+        with self.assertRaises(pf.subprocess.SubprocessError):
+            pf.page_forms(Path("x.pdf"), run)
+
+    def test_incomplete_ai_rows_are_never_adopted(self):
+        base = {"sha256": "s", "区分": "支出", "費目": "事務所費", "相手方": "株式会社X", "相手方種別": "法人その他の団体",
+                "金額": "100", "年月日": "2024-01-01", "頁": "1"}
+        for broken in ({**base, "金額": ""}, {**base, "年月日": ""},
+                       {**base, "区分": "受けた寄附", "費目": "", "相手方": "山田太郎", "相手方種別": ""}):
+            agreed, _ = pf.compare([broken], [dict(broken)])
+            self.assertEqual(agreed, [])
+            agreed, _ = pf.tie_break([], [{**broken, "照合": "Aだけ"}], [dict(broken)])
+            self.assertEqual(agreed, [])
+        agreed, _ = pf.compare([{**base, "頁": ""}], [{**base, "頁": ""}])
+        self.assertEqual(agreed, [])
+        # パーティー対価の支払者は年月日が無くてよい
+        party = {**base, "区分": "パーティー対価", "費目": "", "年月日": ""}
+        self.assertEqual(len(pf.compare([party], [dict(party)])[0]), 1)
+
+    def test_ai_reader_rows_are_normalized_like_line_a(self):
+        import json
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "s1.json").write_text(json.dumps({"関係議員名": "", "行": [
+                {"区分": "支出", "費目": "事務所費", "相手方": "株式会社テスト", "相手方種別": "個人", "金額": "16,500", "年月日": "R6/6/26", "頁": 5},
+                {"区分": "受けた寄附", "相手方": "現代日本研究会", "相手方種別": "政治団体", "金額": 60000, "年月日": "令和6年7月1日", "頁": 3}]}), encoding="utf-8")
+            rows = pf.load_line_b(Path(tmp), {}, line="A")
+        self.assertEqual([(r["系統"], r["相手方種別"], r["金額"], r["年月日"]) for r in rows],
+                         [("A", "法人その他の団体", "16500", "2024-06-26"), ("A", "政治団体", "60000", "2024-07-01")])
+
+    def test_reader_individual_is_kept_unless_name_shows_legal_entity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "s1.json").write_text(json.dumps({"行": [
+                {"区分": "パーティー対価", "相手方": "山田商店", "相手方種別": "個人", "金額": 300000, "頁": 9},
+                {"区分": "パーティー対価", "相手方": "山田商店", "金額": 300000, "頁": 9}]}), encoding="utf-8")
+            rows = pf.load_line_b(Path(tmp), {}, line="A")
+        self.assertEqual([(r["相手方種別"], r["相手方"]) for r in rows], [("個人", pf.INDIVIDUAL), ("法人その他の団体", "山田商店")])
+
+    def test_keep_none_text_failure_is_retried(self):
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with mock.patch.object(pf, "WORK", root / "work"), mock.patch.object(pf, "pdf_text", return_value=None):
+                out = pf.download([{"PDF_URL": "https://a.example/x.pdf"}], [], storage=root / "store", wait=0, keep="none",
+                                  text_dir=root / "text", get_bytes=lambda url: b"X", free_bytes=lambda path: 10 ** 12)
+            self.assertTrue(out[0]["状態"].startswith("失敗"))
+
+    def test_roster_failure_keeps_previous_table(self):
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as tmp:
+            table = Path(tmp, "member-groups.csv")
+            table.write_text("氏名\n前回\n", encoding="utf-8")
+            with mock.patch.object(pf, "MEMBER_GROUPS", table), mock.patch.object(pf, "roster_rows", side_effect=OSError("403")), \
+                 mock.patch.object(pf, "SOURCES", Path(tmp, "none.csv")):
+                self.assertEqual(pf.main(["roster"]), 0)
+            self.assertEqual(table.read_text(encoding="utf-8"), "氏名\n前回\n")
+
+    def test_pages_to_read_uses_range_not_each_mark(self):
+        forms = ["1", "2", "6", "7", "7", "13", "14", "13", "14", "15", "17", "20"]
+        self.assertEqual(pf.pages_to_read(forms), [1, 4, 5, 6, 7, 8, 9, 10])
+        self.assertEqual(pf.pages_to_read(["1", "2", "17"]), [1])
+        # 末尾の別紙（「*1」の本当の名前の一覧）は読み、監査報告書は読まない
+        self.assertEqual(pf.pages_to_read(["1", "7", "14", "17", "20", "監査", "別紙", "別紙"]), [1, 2, 3, 7, 8])
+        # 途中の頁を 19 と読み違えても、その後ろの内訳（15）まで読む
+        self.assertEqual(pf.pages_to_read(["1", "7", "14", "19", "14", "15", "17", "20"]), [1, 2, 3, 4, 5, 6])
+
+    def test_reader_name_folds_spelling_variants(self):
+        self.assertEqual(pf.reader_name("髙石会計事務所　吉葉無線電機㈱"), "高石会計事務所 吉葉無線電機(株)")
+        self.assertEqual(pf.counterpart_kind(pf.reader_name("吉葉無線電機㈱"), ""), "法人その他の団体")
+
+    def test_invalid_expense_item_never_agrees_and_variants_match(self):
+        base = {"sha256": "s", "区分": "支出", "相手方種別": "法人その他の団体", "金額": "100", "年月日": "2024-01-01", "頁": "1"}
+        bad = {**base, "費目": "入力不備：費目「」", "相手方": "株式会社X"}
+        agreed, disagreed = pf.compare([bad], [dict(bad)])
+        self.assertEqual((len(agreed), len(disagreed)), (0, 2))
+        a = {**base, "費目": "事務所費", "相手方": "髙橋事務所"}
+        agreed, _ = pf.compare([a], [{**a, "相手方": "高橋事務所"}])
+        self.assertEqual(len(agreed), 1)
+
+    def test_private_key_ignores_spelling_variants(self):
+        self.assertEqual(pf.private_key("髙橋 太郎"), pf.private_key("高橋太郎"))
+
+    def test_tie_break_takes_rows_where_c_agrees_with_one_side(self):
+        base = {"sha256": "s", "区分": "支出", "費目": "事務所費", "相手方種別": "法人その他の団体", "年月日": "2024-01-01", "頁": "5"}
+        a = {**base, "相手方": "大槻デザイニング株式会社", "金額": "100", "照合": "Aだけ"}
+        b = {**base, "相手方": "大機デザイニング株式会社", "金額": "100", "照合": "Bだけ"}
+        other_page = {**base, "頁": "9", "相手方": "株式会社Z", "金額": "5", "照合": "Aだけ"}
+        c = [{**base, "相手方": "大槻デザイニング株式会社", "金額": "100"}, {**base, "頁": "9", "相手方": "株式会社Z", "金額": "5"}]
+        agreed, disagreed = pf.tie_break([], [a, b, other_page], c)
+        self.assertEqual([(r["相手方"], r["照合"]) for r in agreed], [("大槻デザイニング株式会社", "A・C一致"), ("株式会社Z", "A・C一致")])
+        self.assertEqual([r["相手方"] for r in disagreed], ["大機デザイニング株式会社"])
+
+    def test_tie_break_does_not_reuse_c_for_rows_already_agreed(self):
+        row = {"sha256": "s", "区分": "支出", "費目": "事務所費", "相手方種別": "法人その他の団体", "年月日": "2024-01-01", "頁": "5",
+               "相手方": "株式会社X", "金額": "100"}
+        agreed, disagreed = pf.compare([dict(row), dict(row)], [dict(row)])
+        agreed, disagreed = pf.tie_break(agreed, disagreed, [dict(row)])
+        self.assertEqual((len(agreed), len(disagreed)), (1, 1))
+
+    def test_manifest_meta_gives_source_without_line_a_rows(self):
+        manifest = [{"PDF_URL": "https://example.jp/a.pdf", "sha256": "s1"}, {"PDF_URL": "https://example.jp/b.pdf", "sha256": "s1"}]
+        index = [{"PDF_URL": "https://example.jp/a.pdf", "年分": "2024", "団体名": "テスト会"}]
+        meta = pf.manifest_meta(manifest, index)
+        self.assertEqual(meta["s1"], {"sha256": "s1", "PDF_URL": "https://example.jp/a.pdf", "年分": "2024", "報告団体": "テスト会"})
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "s1.json").write_text(json.dumps({"行": [{"区分": "支出", "費目": "事務所費", "相手方": "株式会社X", "金額": 100, "頁": 5}]}), encoding="utf-8")
+            row = pf.load_line_b(Path(tmp), meta)[0]
+        self.assertEqual((row["PDF_URL"], row["年分"], row["報告団体"]), ("https://example.jp/a.pdf", "2024", "テスト会"))
+
     def test_year_prefers_nenbun_over_publication_date(self):
         self.assertEqual(pf.year_of("令和7年11月28日公表（令和6年分）"), "2024")
         self.assertEqual(pf.year_of("令和7年11月28日公表"), "")
@@ -310,6 +489,62 @@ class CompareAndLinkTests(unittest.TestCase):
     def test_text_classification(self):
         self.assertEqual(pf.classify_text("あ" * 200, 2), "文字あり")
         self.assertEqual(pf.classify_text("あ" * 20, 2), "画像（OCR待ち）")
+
+    def test_roster_table_carries_member_and_fixes_spilled_names(self):
+        import sys
+        import types
+
+        table = [
+            ["氏名", "衆・参", "選挙区", "総務大臣届出", None, "都道府県選挙管理委員会届出", None, None],
+            [None, None, None, "団体名", "区分", "届出先選管", "団体名", "区分"],
+            ["【あ】", "", "", "", "", "", "", ""],
+            ["試験 一郎\n（試驗 一郎）", "衆", "東京１", "試験会", "２", "東京都", "試験一郎後援会（代表者 山田", "太郎）１・２"],
+            [None, None, None, "", "", "東京都", "試験党東京都第一支部", "１"],
+        ]
+        page = types.SimpleNamespace(extract_tables=lambda: [table])
+        pdf = types.SimpleNamespace(pages=[page], __enter__=None)
+
+        class Opened:
+            def __enter__(self):
+                return pdf
+
+            def __exit__(self, *exc):
+                return False
+
+        fake = types.ModuleType("pdfplumber")
+        fake.open = lambda path: Opened()
+        saved = sys.modules.get("pdfplumber")
+        sys.modules["pdfplumber"] = fake
+        try:
+            rows = pf.parse_roster(Path("x.pdf"), "国会議員関係政治団体", "試し")
+        finally:
+            if saved is None:
+                sys.modules.pop("pdfplumber")
+            else:
+                sys.modules["pdfplumber"] = saved
+        self.assertEqual([(r["氏名"], r["届出先"], r["団体名"], r["区分"]) for r in rows], [
+            ("試験 一郎", "総務大臣", "試験会", "２"),
+            ("試験 一郎", "東京都", "試験一郎後援会（代表者 山田太郎）", "１・２"),
+            ("試験 一郎", "東京都", "試験党東京都第一支部", "１"),
+        ])
+        self.assertEqual(rows[0]["届出上の氏名"], "試驗 一郎")
+
+    def test_member_comes_from_roster_only_when_one_member_matches(self):
+        members = [
+            {"氏名": "試験 一郎", "届出上の氏名": "", "届出先": "総務大臣", "団体名": "試験一郎後援会（代表者 和田昌夫）"},
+            {"氏名": "試験一郎", "届出上の氏名": "", "届出先": "総務大臣", "団体名": "試験一郎後援会（代表者 試験一郎）"},
+            {"氏名": "甲 太郎", "届出上の氏名": "", "届出先": "総務大臣", "団体名": "同名会"},
+            {"氏名": "乙 次郎", "届出上の氏名": "", "届出先": "総務大臣", "団体名": "同名会"},
+            {"氏名": "丙 三郎", "届出上の氏名": "", "届出先": "東京都", "団体名": "丙会"},
+        ]
+        lookup = pf.roster_lookup(members)
+        soumu = "総務省（中央分・定期公表）"
+        # 索引と名簿で代表者名の字が違っても（晶／昌）、かっこ書きを落として同じ議員に決まる
+        self.assertEqual(pf.member_of({"出典": soumu, "団体名": "試験一郎後援会(和田 晶夫)"}, lookup), "試験 一郎")
+        self.assertEqual(pf.member_of({"出典": soumu, "団体名": "同名会"}, lookup), "")
+        self.assertEqual(pf.member_of({"出典": soumu, "団体名": "丙会"}, lookup), "")
+        self.assertEqual(pf.member_of({"出典": "東京都", "団体名": "丙会"}, lookup), "丙 三郎")
+        self.assertEqual(pf.member_of({"出典": soumu, "団体名": "同名会", "関係議員名": "甲 太郎"}, lookup), "甲 太郎")
 
 
 if __name__ == "__main__":
