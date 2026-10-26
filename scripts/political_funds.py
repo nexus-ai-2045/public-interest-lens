@@ -999,8 +999,8 @@ def member_of(meta: dict[str, str], lookup: dict[tuple[str, str], dict[str, str]
 
 def attribution_check(member: str, line_b_member: str | None, line_a_member: str | None = None) -> str:
     """議員への帰属の照合。索引（名簿）の関係議員名と、表紙を読んだ2つの読み手（系統B・AI の系統A）の判定を突き合わせ、2者が合えば採る。
-    「A・B一致」＝索引と系統B、「索引・読み手A一致」＝系統Bは違うが索引とAI の系統Aが一致、
-    「読み手A・B一致」＝索引に関係議員名が無く、2つの読み手の表紙の判定が一致。それ以外は人物IDを付けない。"""
+    「A・B一致」＝索引と系統B、「読み手A・B一致」＝索引に関係議員名が無く、2つの読み手の表紙の判定が一致。
+    2つの AI の読み手が食い違うときは、索引と片方が合っても人物IDを付けない（個人への帰属は2系統の AI の一致が要る、AGENTS.md）。"""
     if not member:
         if line_a_member and line_b_member and same_name(line_a_member, line_b_member):
             return "読み手A・B一致"
@@ -1009,12 +1009,10 @@ def attribution_check(member: str, line_b_member: str | None, line_a_member: str
         return "系統Bの判定なし"
     if same_name(member, line_b_member):
         return "A・B一致"
-    if line_a_member and same_name(member, line_a_member):
-        return "索引・読み手A一致"
     return f"食い違い：B「{line_b_member}」"
 
 
-LINKED_CHECKS = {"A・B一致", "索引・読み手A一致", "読み手A・B一致"}
+LINKED_CHECKS = {"A・B一致", "読み手A・B一致"}
 
 
 def same_name(a: str, b: str) -> bool:

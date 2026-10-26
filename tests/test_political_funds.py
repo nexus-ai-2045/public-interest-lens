@@ -188,7 +188,7 @@ class CompareAndLinkTests(unittest.TestCase):
 
     def test_attribution_two_of_three(self):
         self.assertEqual(pf.attribution_check("山口 壯", "山口壮"), "A・B一致")
-        self.assertEqual(pf.attribution_check("森 ゆうこ", "森 裕子", "森ゆうこ"), "索引・読み手A一致")
+        self.assertTrue(pf.attribution_check("森 ゆうこ", "森 裕子", "森ゆうこ").startswith("食い違い"))  # 2つの AI が食い違うなら、索引と片方が合っても結ばない
         self.assertTrue(pf.attribution_check("森 ゆうこ", "森 裕子", "森裕子").startswith("食い違い"))
         self.assertEqual(pf.attribution_check("", "山田一郎", "山田 一郎"), "読み手A・B一致")
         self.assertEqual(pf.attribution_check("", "山田一郎", "山田二郎"), "関係議員名なし")
