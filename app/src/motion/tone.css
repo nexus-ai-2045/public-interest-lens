@@ -119,3 +119,58 @@ header.site-header nav.site-nav button{padding:6px 12px;font-size:13px}
   header.site-header nav.site-nav{flex-wrap:nowrap;overflow-x:auto;gap:14px;margin:0 -18px;padding:2px 18px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   header.site-header nav.site-nav::-webkit-scrollbar{display:none}
 }
+
+/* ---------- 1位の札の飾り（ToneFlair）と音の切り替え ---------- */
+.sound-toggle{order:2;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 14px;border-radius:999px;font-size:14px;font-weight:750;background:var(--quiet);color:var(--muted);border:0;box-shadow:inset 0 0 0 1px var(--line);transition:transform .15s ease-out,background .25s ease,color .25s ease}
+.sound-toggle:active{transform:scale(.94)}
+.sound-toggle.is-on{color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.tone-hero a{position:relative;isolation:isolate}
+.tone-hero a>:not(.tone-flair){position:relative;z-index:1}
+.tone-flair{position:absolute;inset:0;z-index:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+.tone-flair>*{position:absolute;display:block}
+
+/* 国賊：汚れた霧がにじみ、赤い滴がたれ、ハエが飛び、吹き出しがひきつる。 */
+.tone-flair-loss{background:
+  radial-gradient(ellipse 60% 90% at 12% 110%,rgba(90,10,24,.55),transparent 70%),
+  radial-gradient(circle at 80% 20%,rgba(60,50,20,.35),transparent 45%),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .4 0 0 0 0 .3 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:normal;opacity:.85}
+.tf-fog{inset:-20% -10% auto -10%;height:70%;background:radial-gradient(ellipse at 30% 50%,rgba(120,30,45,.35),transparent 60%),radial-gradient(ellipse at 75% 40%,rgba(40,20,60,.45),transparent 62%);filter:blur(8px);animation:tf-fog 7s ease-in-out infinite alternate}
+@keyframes tf-fog{from{transform:translateX(-4%) scale(1)}to{transform:translateX(5%) scale(1.12)}}
+.tf-drips{inset:0 0 auto 0;height:0}
+.tf-drips i{position:absolute;left:var(--x);top:0;width:5px;height:0;border-radius:0 0 4px 4px;background:linear-gradient(#a3233a,#5a0f1c);box-shadow:0 0 6px rgba(255,40,60,.5);animation:tf-drip 2600ms ease-in var(--d) infinite}
+@keyframes tf-drip{0%{height:0;opacity:0}15%{opacity:1}55%{height:var(--h);opacity:1}100%{height:var(--h);opacity:0;transform:translateY(24px)}}
+.tf-flies i{position:absolute;left:62%;top:46%;width:4px;height:4px;border-radius:50%;background:#050506;box-shadow:0 0 0 1px rgba(255,255,255,.12);animation:tf-fly 2.4s linear calc(var(--i)*-.8s) infinite}
+@keyframes tf-fly{0%{transform:translate(0,0)}20%{transform:translate(38px,-14px)}40%{transform:translate(18px,16px)}55%{transform:translate(-30px,6px)}75%{transform:translate(-14px,-18px)}100%{transform:translate(0,0)}}
+.tone-hero a{padding-bottom:46px}
+.tf-bubble{left:26px;bottom:9px;padding:4px 12px;border-radius:14px 14px 14px 2px;font-weight:900;font-size:16px;letter-spacing:.08em;white-space:nowrap;transform-origin:20% 100%;transform:rotate(-4deg)}
+.tone-flair-loss .tf-bubble{background:#170608;color:#ff5a6b;box-shadow:0 0 0 1.5px #7d1f2b,0 0 16px rgba(255,40,60,.45);text-shadow:0 0 8px rgba(255,40,60,.7);animation:tf-bubble-in 500ms var(--m-spring) 650ms both,tf-bubble-twitch 3.2s ease-in-out 1.4s infinite}
+.tone-flair-loss .tf-bubble b{display:inline-block;font-weight:inherit;animation:tf-hehe 900ms ease-in-out calc(var(--i)*110ms + 1100ms) infinite}
+@keyframes tf-hehe{0%,60%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-5px) rotate(-6deg)}}
+@keyframes tf-bubble-in{from{opacity:0;transform:scale(.3) rotate(-14deg)}to{opacity:1;transform:rotate(-4deg)}}
+@keyframes tf-bubble-twitch{0%,86%,100%{transform:rotate(-4deg)}90%{transform:rotate(-2deg) translateX(3px)}94%{transform:rotate(-6deg) translateX(-3px)}}
+.tone-hero.loss a::after{content:"";position:absolute;inset:0;z-index:2;border-radius:inherit;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.55));animation:tf-flicker 5s steps(1) infinite}
+@keyframes tf-flicker{0%,100%{opacity:1}41%{opacity:.55}42%{opacity:1}43%{opacity:.7}44%{opacity:1}78%{opacity:.6}79%{opacity:1}}
+
+/* 国士：後光が回り、翼が開き、羽が舞い落ち、鐘の吹き出しが浮く。 */
+.tf-rays{left:50%;top:50%;width:160%;aspect-ratio:1;translate:-50% -50%;background:repeating-conic-gradient(from 0deg,rgba(255,226,140,.34) 0 8deg,transparent 8deg 22deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 62%);mask:radial-gradient(circle,#000 0,transparent 62%);animation:tf-spin 36s linear infinite}
+@keyframes tf-spin{to{transform:rotate(360deg)}}
+.tf-halo{left:50%;top:6px;width:132px;height:26px;margin-left:-66px;border-radius:50%;border:5px solid #f6cd5b;box-shadow:0 0 18px 4px rgba(246,205,91,.75),inset 0 0 12px rgba(255,240,180,.9);animation:tf-halo-in 700ms var(--m-spring) 250ms both,tf-bob 3.4s ease-in-out 1s infinite}
+@keyframes tf-halo-in{from{opacity:0;transform:translateY(-20px) scale(.4)}to{opacity:1;transform:none}}
+@keyframes tf-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+.tf-wing{top:14px;width:clamp(70px,12vw,120px);height:auto;fill:rgba(255,255,255,.7);stroke:#e9b949;stroke-width:1.6;filter:drop-shadow(0 0 8px rgba(233,185,73,.7));animation:tf-wing-in 800ms var(--m-spring) 350ms both}
+.tf-wing-l{right:calc(50% + 60px);transform-origin:100% 100%}
+.tf-wing-r{left:calc(50% + 60px);transform:scaleX(-1);transform-origin:0 100%;--sx:-1}
+@keyframes tf-wing-in{from{opacity:0;transform:scaleX(calc(var(--sx,1)*.1)) rotate(calc(var(--sx,1)*14deg))}to{opacity:1;transform:scaleX(var(--sx,1))}}
+.tf-feathers i{position:absolute;left:var(--x);top:-12px;width:9px;height:18px;border-radius:50% 50% 50% 50%/70% 70% 30% 30%;background:linear-gradient(#fff,#fff3c4);box-shadow:0 0 6px rgba(255,236,170,.9);opacity:0;animation:tf-feather var(--t) ease-in-out var(--d) infinite}
+@keyframes tf-feather{0%{opacity:0;transform:translate(0,0) rotate(0)}12%{opacity:.95}50%{transform:translate(var(--dx),70px) rotate(70deg)}100%{opacity:0;transform:translate(calc(var(--dx)*-1),150px) rotate(-50deg)}}
+.tone-flair-benefit .tf-bubble{left:26px;bottom:9px;background:#fffdf4;color:#9a6a00;box-shadow:0 0 0 1.5px #e9b949,0 0 16px rgba(246,205,91,.7);border-radius:14px 14px 2px 14px;transform:none;animation:tf-bubble-in2 600ms var(--m-spring) 700ms both,tf-bob 3.4s ease-in-out 1.4s infinite}
+@keyframes tf-bubble-in2{from{opacity:0;transform:translateY(14px) scale(.5)}to{opacity:1;transform:none}}
+@media(max-width:640px){.tone-hero a{padding-bottom:52px}.tf-bubble,.tone-flair-benefit .tf-bubble{left:auto;right:14px;bottom:10px}.tf-wing{display:none}}
+
+/* 動きを減らす設定：飾りは動かさず、吹き出しだけ静止して残す（読めるように）。 */
+@media(prefers-reduced-motion:reduce){
+  .tone-flair *,.tone-flair,.tone-hero.loss a::after{animation:none!important}
+  .tf-drips,.tf-flies,.tf-feathers,.tf-rays,.tf-fog{display:none}
+  .tone-flair-loss .tf-bubble{transform:rotate(-4deg)}
+}

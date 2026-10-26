@@ -3,7 +3,7 @@ import { ArrowUpRight, Info } from 'lucide-react';
 import { SiteShell } from './SiteHeader';
 import { toneTitle, useTone } from './site-tone';
 import { formatYen } from './LawRankingPage';
-import { Burst, CountUp, RankBars, Reveal, type RankBarItem } from './motion';
+import { Burst, CountUp, RankBars, Reveal, ToneFlair, type RankBarItem } from './motion';
 import { distributionActivityUrl, readActivity, type MemberActivity, type MemberActivityEntry } from './member-activity';
 import { ROLE_LABEL as CAUSAL_ROLE_LABEL, type MemberEvidence, type MemberLaw, type PublicMember, type PublicMemberLaw, type PublicMembers, type PartyRanking, allocatedAmount } from './members-build';
 import { DEFAULT_KNOBS, isDefaultKnobs, readKnobs, writeKnobs, type CausalRole, type Knobs } from './causal-allocation';
@@ -198,6 +198,7 @@ function ToneHero({ members }: { members: PublicMember[] }) {
   if (!top) return null;
   return <Reveal tone={side} className={`tone-hero ${side}`} key={`${side}-${top.id}`}>
     <a href={`/members?name=${encodeURIComponent(top.id)}`}>
+      <ToneFlair side={side} />
       <span className="tone-hero-badge">{side === 'loss' ? '国賊 1位' : '国士 1位'}<Burst tone={side} count={22} /></span>
       <strong className="tone-hero-name">{top.name}</strong>
       <span className="tone-hero-amount"><span>{side === 'loss' ? 'この人が失わせた額（純額）' : 'この人が生んだ額（純額）'}</span><b><CountUp value={Math.abs(top.net.median)} format={formatYen} /></b><small>幅 {signedYen(top.net.low)}〜{signedYen(top.net.high)}・{top.laws.length}本の法律から</small></span>
