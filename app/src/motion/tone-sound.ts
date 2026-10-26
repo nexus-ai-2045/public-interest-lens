@@ -25,12 +25,22 @@ const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(fn => fn());
 
 export const isSoundOn = () => enabled;
-export function setSoundOn(on: boolean): void { enabled = on; emit(); }
+export function setSoundOn(on: boolean): void { enabled = on; if (!on) silence(); emit(); }
 export function useSoundOn(): boolean {
   return useSyncExternalStore(fn => { listeners.add(fn); return () => { listeners.delete(fn); }; }, isSoundOn, () => false);
 }
 
 let ctx: AudioContext | null = null;
+/** いま鳴っている音の出力。消音にしたらすぐ止める。 */
+let active: GainNode | null = null;
+function silence(): void {
+  if (!active || !ctx) return;
+  const gain = active;
+  gain.gain.cancelScheduledValues(ctx.currentTime);
+  gain.gain.setTargetAtTime(0, ctx.currentTime, 0.015);
+  setTimeout(() => gain.disconnect(), 150);
+  active = null;
+}
 function audio(): AudioContext | null {
   if (typeof window === 'undefined') return null;
   const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -122,7 +132,8 @@ export function playToneSound(tone: SoundTone): void {
   if (!enabled) return;
   const ac = audio();
   if (!ac) return;
-  const master = ac.createGain(); master.gain.value = 0.22;
+  silence();
+  const master = ac.createGain(); master.gain.value = 0.22; active = master;
   const limiter = ac.createDynamicsCompressor();
   master.connect(limiter).connect(ac.destination);
   const t0 = ac.currentTime + 0.03;
