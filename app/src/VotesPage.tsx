@@ -44,6 +44,7 @@ export function BlocPanel({ laws, bloc }: { laws: VoteLaw[]; bloc: Bloc }) {
   return <div className="votes-bloc">
     <p className="votes-summary">
       衆議院：記載のある{summary.shuLaws}本のうち、賛成側 {summary.shuYes}本・反対側 {summary.shuNo}本。
+      {summary.withLdpLaws > 0 && bloc !== '自民' && <>衆議院で自民と同じ側（賛成か反対）だった法律は {summary.withLdpSame}/{summary.withLdpLaws}本（{Math.round(summary.withLdpSame / summary.withLdpLaws * 100)}%）。</>}
       参議院：{summary.sanLaws}本の押しボタン採決で、賛成 {summary.sanYes.toLocaleString()}票・反対 {summary.sanNo.toLocaleString()}票。
     </p>
     <div className="votes-seg" role="group" aria-label="絞り込み">{([['no', '反対した（反対票が出た）'], ['yes', '賛成した'], ['all', 'すべて']] as const).map(([k, label]) => <button key={k} type="button" aria-pressed={filter === k} onClick={() => { setFilter(k); setLimit(30); }}>{label}</button>)}</div>
@@ -91,7 +92,7 @@ export function VotesPage() {
   useEffect(() => { document.title = PUBLIC_SITE ? '政党・議員の賛否｜試作版' : '政党・議員の賛否｜国賊／国士ランキング'; }, []);
   const [data, setData] = useState<PublicVotes | null>(null);
   const [error, setError] = useState('');
-  const [start, setStart] = useState<StartYear>(() => { const v = new URLSearchParams(window.location.search).get('from'); return (START_YEARS as readonly string[]).includes(v ?? '') ? v as StartYear : '2020'; });
+  const [start, setStart] = useState<StartYear>(() => { const v = new URLSearchParams(window.location.search).get('from'); return (START_YEARS as readonly string[]).includes(v ?? '') ? v as StartYear : 'recent4'; });
   const [bloc, setBloc] = useState<Bloc>(() => { const v = new URLSearchParams(window.location.search).get('party'); return (BLOCS as readonly string[]).includes(v ?? '') ? v as Bloc : '自民'; });
   useEffect(() => {
     const controller = new AbortController();

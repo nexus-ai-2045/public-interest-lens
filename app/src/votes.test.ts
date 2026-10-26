@@ -35,3 +35,20 @@ describe('法律ごとの賛否データ', () => {
     expect(() => parseVotes(JSON.stringify({ schema: 'public-votes/v1', notes: [], counts: {}, members: [], laws: [{ id: 'a', title: 'b', san: { no: [3], url: 'https://x', method: 'ballot' }, shu: null }] }))).toThrow();
   });
 });
+
+describe('直近4年と自民との一致', () => {
+  it('直近4年は最新の日付から4年前までです', async () => {
+    const { recentCutoff } = await import('./votes');
+    const cut = recentCutoff(data.laws);
+    const recent = fromYear(data.laws, 'recent4');
+    expect(recent.length).toBeGreaterThan(0);
+    expect(recent.length).toBeLessThan(data.laws.length);
+    expect(recent.every(l => (l.promulgated ?? l.shu?.date ?? l.san?.date ?? '') > cut)).toBe(true);
+  });
+  it('自民と同じ側だった数は、衆院に会派の記載がある法律の範囲に収まります', () => {
+    const s = blocSummary(data.laws, '公明');
+    expect(s.withLdpLaws).toBeGreaterThan(0);
+    expect(s.withLdpSame).toBeLessThanOrEqual(s.withLdpLaws);
+    expect(s.withLdpSame / s.withLdpLaws).toBeGreaterThan(0.5);
+  });
+});
