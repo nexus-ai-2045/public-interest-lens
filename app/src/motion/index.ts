@@ -6,3 +6,5 @@ export { Reveal } from './Reveal';
 export { MOTION, useInView, usePrefersReducedMotion } from './useMotion';
 export { Burst } from './Burst';
 export { ShareButton } from './ShareButton';
+export { SoundToggle, ToneFlair, useToneSound } from './ToneFlair';
+export { playToneSound, setSoundOn, useSoundOn, laughPlan, CHIME_HZ, type SoundTone } from './tone-sound';

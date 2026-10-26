@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { PUBLIC_SITE } from './site-mode';
 import { toneTitle, useTone, type Tone } from './site-tone';
-import { usePrefersReducedMotion } from './motion';
+import { SoundToggle, useToneSound, usePrefersReducedMotion } from './motion';
 
 /**
  * ナビの並び。結論（誰が・何が）→ 根拠（比べる相手と推移）→ 事例 → 手順。テスト用の仮データの画面（/demo）は公開サイトにリンクしない。
@@ -72,9 +72,11 @@ export function SiteShell({ active, label, className = '', children, extra }: { 
 
 export function SiteHeader({ active, label, extra }: { active: string; label: string; extra?: ReactNode }) {
   const [tone] = useTone();
+  useToneSound(tone);
   return <header className="topbar site-header">
     <a className="brand" href="/"><h1>{toneTitle(tone)}</h1><span className="prototype-label">{label}</span></a>
     <ToneSwitch />
+    <SoundToggle tone={tone} />
     <SiteNav active={active} extra={extra} />
     <ToneFx tone={tone} />
   </header>;
