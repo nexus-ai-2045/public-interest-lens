@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const app = join(root, 'app');
 const inputs = {
+  ranking: join(app, 'public/distribution/ranking.json'),
   involvements: join(root, 'data/derived/allocation-v1/involvements.csv'),
   publish: join(root, 'data/derived/publish-v1-triage-v2/publish.csv'),
   loss: join(root, 'data/derived/loss-v1-triage-v2/loss.csv'),
@@ -36,7 +37,7 @@ try {
   const { buildMembers } = await server.ssrLoadModule('/src/members-build.ts');
   const text = Object.fromEntries(Object.entries(inputs).map(([k, p]) => [k, readFileSync(p, 'utf8')]));
   // 同じ観測を共有する本数は、公開ランキングに残った法律だけで数える（出典チェックで外した法律は数えない）。
-  const ranking = JSON.parse(readFileSync(join(app, 'public/distribution/ranking.json'), 'utf8'));
+  const ranking = JSON.parse(text.ranking);
   const certainty = Object.fromEntries(ranking.laws.map(l => [l.id, l.certainty]));
   const payload = buildMembers({ ...text, listed: ranking.laws.map(l => l.id), certainty });
   // 公開ランキングで確かさ高・中なのに、関わった議員の記録（提出・参議院の賛否）がまだ無く、ここに入っていない法律。

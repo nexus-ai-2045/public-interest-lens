@@ -29,7 +29,7 @@ it('配布している members.json は、いまの派生データから同じ�
   });
   // pending（配分にまだ入っていない法律の一覧）は公開ランキングから付けるので、計算の一致からは外し、下で別に確かめる。
   const { inputs, pending, ...published } = JSON.parse(read('app/public/distribution/members.json'));
-  expect(Object.keys(inputs).sort()).toEqual(['autoInvolvements', 'autoVotes', 'enacted', 'involvements', 'loss', 'ministries', 'opposing', 'orgStances', 'publish', 'resistance', 'taxLedger', 'voteParties', 'votes']);
+  expect(Object.keys(inputs).sort()).toEqual(['autoInvolvements', 'autoVotes', 'enacted', 'involvements', 'loss', 'ministries', 'opposing', 'orgStances', 'publish', 'ranking', 'resistance', 'taxLedger', 'voteParties', 'votes']);
   expect(published).toEqual(JSON.parse(JSON.stringify(built)));
   const ranking = JSON.parse(read('app/public/distribution/ranking.json'));
   const included = new Set(published.laws.map(l => l.id));

@@ -136,6 +136,55 @@ class RegisterLocalMaterialTests(unittest.TestCase):
 
 
 class RegisterOnceTests(unittest.TestCase):
+    def test_same_registration_restores_missing_or_corrupt_original_without_rewriting_observation(self) -> None:
+        for damaged in (None, b"damaged original"):
+            with self.subTest(damaged=damaged), tempfile.TemporaryDirectory() as tmp:
+                body = Path(tmp) / "input.pdf"
+                body.write_bytes(b"%PDF-original")
+                storage = Path(tmp) / "materials"
+                args = dict(input_path=body, source_url="https://example.go.jp/report.pdf", task_id="t",
+                            title="x", purpose="y", storage_root=storage, observed_at="2026-10-18T01:02:03Z")
+                material = register_once(**args)
+                folder = storage / "t" / material
+                record_before = (folder / "record.json").read_bytes()
+                original = folder / "original.pdf"
+                if damaged is None:
+                    original.unlink()
+                else:
+                    original.write_bytes(damaged)
+                self.assertEqual(register_once(**args), material)
+                self.assertEqual(original.read_bytes(), body.read_bytes())
+                self.assertEqual((folder / "record.json").read_bytes(), record_before)
+                if damaged is not None:
+                    self.assertIn(damaged, [p.read_bytes() for p in folder.glob("corrupt-*")])
+
+    def test_repair_refuses_symlinked_original_and_mismatched_record(self) -> None:
+        for invalid in ("symlink", "wrong_hash", "record_control_file"):
+            with self.subTest(invalid=invalid), tempfile.TemporaryDirectory() as tmp:
+                body = Path(tmp) / "input.pdf"
+                body.write_bytes(b"%PDF-original")
+                storage = Path(tmp) / "materials"
+                args = dict(input_path=body, source_url="https://example.go.jp/report.pdf", task_id="t",
+                            title="x", purpose="y", storage_root=storage, observed_at="2026-10-18T01:02:03Z")
+                material = register_once(**args)
+                folder = storage / "t" / material
+                outside = Path(tmp) / "outside.pdf"
+                outside.write_bytes(b"outside unchanged")
+                if invalid == "symlink":
+                    (folder / "original.pdf").unlink()
+                    (folder / "original.pdf").symlink_to(outside)
+                else:
+                    r = json.loads((folder / "record.json").read_text())
+                    if invalid == "wrong_hash":
+                        r["sha256"] = "0" * 64
+                    else:
+                        r["saved_filename"] = "record.json"
+                    (folder / "record.json").write_text(json.dumps(r))
+                with self.assertRaises(ValueError):
+                    register_once(**args)
+                self.assertEqual(outside.read_bytes(), b"outside unchanged")
+                self.assertEqual(body.read_bytes(), b"%PDF-original")
+
     def test_same_body_from_two_urls_keeps_each_source(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             body = Path(tmp) / "404.json"

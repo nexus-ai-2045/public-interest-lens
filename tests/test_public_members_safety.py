@@ -28,6 +28,7 @@ ALLOWED_PATHS = {
     ".counts.members",
     ".counts.zero",
     ".inputs",
+    ".inputs.ranking",
     ".inputs.enacted",
     ".inputs.involvements",
     ".inputs.loss",

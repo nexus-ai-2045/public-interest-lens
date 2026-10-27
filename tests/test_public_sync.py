@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "app" / "public" / "distribution"
 # scripts/build_public_members.mjs の inputs と同じ。
 MEMBER_INPUTS = {
+    "ranking": DIST / "ranking.json",
     "involvements": ROOT / "data/derived/allocation-v1/involvements.csv",
     "publish": ROOT / "data/derived/publish-v1-triage-v2/publish.csv",
     "loss": ROOT / "data/derived/loss-v1-triage-v2/loss.csv",

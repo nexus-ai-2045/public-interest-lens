@@ -11,8 +11,10 @@
 - parse：系統A（規則）で、寄附（法人その他の団体・政治団体から）、政治資金パーティーの対価の支払者、
   寄附・交付金の支出先を行にする。系統B（別の読み手）の結果は --line-b の JSON を読み、compare で突き合わせる。
 - compare：系統A と系統B が金額・相手方・区分で一致した行だけを relations.csv に採る。食い違いは .local の disagreements.csv（Git に入れない）。
-- link：報告団体を議員の人物ID（data/derived/person-ids/persons.csv）に結ぶ。一覧の「関係議員名」だけを根拠にし、
-  同姓同名で決まらないものは結ばない（person_ids の方針と同じ）。
+- roster：総務省の「現職国会議員の資金管理団体一覧」「国会議員関係政治団体一覧」（議員と団体の対応表、文字の PDF）を
+  表として読み、member-groups.csv にする。索引ページに関係議員名が無い団体は、この対応表で団体名から議員を引く。
+- link：報告団体を議員の人物ID（data/derived/person-ids/persons.csv）に結ぶ。索引の「関係議員名」（無ければ対応表）を
+  根拠にし、同姓同名で決まらないものは結ばない（person_ids の方針と同じ）。
 
 個人の寄附者・個人のパーティー券購入者は氏名・住所・職業を出力に残さない（「（個人）」と金額だけ）。
 支払先（支出・寄附の支出先）は個人でも報告書の公表どおりに名前を出す（住所は出さない、原本 PDF へのリンクつき）。
@@ -25,9 +27,11 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 import unicodedata
 import urllib.request
@@ -35,7 +39,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import quote, urljoin, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -51,6 +55,14 @@ SOURCES = ACQUIRED / "sources.csv"
 INDEX = ACQUIRED / "index.csv"
 MANIFEST = ACQUIRED / "manifest.csv"
 LAST_FETCH = ACQUIRED / "last-fetch.txt"
+MEMBER_GROUPS = ACQUIRED / "member-groups.csv"
+# 総務省「政治団体名簿」（なるほど!政治資金）の議員と団体の対応表。名簿が更新されたらここに足す
+ROSTERS = [
+    ("https://www.soumu.go.jp/main_content/000718006.pdf", "資金管理団体", "令和7年3月31日時点の現職国会議員"),
+    ("https://www.soumu.go.jp/main_content/000847595.pdf", "国会議員関係政治団体", "令和7年3月31日時点の現職国会議員"),
+    ("https://www.soumu.go.jp/main_content/001041290.pdf", "資金管理団体", "令和7年参議院議員通常選挙後の現職国会議員"),
+    ("https://www.soumu.go.jp/main_content/001041291.pdf", "国会議員関係政治団体", "令和7年参議院議員通常選挙後の現職国会議員"),
+]
 MONTHLY_DAYS = 28
 MONTHLY_MINUTES = 40
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
@@ -60,7 +72,8 @@ INDEX_HEADER = ["出典", "年分", "団体区分", "団体名", "関係議員�
 MANIFEST_HEADER = ["PDF_URL", "sha256", "bytes", "material_id", "取得日時", "状態"]
 TEXT_HEADER = ["sha256", "ページ数", "文字数", "状態"]
 ROW_HEADER = ["系統", "sha256", "PDF_URL", "年分", "報告団体", "区分", "費目", "相手方", "照合キー", "相手方種別", "金額", "年月日", "頁"]
-RELATION_HEADER = ["年分", "報告団体", "関係議員名", "人物ID", "帰属の照合", "区分", "費目", "相手方", "支払先キー", "相手方種別", "団体の種類", "金額", "年月日", "PDF_URL", "頁", "照合"]
+MEMBER_GROUP_HEADER = ["氏名", "届出上の氏名", "院", "選挙区", "届出先", "団体名", "区分", "種別", "名簿", "資料URL", "material_id"]
+RELATION_HEADER = ["年分", "報告団体", "関係議員名", "人物ID", "帰属の照合", "区分", "費目", "相手方", "支払先キー", "団体名キー", "相手方種別", "団体の種類", "金額", "年月日", "PDF_URL", "頁", "照合"]
 
 KINDS = ("受けた寄附", "パーティー対価", "出した寄附", "支出")
 # 支出の費目（報告書の様式の区分）。経常経費4つと政治活動費の内訳。
@@ -286,51 +299,175 @@ def merge_index(old: list[dict[str, str]], new: list[dict[str, str]]) -> list[di
 
 # ---------- download ----------
 
+KEEP_CHOICES = ("all",)
+MIN_FREE_BYTES = 5 * 1024 ** 3  # 空きがこれを切ったら、原本を保管すべき取得は失敗にして止める
+
+
+def _free_bytes(path: Path) -> int:
+    import shutil
+
+    path.mkdir(parents=True, exist_ok=True)
+    return shutil.disk_usage(path).free
+
+
+def registered_download(row: dict[str, str], storage: Path) -> bool:
+    """登録IDの自己申告ではなく、既存の汎用検証器で原本と来歴を読み戻す。"""
+    from scripts.fetch_diet_minutes import _verified_material
+
+    material = row.get("material_id", "")
+    if not material or Path(material).name != material:
+        return False
+    try:
+        _verified_material(
+            storage / TASK_ID / material / "record.json",
+            roots=(storage / TASK_ID,), url=row["PDF_URL"],
+            digest=row["sha256"], expected_bytes=int(row["bytes"]),
+        )
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+    return True
+
+
 def download(index: list[dict[str, str]], manifest: list[dict[str, str]], storage: Path = MATERIALS,
              wait: float = 1.0, limit: int | None = None, get_bytes=None, minutes: float | None = None,
-             save=None, save_every: int = 20) -> list[dict[str, str]]:
+             save=None, save_every: int = 20, keep: str = "all", text_dir: Path | None = None,
+             workers: int = 1, free_bytes=None) -> list[dict[str, str]]:
     """未取得の PDF だけを落として保管庫に登録する。失敗は「状態」に残し、次回にまた試す。
-    minutes を過ぎたら残りは次回に回す（自動更新を長引かせない。1回目の全件取得は時間を決めずに別に回す）。"""
-    started = time.monotonic()
+    minutes を過ぎたら残りは次回に回す（自動更新を長引かせない。1回目の全件取得は時間を決めずに別に回す）。
+    keep は all のみ。原本登録を省略する保持例外は未採用のため、他の値は通信・書込み前に拒否する。
+    空きが MIN_FREE_BYTES を切ったら「失敗」にして取得をやめる。登録前の作業原本と来歴は残し、次回に再試行する。
+    workers が2以上なら、ホストごとに並べて別々のホストを同時に取る（同じホストへは1本ずつ、wait 秒あける）。"""
+    import threading
+    from collections import defaultdict
+
     from scripts.register_external_material import register_once
 
-    done = {m["PDF_URL"] for m in manifest if m.get("状態") == "取得済み"}
+    if keep not in KEEP_CHOICES:
+        raise ValueError(f"keep は {KEEP_CHOICES} のどれか")
+    started = time.monotonic()
     get_bytes = get_bytes or _get_bytes
-    out = [m for m in manifest if m.get("状態") == "取得済み"]
+    free_bytes = free_bytes or _free_bytes
+    previous = {m["PDF_URL"]: dict(m) for m in manifest if m.get("PDF_URL")}
+    done = {url for url, m in previous.items()
+            if m.get("状態") == "取得済み" and registered_download(m, storage)}
+    for url, m in previous.items():
+        if m.get("状態") == "取得済み" and url not in done:
+            m["状態"] = "失敗：登録原本を確認できないため再試行が必要"
+    out = list(previous.values())
+    positions = {m["PDF_URL"]: i for i, m in enumerate(out)}
     tmp = WORK / "download"
     tmp.mkdir(parents=True, exist_ok=True)
-    count = 0
+    if text_dir is not None:
+        text_dir.mkdir(parents=True, exist_ok=True)
+    lock = threading.Lock()
+    state = {"count": 0, "stop": False}
     # まだ試していない PDF を先に、前回失敗したものを後に回す（先頭の失敗だけで時間枠を使い切らないように）
     failed_before = {m["PDF_URL"] for m in manifest if m.get("状態", "").startswith("失敗")}
-    ordered = sorted(index, key=lambda r: r.get("PDF_URL", "") in failed_before)
+    ordered = sorted((r for r in index if r.get("PDF_URL") and r["PDF_URL"] not in done),
+                     key=lambda r: r["PDF_URL"] in failed_before)
+    seen_urls: set[str] = set()
+    queues: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in ordered:
-        url = row.get("PDF_URL", "")
-        if not url or url in done:
-            continue
-        if (limit is not None and count >= limit) or (minutes is not None and time.monotonic() - started > minutes * 60):
-            break
-        count += 1
-        if save and count % save_every == 0:
-            save(out)  # 途中で打ち切られても、そこまでの取得の記録が残るように
-        observed = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+        if row["PDF_URL"] not in seen_urls:
+            seen_urls.add(row["PDF_URL"])
+            queues[urlsplit(row["PDF_URL"]).netloc if workers > 1 else ""].append(row)
+
+    def take() -> bool:
+        with lock:
+            if state["stop"] or (limit is not None and state["count"] >= limit) or \
+                    (minutes is not None and time.monotonic() - started > minutes * 60):
+                state["stop"] = True
+                return False
+            state["count"] += 1
+            if save and state["count"] % save_every == 0:
+                save(list(out))  # 途中で打ち切られても、そこまでの取得の記録が残るように
+            return True
+
+    def fetch_one(row: dict[str, str]) -> dict[str, str]:
+        url = row["PDF_URL"]
+        old = previous.get(url, {})
+        observed = old.get("取得日時", "")
+        path = None
+        registered = False
+        digest, size = old.get("sha256", ""), old.get("bytes", "")
+
+        def require_space() -> None:
+            if free_bytes(storage) <= MIN_FREE_BYTES:
+                with lock:
+                    state["stop"] = True
+                raise OSError(f"保管庫の空きが{MIN_FREE_BYTES // 1024 ** 3}GiB以下で原本を保管できない")
+
         try:
-            body = get_bytes(url)
-            digest = hashlib.sha256(body).hexdigest()
-            path = tmp / f"{digest}.pdf"
-            path.write_bytes(body)
+            require_space()
+            pending_sha = old.get("sha256", "")
+            url_key = hashlib.sha256(url.encode("utf-8")).hexdigest()[:12]
+            if re.fullmatch(r"[0-9a-f]{64}", pending_sha) and old.get("取得日時"):
+                for candidate in sorted(tmp.glob(f"{pending_sha}-{url_key}-*.pdf")):
+                    if candidate.is_symlink() or not candidate.is_file():
+                        continue
+                    payload = candidate.read_bytes()
+                    if (str(len(payload)) == old.get("bytes")
+                            and hashlib.sha256(payload).hexdigest() == pending_sha):
+                        path, body, observed = candidate, payload, old["取得日時"]
+                        break
+            if path is None:
+                body = get_bytes(url)
+                observed = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+                digest, size = hashlib.sha256(body).hexdigest(), str(len(body))
+                # 同じ原本を別ホストから同時取得しても、登録完了前の作業copyを共有しない。
+                handle, name = tempfile.mkstemp(prefix=f"{digest}-{url_key}-", suffix=".pdf", dir=tmp)
+                os.close(handle)
+                path = Path(name)
+                path.write_bytes(body)
+            digest, size = hashlib.sha256(body).hexdigest(), str(len(body))
+            require_space()
             material = register_once(input_path=path, source_url=url, task_id=TASK_ID,
                                      title=f"政治資金収支報告書 {row.get('年分', '')} {row.get('団体名', '')}".strip(),
                                      purpose="議員・党と団体の関係を一次資料で記録する", storage_root=storage, observed_at=observed)
-            out.append({"PDF_URL": url, "sha256": digest, "bytes": str(len(body)), "material_id": material, "取得日時": observed, "状態": "取得済み"})
-            done.add(url)
+            result = {"PDF_URL": url, "sha256": digest, "bytes": size,
+                      "material_id": material, "取得日時": observed, "状態": "取得済み"}
+            if not registered_download(result, storage):
+                raise OSError("登録原本の読み戻し検証に失敗")
+            registered = True
+            return result
         except Exception as error:
-            out.append({"PDF_URL": url, "sha256": "", "bytes": "", "material_id": "", "取得日時": observed, "状態": f"失敗：{str(error)[:120]}"})
-        if wait:
-            time.sleep(wait)
+            return {"PDF_URL": url, "sha256": digest, "bytes": size, "material_id": "", "取得日時": observed, "状態": f"失敗：{str(error)[:120]}"}
+        finally:
+            if path is not None and registered:
+                path.unlink(missing_ok=True)
+
+    def run(rows: list[dict[str, str]]) -> None:
+        for row in rows:
+            if not take():
+                return
+            record = fetch_one(row)
+            with lock:
+                if record["PDF_URL"] in positions:
+                    out[positions[record["PDF_URL"]]] = record
+                else:
+                    positions[record["PDF_URL"]] = len(out)
+                    out.append(record)
+            if wait:
+                time.sleep(wait)
+
+    if workers <= 1:
+        for rows in queues.values():
+            run(rows)
+    else:
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            list(pool.map(run, sorted(queues.values(), key=len, reverse=True)))
     return out
 
 
+def safe_url(url: str) -> str:
+    """索引の href に混じる空白などをパーセント符号にする（urllib は制御文字・空白入りの URL を開けない）。"""
+    return quote(url.strip(), safe=":/?&=%#~+,;@!$'()*[]")
+
+
 def _get_bytes(url: str) -> bytes:
+    url = safe_url(url)
     last = None
     for attempt in range(3):
         try:
@@ -407,6 +544,89 @@ def extract(manifest: list[dict[str, str]], text_dir: Path, ocr_dir: Path | None
     return rows
 
 
+# ---------- pages：画像 PDF の頁を様式で振り分ける ----------
+
+# 収支報告書の様式の番号（各頁の左上の「（その○）」）。中身は手書き・印字の画像なので、OCR では本文は読めないが、
+# 印刷された様式番号は読める。AI に読ませるのは、表紙（帰属の判定）と寄附・パーティー・支出の内訳の頁だけにする（pages_to_read）。
+#   その1＝表紙、その2＝収支総括表、その3〜6＝収入の内訳、その7＝寄附の内訳、その8〜12＝あっせん・パーティー等、
+#   その13＝支出の総括表、その14＝経常経費の内訳、その15＝政治活動費の内訳（寄附・交付金を含む）、その16＝同、その17〜＝資産等
+FORM_MARK = re.compile(r"その\s*([0-9０-９]{1,2})")
+PAGE_HEADER = ["sha256", "頁", "様式"]
+
+
+def page_forms(path: Path, run=subprocess.run) -> list[str]:
+    """頁ごとの様式番号（読めない頁は空）。左上だけを 150dpi で描いて tesseract に読ませる（1頁0.3秒ほど）。"""
+    def ok(done):
+        # 描画・OCR が異常終了したら例外にして、classify_pages が済みにせず次回に試し直すようにする
+        if done.returncode != 0:
+            raise subprocess.SubprocessError(f"{done.args[0]} が終了コード {done.returncode} で止まった")
+        return done.stdout
+
+    info = ok(run(["pdfinfo", str(path)], capture_output=True, text=True, timeout=60))
+    pages = int(next((l.split()[-1] for l in info.splitlines() if l.startswith("Pages:")), "0"))
+    forms = []
+    for page in range(1, pages + 1):
+        image = ok(run(["pdftoppm", "-f", str(page), "-l", str(page), "-r", "150", "-gray", "-x", "0", "-y", "0",
+                     "-W", "700", "-H", "230", "-png", str(path)], capture_output=True, timeout=120))
+        text = ok(run(["tesseract", "stdin", "stdout", "-l", "jpn", "--psm", "6"], input=image, capture_output=True,
+                      timeout=120, env={**os.environ, "OMP_THREAD_LIMIT": "1"})).decode("utf-8", "replace")
+        flat = re.sub(r"\s+", "", text)
+        mark = FORM_MARK.search(flat)
+        # 別紙（欄に入りきらなかった名前などの一覧。「*1」の本当の名前が載る）と監査報告書は様式番号が無いので、見出しの語で見分ける
+        forms.append(nfkc(mark.group(1)) if mark else "別紙" if "別紙" in flat else "監査" if "監査" in flat else "")
+    # 表紙は様式番号が別の位置にあって読めないことが多い。1頁目が空なら表紙とみなす。
+    # 途中の読めない頁は、直前の頁の続き（同じ様式の2頁目以降）とみなす
+    if forms and not forms[0]:
+        forms[0] = "1"
+    for i in range(1, len(forms)):
+        forms[i] = forms[i] or forms[i - 1]
+    return forms
+
+
+def pages_to_read(forms: list[str]) -> list[int]:
+    """AI に読ませる頁（1始まり）。表紙と、最初の寄附・支出等の内訳（その7〜16）から資産等（その17〜）の手前まで、それと末尾の別紙。
+    様式番号の読み違い（14 を 13 と読むなど）で内訳の頁を落とさないよう、番号ごとではなく範囲で選ぶ。"""
+    numbers = [int(f) if f.isdigit() else 0 for f in forms]
+    start = next((i for i, n in enumerate(numbers) if 7 <= n <= 16), None)
+    picked = [1] if forms else []
+    if start is None:
+        return picked
+    # 終わりは「最後の内訳の頁の次」。途中の頁の番号を 17 以上と読み違えても（14 を 19 と読むなど）、後ろの内訳を落とさない
+    end = max(i for i, n in enumerate(numbers) if 7 <= n <= 16) + 1
+    # 別紙は報告書の末尾にある。明細の「*1」などの本当の名前を引くために読む
+    notes = [i + 1 for i in range(end, len(forms)) if forms[i] == "別紙"]
+    return picked + [i + 1 for i in range(start, end) if i > 0] + notes
+
+
+def classify_pages(manifest: list[dict[str, str]], done: list[dict[str, str]], storage: Path = MATERIALS,
+                   only: set[str] | None = None, workers: int = 4, run=subprocess.run) -> list[dict[str, str]]:
+    """原本のある PDF の頁を様式で振り分ける。済んだ sha256 は飛ばす。only を渡すとその PDF_URL だけ。"""
+    from concurrent.futures import ThreadPoolExecutor
+
+    seen = {r["sha256"] for r in done}
+    targets = []
+    for m in manifest:
+        sha = m.get("sha256", "")
+        if m.get("状態") == "取得済み" and sha and sha not in seen and (only is None or m["PDF_URL"] in only):
+            seen.add(sha)
+            path = material_path(sha, manifest, storage)
+            if path is not None:
+                targets.append((sha, path))
+
+    def one(item):
+        sha, path = item
+        try:
+            return [{"sha256": sha, "頁": str(i), "様式": form} for i, form in enumerate(page_forms(path, run), 1)]
+        except (subprocess.SubprocessError, OSError, ValueError):
+            return []  # 次回に試し直す
+
+    out = list(done)
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+        for rows in pool.map(one, targets):
+            out += rows
+    return out
+
+
 # ---------- parse（系統A：規則） ----------
 
 AMOUNT = re.compile(r"(?<![\d,])(\d{1,3}(?:,\d{3})+|\d{4,})(?![\d,])")
@@ -424,6 +644,7 @@ SECTIONS = [
 SECTION_END = re.compile(r"^\s*(?:\(?\d+\)?|[０-９]+|[一二三四五六七八九十]+)\s*[.．、 ]\s*\S|^\s*(?:本年|前年|翌年|合\s*計|小\s*計|その他の収入|事業による収入|借入金|資産等)")
 CORP_WORDS = ("株式会社", "有限会社", "合同会社", "(株)", "(有)", "協会", "連合会", "組合", "法人", "会社", "銀行", "工業会", "協議会", "連盟", "政治連盟", "支部", "党",
               "後援会", "の会", "研究会", "懇話会", "協同組合", "事務所", "商店", "商会", "センター")
+LEGAL_ENTITY_WORDS = ("株式会社", "有限会社", "合同会社", "合資会社", "合名会社", "(株)", "(有)", "法人")
 # 「会」だけでは判定しない（会田・会沢のような姓を団体と取り違え、個人の公表期限の扱いが外れるため）
 
 
@@ -493,26 +714,45 @@ def parse_lines(text: str, meta: dict[str, str]) -> list[dict[str, str]]:
 
 def private_key(name: str) -> str:
     """伏せた個人を照合するための鍵（名前そのものは残さない）。照合用の行は .local にだけ置く。"""
-    return "個人#" + hashlib.sha256(re.sub(r"\s", "", nfkc(name)).encode("utf-8")).hexdigest()[:16]
+    # 系統A（規則）と AI の読み手で同じ鍵になるよう、reader_name と同じ正規化（異体字の寄せ）をしてから作る
+    return "個人#" + hashlib.sha256(re.sub(r"\s", "", reader_name(name)).encode("utf-8")).hexdigest()[:16]
 
 
 def _key(row: dict[str, str]) -> tuple:
     # 伏せた個人は表示名「（個人）」ではなく照合キーで突き合わせる（別人を一致にしないため）
-    name = row.get("照合キー") or re.sub(r"\s", "", nfkc(row.get("相手方", "")))
+    name = row.get("照合キー") or re.sub(r"\s", "", reader_name(row.get("相手方", "")))
     # 相手方種別も合わせる（個人か団体かで、名前の伏せ方と公表期限の扱いが変わるため）。頁も合わせ、別の明細の対応付けを防ぐ。
     return (row.get("sha256"), row.get("区分"), row.get("費目", ""), row.get("相手方種別", ""), name, row.get("金額"), row.get("年月日"), row.get("頁", ""))
+
+
+DONOR_KINDS = {"個人", "法人その他の団体", "政治団体"}
+
+
+def adoptable(row: dict[str, str]) -> bool:
+    """採ってよい行か。費目が入力不備、金額が無い、日付欄のある明細で年月日が無い、相手方種別が無い・無効な行は、
+    両系統が同じように欠けていても採らない（空どうしの一致で不完全な行や、伏せるべき個人名が入るのを防ぐ）。"""
+    if row.get("費目", "").startswith("入力不備"):
+        return False
+    if not str(row.get("金額", "")).isdigit() or int(row["金額"]) <= 0:
+        return False
+    if not str(row.get("頁", "")).isdigit():
+        return False  # 根拠の頁が無い行は、別の頁の明細と取り違えるおそれがあり、出典も残らない
+    if row.get("区分") != "パーティー対価" and not row.get("年月日"):
+        return False
+    return row.get("相手方種別") in DONOR_KINDS
 
 
 def compare(line_a: list[dict[str, str]], line_b: list[dict[str, str]]) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
     """系統A と系統B で、区分・相手方・金額・年月日がそろった行だけを採る。片方だけの行は食い違いに出す。"""
     from collections import Counter
 
-    a, b = Counter(_key(r) for r in line_a), Counter(_key(r) for r in line_b)
+    usable = adoptable
+    a, b = Counter(_key(r) for r in line_a if usable(r)), Counter(_key(r) for r in line_b if usable(r))
     agreed, disagreed = [], []
     used = Counter()
     for row in line_a:
         k = _key(row)
-        if used[k] < min(a[k], b[k]):
+        if usable(row) and used[k] < min(a[k], b[k]):
             used[k] += 1
             agreed.append({**row, "照合": "A・B一致"})
         else:
@@ -520,10 +760,35 @@ def compare(line_a: list[dict[str, str]], line_b: list[dict[str, str]]) -> tuple
     left = b - a
     for row in line_b:
         k = _key(row)
-        if left[k] > 0:
+        if not usable(row) or left[k] > 0:
             left[k] -= 1
             disagreed.append({**row, "照合": "Bだけ"})
     return agreed, disagreed
+
+
+def tie_break(agreed: list[dict[str, str]], disagreed: list[dict[str, str]],
+              line_c: list[dict[str, str]]) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+    """A・Bが食い違った行を、その頁だけを読んだ3つ目の読み手（C）で決める。C が A か B の片方と
+    区分・相手方・金額・年月日まで一致した行だけを採る（独立した2つの読みの一致という基準は変えない）。
+    C は食い違いのあった頁だけを読むので、その頁の C の行だけを使う。"""
+    from collections import Counter
+
+    pages = {(r.get("sha256"), r.get("頁")) for r in disagreed}
+    left = Counter(_key(r) for r in line_c if (r.get("sha256"), r.get("頁")) in pages and adoptable(r))
+    # C は食い違った頁全体を読むので、A・Bですでに採った同じ明細の分は C の件数から差し引く
+    left = left - Counter(_key(r) for r in agreed)
+    out_agreed, out_disagreed = list(agreed), []
+    taken: Counter = Counter()
+    for row in disagreed:
+        k = _key(row)
+        # 同じ行が複数あっても、C の行数までしか採らない
+        if adoptable(row) and taken[k] < left[k]:
+            taken[k] += 1
+            side = "A" if row.get("照合") == "Aだけ" else "B"
+            out_agreed.append({**row, "照合": f"{side}・C一致"})
+        else:
+            out_disagreed.append(row)
+    return out_agreed, out_disagreed
 
 
 def _line_b_items(data) -> list[dict]:
@@ -543,28 +808,68 @@ def line_b_attribution(directory: Path) -> dict[str, str]:
     return out
 
 
-def load_line_b(directory: Path, meta_by_sha: dict[str, dict[str, str]]) -> list[dict[str, str]]:
+NAME_FOLDS = str.maketrans({"壯": "壮", "濱": "浜", "髙": "高", "﨑": "崎", "德": "徳", "濵": "浜", "邊": "辺", "邉": "辺", "齋": "斎", "齊": "斉"})
+
+
+def reader_name(name: str) -> str:
+    """AI の読み手が写した名前の表記をそろえる（NFKC で ㈱→(株)、異体字を通用字に、空白を1つに）。"""
+    return re.sub(r"\s+", " ", nfkc(name).translate(NAME_FOLDS)).strip()
+
+
+def fold_name(name: str) -> str:
+    """人名の異体字を通用字に寄せる（人物IDとの照合用）。"""
+    return nfkc(name or "").translate(NAME_FOLDS)
+
+
+def manifest_meta(manifest: list[dict[str, str]], index: list[dict[str, str]], storage: Path = MATERIALS) -> dict[str, dict[str, str]]:
+    """sha256 ごとの出典（PDF_URL・年分・報告団体）。読み手が行を出したかどうかに関係なく、原簿から決める。"""
+    index_by_url = {r["PDF_URL"]: r for r in index}
+    out = {}
+    for m in manifest:
+        if (m.get("状態") == "取得済み" and m.get("sha256") and m["sha256"] not in out
+                and registered_download(m, storage)):
+            i = index_by_url.get(m["PDF_URL"], {})
+            out[m["sha256"]] = {"sha256": m["sha256"], "PDF_URL": m["PDF_URL"], "年分": i.get("年分", ""), "報告団体": i.get("団体名", "")}
+    return out
+
+
+def rows_for_verified_reports(rows: list[dict[str, str]], meta: dict[str, dict[str, str]]) -> list[dict[str, str]]:
+    """保存済みの読み手・一致行も、現在読み戻せた原本と出典へ再束縛する。"""
+    return [{**row, **meta[row["sha256"]]} for row in rows if row.get("sha256") in meta]
+
+
+def load_line_b(directory: Path, meta_by_sha: dict[str, dict[str, str]], line: str = "B") -> list[dict[str, str]]:
     """系統B（別の読み手）の結果。<sha256>.json に {"関係議員名", "根拠", "行": [{区分,費目,相手方,相手方種別,金額,年月日,頁}]}
     （古い形の、行の配列だけでもよい。そのときは議員への帰属が未確認になる）。
     区分は KINDS のどれか。費目は区分が「支出」なら EXPENSE_ITEMS のどれか（必須）、「出した寄附」なら「寄附・交付金」（省略可）、
-    寄附・パーティー対価なら空。支出で費目が無い・違う行は「入力不備」として一致させない。"""
+    寄附・パーティー対価なら空。支出で費目が無い・違う行は「入力不備」として一致させない。
+    画像 PDF の系統A（Bとは別の AI の読み手）も同じ形なので、line="A" で読む。"""
     rows = []
     if not directory or not directory.is_dir():
         return rows
     for path in sorted(directory.glob("*.json")):
         sha = path.stem
         for item in _line_b_items(json.loads(path.read_text(encoding="utf-8"))):
+            # 読み手ごとの表記のゆれ（㈱と(株)、髙と高など）をそろえてから突き合わせる
+            item = {**item, "相手方": reader_name(item.get("相手方", ""))}
             kind = item.get("相手方種別", "")
-            hidden = kind == "個人" and item.get("区分") in PRIVATE_KINDS
+            if not isinstance(kind, str) or kind not in DONOR_KINDS:
+                # 未入力・無効値を名前から補って、独立した読み手の一致を作らない。
+                kind = "入力不備：相手方種別"
+            day = str(item.get("年月日", ""))
+            era = DATE.search(nfkc(day))
+            if era:
+                day = wareki(era)  # 「R6/7/1」「令和6年7月1日」のままでも系統Aと同じ形に直す
+            hidden = kind not in (DONOR_KINDS - {"個人"}) and item.get("区分") in PRIVATE_KINDS
             expense = item.get("費目", "")
             if item.get("区分") == "出した寄附" and not expense:
                 expense = "寄附・交付金"
             elif item.get("区分") == "支出" and expense not in EXPENSE_ITEMS:
                 expense = f"入力不備：費目「{expense}」"  # 一致させずに食い違いへ回す
             name = INDIVIDUAL if hidden else item.get("相手方", "")
-            rows.append({**meta_by_sha.get(sha, {"sha256": sha}), "系統": "B", "区分": item.get("区分", ""), "費目": expense, "相手方": name,
+            rows.append({**meta_by_sha.get(sha, {"sha256": sha}), "系統": line, "区分": item.get("区分", ""), "費目": expense, "相手方": name,
                          "照合キー": private_key(item.get("相手方", "")) if hidden else "",
-                         "相手方種別": kind, "金額": str(item.get("金額", "")).replace(",", ""), "年月日": item.get("年月日", ""), "頁": str(item.get("頁", ""))})
+                         "相手方種別": kind, "金額": str(item.get("金額", "")).replace(",", ""), "年月日": day, "頁": str(item.get("頁", ""))})
     return rows
 
 
@@ -624,38 +929,168 @@ def person_index(persons: list[dict[str, str]]) -> dict[str, list[str]]:
     by_name: dict[str, list[str]] = {}
     for p in persons:
         if p.get("人物ID"):
-            by_name.setdefault(canonical(p["氏名"]), []).append(p["人物ID"])
+            for name in {p["氏名"], *filter(None, re.split(r"[|;、,／/]", p.get("別表記", "")))}:
+                ids = by_name.setdefault(canonical(fold_name(name)), [])
+                if p["人物ID"] not in ids:
+                    ids.append(p["人物ID"])
     return by_name
 
 
-def attribution_check(member: str, line_b_member: str | None) -> str:
-    """議員への帰属（系統A＝索引の関係議員名、系統B＝別の読み手の判定）の照合。「A・B一致」のときだけ人物IDを付ける。"""
+# ---------- 議員と団体の対応表（総務省の政治団体名簿） ----------
+
+def _cell(value) -> str:
+    return re.sub(r"\s+", " ", (value or "").replace("\n", "")).strip()
+
+
+PARTS = ("", "１", "２", "１・２")
+
+
+def parse_roster(path: Path, kind: str, roster: str, url: str = "", material_id: str = "") -> list[dict[str, str]]:
+    """名簿 PDF の表（氏名・衆参・選挙区・総務大臣届出の団体名と区分・都道府県選管届出の届出先と団体名と区分）を行にする。
+    1人の議員の2行目以降は氏名欄が空なので、直前の議員を引き継ぐ（ページをまたいでも同じ）。"""
+    import pdfplumber
+
+    out, current = [], None
+    with pdfplumber.open(path) as pdf:
+        for page in pdf.pages:
+            for table in page.extract_tables():
+                for row in table:
+                    cells = [_cell(c) for c in row] + [""] * 8
+                    name = (row[0] or "").strip()
+                    if name.startswith(("氏名", "【")) or cells[3] == "団体名" or cells[6] == "団体名":
+                        continue
+                    if name:
+                        lines = [l.strip() for l in name.split("\n") if l.strip()]
+                        alias = re.sub(r"^[（(]|[）)]$", "", lines[1]) if len(lines) > 1 else ""
+                        current = {"氏名": lines[0], "届出上の氏名": alias, "院": cells[1], "選挙区": cells[2]}
+                    if not current:
+                        continue
+                    common = {**current, "種別": kind, "名簿": roster, "資料URL": url, "material_id": material_id}
+                    # 資金管理団体の名簿は区分欄が無い（氏名・衆参・選挙区・団体名・届出先選管・団体名）
+                    if kind == "資金管理団体" and len(row) < 8:
+                        pairs = [("総務大臣", cells[3], ""), (cells[4], cells[5], "")]
+                    else:
+                        pairs = [("総務大臣", cells[3], cells[4]), (cells[5], cells[6], cells[7])]
+                    for office, group, part in pairs:
+                        # 長い団体名がはみ出して区分欄に入ることがある（「…（慶歯」「会）２」）。区分の数字だけを残して名前に戻す
+                        spill = re.fullmatch(r"(.*?)(１・２|１|２)(.*)", part) if part not in PARTS else None
+                        if spill:
+                            group, part = group + spill.group(1) + spill.group(3), spill.group(2)
+                        if group:
+                            out.append({**common, "届出先": office, "団体名": group, "区分": part})
+    return out
+
+
+def roster_rows(get_bytes=None, storage: Path = MATERIALS) -> list[dict[str, str]]:
+    """ROSTERS の名簿 PDF を落として保管庫に登録し、表を読む。"""
+    from scripts.register_external_material import register_once
+
+    get_bytes = get_bytes or _get_bytes
+    tmp = WORK / "rosters"
+    tmp.mkdir(parents=True, exist_ok=True)
+    out = []
+    for url, kind, roster in ROSTERS:
+        body = get_bytes(url)
+        path = tmp / f"{hashlib.sha256(body).hexdigest()}.pdf"
+        path.write_bytes(body)
+        observed = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+        material = register_once(input_path=path, source_url=url, task_id=TASK_ID, title=f"現職国会議員の{kind}一覧（{roster}）",
+                                 purpose="報告団体と議員の対応（関係議員名）の根拠を残す", storage_root=storage, observed_at=observed)
+        out += parse_roster(path, kind, roster, url, material)
+    return out
+
+
+def group_key(name: str) -> str:
+    """団体名の照合キー。かっこ書き（代表者名・略称）と空白・異体字セレクタを落とす（索引と名簿で代表者名の字が違うことがある）。"""
+    text = re.sub(r"[\ufe00-\ufe0f\U000e0100-\U000e01ef]", "", nfkc(name))
+    text = re.sub(r"\([^()]*\)", "", text)
+    return re.sub(r"\s+", "", text)
+
+
+def roster_lookup(members: list[dict[str, str]]) -> dict[tuple[str, str], dict[str, str]]:
+    """(届出先, 団体名の照合キー) → 議員の氏名の集合。総務省の索引は届出先「総務大臣」、県の索引は県名で引く。"""
     from scripts.person_ids import canonical
 
+    # 名簿によって氏名の書き方（空白・ひらがな・異体字）が違うので、氏名と届出上の氏名でつながる人は1人にまとめる
+    parent: dict[str, str] = {}
+
+    def root(name: str) -> str:
+        while parent.setdefault(name, name) != name:
+            name = parent[name]
+        return name
+
+    for m in members:
+        if m.get("届出上の氏名"):
+            parent[root(canonical(m["届出上の氏名"]))] = root(canonical(m["氏名"]))
+    out: dict[tuple[str, str], dict[str, str]] = {}
+    for m in members:
+        out.setdefault((m["届出先"], group_key(m["団体名"])), {}).setdefault(root(canonical(m["氏名"])), m["氏名"])
+    return out
+
+
+def member_of(meta: dict[str, str], lookup: dict[tuple[str, str], dict[str, str]]) -> str:
+    """索引の関係議員名。無ければ対応表で団体名から引き、議員が1人に決まるときだけ返す。"""
+    if meta.get("関係議員名"):
+        return meta["関係議員名"]
+    source = meta.get("出典", "")
+    office = "総務大臣" if source.startswith("総務省") or "WARP" in source else source
+    names = lookup.get((office, group_key(meta.get("団体名", ""))), {})
+    return next(iter(names.values())) if len(names) == 1 else ""
+
+
+def attribution_check(member: str, line_b_member: str | None, line_a_member: str | None = None) -> str:
+    """2系統の読み手の一致を必須とし、索引に議員名があればそれとも照合する。
+    互換ラベル「A・B一致」は索引と両読み手の一致、「読み手A・B一致」は索引の議員名が無い場合。
+    読み手の不一致・未回答は、索引と片方が合っても採用しない（AGENTS.md）。"""
     if not member:
+        if (line_a_member and line_a_member.strip()
+                and line_b_member and line_b_member.strip()
+                and same_name(line_a_member, line_b_member)):
+            return "読み手A・B一致"
         return "関係議員名なし"
-    if line_b_member is None:
+    if not line_b_member or not line_b_member.strip():
         return "系統Bの判定なし"
-    if canonical(member) != canonical(line_b_member):
-        return f"食い違い：B「{line_b_member}」"
-    return "A・B一致"
+    if not line_a_member or not line_a_member.strip():
+        return "系統Aの判定なし"
+    if not same_name(line_a_member, line_b_member):
+        return "食い違い：読み手A・B"
+    if same_name(member, line_b_member):
+        return "A・B一致"
+    return f"食い違い：B「{line_b_member}」"
+
+
+LINKED_CHECKS = {"A・B一致", "読み手A・B一致"}
+
+
+def same_name(a: str, b: str) -> bool:
+    """同じ氏名か（人物IDの正規化に、報告書でよく出る異体字の寄せを足して比べる）。"""
+    from scripts.person_ids import canonical
+
+    return bool(a) and canonical(fold_name(a)) == canonical(fold_name(b))
 
 
 def link(rows: list[dict[str, str]], index_by_url: dict[str, dict[str, str]], persons: list[dict[str, str]],
-         attribution: dict[str, str] | None = None) -> list[dict[str, str]]:
-    """報告団体の関係議員名を人物IDに結ぶ。帰属が系統A・Bで一致し、候補が1人のときだけ結ぶ。
+         attribution: dict[str, str] | None = None, members: list[dict[str, str]] | None = None,
+         cover_a: dict[str, str] | None = None) -> list[dict[str, str]]:
+    """報告団体の関係議員名を人物IDに結ぶ。2系統の読み手が一致し、索引があればそれとも一致し、候補が1人のときだけ結ぶ。
     一致しない・判定が無い・候補が0人か2人以上のものは空のまま（算入外、「帰属の照合」に理由）。"""
+    from scripts.org_names import org_key
     from scripts.person_ids import canonical
 
     by_name = person_index(persons)
     attribution = attribution or {}
+    lookup = roster_lookup(members or [])
     out = []
     for row in rows:
         meta = index_by_url.get(row.get("PDF_URL", ""), {})
-        member = meta.get("関係議員名", "")
-        check = attribution_check(member, attribution.get(row.get("sha256", "")))
-        ids = by_name.get(canonical(member), []) if check == "A・B一致" else []
-        out.append({**row, "相手方": public_name(row), "支払先キー": payee_key(row), "報告団体": row.get("報告団体") or meta.get("団体名", ""), "関係議員名": member,
+        member = member_of(meta, lookup)
+        sha = row.get("sha256", "")
+        check = attribution_check(member, attribution.get(sha), (cover_a or {}).get(sha))
+        if check == "読み手A・B一致":
+            member = attribution[sha]
+        ids = by_name.get(canonical(fold_name(member)), []) if check in LINKED_CHECKS else []
+        out.append({**row, "相手方": public_name(row), "支払先キー": payee_key(row),
+                    "団体名キー": "" if row.get("相手方種別") == "個人" else org_key(row.get("相手方", "")), "報告団体": row.get("報告団体") or meta.get("団体名", ""), "関係議員名": member,
                     "人物ID": ids[0] if len(ids) == 1 else "", "帰属の照合": check,
                     "団体の種類": org_type(row.get("相手方", ""), row.get("相手方種別", ""))})
     return out
@@ -699,7 +1134,8 @@ def spending_by_member(relations: list[dict[str, str]], top: int = 20) -> dict:
         if not payee[3] or not label.startswith(INDIVIDUAL):  # 実名の年があれば実名を表示名にする
             payee[3] = label
         # 偏りも支払先キーでまとめる。キーの無い行（寄附者側で伏せたもの）は入れない。
-        if key:
+        # 出した寄附（自分の後援会・党支部への資金移動が大半）は支払いの偏りではないので入れない。
+        if key and row["区分"] == "支出":
             # 同じ人の公表期間内（実名）と期間後（伏せた名前）の年分を1つに数える。表示名は実名があれば実名。
             cell = spread[pid][key]
             cell[0] += amount
@@ -720,8 +1156,8 @@ def spending_by_member(relations: list[dict[str, str]], top: int = 20) -> dict:
 FLAG_MIN_TOTAL = 1_000_000   # 名前の分かる支払先への支出の合計がこれ未満なら印を付けない（少額で割合が跳ねるため）
 FLAG_TOP1_SHARE = 0.30       # 1つの支払先が合計の30%以上
 FLAG_TOP3_SHARE = 0.60       # 上位3つの支払先で合計の60%以上
-FLAG_MULTI_YEARS = 3         # 同じ支払先に3年分以上、かつ合計の10%以上
-FLAG_MULTI_SHARE = 0.10
+FLAG_MULTI_YEARS = 3         # 同じ支払先に3年分以上、かつ合計の20%以上（ホテル・税理士など毎年使う先の1割程度は普通なので）
+FLAG_MULTI_SHARE = 0.20
 
 
 def concentration(spread: dict) -> dict:
@@ -754,13 +1190,18 @@ def concentration(spread: dict) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("phase", choices=["crawl", "download", "extract", "parse", "compare", "link", "all", "status"])
+    parser.add_argument("phase", choices=["crawl", "roster", "download", "extract", "pages", "parse", "compare", "link", "all", "status"])
     parser.add_argument("--monthly", action="store_true", help="前回の取得から28日たっていなければ何もしない（自動更新用）")
     parser.add_argument("--limit", type=int, default=None, help="download で落とす件数の上限（試し用）")
     parser.add_argument("--minutes", type=float, default=None, help="download を打ち切る分数（--monthly のときは既定で40分）")
     parser.add_argument("--wait", type=float, default=1.0, help="1件ごとの待ち秒数")
     parser.add_argument("--ocr-dir", type=Path, default=WORK / "ocr", help="画像 PDF の OCR 結果 <sha256>.txt の置き場")
+    parser.add_argument("--line-a-ai", type=Path, default=WORK / "line-a-ai", help="画像 PDF の系統A（Bとは別の AI の読み手）の結果 <sha256>.json の置き場（形は系統Bと同じ）")
+    parser.add_argument("--line-c", type=Path, default=WORK / "line-c", help="A・Bが食い違った頁だけを読んだ3つ目の読み手の結果 <sha256>.json（形は系統Bと同じ）")
     parser.add_argument("--line-b", type=Path, default=WORK / "line-b", help="系統B の結果 <sha256>.json の置き場")
+    parser.add_argument("--storage", type=Path, default=MATERIALS, help="原本の保管庫（既定は .local/external-materials。全件で数十GBになるので、容量の大きい場所を指せる）")
+    parser.add_argument("--keep", choices=KEEP_CHOICES, default="all", help="原本の保管は all のみ。保存を省略する保持例外は未採用")
+    parser.add_argument("--workers", type=int, default=1, help="download で同時に取るホストの数（同じホストへは1本ずつ）")
     parser.add_argument("--source", action="append", default=None, help="crawl する始点を名前で絞る（部分一致、複数可。試し・追加した始点だけ回すとき）")
     parser.add_argument("--dry-run", action="store_true", help="通信もファイルの書き込みもせず、やることだけ出す")
     args = parser.parse_args(argv)
@@ -777,20 +1218,30 @@ def main(argv: list[str] | None = None) -> int:
         ok = sum(1 for m in manifest if m.get("状態") == "取得済み")
         print(f"始点 {len(sources)}件・一覧 {len(index)}件・取得済み {ok}件・次の月次取得 {'今回' if due() else 'まだ'}")
         return 0
-    phases = ["crawl", "download", "extract", "parse", "compare", "link"] if args.phase == "all" else [args.phase]
+    phases = ["crawl", "roster", "download", "extract", "parse", "compare", "link"] if args.phase == "all" else [args.phase]
     if offline_only:
-        phases = [p for p in phases if p not in {"crawl", "download"}]
+        phases = [p for p in phases if p not in {"crawl", "roster", "download"}]
     text_dir = WORK / "text"
     for phase in phases:
         if phase == "crawl":
             rows = merge_index(read_csv(INDEX), crawl(sources, wait=args.wait, keep=keep_index_page))
             write_csv(INDEX, INDEX_HEADER, rows)
             print(f"一覧 {len(rows)}件")
+        elif phase == "roster":
+            try:
+                members = roster_rows(storage=args.storage)
+            except Exception as error:  # 通信・PDF の読み取りの失敗のどれでも
+                # 名簿が取れなくても、手元の対応表のまま後の段（取得・再計算）は続ける
+                print(f"名簿の取得に失敗したので、前回の対応表を使う：{error}")
+            else:
+                write_csv(MEMBER_GROUPS, MEMBER_GROUP_HEADER, members)
+                print(f"議員と団体の対応 {len(members)}行（議員 {len({m['氏名'] for m in members})}人）")
         elif phase == "download":
             # 自動更新の1段の上限（daily_update の Run.command は3600秒）に、一覧作り・抽出の分を残して収める
             manifest = download(read_csv(INDEX), read_csv(MANIFEST), wait=args.wait, limit=args.limit,
                                 minutes=args.minutes if args.minutes is not None else (MONTHLY_MINUTES if args.monthly else None),
-                                save=lambda rows: write_csv(MANIFEST, MANIFEST_HEADER, rows))
+                                save=lambda rows: write_csv(MANIFEST, MANIFEST_HEADER, rows),
+                                keep=args.keep, text_dir=text_dir, workers=args.workers, storage=args.storage)
             write_csv(MANIFEST, MANIFEST_HEADER, manifest)
             fetched = {m["PDF_URL"] for m in manifest if m["状態"] == "取得済み"}
             tried = {m["PDF_URL"] for m in manifest}
@@ -800,32 +1251,49 @@ def main(argv: list[str] | None = None) -> int:
                 LAST_FETCH.write_text(str(date.today()) + "\n", encoding="utf-8")
             print(f"取得済み {len(fetched)}件・失敗 {sum(1 for m in manifest if m['状態'] != '取得済み')}件・残り {remaining}件")
         elif phase == "extract":
-            texts = extract(read_csv(MANIFEST), text_dir, args.ocr_dir)
+            texts = extract(read_csv(MANIFEST), text_dir, args.ocr_dir, storage=args.storage)
             write_csv(ACQUIRED / "texts.csv", TEXT_HEADER, texts)
             write_csv(WORK / "ocr-queue.csv", TEXT_HEADER, [t for t in texts if t["状態"].startswith("画像")])
             print(f"文字あり {sum(t['状態'] == '文字あり' for t in texts)}件・OCR {sum(t['状態'] == 'OCR' for t in texts)}件・OCR待ち {sum(t['状態'].startswith('画像') for t in texts)}件")
+        elif phase == "pages":
+            pages = classify_pages(read_csv(MANIFEST), read_csv(WORK / "pages.csv"), storage=args.storage, workers=args.workers)
+            write_csv(WORK / "pages.csv", PAGE_HEADER, pages)
+            by_sha: dict[str, list[str]] = {}
+            for r in pages:
+                by_sha.setdefault(r["sha256"], []).append(r["様式"])
+            print(f"頁 {len(pages)}件（AI が読む頁 {sum(len(pages_to_read(f)) for f in by_sha.values())}件）")
         elif phase == "parse":
-            index_by_url = {r["PDF_URL"]: r for r in read_csv(INDEX)}
+            meta_by_sha = manifest_meta(read_csv(MANIFEST), read_csv(INDEX), args.storage)
+            # AI の読み手の結果がある PDF（画像 PDF）は、規則で読めた一部の行ではなく AI の結果を系統Aにする
+            ai_read = {path.stem for path in args.line_a_ai.glob("*.json")} if args.line_a_ai.is_dir() else set()
             rows = []
-            for m in read_csv(MANIFEST):
-                path = text_dir / f"{m.get('sha256', '')}.txt"
-                if m.get("sha256") and path.exists():
-                    meta = {"sha256": m["sha256"], "PDF_URL": m["PDF_URL"], "年分": index_by_url.get(m["PDF_URL"], {}).get("年分", ""),
-                            "報告団体": index_by_url.get(m["PDF_URL"], {}).get("団体名", "")}
+            for sha, meta in meta_by_sha.items():
+                path = text_dir / f"{sha}.txt"
+                if sha not in ai_read and path.exists():
                     rows += parse_lines(path.read_text(encoding="utf-8"), meta)
+            # 画像 PDF は文字が無いので、系統A は規則ではなく別の AI の読み手の結果を使う（文字のある PDF は規則のまま）
+            meta_ai = {sha: meta for sha, meta in meta_by_sha.items() if sha in ai_read}
+            rows += [r for r in load_line_b(args.line_a_ai, meta_ai, line="A") if r["sha256"] in meta_ai]
             write_csv(WORK / "line-a.csv", ROW_HEADER, rows)
             print(f"系統A {len(rows)}行")
         elif phase == "compare":
             line_a = read_csv(WORK / "line-a.csv")
-            meta = {r["sha256"]: {k: r[k] for k in ("sha256", "PDF_URL", "年分", "報告団体")} for r in line_a}
-            agreed, disagreed = compare(line_a, load_line_b(args.line_b, meta))
+            # 系統Aが1行も読めなかった PDF でも、B・C一致で採る行に出典が付くよう、原簿（manifest・索引）から補う
+            meta = manifest_meta(read_csv(MANIFEST), read_csv(INDEX), args.storage)
+            line_a = rows_for_verified_reports(line_a, meta)
+            agreed, disagreed = compare(line_a, rows_for_verified_reports(load_line_b(args.line_b, meta), meta))
+            line_c = rows_for_verified_reports(load_line_b(args.line_c, meta, line="C"), meta)
+            if line_c:
+                agreed, disagreed = tie_break(agreed, disagreed, line_c)
             write_csv(WORK / "agreed.csv", ROW_HEADER + ["照合"], agreed)
             # 食い違いは照合前の生の行（伏せていない個人名を含みうる）なので、Git に入れない .local に置く
             write_csv(WORK / "disagreements.csv", ROW_HEADER + ["照合"], disagreed)
             print(f"一致 {len(agreed)}行・食い違い {len(disagreed)}行")
         elif phase == "link":
             index_by_url = {r["PDF_URL"]: r for r in read_csv(INDEX)}
-            rows = link(read_csv(WORK / "agreed.csv"), index_by_url, read_csv(PERSONS), line_b_attribution(args.line_b))
+            meta = manifest_meta(read_csv(MANIFEST), read_csv(INDEX), args.storage)
+            eligible = rows_for_verified_reports(read_csv(WORK / "agreed.csv"), meta)
+            rows = link(eligible, index_by_url, read_csv(PERSONS), line_b_attribution(args.line_b), read_csv(MEMBER_GROUPS), line_b_attribution(args.line_a_ai))
             write_csv(DERIVED / "relations.csv", RELATION_HEADER, rows)
             spending = spending_by_member(rows)
             (DERIVED / "spending-by-member.json").write_text(json.dumps({"説明": "議員ごとの関係政治団体の支出（政治資金収支報告書、系統A・B一致分）。点数には使わない。個人の支払先は公表期間（3年）の間だけ報告書どおりの名前を出し、住所は出さない。寄附者・パーティー券購入者の個人は名前を出さない。", "議員": spending}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
