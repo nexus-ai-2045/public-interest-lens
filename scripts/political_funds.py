@@ -385,10 +385,11 @@ def download(index: list[dict[str, str]], manifest: list[dict[str, str]], storag
 
     def fetch_one(row: dict[str, str]) -> dict[str, str]:
         url = row["PDF_URL"]
-        observed = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+        old = previous.get(url, {})
+        observed = old.get("取得日時", "")
         path = None
         registered = False
-        digest, size = "", ""
+        digest, size = old.get("sha256", ""), old.get("bytes", "")
 
         def require_space() -> None:
             if free_bytes(storage) <= MIN_FREE_BYTES:
@@ -398,7 +399,6 @@ def download(index: list[dict[str, str]], manifest: list[dict[str, str]], storag
 
         try:
             require_space()
-            old = previous.get(url, {})
             pending_sha = old.get("sha256", "")
             url_key = hashlib.sha256(url.encode("utf-8")).hexdigest()[:12]
             if re.fullmatch(r"[0-9a-f]{64}", pending_sha) and old.get("取得日時"):
@@ -412,7 +412,8 @@ def download(index: list[dict[str, str]], manifest: list[dict[str, str]], storag
                         break
             if path is None:
                 body = get_bytes(url)
-                digest = hashlib.sha256(body).hexdigest()
+                observed = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+                digest, size = hashlib.sha256(body).hexdigest(), str(len(body))
                 # 同じ原本を別ホストから同時取得しても、登録完了前の作業copyを共有しない。
                 handle, name = tempfile.mkstemp(prefix=f"{digest}-{url_key}-", suffix=".pdf", dir=tmp)
                 os.close(handle)
@@ -728,7 +729,7 @@ DONOR_KINDS = {"個人", "法人その他の団体", "政治団体"}
 
 
 def adoptable(row: dict[str, str]) -> bool:
-    """採ってよい行か。費目が入力不備、金額が無い、日付欄のある明細で年月日が無い、受けた寄附で寄附者の区分が無い行は、
+    """採ってよい行か。費目が入力不備、金額が無い、日付欄のある明細で年月日が無い、相手方種別が無い・無効な行は、
     両系統が同じように欠けていても採らない（空どうしの一致で不完全な行や、伏せるべき個人名が入るのを防ぐ）。"""
     if row.get("費目", "").startswith("入力不備"):
         return False
@@ -738,7 +739,7 @@ def adoptable(row: dict[str, str]) -> bool:
         return False  # 根拠の頁が無い行は、別の頁の明細と取り違えるおそれがあり、出典も残らない
     if row.get("区分") != "パーティー対価" and not row.get("年月日"):
         return False
-    return row.get("区分") != "受けた寄附" or row.get("相手方種別") in DONOR_KINDS
+    return row.get("相手方種別") in DONOR_KINDS
 
 
 def compare(line_a: list[dict[str, str]], line_b: list[dict[str, str]]) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
@@ -846,14 +847,14 @@ def load_line_b(directory: Path, meta_by_sha: dict[str, dict[str, str]], line: s
             # 読み手ごとの表記のゆれ（㈱と(株)、髙と高など）をそろえてから突き合わせる
             item = {**item, "相手方": reader_name(item.get("相手方", ""))}
             kind = item.get("相手方種別", "")
-            if item.get("区分") != "受けた寄附" and kind not in DONOR_KINDS:
-                # 明示された有効な区分は照合の根拠。名前の推測で不一致を一致に変えない。
-                kind = counterpart_kind(item.get("相手方", ""), "")
+            if not isinstance(kind, str) or kind not in DONOR_KINDS:
+                # 未入力・無効値を名前から補って、独立した読み手の一致を作らない。
+                kind = "入力不備：相手方種別"
             day = str(item.get("年月日", ""))
             era = DATE.search(nfkc(day))
             if era:
                 day = wareki(era)  # 「R6/7/1」「令和6年7月1日」のままでも系統Aと同じ形に直す
-            hidden = kind == "個人" and item.get("区分") in PRIVATE_KINDS
+            hidden = kind not in (DONOR_KINDS - {"個人"}) and item.get("区分") in PRIVATE_KINDS
             expense = item.get("費目", "")
             if item.get("区分") == "出した寄附" and not expense:
                 expense = "寄附・交付金"

@@ -395,13 +395,13 @@ class CompareAndLinkTests(unittest.TestCase):
         self.assertEqual([(r["系統"], r["相手方種別"], r["金額"], r["年月日"]) for r in rows],
                          [("A", "個人", "16500", "2024-06-26"), ("A", "政治団体", "60000", "2024-07-01")])
 
-    def test_reader_individual_is_kept_unless_name_shows_legal_entity(self):
+    def test_reader_category_is_explicit_and_missing_category_is_held(self):
         with tempfile.TemporaryDirectory() as tmp:
             Path(tmp, "s1.json").write_text(json.dumps({"行": [
                 {"区分": "パーティー対価", "相手方": "山田商店", "相手方種別": "個人", "金額": 300000, "頁": 9},
                 {"区分": "パーティー対価", "相手方": "山田商店", "金額": 300000, "頁": 9}]}), encoding="utf-8")
             rows = pf.load_line_b(Path(tmp), {}, line="A")
-        self.assertEqual([(r["相手方種別"], r["相手方"]) for r in rows], [("個人", pf.INDIVIDUAL), ("法人その他の団体", "山田商店")])
+        self.assertEqual([(r["相手方種別"], r["相手方"]) for r in rows], [("個人", pf.INDIVIDUAL), ("入力不備：相手方種別", pf.INDIVIDUAL)])
 
     def test_roster_failure_keeps_previous_table(self):
         from unittest import mock
@@ -583,6 +583,54 @@ class CompareAndLinkTests(unittest.TestCase):
 
 
 class EvidenceContractTests(unittest.TestCase):
+    def test_failed_retry_keeps_original_provenance_when_space_is_low(self):
+        from unittest import mock
+        body = b"original report bytes"
+        index = [{"PDF_URL": "https://a.example/x.pdf"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with mock.patch.object(pf, "WORK", root / "work"):
+                with mock.patch("scripts.register_external_material.register_once", side_effect=OSError("store unavailable")):
+                    first = pf.download(index, [], storage=root / "store", wait=0,
+                                        get_bytes=lambda url: body, free_bytes=lambda path: 10 ** 12)
+                first[0]["取得日時"] = "2020-01-01T00:00:00+00:00"
+                getter = mock.Mock(side_effect=AssertionError("pending copy should survive"))
+                second = pf.download(index, first, storage=root / "store", wait=0,
+                                     get_bytes=getter, free_bytes=lambda path: 0)
+                for key in ("sha256", "bytes", "取得日時"):
+                    self.assertEqual(second[0][key], first[0][key])
+                third = pf.download(index, second, storage=root / "store", wait=0,
+                                    get_bytes=getter, free_bytes=lambda path: 10 ** 12)
+            getter.assert_not_called()
+            self.assertEqual(third[0]["状態"], "取得済み")
+            self.assertEqual(third[0]["取得日時"], first[0]["取得日時"])
+
+    def test_legacy_provenance_is_not_lost_when_refetch_fails(self):
+        from unittest import mock
+        old = {"PDF_URL": "https://a.example/x.pdf", "sha256": hashlib.sha256(b"old").hexdigest(),
+               "bytes": "3", "取得日時": "2020-01-01T00:00:00+00:00", "material_id": "", "状態": "取得済み"}
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with mock.patch.object(pf, "WORK", root / "work"):
+                rows = pf.download([{"PDF_URL": old["PDF_URL"]}], [old], storage=root / "store", wait=0,
+                                   get_bytes=mock.Mock(side_effect=OSError("offline")), free_bytes=lambda path: 10 ** 12)
+            self.assertTrue(rows[0]["状態"].startswith("失敗"))
+            for key in ("sha256", "bytes", "取得日時"):
+                self.assertEqual(rows[0][key], old[key])
+
+    def test_missing_or_invalid_reader_category_is_not_inferred_into_agreement(self):
+        row = {"区分": "パーティー対価", "相手方": "山田一郎", "金額": 100, "頁": 1}
+        for kind in ("不明", "", None):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as tmp:
+                a, b = Path(tmp) / "a", Path(tmp) / "b"
+                a.mkdir(); b.mkdir()
+                (a / "report.json").write_text(json.dumps({"行": [{**row, "相手方種別": kind}]}), encoding="utf-8")
+                (b / "report.json").write_text(json.dumps({"行": [{**row, "相手方種別": "個人"}]}), encoding="utf-8")
+                left, right = pf.load_line_b(a, {}, line="A"), pf.load_line_b(b, {})
+            agreed, disagreed = pf.compare(left, right)
+            self.assertEqual((len(agreed), len(disagreed)), (0, 2))
+            self.assertEqual(left[0]["相手方"], pf.INDIVIDUAL)
+
     def test_retry_uses_preserved_original_without_fetching_again(self):
         from unittest import mock
         body = b"original report bytes"
