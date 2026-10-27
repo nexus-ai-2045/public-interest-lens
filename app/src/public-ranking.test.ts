@@ -22,6 +22,15 @@ function approved() {
 }
 
 describe('公開ランキングの配布データ', () => {
+  it('方法版・生成元・保留条件の欠落した配布を拒否する', () => {
+    for (const change of [v => { delete v.generatedFrom.codeHashes; },
+      v => { v.generatedFrom.methodSpecVersion = 'method-spec-v999.0'; },
+      v => { delete v.generatedFrom.parameters; }]) {
+      const value = approved(); change(value);
+      expect(() => parsePublicRanking(JSON.stringify(value))).toThrow();
+    }
+  });
+
   it('リポジトリの ranking.json を読み、成立した法律の全件が額か理由つきで載っている', () => {
     const value = parsePublicRanking(committed);
     expect(value.approval).toEqual({ approvedAt: '2026-10-17', scope: 'all-laws', note });

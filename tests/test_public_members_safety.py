@@ -19,6 +19,22 @@ DIST = ROOT / "app" / "public" / "distribution"
 # いま members.json に出ている項目を、JSON の経路（どの階層のどの項目か）で並べたもの。
 # 同じ項目名でも別の階層に増えたら止める。新しい項目を足すときは、公人としての公開記録かを確かめてからここに足す。
 ALLOWED_PATHS = {
+    '.generatedFrom.codeHashes.scripts/path_guard.mjs',
+    '.generatedFrom',
+    '.generatedFrom.methodSpecVersion',
+    '.generatedFrom.codeHashes',
+    '.generatedFrom.codeHashes.app/src/method-spec.ts',
+    '.generatedFrom.codeHashes.app/src/members-build.ts',
+    '.generatedFrom.codeHashes.app/src/allocation-batch.ts',
+    '.generatedFrom.codeHashes.app/src/loss-rule.ts',
+    '.generatedFrom.codeHashes.app/src/causal-allocation.ts',
+    '.generatedFrom.codeHashes.app/src/impact-batch.ts',
+    '.generatedFrom.codeHashes.app/src/indicator-pick.ts',
+    '.generatedFrom.codeHashes.app/src/impact-rule.ts',
+    '.generatedFrom.codeHashes.scripts/generation_provenance.mjs',
+    '.generatedFrom.codeHashes.scripts/build_public_members.mjs',
+    '.generatedFrom.codeHashes.app/package-lock.json',
+
     ".counts",
     ".counts.benefit",
     ".counts.context",

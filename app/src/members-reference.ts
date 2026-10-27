@@ -1,5 +1,6 @@
+import type { GenerationMetadata } from './generation-metadata';
 /**
- * 議員ページの「全議員」の表（public-members-reference/v1）を作る。
+ * 議員ページの「全議員」の表（public-members-reference/v2）を作る。
  * ユーザーの選択（2026-10-18）：参考の額も、確かな額とは別の欄に「参考」の印つきで全員に配る。確かな額の順位は変えない。
  *
  * 決まり（1本ごとの人の判断は入れない）：
@@ -39,7 +40,8 @@ export type ReferenceMember = {
   reason: string;
 };
 export type PublicMembersReference = {
-  schema: 'public-members-reference/v1';
+  schema: 'public-members-reference/v2';
+  generatedFrom?: GenerationMetadata;
   rules: string[];
   members: ReferenceMember[];
   counts: { members: number; current: number; withAmount: number; laws: number; lawsWithVotes: number; lawsPartyOnly: number; observations: number; unresolved: number };
@@ -226,7 +228,7 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
       top: [...t.laws].sort((a, b) => b.share - a.share).slice(0, 5), reason };
   }).sort((a, b) => a.net.median - b.net.median || a.id.localeCompare(b.id));
   return {
-    schema: 'public-members-reference/v1',
+    schema: 'public-members-reference/v2',
     rules: ['reference-split-by-observation-v1', 'causal-shapley-v1', 'reference-party-fallback-v1'],
     members,
     counts: { members: members.length, current: members.filter(m => m.current).length, withAmount: members.filter(m => m.laws > 0).length, laws: laws.length,

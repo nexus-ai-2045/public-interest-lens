@@ -16,10 +16,15 @@ import argparse
 import csv
 import hashlib
 import json
+import io
 import re
 from collections import Counter
-from functools import cache
 from pathlib import Path
+
+try:
+    from scripts.generation_provenance import generation_metadata
+except ModuleNotFoundError:
+    from generation_provenance import generation_metadata
 
 ROOT = Path(__file__).resolve().parents[1]
 DERIVED = ROOT / "data" / "derived"
@@ -28,6 +33,8 @@ INDUSTRY_VA = ACQUIRED / "oecd-industry" / "industry_va.csv"
 OUTPUT = ROOT / "app" / "public" / "distribution" / "ranking.json"
 
 INPUTS = {
+    "covidLabels": DERIVED / "covid-response-v1" / "labels.csv",
+    "industryVa": INDUSTRY_VA,
     "enacted": ACQUIRED / "bill-census-full" / "enacted.csv",
     "triage": DERIVED / "bill-triage-v1" / "triage.csv",
     "dated": DERIVED / "bill-triage-v2" / "agreement.csv",
@@ -60,7 +67,7 @@ ROW_NOTES = {
 # （ユーザー 2026-10-24「コロナのマイナスはその法律のせいではない」、設計決定0014）。
 COVID_HELD = "コロナ期と分離できない（元の窓の額。議員への配分に使わない）"
 # コロナ対応の法律（covid-response-v1）は、施行が2020年以降で窓がコロナ期そのもの。判定表の行に関わらず同じ扱いにする。
-COVID_LABELS = DERIVED / "covid-response-v1" / "labels.csv"
+COVID_LABELS = INPUTS["covidLabels"]
 OUTCOMES = {
     "pending": "公開承認待ち",
     "source": "出典チェックで食い違い（確認中）",
@@ -78,34 +85,34 @@ SOURCE_HELD = DERIVED / "source-check" / "summary.json"
 
 def source_held() -> set[str]:
     if not SOURCE_HELD.exists():
-        return set()
+        raise ValueError("出典チェックの記録が無いため公開用の生成を停止します")
     return set(json.loads(SOURCE_HELD.read_text(encoding="utf-8"))["heldOut"])
 
 
-@cache
-def covid_response() -> frozenset[str]:
-    if not COVID_LABELS.exists():
-        return frozenset()
-    with COVID_LABELS.open(encoding="utf-8", newline="") as f:
-        return frozenset(r["id"] for r in csv.DictReader(f) if r["コロナ対応"] == "はい")
+def covid_response(raw: bytes | None = None) -> frozenset[str]:
+    if raw is None:
+        if not COVID_LABELS.exists():
+            return frozenset()
+        raw = COVID_LABELS.read_bytes()
+    return frozenset(r["id"] for r in csv.DictReader(io.StringIO(raw.decode("utf-8"))) if r["コロナ対応"] == "はい")
 
 
-def _rows(name: str) -> list[dict[str, str]]:
-    with INPUTS[name].open(encoding="utf-8", newline="") as handle:
-        return list(csv.DictReader(handle))
+def _rows(name: str, captured: dict[str, bytes] | None = None) -> list[dict[str, str]]:
+    raw = INPUTS[name].read_bytes() if captured is None else captured[name]
+    return list(csv.DictReader(io.StringIO(raw.decode("utf-8"))))
 
 
 def _digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _counts(publish: list[dict[str, str]], loss: list[dict[str, str]]) -> dict[str, int]:
-    impact = _rows("impact")
+def _counts(publish: list[dict[str, str]], loss: list[dict[str, str]], captured: dict[str, bytes]) -> dict[str, int]:
+    impact = _rows("impact", captured)
     return {
-        "enacted": len(_rows("enacted")),
+        "enacted": len(_rows("enacted", captured)),
         # 施行日のある法律のうち、振り分け v2 の両系統が「評価対象外」で一致せず、影響の判定に回った本数。
         "evaluated": len(impact),
-        "dated": len(_rows("dated")),
+        "dated": len(_rows("dated", captured)),
         "staged": sum(1 for row in impact if re.fullmatch(r"段階[123]", row["判定"])),
         "amounted": sum(1 for row in loss if row["損失または便益の額"] and row["参考フラグ"] != "参考"),
         "publishable": sum(1 for row in publish if row["公開可否"] == "公開可"),
@@ -159,7 +166,7 @@ def certainty(publish_row: dict[str, str], loss_row: dict[str, str]) -> str:
     return {"段階3": "高", "段階2": "中", "段階1": "低"}[loss_row["段階"]]
 
 
-def _law(row: dict[str, str], loss_row: dict[str, str], sources: list[str], enforced: str) -> dict:
+def _law(row: dict[str, str], loss_row: dict[str, str], sources: list[str], enforced: str, covid_ids: frozenset[str] | None = None) -> dict:
     amount = AMOUNT.search(row["損失または便益"])
     window = WINDOW.search(row["損失または便益"])
     if window:
@@ -184,7 +191,7 @@ def _law(row: dict[str, str], loss_row: dict[str, str], sources: list[str], enfo
     if not countries:
         raise ValueError(f"比較国を読めません: {row['id']}")
     notes = [ROW_NOTES[row["判定表の行"]]] if row["判定表の行"] in ROW_NOTES else []
-    if row["判定表の行"] == "R3" or row["id"] in covid_response():
+    if row["判定表の行"] == "R3" or row["id"] in (covid_response() if covid_ids is None else covid_ids):
         level = "参考"
         notes.append(COVID_HELD)
     return {
@@ -290,22 +297,22 @@ def _no_amount(
     return _other(law_id, title, "triage_hold", f"{result}：系統1は{row['A_種類']}・{row['A_判定']}、系統2は{row['B_種類']}・{row['B_判定']}")
 
 
-def japan_value_added_max() -> int:
-    """日本の全産業の名目付加価値（OECD 表6、1年分）の最大値（円）。額の大きさの目安に使う。"""
-    with INDUSTRY_VA.open(encoding="utf-8", newline="") as f:
-        values = [int(float(r["値"]) * 1_000_000) for r in csv.DictReader(f)
-                  if r["国"] == "JPN" and r["産業"] == "_T" and r["価格"] == "V" and r["単位"] == "百万JPY"]
+def japan_value_added_max(raw: bytes | None = None) -> int:
+    """日本の全産業の名目付加価値1年分の最大値。計算時は捕捉済み入力を使う。"""
+    raw = INPUTS["industryVa"].read_bytes() if raw is None else raw
+    values = [int(float(r["値"]) * 1_000_000) for r in csv.DictReader(io.StringIO(raw.decode("utf-8")))
+              if r["国"] == "JPN" and r["産業"] == "_T" and r["価格"] == "V" and r["単位"] == "百万JPY"]
     if not values:
         raise ValueError("日本の全産業の名目付加価値がありません")
     return max(values)
 
 
-def _reading_notes(laws: list[dict]) -> None:
+def _reading_notes(laws: list[dict], ceiling: int | None = None) -> None:
     """額の読み方の注意を機械的に足す。
     - 同じ観測グループ・同じ期間・同じ額の法律が複数ある：1つの観測を分け合っている（足し合わせない）。
     - 額が日本の全産業の付加価値1年分を超える：累積の額だが、仮定の影響が大きいので大きさをそのまま読まない。"""
     shared = Counter((law["group"], law["window"], law["amountMedianYen"]) for law in laws)
-    ceiling = japan_value_added_max()
+    ceiling = japan_value_added_max() if ceiling is None else ceiling
     for law in laws:
         n = shared[(law["group"], law["window"], law["amountMedianYen"])]
         if n > 1:
@@ -318,16 +325,21 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
     if approve_all and not DATE.fullmatch(approved_at):
         raise ValueError("承認日は YYYY-MM-DD で渡してください")
     held_by_check = source_held() if held_by_check is None else held_by_check
-    publish_rows = _rows("publish")
+    if any(not isinstance(law, str) or not LAW_ID.fullmatch(law) for law in held_by_check):
+        raise ValueError("出典による保留対象の識別子が不正です")
+    # 各入力を一度だけ捕捉し、計算と照合値が別時点の内容を指さないようにする。
+    captured = {name: path.read_bytes() for name, path in INPUTS.items()}
+    covid_ids = covid_response(captured["covidLabels"])
+    publish_rows = _rows("publish", captured)
     publish = {row["id"]: row for row in publish_rows}
-    loss = {row["id"]: row for row in _rows("loss")}
-    impact = {row["id"]: row for row in _rows("impact")}
-    dated = {row["id"]: row for row in _rows("dated")}
-    triage = {row["id"]: row for row in _rows("triage")}
-    census = _rows("enacted")
+    loss = {row["id"]: row for row in _rows("loss", captured)}
+    impact = {row["id"]: row for row in _rows("impact", captured)}
+    dated = {row["id"]: row for row in _rows("dated", captured)}
+    triage = {row["id"]: row for row in _rows("triage", captured)}
+    census = _rows("enacted", captured)
     enacted = {f"{row['種別']}-{row['提出回次']}-{row['番号']}": row for row in census}
-    enforcement = {row["id"]: row for row in _rows("enforcement")}
-    macro = {row["id"]: row for row in _rows("macro") if row["結果"] == "額"} if INPUTS["macro"].exists() else {}
+    enforcement = {row["id"]: row for row in _rows("enforcement", captured)}
+    macro = {row["id"]: row for row in _rows("macro", captured) if row["結果"] == "額"}
     laws, others = [], []
     for law_id, census_row in enacted.items():
         row = publish.get(law_id)
@@ -345,19 +357,21 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
             enforced = enforcement[law_id]["施行日"]
             if not DATE.fullmatch(enforced):
                 raise ValueError(f"施行日がありません: {law_id}")
-            laws.append(_law(row, loss[law_id], _sources(law_id, enacted, enforcement), enforced))
+            laws.append(_law(row, loss[law_id], _sources(law_id, enacted, enforcement), enforced, covid_ids))
     missing = sorted(set(publish) - set(enacted))
     if missing:
         raise ValueError(f"成立法の台帳に無い法律があります: {missing}")
-    _reading_notes(laws)
+    _reading_notes(laws, japan_value_added_max(captured["industryVa"]))
     # 確かな額（高・中・低）を先、参考を後。どちらも額の大きい順。
     laws.sort(key=lambda law: (law["certainty"] == "参考", law["group"].startswith(MACRO_GROUP), -law["amountMedianYen"], law["id"]))
     reference = sum(1 for law in laws if law["certainty"] == "参考")
     return {
-        "schema": "public-ranking/v2",
+        "schema": "public-ranking/v3",
         "generatedFrom": {
             "rules": RULES,
-            "inputs": {name: _digest(path) for name, path in INPUTS.items()},
+            **generation_metadata(["scripts/build_public_ranking.py"]),
+            "inputs": {name: hashlib.sha256(raw).hexdigest() for name, raw in captured.items()},
+            "parameters": {"heldOut": sorted(held_by_check)},
         },
         "approval": (
             {"approvedAt": approved_at, "scope": APPROVAL_SCOPE, "note": APPROVAL_NOTE}
@@ -367,7 +381,7 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
         "laws": laws,
         "others": others,
         "counts": {
-            **_counts(publish_rows, list(loss.values())),
+            **_counts(publish_rows, list(loss.values()), captured),
             "published": len(laws),
             "confirmed": len(laws) - reference,
             "reference": reference,

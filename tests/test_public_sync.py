@@ -44,6 +44,21 @@ def _load(name: str) -> dict:
 
 
 class PublicSyncTest(unittest.TestCase):
+    def test_generated_rankings_bind_method_and_source_code(self):
+        for label, value, entry in (("ranking.json", _load("ranking.json"), "scripts/build_public_ranking.py"),
+                                    ("members.json", _load("members.json"), "app/src/members-build.ts")):
+            meta = value["generatedFrom"]
+            from scripts.generation_provenance import generation_metadata
+            self.assertEqual(meta["methodSpecVersion"], generation_metadata([])["methodSpecVersion"])
+            self.assertIn(entry, meta["codeHashes"])
+            if label == "ranking.json":
+                self.assertEqual({"methodSpecVersion": meta["methodSpecVersion"], "codeHashes": meta["codeHashes"]},
+                                 generation_metadata(["scripts/build_public_ranking.py"]))
+            for path, digest in meta["codeHashes"].items():
+                self.assertFalse(Path(path).is_absolute())
+                self.assertNotIn("..", Path(path).parts)
+                self.assertEqual(digest, _digest(ROOT / path), label + ": " + path)
+
     def setUp(self) -> None:
         self.ranking = _load("ranking.json")
         self.laws = _load("laws.json")
@@ -55,7 +70,16 @@ class PublicSyncTest(unittest.TestCase):
         self.assertEqual(stale, [], f"{label} が古い入力から作られている（{', '.join(stale)}）。{FIX}")
 
     def test_ranking_is_built_from_current_derived_data(self) -> None:
-        self.assert_inputs("ranking.json", self.ranking["generatedFrom"]["inputs"], build_public_ranking.INPUTS)
+        recorded = self.ranking["generatedFrom"]["inputs"]
+        paths = build_public_ranking.INPUTS
+        self.assertEqual(set(recorded), set(paths))
+        public = {k: p for k, p in paths.items() if k != "industryVa"}
+        self.assert_inputs("ranking.json", {k: recorded[k] for k in public}, public)
+        self.assertRegex(recorded["industryVa"], r"^[a-f0-9]{64}$")
+        # 非公開入力を持つ検査段は既存のPublicRankingTestsが全再生成を比較する。
+        # CIでも従来の公開8入力の照合は省略せず、skip許可一覧を増やさない。
+        if paths["industryVa"].exists():
+            self.assertEqual(recorded["industryVa"], _digest(paths["industryVa"]))
 
     def test_members_is_built_from_current_derived_data(self) -> None:
         self.assert_inputs("members.json", self.members["inputs"], MEMBER_INPUTS)

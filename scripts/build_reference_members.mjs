@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { generationMetadata } from './generation_provenance.mjs';
 
 const argv = process.argv.slice(2);
 const attributionsOut = argv.includes('--attributions') ? argv[argv.indexOf('--attributions') + 1] : '';
@@ -36,6 +37,7 @@ try {
     const head = ['member', 'name', 'house', 'lawId', 'role', 'side', 'median'];
     writeFileSync(attributionsOut, [head.join(','), ...attributions.map(a => head.map(k => cell(a[k])).join(','))].join('\n') + '\n');
   }
+  payload.generatedFrom = await generationMetadata(server, root, ['app/src/members-reference.ts'], ['scripts/build_reference_members.mjs']);
   payload.inputs = Object.fromEntries(Object.entries(text).map(([k, t]) => [k, createHash('sha256').update(t).digest('hex')]));
   // 個人別の賛否（ballots_*.csv）は、ファイル名と中身を順に並べた1つの照合値にする（tests/test_public_sync.py が同じ方法で確かめる）。
   const ballotHash = createHash('sha256');
