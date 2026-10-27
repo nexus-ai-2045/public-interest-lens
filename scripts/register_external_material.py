@@ -7,8 +7,10 @@ import hashlib
 import ipaddress
 import json
 import mimetypes
+import os
 import re
 import shutil
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
@@ -184,8 +186,45 @@ def register_once(
     record_path = register_local_material(**kwargs, dry_run=True)
     if not record_path.exists():
         register_local_material(**kwargs)
-    elif json.loads(record_path.read_text(encoding="utf-8"))["source_url"] != source_url:
-        raise ValueError(f"{record_path} の出典が {source_url} と違う")
+    else:
+        if inside_without_links(storage_root, record_path) is None:
+            raise ValueError("registered record escaped storage root")
+        record = json.loads(record_path.read_text(encoding="utf-8"))
+        digest = sha256_file(input_path)
+        size = input_path.stat().st_size
+        name = record.get("saved_filename")
+        observed = record.get("observed_at")
+        if (record.get("schema_version") != SCHEMA_VERSION
+                or record.get("source_url") != source_url
+                or record.get("task_id") != task_id
+                or record.get("material_id") != record_path.parent.name
+                or record.get("sha256") != digest
+                or type(record.get("bytes")) is not int or record["bytes"] != size
+                or not isinstance(name, str) or not name.startswith("original.") or Path(name).name != name
+                or not isinstance(observed, str)
+                or normalize_observed_at(observed)[1] != record_path.parent.name[:10]):
+            raise ValueError("existing registration metadata does not match input")
+        saved = record_path.parent / name
+        if inside_without_links(storage_root, saved) is None or (saved.exists() and not saved.is_file()):
+            raise ValueError("registered original escaped storage root")
+        if not saved.exists() or saved.stat().st_size != size or sha256_file(saved) != digest:
+            # 観測記録は書き換えず、同じURL・hashの再取得copyから原本だけ復旧する。
+            handle, stage_name = tempfile.mkstemp(prefix=".restore-", dir=record_path.parent)
+            os.close(handle)
+            stage = Path(stage_name)
+            try:
+                shutil.copy2(input_path, stage)
+                if stage.stat().st_size != size or sha256_file(stage) != digest:
+                    raise ValueError("restoration copy does not match registration")
+                if inside_without_links(storage_root, saved) is None:
+                    raise ValueError("registered original escaped storage root")
+                if saved.exists():
+                    handle, backup_name = tempfile.mkstemp(prefix="corrupt-", dir=record_path.parent)
+                    os.close(handle)
+                    os.replace(saved, backup_name)  # 破損したbyteも捨てない。
+                os.replace(stage, saved)
+            finally:
+                stage.unlink(missing_ok=True)
     return record_path.parent.name
 
 

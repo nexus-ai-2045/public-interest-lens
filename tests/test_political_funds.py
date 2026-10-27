@@ -747,7 +747,7 @@ class EvidenceContractTests(unittest.TestCase):
             self.assertTrue(rows[0]["material_id"])
             self.assertEqual((root / "store" / pf.TASK_ID / rows[0]["material_id"] / "original.pdf").read_bytes(), body)
 
-    def test_missing_registered_original_is_not_treated_as_done(self):
+    def test_missing_registered_original_is_refetched_repaired_and_verified(self):
         from unittest import mock
         body = b"original report bytes"
         index = [{"PDF_URL": "https://a.example/x.pdf"}]
@@ -761,8 +761,9 @@ class EvidenceContractTests(unittest.TestCase):
                 second = pf.download(index, first, storage=root / "store", wait=0,
                                      get_bytes=getter, free_bytes=lambda path: 10 ** 12)
             getter.assert_called_once()
-            self.assertTrue(second[0]["状態"].startswith("失敗"))
-            self.assertEqual([p.read_bytes() for p in (root / "work" / "download").glob("*.pdf")], [body])
+            self.assertEqual(second[0]["状態"], "取得済み")
+            self.assertTrue(pf.registered_download(second[0], root / "store"))
+            self.assertEqual(list((root / "work" / "download").glob("*.pdf")), [])
 
     def test_reader_categories_do_not_create_false_agreement(self):
         row = {"区分": "パーティー対価", "相手方": "あさひ会", "金額": 100, "頁": 1}
