@@ -821,15 +821,21 @@ def fold_name(name: str) -> str:
     return nfkc(name or "").translate(NAME_FOLDS)
 
 
-def manifest_meta(manifest: list[dict[str, str]], index: list[dict[str, str]]) -> dict[str, dict[str, str]]:
+def manifest_meta(manifest: list[dict[str, str]], index: list[dict[str, str]], storage: Path = MATERIALS) -> dict[str, dict[str, str]]:
     """sha256 ごとの出典（PDF_URL・年分・報告団体）。読み手が行を出したかどうかに関係なく、原簿から決める。"""
     index_by_url = {r["PDF_URL"]: r for r in index}
     out = {}
     for m in manifest:
-        if m.get("sha256") and m["sha256"] not in out:
+        if (m.get("状態") == "取得済み" and m.get("sha256") and m["sha256"] not in out
+                and registered_download(m, storage)):
             i = index_by_url.get(m["PDF_URL"], {})
             out[m["sha256"]] = {"sha256": m["sha256"], "PDF_URL": m["PDF_URL"], "年分": i.get("年分", ""), "報告団体": i.get("団体名", "")}
     return out
+
+
+def rows_for_verified_reports(rows: list[dict[str, str]], meta: dict[str, dict[str, str]]) -> list[dict[str, str]]:
+    """保存済みの読み手・一致行も、現在読み戻せた原本と出典へ再束縛する。"""
+    return [{**row, **meta[row["sha256"]]} for row in rows if row.get("sha256") in meta]
 
 
 def load_line_b(directory: Path, meta_by_sha: dict[str, dict[str, str]], line: str = "B") -> list[dict[str, str]]:
@@ -1257,7 +1263,7 @@ def main(argv: list[str] | None = None) -> int:
                 by_sha.setdefault(r["sha256"], []).append(r["様式"])
             print(f"頁 {len(pages)}件（AI が読む頁 {sum(len(pages_to_read(f)) for f in by_sha.values())}件）")
         elif phase == "parse":
-            meta_by_sha = manifest_meta(read_csv(MANIFEST), read_csv(INDEX))
+            meta_by_sha = manifest_meta(read_csv(MANIFEST), read_csv(INDEX), args.storage)
             # AI の読み手の結果がある PDF（画像 PDF）は、規則で読めた一部の行ではなく AI の結果を系統Aにする
             ai_read = {path.stem for path in args.line_a_ai.glob("*.json")} if args.line_a_ai.is_dir() else set()
             rows = []
@@ -1273,9 +1279,10 @@ def main(argv: list[str] | None = None) -> int:
         elif phase == "compare":
             line_a = read_csv(WORK / "line-a.csv")
             # 系統Aが1行も読めなかった PDF でも、B・C一致で採る行に出典が付くよう、原簿（manifest・索引）から補う
-            meta = manifest_meta(read_csv(MANIFEST), read_csv(INDEX))
-            agreed, disagreed = compare(line_a, load_line_b(args.line_b, meta))
-            line_c = [r for r in load_line_b(args.line_c, meta, line="C")]
+            meta = manifest_meta(read_csv(MANIFEST), read_csv(INDEX), args.storage)
+            line_a = rows_for_verified_reports(line_a, meta)
+            agreed, disagreed = compare(line_a, rows_for_verified_reports(load_line_b(args.line_b, meta), meta))
+            line_c = rows_for_verified_reports(load_line_b(args.line_c, meta, line="C"), meta)
             if line_c:
                 agreed, disagreed = tie_break(agreed, disagreed, line_c)
             write_csv(WORK / "agreed.csv", ROW_HEADER + ["照合"], agreed)
@@ -1284,7 +1291,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"一致 {len(agreed)}行・食い違い {len(disagreed)}行")
         elif phase == "link":
             index_by_url = {r["PDF_URL"]: r for r in read_csv(INDEX)}
-            rows = link(read_csv(WORK / "agreed.csv"), index_by_url, read_csv(PERSONS), line_b_attribution(args.line_b), read_csv(MEMBER_GROUPS), line_b_attribution(args.line_a_ai))
+            meta = manifest_meta(read_csv(MANIFEST), read_csv(INDEX), args.storage)
+            eligible = rows_for_verified_reports(read_csv(WORK / "agreed.csv"), meta)
+            rows = link(eligible, index_by_url, read_csv(PERSONS), line_b_attribution(args.line_b), read_csv(MEMBER_GROUPS), line_b_attribution(args.line_a_ai))
             write_csv(DERIVED / "relations.csv", RELATION_HEADER, rows)
             spending = spending_by_member(rows)
             (DERIVED / "spending-by-member.json").write_text(json.dumps({"説明": "議員ごとの関係政治団体の支出（政治資金収支報告書、系統A・B一致分）。点数には使わない。個人の支払先は公表期間（3年）の間だけ報告書どおりの名前を出し、住所は出さない。寄附者・パーティー券購入者の個人は名前を出さない。", "議員": spending}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

@@ -456,9 +456,11 @@ class CompareAndLinkTests(unittest.TestCase):
         self.assertEqual((len(agreed), len(disagreed)), (1, 1))
 
     def test_manifest_meta_gives_source_without_line_a_rows(self):
-        manifest = [{"PDF_URL": "https://example.jp/a.pdf", "sha256": "s1"}, {"PDF_URL": "https://example.jp/b.pdf", "sha256": "s1"}]
+        manifest = [{"PDF_URL": "https://example.jp/a.pdf", "sha256": "s1", "状態": "取得済み"}, {"PDF_URL": "https://example.jp/b.pdf", "sha256": "s1", "状態": "取得済み"}]
         index = [{"PDF_URL": "https://example.jp/a.pdf", "年分": "2024", "団体名": "テスト会"}]
-        meta = pf.manifest_meta(manifest, index)
+        from unittest import mock
+        with mock.patch.object(pf, "registered_download", return_value=True):
+            meta = pf.manifest_meta(manifest, index)
         self.assertEqual(meta["s1"], {"sha256": "s1", "PDF_URL": "https://example.jp/a.pdf", "年分": "2024", "報告団体": "テスト会"})
         with tempfile.TemporaryDirectory() as tmp:
             Path(tmp, "s1.json").write_text(json.dumps({"行": [{"区分": "支出", "費目": "事務所費", "相手方": "株式会社X", "金額": 100, "頁": 5}]}), encoding="utf-8")
@@ -583,6 +585,51 @@ class CompareAndLinkTests(unittest.TestCase):
 
 
 class EvidenceContractTests(unittest.TestCase):
+    def test_cached_rows_cannot_bypass_failed_original_at_any_adoption_phase(self):
+        from unittest import mock
+        from contextlib import ExitStack
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work, store, derived = root / "work", root / "store", root / "derived"
+            work.mkdir()
+            index = [{"PDF_URL": "https://a.example/report.pdf", "年分": "2024", "団体名": "テスト会", "関係議員名": "山田一郎"}]
+            with mock.patch.object(pf, "WORK", work):
+                manifest = pf.download(index, [], storage=store, wait=0,
+                                       get_bytes=lambda url: b"original report", free_bytes=lambda path: 10 ** 12)
+            sha = manifest[0]["sha256"]
+            self.assertEqual(manifest[0]["状態"], "取得済み")
+            self.assertIn(sha, pf.manifest_meta(manifest, index, store))
+            original = pf.material_path(sha, manifest, store)
+            original.write_bytes(b"tampered")
+            self.assertEqual(pf.manifest_meta(manifest, index, store), {})
+            original.write_bytes(b"original report")
+            self.assertIn(sha, pf.manifest_meta(manifest, index, store))
+            manifest[0]["状態"] = "失敗：原本検証に失敗"
+            self.assertEqual(pf.manifest_meta(manifest, index, store), {})
+            row = {"sha256": sha, "PDF_URL": index[0]["PDF_URL"], "年分": "2024", "報告団体": "テスト会",
+                   "区分": "支出", "費目": "事務所費", "相手方": "株式会社テスト", "相手方種別": "法人その他の団体",
+                   "金額": "100", "年月日": "2024-01-01", "頁": "1", "照合": "一致"}
+            for folder in (work / "line-a-ai", work / "line-b", work / "line-c"):
+                folder.mkdir()
+                (folder / f"{sha}.json").write_text(json.dumps({"関係議員名": "山田一郎", "行": [row]}))
+            pf.write_csv(work / "manifest.csv", pf.MANIFEST_HEADER, manifest)
+            pf.write_csv(work / "index.csv", pf.INDEX_HEADER, index)
+            with ExitStack() as stack:
+                for key, value in {"WORK": work, "DERIVED": derived, "MANIFEST": work / "manifest.csv",
+                                   "INDEX": work / "index.csv", "PERSONS": work / "persons.csv",
+                                   "MEMBER_GROUPS": work / "groups.csv"}.items():
+                    stack.enter_context(mock.patch.object(pf, key, value))
+                args = ["--storage", str(store)]
+                self.assertEqual(pf.main(["parse", *args]), 0)
+                self.assertEqual(pf.read_csv(work / "line-a.csv"), [])
+                # parse を飛ばした古い行も、compare と link の各入口で排除する。
+                pf.write_csv(work / "line-a.csv", pf.ROW_HEADER, [row])
+                self.assertEqual(pf.main(["compare", *args]), 0)
+                self.assertEqual(pf.read_csv(work / "agreed.csv"), [])
+                pf.write_csv(work / "agreed.csv", pf.ROW_HEADER + ["照合"], [row])
+                self.assertEqual(pf.main(["link", *args]), 0)
+                self.assertEqual(pf.read_csv(derived / "relations.csv"), [])
+
     def test_failed_retry_keeps_original_provenance_when_space_is_low(self):
         from unittest import mock
         body = b"original report bytes"
