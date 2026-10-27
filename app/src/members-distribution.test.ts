@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { buildMembers } from './members-build';
+import { SPEC_VERSION } from './method-spec';
 
 const root = join(process.cwd(), '..');
 const read = (path: string) => readFileSync(join(root, path), 'utf8');
@@ -28,8 +29,10 @@ it('配布している members.json は、いまの派生データから同じ�
     certainty: Object.fromEntries(JSON.parse(read('app/public/distribution/ranking.json')).laws.map((l: { id: string; certainty: string }) => [l.id, l.certainty])),
   });
   // pending（配分にまだ入っていない法律の一覧）は公開ランキングから付けるので、計算の一致からは外し、下で別に確かめる。
-  const { inputs, pending, ...published } = JSON.parse(read('app/public/distribution/members.json'));
+  const { inputs, pending, generatedFrom, ...published } = JSON.parse(read('app/public/distribution/members.json'));
   expect(Object.keys(inputs).sort()).toEqual(['autoInvolvements', 'autoVotes', 'enacted', 'involvements', 'loss', 'ministries', 'opposing', 'orgStances', 'publish', 'ranking', 'resistance', 'taxLedger', 'voteParties', 'votes']);
+  expect(generatedFrom.methodSpecVersion).toBe(SPEC_VERSION);
+  expect(generatedFrom.codeHashes['app/src/members-build.ts']).toMatch(/^[a-f0-9]{64}$/);
   expect(published).toEqual(JSON.parse(JSON.stringify(built)));
   const ranking = JSON.parse(read('app/public/distribution/ranking.json'));
   const included = new Set(published.laws.map(l => l.id));

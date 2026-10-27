@@ -6,6 +6,15 @@ from _data_gate import requires_data  # noqa: E402
 
 
 class EnforcementDateSourceTest(unittest.TestCase):
+    def test_missing_source_check_is_not_an_empty_success(self):
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        from scripts import build_public_ranking as builder
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(builder, "SOURCE_HELD", Path(tmp) / "missing.json"):
+            with self.assertRaisesRegex(ValueError, "出典チェック"):
+                builder.source_held()
+
     def test_the_house_enacted_law_page_stays_with_the_published_date(self):
         from scripts.build_laws_catalog import source_links
         from scripts.build_public_ranking import _sources
@@ -23,6 +32,38 @@ class PublicRankingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.payload = build(True, "2026-10-17", held_by_check=set())
+
+    def test_generation_uses_one_input_snapshot_and_records_effective_holds(self):
+        import tempfile
+        import shutil
+        import hashlib
+        from pathlib import Path
+        from unittest import mock
+        from scripts import build_public_ranking as builder
+        with tempfile.TemporaryDirectory() as tmp:
+            inputs = {}
+            for key, original in builder.INPUTS.items():
+                path = Path(tmp) / (key + original.suffix)
+                shutil.copyfile(original, path)
+                inputs[key] = path
+            before = inputs["industryVa"].read_bytes()
+            original_rows = builder._rows
+            def changing(name, captured=None):
+                if name == "publish":
+                    inputs["industryVa"].write_bytes(b"changed after capture")
+                    for key in ("enacted", "impact", "dated"):
+                        inputs[key].write_text(inputs[key].read_text().splitlines()[0] + "\n")
+                    inputs["macro"].unlink()
+                return original_rows(name, captured)
+            with mock.patch.object(builder, "INPUTS", inputs):
+                expected = builder.build(True, "2026-10-17", held_by_check={"閣法-169-3"})
+                with mock.patch.object(builder, "_rows", side_effect=changing):
+                    result = builder.build(True, "2026-10-17", held_by_check={"閣法-169-3"})
+            self.assertEqual(result["counts"], expected["counts"])
+            self.assertEqual(len(result["laws"]), len(expected["laws"]))
+            self.assertEqual(result["generatedFrom"]["inputs"]["industryVa"], hashlib.sha256(before).hexdigest())
+            self.assertEqual(result["generatedFrom"]["parameters"], {"heldOut": ["閣法-169-3"]})
+            self.assertNotIn("閣法-169-3", {r["id"] for r in result["laws"]})
 
     def test_committed_file_matches_inputs(self):
         committed = json.loads(OUTPUT.read_text(encoding="utf-8"))

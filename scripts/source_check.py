@@ -399,8 +399,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--ranking", type=Path, default=RANKING)
     parser.add_argument("--dry-run", action="store_true", help="ranking.json と報告を書き換えない")
+    parser.add_argument("--members-only", action="store_true", help="生成済み議員ページと公開ランキングだけを照合し、ファイルを書き換えない")
     args = parser.parse_args()
     current = json.loads(args.ranking.read_text(encoding="utf-8"))
+    if args.members_only:
+        members = json.loads(MEMBERS.read_text(encoding="utf-8"))
+        rows = check_members(members, current)
+        mismatches = [row for row in rows if row["結果"] == NG]
+        print(json.dumps({"memberItems": len(rows), "memberMismatch": len(mismatches)}, ensure_ascii=False))
+        for row in mismatches:
+            print(json.dumps(row, ensure_ascii=False), file=sys.stderr)
+        return 1 if mismatches else 0
     # 承認は記録済みの日付を引き継ぐ。前回外した法律も全件を照合し直す（直っていれば公開に戻る）。
     approve_all = current["approval"]["scope"] == "all-laws"
     approved_at = current["approval"]["approvedAt"] or ""

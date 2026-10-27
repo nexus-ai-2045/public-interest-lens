@@ -1,5 +1,5 @@
 {
-  "schema": "public-ranking/v2",
+  "schema": "public-ranking/v3",
   "generatedFrom": {
     "rules": [
       "bill-triage-v2",
@@ -8,7 +8,16 @@
       "benefit-rule-v1.2",
       "macro-v1"
     ],
+    "methodSpecVersion": "method-spec-v2.2",
+    "codeHashes": {
+      "app/src/method-spec.ts": "47ba15f8eebb382fed5b48e4ec1a5b51107ca876e8037ae7ed5336fa82d2ab77",
+      "scripts/build_public_ranking.py": "5bf3e6e31a430afca8d951e018e642c7b269662cf1e4ed20b0122980a07f8024",
+      "scripts/generation_provenance.py": "7305f180fe2a415389bc00604f5806485c2eb559be545ae0669d616359b6b742",
+      "scripts/path_guard.py": "aa7114e249f6591514297de30c97ee3428526ffa51babb999ab2d17a5aafe3c1"
+    },
     "inputs": {
+      "covidLabels": "ad98eddeb1a88320ad7c08cef2f417bc2cdd60e57085fdf9f097989b3aa1e16b",
+      "industryVa": "e5ade09bf65dd72628a24120d6e5374fafb0b788d1bed38ba9b781e10ff1fd5f",
       "enacted": "f8ec2d1b14c988aad522dafcee33037e6288d0972613eed18a938b7616c8c94b",
       "triage": "62bc7a90ee69c95359f3ad79be8346c05fa811d7f1bf8251227f2d42b4e8a6fb",
       "dated": "2df534d80b08bbaec5c2b793f5eb868f24904dc957a44a582964024fe05f3dc3",
@@ -17,6 +26,14 @@
       "publish": "61aeb6ee78a039ac3f5577f976b7e897d2753ab1f025143a3e89342631b091b2",
       "enforcement": "b5ba88726efbc30088831ee102b740f86f73ea2bee82e74083fcb3a7c503c3b7",
       "macro": "3e0416fc42a2bd09cc6ecf460f32fdd43aa86db4c79aac372075a61d8763416d"
+    },
+    "parameters": {
+      "heldOut": [
+        "閣法-169-16",
+        "閣法-169-3",
+        "閣法-169-4",
+        "閣法-169-5"
+      ]
     }
   },
   "approval": {

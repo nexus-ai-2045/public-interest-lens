@@ -1,5 +1,6 @@
+import type { GenerationMetadata } from './generation-metadata';
 /**
- * 公開用の議員ページのデータ（public-members/v2）を作る。
+ * 公開用の議員ページのデータ（public-members/v3）を作る。
  * 配分は causal-allocation.ts（成立への寄与の Shapley 値）を使う。この人の行動が無ければ法律は成立したか、を投票のしくみで測り、法律の額をその割合で配る。
  * 額が出た法律（参考の行を除く）に関与の記録と参議院の投票の記録があれば、自動で配分に入る。人物名はデータとして受け取るだけで、このファイルには書かない。
  */
@@ -124,7 +125,8 @@ export function taxLedgerOf(csv: string): TaxLedgerLaw[] {
 }
 
 export type PublicMembers = {
-  schema: 'public-members/v2';
+  schema: 'public-members/v3';
+  generatedFrom?: GenerationMetadata;
   rules: string[];
   laws: PublicMemberLaw[];
   members: PublicMember[];
@@ -382,7 +384,7 @@ export function buildMembers(input: MemberInputs): PublicMembers {
   const inLaws = counted.filter(r => lawIds.has(r['法律ID']));
   const roleRows = inLaws.filter(r => r['行動'] === 'decide' || r['行動'] === 'vote');
   return {
-    schema: 'public-members/v2',
+    schema: 'public-members/v3',
     rules: ['allocation-v1', 'causal-shapley-v1', 'loss-rule-v1', 'benefit-rule-v1.2'],
     laws: lawOut,
     members,

@@ -1,3 +1,5 @@
+import { parsePublicMembers as readMembers, parsePublicMembersReference } from './public-distribution';
+export { parsePublicMembers as readMembers } from './public-distribution';
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight, Info } from 'lucide-react';
 import { SiteShell } from './SiteHeader';
@@ -33,11 +35,7 @@ function hostLabel(url: string): string {
   return host;
 }
 
-export function readMembers(text: string): PublicMembers {
-  const data = JSON.parse(text) as PublicMembers;
-  if (data.schema !== 'public-members/v2' || !Array.isArray(data.members) || !Array.isArray(data.laws)) throw new Error('議員データの形式が違います');
-  return data;
-}
+
 
 const ROLE_LABEL: Record<string, string> = { 役職_内閣: '内閣', 役職_国会: '国会', 役職_党: '党', 選挙: '選挙', 提出法案: '提出法案', 政治資金: '政治資金', 公式発言: '公式発言', 資産公開: '資産公開', その他公的記録: 'その他' };
 
@@ -335,7 +333,8 @@ export function MembersPage() {
   useEffect(() => {
     const controller = new AbortController();
     void fetch(distributionReferenceUrl, { signal: controller.signal, cache: 'no-store' })
-      .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<PublicMembersReference>; })
+      .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.text(); })
+      .then(parsePublicMembersReference)
       .then(setReference).catch(e => { if (!controller.signal.aborted) setReferenceError(`所属政党の表を読み込めませんでした（${e instanceof Error ? e.message : e}）`); });
     return () => controller.abort();
   }, []);

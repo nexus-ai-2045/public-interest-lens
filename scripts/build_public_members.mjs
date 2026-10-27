@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { generationMetadata } from './generation_provenance.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const app = join(root, 'app');
@@ -45,6 +46,7 @@ try {
   const included = new Set(payload.laws.map(l => l.id));
   payload.pending = ranking.laws.filter(l => (l.certainty === '高' || l.certainty === '中') && !included.has(l.id))
     .map(l => ({ id: l.id, title: l.title, side: l.side, certainty: l.certainty, median: l.amountMedianYen }));
+  payload.generatedFrom = await generationMetadata(server, root, ['app/src/members-build.ts'], ['scripts/build_public_members.mjs']);
   payload.inputs = Object.fromEntries(Object.entries(text).map(([k, t]) => [k, createHash('sha256').update(t).digest('hex')]));
   writeFileSync(join(app, 'public/distribution/members.json'), JSON.stringify(payload) + '\n');
   console.log(JSON.stringify(payload.counts), payload.laws.map(l => l.id).join(' '), `集めている途中 ${payload.pending.length}本`);

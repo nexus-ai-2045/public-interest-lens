@@ -1,3 +1,6 @@
+import type { PublicMembers } from './members-build';
+import type { PublicMembersReference } from './members-reference';
+import { validGenerationMetadata, type GenerationMetadata } from './generation-metadata';
 export type PublicCitation = { id: string; title: string; url: string; license: string; locator: string; quote: string };
 export type PublicActor = { id: string; label: string; date: string; action: string; identityNote: string; citationIds: string[]; identityCitationIds?: string[] };
 export type PublicCase = {
@@ -75,8 +78,8 @@ export type PublicRankingLaw = {
 };
 export type PublicRankingOther = { id: string; title: string; outcome: string; reason: string };
 export type PublicRanking = {
-  schema: 'public-ranking/v2';
-  generatedFrom: { rules: string[]; inputs: Record<string, string> };
+  schema: 'public-ranking/v3';
+  generatedFrom: { rules: string[]; inputs: Record<string, string>; parameters: { heldOut: string[] } } & GenerationMetadata;
   approval: { approvedAt: string | null; scope: 'all-laws' | null; note: string | null };
   laws: PublicRankingLaw[];
   others: PublicRankingOther[];
@@ -100,8 +103,10 @@ const signedYen = (value: unknown) => Number.isSafeInteger(value);
 export function parsePublicRanking(text: string): PublicRanking {
   if (text.length > RANKING_TEXT_LIMIT) throw new Error('ランキングのデータが大きすぎます。');
   const value = JSON.parse(text) as PublicRanking;
-  if (!onlyKeys(value, ['schema', 'generatedFrom', 'approval', 'laws', 'others', 'counts']) || value.schema !== 'public-ranking/v2') throw new Error('ランキングの形式が不正です。');
-  if (!onlyKeys(value.generatedFrom, ['rules', 'inputs']) || !Array.isArray(value.generatedFrom.rules) || !value.generatedFrom.rules.every(rule => prose(rule, 80)) || !Object.values(value.generatedFrom.inputs ?? {}).every(hash => typeof hash === 'string' && /^[a-f0-9]{64}$/.test(hash))) throw new Error('生成元の記録が不正です。');
+  if (!onlyKeys(value, ['schema', 'generatedFrom', 'approval', 'laws', 'others', 'counts']) || value.schema !== 'public-ranking/v3') throw new Error('ランキングの形式が不正です。');
+  if (!onlyKeys(value.generatedFrom, ['rules', 'inputs', 'methodSpecVersion', 'codeHashes', 'parameters']) || !Array.isArray(value.generatedFrom.rules) || !value.generatedFrom.rules.every(rule => prose(rule, 80)) || !Object.values(value.generatedFrom.inputs ?? {}).every(hash => typeof hash === 'string' && /^[a-f0-9]{64}$/.test(hash))) throw new Error('生成元の記録が不正です。');
+  if (!validGenerationMetadata({ methodSpecVersion: value.generatedFrom.methodSpecVersion, codeHashes: value.generatedFrom.codeHashes }, ['scripts/build_public_ranking.py', 'scripts/generation_provenance.py', 'scripts/path_guard.py'])) throw new Error('計算方法・生成ソースの版が不正です。');
+  if (!onlyKeys(value.generatedFrom.parameters, ['heldOut']) || !Array.isArray(value.generatedFrom.parameters.heldOut) || !value.generatedFrom.parameters.heldOut.every(id => typeof id === 'string' && /^(閣法|衆法|参法)-[0-9]+-[0-9]+$/.test(id))) throw new Error('出典の保留条件が不正です。');
   const { approval } = value;
   if (!onlyKeys(approval, ['approvedAt', 'scope', 'note'])) throw new Error('承認の記録が不正です。');
   const recorded = approval.scope === 'all-laws';
@@ -132,4 +137,19 @@ export function parsePublicRanking(text: string): PublicRanking {
   const { counts } = value;
   if (counts.published !== value.laws.length || counts.others !== value.others.length || counts.confirmed + counts.reference !== counts.published || counts.published + counts.others !== counts.enacted) throw new Error('公開件数が一致しません。');
   return value;
+}
+
+
+export function parsePublicMembers(text: string): PublicMembers {
+  const data = JSON.parse(text) as PublicMembers;
+  if (data.schema !== 'public-members/v3' || !Array.isArray(data.members) || !Array.isArray(data.laws)) throw new Error('議員データの形式が違います');
+  if (!validGenerationMetadata(data.generatedFrom, ['app/src/members-build.ts', 'scripts/build_public_members.mjs', 'scripts/generation_provenance.mjs', 'scripts/path_guard.mjs', 'app/package-lock.json'])) throw new Error('議員データの生成元が不正です');
+  return data;
+}
+
+export function parsePublicMembersReference(text: string): PublicMembersReference {
+  const data = JSON.parse(text) as PublicMembersReference;
+  if (data.schema !== 'public-members-reference/v2' || !Array.isArray(data.members)) throw new Error('参考一覧の形式が違います');
+  if (!validGenerationMetadata(data.generatedFrom, ['app/src/members-reference.ts', 'scripts/build_reference_members.mjs', 'scripts/generation_provenance.mjs', 'scripts/path_guard.mjs', 'app/package-lock.json'])) throw new Error('参考一覧の生成元が不正です');
+  return data;
 }
