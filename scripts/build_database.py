@@ -347,6 +347,20 @@ JGB_STAGE = {"実績": "決算", "補正後": "補正", "当初": "当初"}
 OKU = 1e8  # fetch_fiscal_more.py は億円。DB は load_fiscal と同じく円にそろえる
 
 
+def load_monetary_decisions(db: Db) -> None:
+    # 日銀の金融政策決定会合（scripts/fetch_monetary.py）。委員は声明の姓だけで people と結べないので、賛否は要旨に書き decision_votes には入れない。
+    path = ACQ / "monetary-stats" / "mpm-decisions.csv"
+    if not path.exists():
+        return
+    for r in read_csv(path):
+        y, m, d = (int(x) for x in r["会合日"].split("-"))
+        vote = r["賛否"] or "賛否の記載なし"
+        summary = f"{r['決定の要旨']} 賛否：{vote}" + (f"（反対：{r['反対']}）" if r["反対"] else "") + "。委員ごとの賛否は monetary-stats/mpm-votes.csv"
+        db.insert("decisions", {"decision_id": r["決定ID"], "country": "JPN", "kind": "金融政策", "title": f"日銀 金融政策決定会合（{y}年{m}月{d}日）：{r['題名']}",
+                                "decided_on": r["会合日"], "effective_on": None, "effective_origin": None, "fiscal_year": None, "decided_by": "日本銀行政策委員会",
+                                "source_id": db.source(r["出典URL"]), "summary": summary})
+
+
 def load_fiscal_more(db: Db) -> None:
     """load_fiscal の後に、重ならないものだけ足す。特別会計は照合（主要経費の足し上げ＝表の合計）が「一致」の（会計・表・年度・段階）だけを入れ、
     不一致のある年度は年度ごと入れない。地方財政は load_fiscal に無い（年度・項目）だけ、国策は無い決定だけ足す。"""
@@ -536,6 +550,14 @@ def load_series(db: Db) -> None:
             add_series(db, seen, sid=f"gap:{path.stem}:{r['系列']}:{r['国']}:{r['区分']}:{r['単位']}", dataset=f"gap-stats/{path.name}", domain=domain_of(r["系列"]),
                        country=r["国"], label=r["系列"], breakdown=r["区分"], price="", unit=r["単位"], base="",
                        kind=period_kind(r["区分"], r.get("備考", ""), r["系列"]), url=r["出典URL"], year=r["年"], value=r["値"], note=r.get("備考", ""))
+    # 金融政策と海外比較（scripts/fetch_monetary.py：日本銀行・BIS・IMF・FRED）。領域は取り込み側で決めてある
+    for path in sorted((ACQ / "monetary-stats").glob("*.csv")):
+        if path.name in ("manifest.csv", "checks.csv") or path.name.startswith("mpm-"):
+            continue
+        for r in read_csv(path):
+            add_series(db, seen, sid=f"monetary:{path.stem}:{r['系列']}:{r['国']}:{r['区分']}", dataset=f"monetary-stats/{path.name}", domain=r["領域"],
+                       country=r["国"], label=r["系列"], breakdown=r["区分"], price="", unit=r["単位"], base="", kind="暦年", url=r["出典URL"],
+                       year=r["年"], value=r["値"], note=r["備考"])
     for path in sorted(TARGET_SERIES.glob("*.csv")):
         if path.name in ("manifest.csv", "target-links.csv"):
             continue
@@ -662,6 +684,7 @@ def build(out: Path, write_charts: bool) -> dict:
     load_other_decisions(db)
     load_fiscal(db)
     load_fiscal_more(db)
+    load_monetary_decisions(db)
     load_series(db)
     load_target_progress(db)
     digest = inputs_digest()
