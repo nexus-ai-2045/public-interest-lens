@@ -21,6 +21,28 @@ class RoadmapCheckTest(unittest.TestCase):
         self.assertEqual([], roadmap_check.check_roadmap(text))
         self.assertEqual([], roadmap_check.check_adrs(roadmap_check.ADR_DIR))
 
+    def test_goal_indicators_match_data(self):
+        text = roadmap_check.ROADMAP.read_text(encoding="utf-8")
+        self.assertEqual([], roadmap_check.check_goal_metrics(text, roadmap_check.goal_metrics()))
+
+    def test_stale_handwritten_number_fails_and_update_fixes_it(self):
+        text = roadmap_check.ROADMAP.read_text(encoding="utf-8")
+        metrics = roadmap_check.goal_metrics()
+        stale = roadmap_check.MARK.sub(
+            lambda m: "<!--m:laws_enacted-->9,999<!--/m-->" if m.group(1) == "laws_enacted" else m.group(0), text)
+        problems = roadmap_check.check_goal_metrics(stale, metrics)
+        self.assertTrue(any("laws_enacted" in p and "9,999" in p for p in problems))
+        self.assertEqual([], roadmap_check.check_goal_metrics(roadmap_check.update_goal_metrics(stale, metrics), metrics))
+
+    def test_goal_row_without_mark_or_unknown_key_fails(self):
+        metrics = {"a": 1}
+        row = "| G{n} | x | {now} |\n"
+        text = "".join(row.format(n=n, now="<!--m:a-->1<!--/m-->") for n in range(1, 9))
+        self.assertEqual([], roadmap_check.check_goal_metrics(text, metrics))
+        self.assertTrue(any(p.startswith("G3：") for p in roadmap_check.check_goal_metrics(text.replace("| G3 | x | <!--m:a-->1<!--/m--> |", "| G3 | x | 手書きの12本 |"), metrics)))
+        self.assertTrue(any("定義に無い" in p for p in roadmap_check.check_goal_metrics(text + "<!--m:zzz-->1<!--/m-->", metrics)))
+        self.assertTrue(any(p.startswith("G8：") for p in roadmap_check.check_goal_metrics(text.replace("| G8 |", "| G9 |"), metrics)))
+
     def test_good_table(self):
         self.assertEqual(2, len(roadmap_check.roadmap_rows(GOOD)))
         self.assertEqual([], roadmap_check.check_roadmap(GOOD))
