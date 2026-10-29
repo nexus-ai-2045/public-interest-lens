@@ -56,7 +56,10 @@ class TestPublishedTables(unittest.TestCase):
                 lo, rr, hi = float(r['波及比率_下限']), float(r['波及比率r']), float(r['波及比率_上限'])
                 self.assertLessEqual(lo, rr)
                 self.assertLessEqual(rr, hi)
-                self.assertGreaterEqual(int(r['波及を含む上限_円']) / int(r['額_中央値_円']), 1 if int(r['額_中央値_円']) > 0 else -1e9)
+                small, large, med = (int(r[k]) for k in ('波及を含む額_絶対値が小さい側_円', '波及を含む額_絶対値が大きい側_円', '額_中央値_円'))
+                self.assertLessEqual(abs(med), abs(small))
+                self.assertLessEqual(abs(small), abs(large))
+                self.assertEqual(med >= 0, large >= 0)  # 符号は変わらない
             else:
                 self.assertTrue(r['理由'], r['id'])  # 出さないときは理由を書く
 

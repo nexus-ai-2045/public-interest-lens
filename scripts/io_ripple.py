@@ -29,10 +29,14 @@ from pathlib import Path
 import numpy as np
 import openpyxl
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from register_external_material import register_once  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / 'data/acquired/io-tables/raw'
 ACQ = ROOT / 'data/acquired/io-tables'
 OUT = ROOT / 'data/derived/io-ripple-v1'
+TASK_ID = 'io-ripple'  # 外部資料の保管庫 <root>/.local/external-materials/io-ripple/（AGENTS.md）
 UA = 'public-interest-lens io-ripple (research; GitHub nexus-ai-2045/public-interest-lens)'
 
 SOURCES = {
@@ -58,6 +62,9 @@ def fetch() -> None:
         if not p.exists():
             req = urllib.request.Request(url, headers={'User-Agent': UA})
             p.write_bytes(urllib.request.urlopen(req, timeout=120).read())
+        # 原本は外部資料として登録する（AGENTS.md。中身の確かさは unverified から。同じ日・URL・中身は登録し直さない）
+        register_once(input_path=p, source_url=url, task_id=TASK_ID, title=f'産業連関表の原本（{name}）', purpose=title,
+                      storage_root=ROOT / '.local' / 'external-materials', observed_at=datetime.now(timezone.utc).isoformat(timespec='seconds'))
         rows.append({'file': name, 'url': url, 'title': title, 'sha256': hashlib.sha256(p.read_bytes()).hexdigest(),
                      'bytes': p.stat().st_size, 'fetched_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%MZ')})
     with open(ACQ / 'manifest.csv', 'w', newline='', encoding='utf-8') as f:
@@ -341,7 +348,8 @@ def aggregation_offset(mt, basic):
 
 
 def apply_laws() -> None:
-    """macro-v1 の額に波及を別欄で付ける。波及は川上だけ、額に足さず「波及を含む上限」として別に出す。"""
+    """macro-v1 の額に波及を別欄で付ける。波及は川上だけ、額には足さず別欄に出す。額は符号つき（正は損失、負は便益）なので、「上限」ではなく
+    波及を含む額の端点を絶対値の小さい側と大きい側で出す（負の額に比率を掛けると絶対値が大きい側は下限になるため）。"""
     basic = {}
     for label, sheet, year in TABLES:
         if label.endswith('名目'):
@@ -389,7 +397,8 @@ def apply_laws() -> None:
             '波及比率_下限': f'{rr * np.exp(-hw):.4f}' if rr is not None else '',
             '波及比率_上限': f'{rr * np.exp(hw):.4f}' if rr is not None else '',
             '波及の額_中央値_円': int(med * rr) if rr is not None else '',
-            '波及を含む上限_円': int(med * (1 + rr * np.exp(hw))) if rr is not None else '',
+            '波及を含む額_絶対値が小さい側_円': int(med * (1 + rr * np.exp(-hw))) if rr is not None else '',
+            '波及を含む額_絶対値が大きい側_円': int(med * (1 + rr * np.exp(hw))) if rr is not None else '',
             '理由': reason,
         })
     with open(OUT / 'laws_ripple.csv', 'w', newline='', encoding='utf-8') as f:
