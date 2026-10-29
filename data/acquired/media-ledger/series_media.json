@@ -1,0 +1,2927 @@
+[
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2025,
+  "value": "24,868,122",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "24,868,122",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2025,
+  "value": "23,373,706",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "23,373,706",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2025,
+  "value": "1,494,416",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "1,494,416",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2024,
+  "value": "26,616,578",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "26,616,578",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2024,
+  "value": "24,938,756",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "24,938,756",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2024,
+  "value": "1,677,822",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "1,677,822",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2023,
+  "value": "28,590,486",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "28,590,486",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2023,
+  "value": "26,674,129",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "26,674,129",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2023,
+  "value": "1,916,357",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "1,916,357",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2022,
+  "value": "30,846,631",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "30,846,631",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2022,
+  "value": "28,694,915",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "28,694,915",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2022,
+  "value": "2,151,716",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "2,151,716",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2021,
+  "value": "33,027,135",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "33,027,135",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2021,
+  "value": "30,657,153",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "30,657,153",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2021,
+  "value": "2,369,982",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "2,369,982",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2020,
+  "value": "35,091,944",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "35,091,944",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2020,
+  "value": "32,454,796",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "32,454,796",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2020,
+  "value": "2,637,148",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "2,637,148",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2019,
+  "value": "37,811,248",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "37,811,248",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2019,
+  "value": "34,877,964",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "34,877,964",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2019,
+  "value": "2,933,284",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "2,933,284",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2018,
+  "value": "39,901,576",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "39,901,576",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2018,
+  "value": "36,823,021",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "36,823,021",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2018,
+  "value": "3,078,555",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "3,078,555",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2017,
+  "value": "42,128,189",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "42,128,189",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2017,
+  "value": "38,763,641",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "38,763,641",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2017,
+  "value": "3,364,548",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "3,364,548",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2016,
+  "value": "43,276,147",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "43,276,147",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2016,
+  "value": "39,821,106",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "39,821,106",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2016,
+  "value": "3,455,041",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "3,455,041",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2015,
+  "value": "44,246,688",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "44,246,688",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2015,
+  "value": "40,691,869",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "40,691,869",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2015,
+  "value": "3,554,819",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "3,554,819",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2014,
+  "value": "45,362,672",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "45,362,672",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2014,
+  "value": "41,687,125",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "41,687,125",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2014,
+  "value": "3,675,547",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "3,675,547",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2013,
+  "value": "46,999,468",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "46,999,468",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2013,
+  "value": "43,126,352",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "43,126,352",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2013,
+  "value": "3,873,116",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "3,873,116",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2012,
+  "value": "47,777,913",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,777,913",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2012,
+  "value": "43,723,161",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "43,723,161",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2012,
+  "value": "4,054,752",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,054,752",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2011,
+  "value": "48,345,304",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "48,345,304",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2011,
+  "value": "44,091,335",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "44,091,335",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2011,
+  "value": "4,253,969",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,253,969",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2010,
+  "value": "49,321,840",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "49,321,840",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2010,
+  "value": "44,906,720",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "44,906,720",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2010,
+  "value": "4,415,120",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,415,120",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2009,
+  "value": "50,352,831",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "50,352,831",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2009,
+  "value": "45,659,885",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "45,659,885",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2009,
+  "value": "4,692,946",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,692,946",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2008,
+  "value": "51,491,409",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "51,491,409",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2008,
+  "value": "46,563,681",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "46,563,681",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2008,
+  "value": "4,927,728",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,927,728",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2007,
+  "value": "52,028,671",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "52,028,671",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2007,
+  "value": "46,963,136",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "46,963,136",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2007,
+  "value": "5,065,535",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,065,535",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2006,
+  "value": "52,310,478",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "52,310,478",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2006,
+  "value": "47,056,527",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,056,527",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2006,
+  "value": "5,253,951",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,253,951",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2005,
+  "value": "52,568,032",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "52,568,032",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2005,
+  "value": "47,189,832",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,189,832",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2005,
+  "value": "5,378,200",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,378,200",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2004,
+  "value": "53,021,564",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "53,021,564",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2004,
+  "value": "47,469,987",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,469,987",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2004,
+  "value": "5,551,577",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,551,577",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2003,
+  "value": "52,874,959",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "52,874,959",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2003,
+  "value": "47,282,645",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,282,645",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2003,
+  "value": "5,592,314",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,592,314",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2002,
+  "value": "53,198,444",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "53,198,444",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2002,
+  "value": "47,390,027",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,390,027",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2002,
+  "value": "5,808,417",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,808,417",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2001,
+  "value": "53,680,753",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "53,680,753",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2001,
+  "value": "47,559,052",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,559,052",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2001,
+  "value": "6,121,701",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "6,121,701",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 2000,
+  "value": "53,708,831",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "53,708,831",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 2000,
+  "value": "47,401,669",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,401,669",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 2000,
+  "value": "6,307,162",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "6,307,162",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1999,
+  "value": "53,757,281",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "53,757,281",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1999,
+  "value": "47,464,599",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,464,599",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1999,
+  "value": "6,292,682",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "6,292,682",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1998,
+  "value": "53,669,866",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "53,669,866",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1998,
+  "value": "47,289,617",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,289,617",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1998,
+  "value": "6,380,249",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "6,380,249",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1997,
+  "value": "53,765,074",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "53,765,074",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1997,
+  "value": "47,262,982",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,262,982",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1997,
+  "value": "6,502,092",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "6,502,092",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1996,
+  "value": "53,555,803",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "53,555,803",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1996,
+  "value": "46,975,839",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "46,975,839",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1996,
+  "value": "6,579,964",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "6,579,964",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1995,
+  "value": "52,854,538",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "52,854,538",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1995,
+  "value": "46,511,872",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "46,511,872",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1995,
+  "value": "6,342,666",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "6,342,666",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1994,
+  "value": "52,600,502",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "52,600,502",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1994,
+  "value": "46,224,993",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "46,224,993",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1994,
+  "value": "6,375,509",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "6,375,509",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1993,
+  "value": "52,433,451",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "52,433,451",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1993,
+  "value": "46,072,744",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "46,072,744",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1993,
+  "value": "6,360,707",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "6,360,707",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1992,
+  "value": "51,938,092",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "51,938,092",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1992,
+  "value": "45,748,937",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "45,748,937",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1992,
+  "value": "6,189,155",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "6,189,155",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1991,
+  "value": "52,026,372",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "52,026,372",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1991,
+  "value": "46,029,154",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "46,029,154",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1991,
+  "value": "5,997,218",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,997,218",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1990,
+  "value": "51,907,538",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "51,907,538",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1990,
+  "value": "46,059,774",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "46,059,774",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1990,
+  "value": "5,847,764",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,847,764",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1989,
+  "value": "51,063,353",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "51,063,353",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1989,
+  "value": "45,351,852",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "45,351,852",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1989,
+  "value": "5,711,501",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,711,501",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1988,
+  "value": "50,597,565",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "50,597,565",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1988,
+  "value": "44,960,104",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "44,960,104",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1988,
+  "value": "5,637,461",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,637,461",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1987,
+  "value": "49,831,896",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "49,831,896",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1987,
+  "value": "44,250,975",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "44,250,975",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1987,
+  "value": "5,580,921",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,580,921",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1986,
+  "value": "48,569,364",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "48,569,364",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1986,
+  "value": "43,074,181",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "43,074,181",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1986,
+  "value": "5,495,183",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,495,183",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1985,
+  "value": "48,231,671",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "48,231,671",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1985,
+  "value": "42,673,198",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "42,673,198",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1985,
+  "value": "5,558,473",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,558,473",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1984,
+  "value": "47,515,488",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,515,488",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1984,
+  "value": "42,096,162",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "42,096,162",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1984,
+  "value": "5,419,326",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,419,326",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1983,
+  "value": "47,040,709",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,040,709",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1983,
+  "value": "41,616,862",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "41,616,862",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1983,
+  "value": "5,423,847",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,423,847",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1982,
+  "value": "47,993,030",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,993,030",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1982,
+  "value": "42,166,062",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "42,166,062",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1982,
+  "value": "5,826,968",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,826,968",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1981,
+  "value": "47,256,150",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "47,256,150",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1981,
+  "value": "41,639,715",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "41,639,715",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1981,
+  "value": "5,616,435",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,616,435",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1980,
+  "value": "46,391,096",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "46,391,096",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1980,
+  "value": "40,944,751",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "40,944,751",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1980,
+  "value": "5,446,345",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,446,345",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1979,
+  "value": "45,851,852",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "45,851,852",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1979,
+  "value": "40,476,282",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "40,476,282",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1979,
+  "value": "5,375,570",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,375,570",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1978,
+  "value": "44,276,615",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "44,276,615",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1978,
+  "value": "39,228,302",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "39,228,302",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1978,
+  "value": "5,048,313",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "5,048,313",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1977,
+  "value": "43,113,521",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "43,113,521",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1977,
+  "value": "38,127,716",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "38,127,716",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1977,
+  "value": "4,985,805",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,985,805",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1976,
+  "value": "42,119,566",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "42,119,566",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1976,
+  "value": "37,371,351",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "37,371,351",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1976,
+  "value": "4,748,215",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,748,215",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1975,
+  "value": "40,512,598",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "40,512,598",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1975,
+  "value": "35,921,496",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "35,921,496",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1975,
+  "value": "4,591,102",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,591,102",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1974,
+  "value": "40,005,526",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "40,005,526",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1974,
+  "value": "35,412,951",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "35,412,951",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1974,
+  "value": "4,592,575",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,592,575",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1973,
+  "value": "39,847,332",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "39,847,332",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1973,
+  "value": "35,199,798",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "35,199,798",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1973,
+  "value": "4,647,534",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,647,534",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1972,
+  "value": "38,162,063",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "38,162,063",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1972,
+  "value": "33,797,786",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "33,797,786",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1972,
+  "value": "4,364,277",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,364,277",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1971,
+  "value": "36,562,450",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "36,562,450",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1971,
+  "value": "32,399,739",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "32,399,739",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1971,
+  "value": "4,162,711",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,162,711",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1970,
+  "value": "36,303,928",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "36,303,928",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1970,
+  "value": "31,875,907",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "31,875,907",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1970,
+  "value": "4,428,021",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,428,021",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1969,
+  "value": "35,073,213",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "35,073,213",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1969,
+  "value": "30,646,021",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "30,646,021",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1969,
+  "value": "4,427,192",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,427,192",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1968,
+  "value": "33,792,078",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "33,792,078",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1968,
+  "value": "29,750,759",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "29,750,759",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1968,
+  "value": "4,041,319",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "4,041,319",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1967,
+  "value": "32,447,141",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "32,447,141",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1967,
+  "value": "28,556,314",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "28,556,314",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1967,
+  "value": "3,890,827",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "3,890,827",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1966,
+  "value": "30,935,235",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "30,935,235",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1966,
+  "value": "27,367,031",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "27,367,031",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1966,
+  "value": "3,568,204",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "3,568,204",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 合計（一般紙+スポーツ紙、朝夕刊セットを1部）",
+  "year": 1965,
+  "value": "29,776,465",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "29,776,465",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 一般紙",
+  "year": 1965,
+  "value": "26,794,713",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "26,794,713",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞発行部数 スポーツ紙",
+  "year": 1965,
+  "value": "2,981,752",
+  "unit": "部",
+  "source_url": "https://www.pressnet.or.jp/data/circulation/circulation01.php",
+  "quote": "2,981,752",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2026,
+  "value": "31,124",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "31,124",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2026,
+  "value": "14,345",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "14,345",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2026,
+  "value": "3,972",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,972",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2025,
+  "value": "32,064",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "32,064",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2025,
+  "value": "14,758",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "14,758",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2025,
+  "value": "3,926",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,926",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2024,
+  "value": "32,982",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "32,982",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2024,
+  "value": "15,434",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "15,434",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2024,
+  "value": "3,886",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,886",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2023,
+  "value": "34,454",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "34,454",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2023,
+  "value": "15,905",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "15,905",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2023,
+  "value": "3,930",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,930",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2022,
+  "value": "35,547",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "35,547",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2022,
+  "value": "16,531",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "16,531",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2022,
+  "value": "3,988",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,988",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2021,
+  "value": "36,701",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "36,701",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2021,
+  "value": "17,148",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "17,148",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2021,
+  "value": "4,026",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "4,026",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2020,
+  "value": "37,294",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "37,294",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2020,
+  "value": "17,685",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "17,685",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2020,
+  "value": "3,929",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,929",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2019,
+  "value": "38,560",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "38,560",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2019,
+  "value": "17,931",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "17,931",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2019,
+  "value": "3,859",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,859",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2018,
+  "value": "41,464",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "41,464",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2018,
+  "value": "18,734",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "18,734",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2018,
+  "value": "3,781",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,781",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2017,
+  "value": "42,193",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "42,193",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2017,
+  "value": "19,327",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "19,327",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2017,
+  "value": "3,741",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,741",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2016,
+  "value": "41,396",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "41,396",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2016,
+  "value": "19,116",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "19,116",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2016,
+  "value": "3,520",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,520",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2015,
+  "value": "41,916",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "41,916",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2015,
+  "value": "19,587",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "19,587",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2015,
+  "value": "3,450",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,450",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2014,
+  "value": "42,282",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "42,282",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2014,
+  "value": "19,208",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "19,208",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2014,
+  "value": "3,134",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,134",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2013,
+  "value": "42,720",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "42,720",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2013,
+  "value": "19,666",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "19,666",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2013,
+  "value": "3,277",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,277",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2012,
+  "value": "44,321",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "44,321",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2012,
+  "value": "20,121",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "20,121",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2012,
+  "value": "3,325",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,325",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2011,
+  "value": "45,318",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "45,318",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2011,
+  "value": "20,305",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "20,305",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2011,
+  "value": "3,235",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,235",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2010,
+  "value": "46,433",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "46,433",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2010,
+  "value": "20,406",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "20,406",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2010,
+  "value": "3,180",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,180",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2009,
+  "value": "47,599",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "47,599",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2009,
+  "value": "21,103",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "21,103",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2009,
+  "value": "3,129",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,129",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2008,
+  "value": "48,331",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "48,331",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2008,
+  "value": "21,093",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "21,093",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2008,
+  "value": "3,108",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "3,108",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2007,
+  "value": "48,069",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "48,069",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2007,
+  "value": "19,124",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "19,124",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2007,
+  "value": "2,631",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "2,631",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2006,
+  "value": "49,668",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "49,668",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2006,
+  "value": "20,773",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "20,773",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2006,
+  "value": "2,642",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "2,642",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2005,
+  "value": "49,523",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "49,523",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2005,
+  "value": "20,315",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "20,315",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2005,
+  "value": "2,436",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "2,436",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2004,
+  "value": "51,863",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "51,863",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2004,
+  "value": "20,979",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "20,979",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2004,
+  "value": "2,450",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "2,450",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2003,
+  "value": "53,488",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "53,488",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2003,
+  "value": "21,311",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "21,311",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2003,
+  "value": "2,458",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "2,458",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 従業員合計（各年4月）",
+  "year": 2002,
+  "value": "54,015",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "54,015",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 記者数（各年4月）",
+  "year": 2002,
+  "value": "20,851",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "20,851",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "新聞・通信社 うち女性記者数（各年4月）",
+  "year": 2002,
+  "value": "2,384",
+  "unit": "人",
+  "source_url": "https://www.pressnet.or.jp/data/employment/employment03.php",
+  "quote": "2,384",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2008,
+  "value": "24,493",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2008\",\"24,493\",\"150\",\"3,905\",\"4,667\",\"6",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2009,
+  "value": "22,574",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2009\",\"22,574\",\"123\",\"3,887\",\"5,134\",\"6",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2010,
+  "value": "22,655",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2010\",\"22,655\",\"116",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2011,
+  "value": "22,502",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2011\",\"22,502\",\"120\",\"4,490\",\"5,177\",\"6",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2012,
+  "value": "22,870",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2012\",\"22,870\",\"115\",\"4,510\",\"4,931\",\"6",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2013,
+  "value": "23,216",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2013\",\"23,216\",\"124\",\"4,491\",\"5,030\",\"6",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2014,
+  "value": "23,375",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2014\",\"23,375\",\"127\",\"3,661\",\"4,975\",\"6",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2015,
+  "value": "23,461",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2015\",\"23,461\",\"126\",\"3,809\",\"5,003\",\"6",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2016,
+  "value": "23,773",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2016\",\"23,773\",\"136\",\"3,463\",\"5,031\",\"7",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2017,
+  "value": "23,471",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2017\",\"23,471\",\"136\",\"3,697\",\"4,992\",\"7",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2018,
+  "value": "23,396",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2018\",\"23,396\",\"143\",\"3,619\",\"5,030\",\"7",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2019,
+  "value": "22,640",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2019\",\"22,640\",\"145\",\"3,623\",\"5,008\",\"7",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2020,
+  "value": "19,993",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2020\",\"19,993\",\"130\",\"3,386\",\"5,006\",\"7",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2021,
+  "value": "21,701",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2021\",\"21,701\",\"135\",\"3,418\",\"4,990\",\"7",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2022,
+  "value": "21,623",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2022\",\"21,623\",\"151\",\"3,370\",\"4,880\",\"6",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2023,
+  "value": "21,582",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2023\",\"21,582\",\"146\",\"3,315\",\"4,795\",\"6",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "民間放送 地上系基幹放送事業者 売上高（営業収益）集計（年度）",
+  "year": 2024,
+  "value": "21,977",
+  "unit": "億円",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00148.csv",
+  "quote": "\"2024\",\"21,977\",\"146\",\"3,200\",\"4,740\",\"6",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 テレビ（リアルタイム）視聴",
+  "year": 2021,
+  "value": "171.9",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2021年\",\"171.9\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 テレビ（録画）視聴",
+  "year": 2021,
+  "value": "19.0",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2021年\",\"171.9\",\"19.0\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 ネット利用",
+  "year": 2021,
+  "value": "156.3",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2021年\",\"171.9\",\"19.0\",\"156.3\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 新聞閲読",
+  "year": 2021,
+  "value": "11.5",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "代\",\"2021年\",\"171.9\",\"19.0\",\"156.3\",\"11.5\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 ラジオ聴取",
+  "year": 2021,
+  "value": "14.3",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "1年\",\"171.9\",\"19.0\",\"156.3\",\"11.5\",\"14.3\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 テレビ（リアルタイム）視聴",
+  "year": 2022,
+  "value": "163.5",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2022年\",\"163.5\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 テレビ（録画）視聴",
+  "year": 2022,
+  "value": "20.5",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2022年\",\"163.5\",\"20.5\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 ネット利用",
+  "year": 2022,
+  "value": "154.7",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2022年\",\"163.5\",\"20.5\",\"154.7\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 新聞閲読",
+  "year": 2022,
+  "value": "10.4",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "代\",\"2022年\",\"163.5\",\"20.5\",\"154.7\",\"10.4\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 ラジオ聴取",
+  "year": 2022,
+  "value": "10.0",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "2年\",\"163.5\",\"20.5\",\"154.7\",\"10.4\",\"10.0\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 テレビ（リアルタイム）視聴",
+  "year": 2023,
+  "value": "162.9",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2023年\",\"162.9\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 テレビ（録画）視聴",
+  "year": 2023,
+  "value": "18.4",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2023年\",\"162.9\",\"18.4\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 ネット利用",
+  "year": 2023,
+  "value": "173.6",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2023年\",\"162.9\",\"18.4\",\"173.6\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 新聞閲読",
+  "year": 2023,
+  "value": "9.3",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "年代\",\"2023年\",\"162.9\",\"18.4\",\"173.6\",\"9.3\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 ラジオ聴取",
+  "year": 2023,
+  "value": "9.4",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "023年\",\"162.9\",\"18.4\",\"173.6\",\"9.3\",\"9.4\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 テレビ（リアルタイム）視聴",
+  "year": 2024,
+  "value": "154.7",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2024年\",\"154.7\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 テレビ（録画）視聴",
+  "year": 2024,
+  "value": "18.1",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2024年\",\"154.7\",\"18.1\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 ネット利用",
+  "year": 2024,
+  "value": "181.8",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2024年\",\"154.7\",\"18.1\",\"181.8\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 新聞閲読",
+  "year": 2024,
+  "value": "9.0",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "年代\",\"2024年\",\"154.7\",\"18.1\",\"181.8\",\"9.0\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 ラジオ聴取",
+  "year": 2024,
+  "value": "11.8",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "24年\",\"154.7\",\"18.1\",\"181.8\",\"9.0\",\"11.8\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 テレビ（リアルタイム）視聴",
+  "year": 2025,
+  "value": "156.1",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2025年\",\"156.1\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 テレビ（録画）視聴",
+  "year": 2025,
+  "value": "15.6",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2025年\",\"156.1\",\"15.6\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 ネット利用",
+  "year": 2025,
+  "value": "183.9",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "\"全年代\",\"2025年\",\"156.1\",\"15.6\",\"183.9\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 新聞閲読",
+  "year": 2025,
+  "value": "8.8",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "年代\",\"2025年\",\"156.1\",\"15.6\",\"183.9\",\"8.8\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 平日 ラジオ聴取",
+  "year": 2025,
+  "value": "11.4",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_01.csv",
+  "quote": "25年\",\"156.1\",\"15.6\",\"183.9\",\"8.8\",\"11.4\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 テレビ（リアルタイム）視聴",
+  "year": 2021,
+  "value": "213.9",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2021年\",\"213.9\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 テレビ（録画）視聴",
+  "year": 2021,
+  "value": "25.5",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2021年\",\"213.9\",\"25.5\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 ネット利用",
+  "year": 2021,
+  "value": "154.2",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2021年\",\"213.9\",\"25.5\",\"154.2\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 新聞閲読",
+  "year": 2021,
+  "value": "10.6",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "代\",\"2021年\",\"213.9\",\"25.5\",\"154.2\",\"10.6\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 ラジオ聴取",
+  "year": 2021,
+  "value": "9.0",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "21年\",\"213.9\",\"25.5\",\"154.2\",\"10.6\",\"9.0\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 テレビ（リアルタイム）視聴",
+  "year": 2022,
+  "value": "207.2",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2022年\",\"207.2\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 テレビ（録画）視聴",
+  "year": 2022,
+  "value": "30.2",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2022年\",\"207.2\",\"30.2\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 ネット利用",
+  "year": 2022,
+  "value": "164.3",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2022年\",\"207.2\",\"30.2\",\"164.3\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 新聞閲読",
+  "year": 2022,
+  "value": "10.2",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "代\",\"2022年\",\"207.2\",\"30.2\",\"164.3\",\"10.2\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 ラジオ聴取",
+  "year": 2022,
+  "value": "7.3",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "22年\",\"207.2\",\"30.2\",\"164.3\",\"10.2\",\"7.3\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 テレビ（リアルタイム）視聴",
+  "year": 2023,
+  "value": "202.0",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2023年\",\"202.0\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 テレビ（録画）視聴",
+  "year": 2023,
+  "value": "23.8",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2023年\",\"202.0\",\"23.8\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 ネット利用",
+  "year": 2023,
+  "value": "179.7",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2023年\",\"202.0\",\"23.8\",\"179.7\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 新聞閲読",
+  "year": 2023,
+  "value": "8.7",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "年代\",\"2023年\",\"202.0\",\"23.8\",\"179.7\",\"8.7\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 ラジオ聴取",
+  "year": 2023,
+  "value": "6.6",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "023年\",\"202.0\",\"23.8\",\"179.7\",\"8.7\",\"6.6\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 テレビ（リアルタイム）視聴",
+  "year": 2024,
+  "value": "182.7",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2024年\",\"182.7\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 テレビ（録画）視聴",
+  "year": 2024,
+  "value": "25.0",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2024年\",\"182.7\",\"25.0\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 ネット利用",
+  "year": 2024,
+  "value": "183.7",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2024年\",\"182.7\",\"25.0\",\"183.7\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 新聞閲読",
+  "year": 2024,
+  "value": "8.5",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "年代\",\"2024年\",\"182.7\",\"25.0\",\"183.7\",\"8.5\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 ラジオ聴取",
+  "year": 2024,
+  "value": "7.9",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "024年\",\"182.7\",\"25.0\",\"183.7\",\"8.5\",\"7.9\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 テレビ（リアルタイム）視聴",
+  "year": 2025,
+  "value": "189.2",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2025年\",\"189.2\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 テレビ（録画）視聴",
+  "year": 2025,
+  "value": "22.4",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2025年\",\"189.2\",\"22.4\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 ネット利用",
+  "year": 2025,
+  "value": "192.9",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "\"全年代\",\"2025年\",\"189.2\",\"22.4\",\"192.9\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 新聞閲読",
+  "year": 2025,
+  "value": "8.3",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "年代\",\"2025年\",\"189.2\",\"22.4\",\"192.9\",\"8.3\"",
+  "confidence": "原本で確認"
+ },
+ {
+  "series": "平均利用時間 全年代 休日 ラジオ聴取",
+  "year": 2025,
+  "value": "7.3",
+  "unit": "分/日",
+  "source_url": "https://www.soumu.go.jp/johotsusintokei/whitepaper/ja/r08/csv/f00298_02.csv",
+  "quote": "025年\",\"189.2\",\"22.4\",\"192.9\",\"8.3\",\"7.3\"",
+  "confidence": "原本で確認"
+ }
+]
