@@ -1,0 +1,572 @@
+{
+ "schema": "provisional/v1",
+ "version": "provisional-v1",
+ "window": {
+  "pre_years": 3,
+  "post_years": 2,
+  "note": "開始年末を基準とし、開始前3年の平均の伸びと開始後2年の平均の伸びを比べる。結果を見る前に固定した。"
+ },
+ "inputs": {
+  "cards": "814bbe76c9230a3604f69d752a8950f4197758af9e726f902643e7f28747bf52",
+  "oecd_stan_J59_60.csv": "279476fa05c8fe1da4fa332e6be634eb232f9d79d2fc622d26f53f1815750f80",
+  "oecd_stan_policy_sectors.csv": "8bbab68be8cd55e638726745ac20226149778e3c9b228c969b61f76078e5f3c0",
+  "oecd_stan_total_V.csv": "50a4a3f1ada18e3854f1301fdd6e0d3edf21fde8bfff65145f56e55492d3d8f4",
+  "wb_industry_zg.json": "d1c38da27d2108a14a84994bd3084a0b267d51779e6e9bd395926d35fe6228b4",
+  "wb_jpn_manf_nominal.json": "c50150cfca054575f2f438794dd3b8bf18ae8f3f21a8b9333a9a122d61ef484e",
+  "wb_manf_zg.json": "c58b6733943476deb5e331c8382f8c7b14289f9983bb4f8b45c08cd4521459b3",
+  "laws": "0f4a56d46004c78d9b1a94f85c91ba4db1ad3bfec2ff3afb5603e072bdce00aa"
+ },
+ "recentFromYear": 2022,
+ "counts": {
+  "recent": 449,
+  "provisional": 0,
+  "unmeasured": 449
+ },
+ "cards": [
+  {
+   "id": "kr-kocca-2009",
+   "country": "KOR",
+   "countryName": "韓国",
+   "title": "韓国コンテンツ振興院の設立（放送・ゲーム・音楽・漫画の振興機関を一本化）",
+   "startYear": 2009,
+   "purpose": "コンテンツ産業の育成と輸出の拡大",
+   "targetIndustry": "映像・音響・放送（OECD STAN の J59_60）",
+   "instrument": "振興機関による補助・輸出支援・人材育成（規制の緩和ではない）",
+   "startLevel": "高所得国（1人当たりGDPは日本の7〜8割）。産業の割合は0.3%台",
+   "measure": "産業の付加価値が経済全体に占める割合（名目。実質の系列は韓国分が無い）",
+   "comparators": [
+    "USA",
+    "DEU",
+    "FRA",
+    "GBR",
+    "NLD",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "applicableToJapan": true,
+   "applicabilityNote": "高所得国どうしで、手段が補助・支援と同じ種類。ただし名目の割合なので物価の違いを含み、確かさは低。",
+   "sourceCertainty": "低",
+   "source": "他国の産業政策と日本_2026-10-24.md 3-2-1（二次資料、未照合）。数値の出所は OECD STAN（DF_STAN_2025）",
+   "window": {
+    "pre": [
+     2007,
+     2009
+    ],
+    "post": [
+     2010,
+     2011
+    ]
+   },
+   "crisisYears": [
+    2008,
+    2009
+   ],
+   "status": "measured",
+   "comparatorsUsed": [
+    "USA",
+    "DEU",
+    "FRA",
+    "GBR",
+    "NLD",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "effect": {
+    "low": -0.2538699206102173,
+    "high": -0.03519154620412657,
+    "perComparator": {
+     "USA": -0.0857,
+     "DEU": -0.1613,
+     "FRA": -0.2539,
+     "GBR": -0.0352,
+     "NLD": -0.1724,
+     "NOR": -0.1621,
+     "ITA": -0.0382,
+     "CAN": -0.2044
+    }
+   },
+   "spansZero": false
+  },
+  {
+   "id": "cn-wto-2001",
+   "country": "CHN",
+   "countryName": "中国",
+   "title": "中国のWTO加盟（2001年12月）",
+   "startYear": 2001,
+   "purpose": "市場開放と輸出拡大",
+   "targetIndustry": "工業全体（世界銀行に製造業の実質系列が無いため、鉱工業・建設を含む）",
+   "instrument": "貿易・投資の自由化（関税の引き下げ・参入規制の緩和）",
+   "startLevel": "低所得〜中所得国（追い上げの段階）",
+   "measure": "工業の実質付加価値の伸び（%、世界銀行）",
+   "comparators": [
+    "DEU",
+    "FRA",
+    "GBR",
+    "NLD",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "applicableToJapan": false,
+   "applicabilityNote": "日本は高所得で貿易の開放度が既に高く、追い上げの伸びを当てられない。学習用のカードで、日本の法律には当てない。",
+   "sourceCertainty": "中",
+   "source": "他国の産業政策と日本_2026-10-24.md（加盟日は会議録で照合済み）。数値は世界銀行 WDI",
+   "window": {
+    "pre": [
+     1999,
+     2001
+    ],
+    "post": [
+     2002,
+     2003
+    ]
+   },
+   "crisisYears": [],
+   "status": "measured",
+   "comparatorsUsed": [
+    "DEU",
+    "FRA",
+    "GBR",
+    "NLD",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "effect": {
+    "low": 0.07878332842961355,
+    "high": 0.1512216428915929,
+    "perComparator": {
+     "DEU": 0.1052,
+     "FRA": 0.112,
+     "GBR": 0.0813,
+     "NLD": 0.1512,
+     "NOR": 0.0788,
+     "ITA": 0.08,
+     "CAN": 0.0898
+    }
+   },
+   "spansZero": false
+  },
+  {
+   "id": "vn-wto-2007",
+   "country": "VNM",
+   "countryName": "ベトナム",
+   "title": "ベトナムのWTO加盟（2007年1月）と外資誘致",
+   "startYear": 2007,
+   "purpose": "外資の誘致と輸出拡大",
+   "targetIndustry": "製造業（世界銀行 NV.IND.MANF.KD）",
+   "instrument": "貿易の自由化と外資への税・土地の優遇",
+   "startLevel": "低所得国（追い上げの段階）",
+   "measure": "製造業の実質付加価値の伸び（%、世界銀行）",
+   "comparators": [
+    "DEU",
+    "FRA",
+    "GBR",
+    "NLD",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "applicableToJapan": false,
+   "applicabilityNote": "低所得国の追い上げで、日本に当てられない。開始後の窓に世界金融危機（2008〜09年）が入る。",
+   "sourceCertainty": "低",
+   "source": "他国の産業政策と日本_2026-10-24.md（二次資料、未照合）。数値は世界銀行 WDI",
+   "window": {
+    "pre": [
+     2005,
+     2007
+    ],
+    "post": [
+     2008,
+     2009
+    ]
+   },
+   "crisisYears": [
+    2008,
+    2009
+   ],
+   "status": "measured",
+   "comparatorsUsed": [
+    "DEU",
+    "FRA",
+    "GBR",
+    "NLD",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "effect": {
+    "low": -0.016324374999971303,
+    "high": 0.24214548369223987,
+    "perComparator": {
+     "DEU": 0.2421,
+     "FRA": 0.0215,
+     "GBR": 0.0041,
+     "NLD": 0.0806,
+     "NOR": -0.0163,
+     "ITA": 0.1923,
+     "CAN": 0.0604
+    }
+   },
+   "spansZero": true
+  },
+  {
+   "id": "in-liberalization-1991",
+   "country": "IND",
+   "countryName": "インド",
+   "title": "インドの経済自由化（1991年。通貨危機後の産業許認可の廃止・関税引き下げ）",
+   "startYear": 1991,
+   "purpose": "危機対応としての市場開放と産業の規制緩和",
+   "targetIndustry": "製造業（世界銀行 NV.IND.MANF.KD）",
+   "instrument": "許認可の廃止と貿易の自由化",
+   "startLevel": "低所得国",
+   "measure": "製造業の実質付加価値の伸び（%、世界銀行）",
+   "comparators": [
+    "FRA",
+    "NLD",
+    "NOR",
+    "GBR",
+    "ITA",
+    "DEU"
+   ],
+   "applicableToJapan": false,
+   "applicabilityNote": "失敗例として入れた（勝者だけを見る罠を避けるため）。窓に危機の年が入る。日本には当てない。",
+   "sourceCertainty": "低",
+   "source": "他国の産業政策と日本_2026-10-24.md（二次資料）。数値は世界銀行 WDI",
+   "window": {
+    "pre": [
+     1989,
+     1991
+    ],
+    "post": [
+     1992,
+     1993
+    ]
+   },
+   "crisisYears": [],
+   "status": "measured",
+   "comparatorsUsed": [
+    "FRA",
+    "NLD",
+    "NOR"
+   ],
+   "effect": {
+    "low": -0.037993141052444446,
+    "high": 0.11594011864347498,
+    "perComparator": {
+     "FRA": 0.1159,
+     "NLD": 0.1,
+     "NOR": -0.038
+    }
+   },
+   "spansZero": true
+  },
+  {
+   "id": "de-eeg-2000",
+   "country": "DEU",
+   "countryName": "ドイツ",
+   "title": "ドイツ再生可能エネルギー法 EEG（固定価格買取、2000年4月施行）",
+   "startYear": 2000,
+   "purpose": "再生可能エネルギーによる発電の促進",
+   "targetIndustry": "電気・ガス・蒸気・空調供給（OECD STAN の D）",
+   "instrument": "固定価格での20年間の買取保証と優先接続（補助型）",
+   "startLevel": "高所得国",
+   "measure": "産業の実質付加価値（連鎖方式、OECD STAN）",
+   "comparators": [
+    "USA",
+    "FRA",
+    "GBR",
+    "NLD",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "applicableToJapan": true,
+   "applicabilityNote": "高所得国どうしで、手段が買取保証という同じ種類。ただし付加価値は発電量でなく価値なので、買取の費用の付け替えを含む。",
+   "sourceCertainty": "中",
+   "source": "日付は複数の二次資料で一致（Wikipedia・pv-magazine ほか、Workflow の照合）。数値は OECD STAN",
+   "window": {
+    "pre": [
+     1998,
+     2000
+    ],
+    "post": [
+     2001,
+     2002
+    ]
+   },
+   "crisisYears": [
+    1998
+   ],
+   "status": "measured",
+   "comparatorsUsed": [
+    "FRA",
+    "GBR",
+    "NLD",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "effect": {
+    "low": -0.04792804071926382,
+    "high": 0.08994616923885523,
+    "perComparator": {
+     "FRA": -0.0306,
+     "GBR": -0.0261,
+     "NLD": -0.0479,
+     "NOR": 0.0899,
+     "ITA": 0.0163,
+     "CAN": -0.0346
+    }
+   },
+   "spansZero": true
+  },
+  {
+   "id": "nl-zvw-2006",
+   "country": "NLD",
+   "countryName": "オランダ",
+   "title": "オランダ医療保険法（競争型の一本化、2006年1月施行）",
+   "startYear": 2006,
+   "purpose": "公的・民間に分かれた医療保険を一本化し、保険者の競争で費用と質を改善する",
+   "targetIndustry": "保健衛生・社会事業（OECD STAN の Q）",
+   "instrument": "全員加入の義務と標準給付、保険者の競争（規制と義務）",
+   "startLevel": "高所得国",
+   "measure": "産業の実質付加価値（連鎖方式、OECD STAN）",
+   "comparators": [
+    "USA",
+    "DEU",
+    "FRA",
+    "GBR",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "applicableToJapan": true,
+   "applicabilityNote": "高所得国どうしで、規制による制度の一本化という同じ種類。社会事業を含む産業全体で測るため、医療保険以外の影響も入る。",
+   "sourceCertainty": "中",
+   "source": "日付は NIVEL・政府ページ等で一致（Workflow の照合）。数値は OECD STAN",
+   "window": {
+    "pre": [
+     2004,
+     2006
+    ],
+    "post": [
+     2007,
+     2008
+    ]
+   },
+   "crisisYears": [
+    2008
+   ],
+   "status": "measured",
+   "comparatorsUsed": [
+    "USA",
+    "DEU",
+    "FRA",
+    "GBR",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "effect": {
+    "low": -0.0722874354094738,
+    "high": 0.0316522930384211,
+    "perComparator": {
+     "USA": -0.0072,
+     "DEU": -0.0723,
+     "FRA": 0.0095,
+     "GBR": 0.011,
+     "NOR": -0.0346,
+     "ITA": 0.0317,
+     "CAN": -0.0256
+    }
+   },
+   "spansZero": true
+  },
+  {
+   "id": "us-glba-1999",
+   "country": "USA",
+   "countryName": "米国",
+   "title": "米国グラム・リーチ・ブライリー法（銀行・証券・保険の垣根の撤廃、1999年11月）",
+   "startYear": 1999,
+   "purpose": "銀行・証券・保険の兼営の解禁",
+   "targetIndustry": "金融・保険（OECD STAN の K）",
+   "instrument": "法律による業務規制の撤廃",
+   "startLevel": "高所得国",
+   "measure": "産業の実質付加価値（連鎖方式、OECD STAN）",
+   "comparators": [
+    "DEU",
+    "FRA",
+    "GBR",
+    "NLD",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "applicableToJapan": true,
+   "applicabilityNote": "高所得国どうしで、規制緩和という同じ種類。窓にアジア危機（1997〜98）とITバブルの崩壊が入る。",
+   "sourceCertainty": "中",
+   "source": "日付は CRS・SEC 等で一致（Workflow の照合）。数値は OECD STAN",
+   "window": {
+    "pre": [
+     1997,
+     1999
+    ],
+    "post": [
+     2000,
+     2001
+    ]
+   },
+   "crisisYears": [
+    1997,
+    1998
+   ],
+   "status": "measured",
+   "comparatorsUsed": [
+    "DEU",
+    "FRA",
+    "GBR",
+    "NLD",
+    "NOR",
+    "ITA"
+   ],
+   "effect": {
+    "low": -0.09937409609985526,
+    "high": 0.08511168343717967,
+    "perComparator": {
+     "DEU": 0.0504,
+     "FRA": -0.034,
+     "GBR": -0.013,
+     "NLD": 0.0851,
+     "NOR": -0.0994,
+     "ITA": -0.0969
+    }
+   },
+   "spansZero": true
+  },
+  {
+   "id": "nl-postal-2009",
+   "country": "NLD",
+   "countryName": "オランダ",
+   "title": "オランダ郵便市場の完全自由化（2009年4月）",
+   "startYear": 2009,
+   "purpose": "郵便の信書市場への競争の導入",
+   "targetIndustry": "運輸・倉庫の郵便・宅配（OECD STAN の H53）",
+   "instrument": "参入規制の撤廃",
+   "startLevel": "高所得国",
+   "measure": "産業の実質付加価値（連鎖方式、OECD STAN）",
+   "comparators": [
+    "USA",
+    "DEU",
+    "FRA",
+    "GBR",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "applicableToJapan": true,
+   "applicabilityNote": "高所得国どうしで、参入自由化という同じ種類。窓に世界金融危機が入り、施行日は何度も延期された。",
+   "sourceCertainty": "中",
+   "source": "日付は報道で一致、法律名は未確認（Workflow の照合）。数値は OECD STAN",
+   "window": {
+    "pre": [
+     2007,
+     2009
+    ],
+    "post": [
+     2010,
+     2011
+    ]
+   },
+   "crisisYears": [
+    2008,
+    2009
+   ],
+   "status": "measured",
+   "comparatorsUsed": [
+    "USA",
+    "DEU",
+    "FRA",
+    "GBR",
+    "NOR",
+    "ITA",
+    "CAN"
+   ],
+   "effect": {
+    "low": -0.1743665907304741,
+    "high": 0.12229116064521728,
+    "perComparator": {
+     "USA": -0.1212,
+     "DEU": 0.1223,
+     "FRA": -0.0183,
+     "GBR": -0.1084,
+     "NOR": -0.1744,
+     "ITA": -0.0896,
+     "CAN": -0.0717
+    }
+   },
+   "spansZero": true
+  }
+ ],
+ "sizes": {
+  "content": {
+   "year": 2023,
+   "yen": 3103105052116.95,
+   "label": "映像・音響・放送（OECD STAN J59_60、名目）"
+  },
+  "manufacturing": {
+   "year": 2024,
+   "yen": 119345100000000.0,
+   "label": "製造業（世界銀行 NV.IND.MANF.CN、名目）"
+  },
+  "energy": {
+   "year": 2024,
+   "yen": 7445700000000.0,
+   "label": "電気・ガス・蒸気・空調供給（OECD STAN D、名目）"
+  },
+  "health": {
+   "year": 2024,
+   "yen": 43040400000000.0,
+   "label": "保健衛生・社会事業（OECD STAN Q、名目）"
+  },
+  "finance": {
+   "year": 2024,
+   "yen": 27779600000000.0,
+   "label": "金融・保険（OECD STAN K、名目）"
+  },
+  "post": {
+   "year": 2023,
+   "yen": 1841199348538.32,
+   "label": "郵便・宅配（OECD STAN H53、名目）"
+  }
+ },
+ "items": [],
+ "nearMisses": [
+  {
+   "id": "閣法-221-32",
+   "title": "株式会社海外通信・放送・郵便事業支援機構法の一部を改正する法律案",
+   "cardId": "kr-kocca-2009",
+   "reason": "放送の海外展開を支える機構の法律だが、改正は株式・債権の処分期限の延長だけで、コンテンツの育成や輸出拡大の施策を含まない"
+  },
+  {
+   "id": "閣法-221-62",
+   "title": "著作権法の一部を改正する法律案",
+   "cardId": "kr-kocca-2009",
+   "reason": "著作権法の改正（演奏者の使用料請求権）。権利の定めで、振興機関・補助・輸出支援・人材育成の手段ではない"
+  },
+  {
+   "id": "閣法-211-51",
+   "title": "著作権法の一部を改正する法律案",
+   "cardId": "kr-kocca-2009",
+   "reason": "著作権法の改正（所在不明の著作物の裁定利用）。利用ルールで、振興の手段ではない"
+  },
+  {
+   "id": "閣法-217-19",
+   "title": "電波法及び放送法の一部を改正する法律案",
+   "cardId": "kr-kocca-2009",
+   "reason": "電波法・放送法の改正。電波の割当てが目的で、コンテンツの振興・輸出ではない"
+  }
+ ]
+}
