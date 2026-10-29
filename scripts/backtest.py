@@ -167,6 +167,10 @@ def classify_aligned(case: dict, base: dict, align: dict, impact: dict) -> dict:
     if base["predicted"] is None:   # 日本の研究でない・ラベル保留・法律に当てられない
         out["reason"] = base["reason"]
         return out
+    laws = base["predicted"]["laws"]
+    if not laws:   # 対象期間外など。指標の対応の集計に入れない
+        out["reason"] = base["reason"] or "対応する法律が現行の計算に無い"
+        return out
     al = align.get(case["id"])
     if al is None:
         out["reason"] = "日本の研究ではない（現行の計算は日本の法律だけ）"
@@ -177,10 +181,6 @@ def classify_aligned(case: dict, base: dict, align: dict, impact: dict) -> dict:
         return out
     if al["alignment"] == "none":
         out["reason"] = "計算に同じ指標が無い"
-        return out
-    laws = base["predicted"]["laws"]
-    if not laws:
-        out["reason"] = base["reason"] or "対応する法律が現行の計算に無い"
         return out
     signs = []
     for law in laws:
