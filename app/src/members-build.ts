@@ -85,6 +85,40 @@ export type PublicMemberLaw = {
     opposingParties: string[];
   };
 };
+/** 背後の力の記録1行（実測の件数。誰がどの法律の原因かは示さない）。 */
+export type BackingItem = { ledger: '省庁の抵抗' | '団体の立場'; who: string; period: string; count: number; detail: string; technologies: string[]; sources: string[] };
+export type LawBacking = {
+  lawId: string;
+  /** 閣法の所管の省庁と、その省庁全体の抵抗の件数（弱い結び付け。法律ごとの記録ではない）。 */
+  ministry?: { name: string; total: number; refusals: number; hearings: number; followups: number };
+  /** 記録が名指しした法令名で結べたもの。 */
+  named: BackingItem[];
+};
+/** 閣法の所管_今（国会会議録の肩書）を、省庁の抵抗の帳簿の省庁名へ寄せる。 */
+const MINISTRY_ALIAS: Record<string, string> = { '国家公安委員会（警察庁）': '警察庁' };
+
+export function backingOf(links: string, cabinet: string | undefined, resistance: string | undefined, lawIds: string[]): LawBacking[] {
+  const wanted = new Set(lawIds);
+  const out: Record<string, LawBacking> = {};
+  const at = (id: string): LawBacking => (out[id] ??= { lawId: id, named: [] });
+  for (const r of parseCsv(links)) {
+    if (!wanted.has(r['法律ID'])) continue;
+    at(r['法律ID']).named.push({ ledger: r['帳簿'] as BackingItem['ledger'], who: r['主体'], period: r['時期'], count: Number(r['件数']), detail: r['内訳'],
+      technologies: r['関連技術'] ? r['関連技術'].split('、') : [], sources: r['出典URL'] ? r['出典URL'].split(' ') : [] });
+  }
+  if (cabinet && resistance) {
+    const totals = new Map(parseCsv(resistance).map(r => [r['省庁'], r]));
+    for (const r of parseCsv(cabinet)) {
+      if (!wanted.has(r['法律ID'])) continue;
+      const name = MINISTRY_ALIAS[r['所管_今']] ?? r['所管_今'];
+      const t = totals.get(name);
+      if (t && Number(t['抵抗の件数']) > 0) at(r['法律ID']).ministry = { name, total: Number(t['抵抗の件数']), refusals: Number(t['対応不可']),
+        hearings: Number(t['ヒアリングで反対・慎重']), followups: Number(t['フォローアップで反対・慎重・未措置']) };
+    }
+  }
+  return Object.values(out).sort((a, b) => a.lawId.localeCompare(b.lawId));
+}
+
 export type PartyLedger = { name: string; bad: Range; good: Range; net: Range; laws: { lawId: string; side: Law['side']; direction: 'with' | 'against'; effect: 'bad' | 'good'; share: Range }[] };
 export type PartyBloc = {
   bloc: string; parties: string[]; people: number; laws: number; yesLaws: number; noLaws: number;
@@ -182,6 +216,11 @@ export type PublicMembers = {
    * 主に1人あたり・1本あたりで並べる（与党は人数も賛成した本数も多く、総額は規模で大きくなる）。総額は参考。
    */
   partyRanking?: PartyRanking;
+  /**
+   * 背後の力の記録（法律ごと、scripts/build_backing_forces.py と設計決定0017）。議員の因果の鎖の結び目（法律）に、省庁の抵抗・審議会での団体の立場を結んだ参考表示。
+   * 件数だけで額は付けず、議員の点数にも足さない。結び付けは名指しした法令名の一致で、原因の断定ではない。
+   */
+  backing?: LawBacking[];
   /** 公開ランキングで確かさ高・中なのに、関わった議員の記録がまだそろわず配分に入っていない法律（scripts/build_public_members.mjs が付ける）。 */
   pending?: { id: string; title: string; side: 'loss' | 'benefit'; certainty: string; median: number }[];
 };
@@ -212,7 +251,9 @@ export type MemberInputs = { involvements: string; publish: string; loss: string
   /** 省庁の抵抗の件数（data/derived/org-ledger-v1/ministry-resistance.csv）。 */
   resistance?: string;
   /** 団体の立場（data/derived/org-ledger-v1/org-stances.csv）。 */
-  orgStances?: string };
+  orgStances?: string;
+  /** 背後の力の結び付け（data/derived/backing-forces-v1/law-links.csv）。点数には影響しない。 */
+  backing?: string };
 
 /** 参議院の会派名を系統に分ける（会派は合流・改称が多いので、名前の一部で寄せる。上から順に当てる）。 */
 const BLOCS: [RegExp, string][] = [[/自由民主/, '自民'], [/公明/, '公明'], [/立憲/, '立憲'], [/共産/, '共産'], [/社会民主|社民/, '社民'], [/国民民主/, '国民民主'],
@@ -430,6 +471,7 @@ export function buildMembers(input: MemberInputs): PublicMembers {
     ...(input.taxRevenueForecasts ? { taxRevenueForecasts: taxRevenueForecastsOf(input.taxRevenueForecasts) } : {}),
     ...(input.resistance ? { resistance: parseCsv(input.resistance).map(r => ({ ministry: r['省庁'], total: Number(r['抵抗の件数']), refusals: Number(r['対応不可']),
       answers: Number(r['ホットラインの回答']), hearings: Number(r['ヒアリングで反対・慎重']), followups: Number(r['フォローアップで反対・慎重・未措置']) })) } : {}),
+    ...(input.backing ? { backing: backingOf(input.backing, input.ministries, input.resistance, lawOut.map(l => l.id)) } : {}),
     ...(input.orgStances ? { orgStances: parseCsv(input.orgStances).map(r => ({ name: r['団体'], kind: r['区分'], against: Number(r['反対']), careful: Number(r['慎重']),
       conditional: Number(r['条件付き賛成']), support: Number(r['賛成']), technologies: r['関連技術'] ? r['関連技術'].split('、') : [] })) } : {}),
     counts: { members: members.length, loss: members.filter(m => m.net.median < 0).length, benefit: members.filter(m => m.net.median > 0).length, zero: members.filter(m => m.net.median === 0).length,
