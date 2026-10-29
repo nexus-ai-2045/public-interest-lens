@@ -131,3 +131,14 @@
 .laws-mark.is-outlier svg{flex:none}
 @media(max-width:600px){.laws-fold{padding:8px 10px}.laws-peers{padding:0 10px 10px 12px}}
 @media(prefers-reduced-motion:reduce){.laws-peers-chevron{transition:none}}
+.prov-mode{display:flex;gap:8px;margin:12px 0}
+.prov-mode a{padding:6px 12px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none}
+.prov-mode a[aria-current=true]{background:var(--ink);color:var(--bg,#fff)}
+.prov-list,.prov-cards{list-style:none;padding:0;display:grid;gap:10px}
+.prov-row,.prov-card{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--quiet)}
+.prov-row small{display:block;color:var(--muted);font-size:12px}
+.prov-range{position:relative;display:block;height:10px;margin:8px 0;background:var(--line);border-radius:5px}
+.prov-zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.prov-span{position:absolute;top:0;bottom:0;background:var(--accent,#b33);border-radius:5px}
+.prov-flag{margin-left:8px;padding:1px 6px;border:1px solid var(--line);border-radius:6px;font-size:12px}
+.prov-apply.no{opacity:.85}
