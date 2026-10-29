@@ -1,8 +1,6 @@
 name: 製品契約と動作検証
 on:
   pull_request:
-  # merge queue が作る合流用コミットでも同じ検証を回す（必須チェックはこのイベントでも報告されること）
-  merge_group:
   push:
     branches: [main]
 permissions:

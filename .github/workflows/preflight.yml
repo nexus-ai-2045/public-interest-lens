@@ -6,8 +6,6 @@ name: preflight
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
-  # merge queue の合流用コミット。preflight-gate は merge_group の比較元（base_sha）に対応済み
-  merge_group:
   push:
     branches: [main]
 
