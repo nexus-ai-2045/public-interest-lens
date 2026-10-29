@@ -539,8 +539,8 @@ def analyze_meeting(m: dict, bill: dict) -> dict | None:
             continue
         if re.match(r'○[^\s　]{0,15}(?:国務大臣|大臣|副大臣|政務官|政務次官|長官)', t):
             continue  # 政府の対応表明（政府の所信）は決議の趣旨説明ではない
-        if names_other_bill(t[:800], short):
-            continue  # 本文が別の法案への決議だと明示しているときは、一括審議でもその法案の決議にしない
+        if names_other_bill(t, short):
+            continue  # 全文が挙げる法案の中にこの法案が無い（別の法案への決議）ときは、一括審議でもこの法案の決議にしない
         if re.search(r'附帯決議(案)?(\s|　)*(\（案\）)?(につきまして|について|案を|案の|を付|の趣旨)|附帯決議(\（案\）|案)', t) and \
                 re.search(r'提出者|提案者|案文|趣旨', t[:400]) and \
                 re.search(r'右決議|決議する|朗読|(?:^|[\s　。])一[、\s　]', t):  # 案文がある発言だけ（過去の決議への質疑は除く）
