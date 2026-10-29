@@ -15,3 +15,25 @@ test('法律ランキングは全法律と政策を理由つきで並べ、行�
   await expect(page).toHaveURL(/\/demo$/);
   await expect(page.locator('#ranking')).toBeVisible();
 });
+
+test('並べ替えに損失順・便益順があり、一覧を共有でき、額なしの数が一覧とそろい、/votes へ行ける', async ({ page }) => {
+  await page.goto('/ranking?sort=loss');
+  await expect(page.getByLabel('並べ替え')).toHaveValue('loss');
+  await page.getByLabel('並べ替え').selectOption('benefit');
+  await expect(page).toHaveURL(/sort=benefit/);
+  await expect(page.getByRole('button', { name: 'この一覧を共有' })).toBeVisible();
+  // 上部カードの額なしは、一覧の「額なし」の絞り込みの件数と同じ（政策を含む）。
+  const card = await page.locator('a.laws-stat', { hasText: '額なし（理由つき）' }).locator('strong').innerText();
+  await page.getByRole('button', { name: '額なし', exact: true }).click();
+  const showAll = page.getByRole('button', { name: '同じ観測の法律もすべて表示' });
+  if (await showAll.isVisible()) await showAll.click();
+  await expect(page.locator('.laws-count')).toContainText(`${card.replace('件', '')}件`);
+  await expect(page.getByRole('link', { name: '法案の賛否' })).toHaveAttribute('href', '/votes');
+});
+
+test('/methodology#spec-price で式の節が開く', async ({ page }) => {
+  await page.goto('/methodology#spec-price');
+  const section = page.locator('details#spec-price');
+  await expect(section).toHaveAttribute('open', '');
+  await expect(section).toBeInViewport();
+});
