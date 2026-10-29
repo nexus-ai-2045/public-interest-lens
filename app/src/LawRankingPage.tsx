@@ -5,7 +5,7 @@ import { toneTitle, useTone } from './site-tone';
 import { FunnelSteps, RankBars } from './motion';
 import { LawCatalog } from './LawCatalog';
 import { ProvisionalPanel } from './ProvisionalPanel';
-import { collapseObservations, formatYen, lawsCatalogUrl, parseLawsCatalog, type CatalogStep, type LawsCatalog } from './laws-catalog';
+import { collapseObservations, formatYen, isLow, isSolid, straddlesZero, lawsCatalogUrl, parseLawsCatalog, type CatalogStep, type LawsCatalog } from './laws-catalog';
 import { plainLawName } from './law-name';
 import './laws.css';
 
@@ -16,7 +16,7 @@ const funnel: { key: CatalogStep; label: string }[] = [
   { key: 'dated', label: '施行日が決まった（公布日での推定を含む）' },
   { key: 'staged', label: '影響の段階が付いた、または全体指標で測った' },
   { key: 'amounted', label: '損失・便益の額が出た（参考を含む）' },
-  { key: 'published', label: 'うち確かな額（参考を除く）' },
+  { key: 'published', label: 'うち参考を除く（高・中・低。確かな額は高・中だけ）' },
 ];
 
 export { formatYen } from './laws-catalog';
@@ -39,7 +39,9 @@ export function LawRankingPage() {
   }, []);
   const provisional = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'provisional';
   const amounted = (data?.laws ?? []).filter(law => law.amount);
-  const confirmed = amounted.filter(law => law.step === 'published');
+  // 確かな額は高・中だけ。低（段階1）は額が出ていても別の組にして、順位の根拠にしない。
+  const confirmed = amounted.filter(isSolid);
+  const lows = amounted.filter(isLow);
   // 一覧の「額なし」は法律と政策を合わせて数えるので、カードも同じ数え方にそろえる。
   const noAmount = (data?.laws ?? []).concat(data?.policies ?? []).filter(item => !item.amount).length;
   const loss = confirmed.filter(law => law.side === 'loss').length;
@@ -48,6 +50,11 @@ export function LawRankingPage() {
   const sideTop = confirmed.filter(law => law.side === toneSide);
   // 同じ観測（同じ額）は代表の1本だけを棒にする。
   const topList = collapseObservations((sideTop.length ? sideTop : confirmed).slice().sort((a, b) => b.amount!.median - a.amount!.median)).slice(0, TOP);
+  // 確かさ低は別のバー図。向きの側で分け、順位は付けずに額の大きい順に並べるだけ。
+  const lowSide = lows.filter(law => law.side === toneSide);
+  const lowList = collapseObservations((lowSide.length ? lowSide : lows).slice().sort((a, b) => b.amount!.median - a.amount!.median)).slice(0, TOP);
+  const lowStraddle = lows.filter(law => straddlesZero(law.amount)).length;
+  const barItem = (law: (typeof lows)[number]) => ({ id: law.id, label: law.what ? plainLawName(law.what) : law.title, value: law.amount!.median, low: law.amount!.low, high: law.amount!.high, side: law.side ?? 'loss', note: `${law.what ? `名前はAI要約・正式名：${law.title}・` : ''}${law.side === 'loss' ? '国賊側（損失）' : '国士側（便益）'}・${law.field}・確かさ${law.certainty}${straddlesZero(law.amount) ? '・幅が0をまたぐ（向きが定まらない）' : ''}${law.marks.length ? `・${law.marks.filter(mark => !mark.startsWith('同じ') && !mark.startsWith('確かさ') && !mark.startsWith('向きが定まらない')).join('・') || '印なし'}` : ''}`, href: `#${encodeURIComponent(law.id)}` });
   return <SiteShell active="/ranking" label="法律・政策ランキング（実データ）" className="law-ranking">
     
     <main id="main">
@@ -62,15 +69,21 @@ export function LawRankingPage() {
       {!provisional && data && <>
         <section className="laws-stats" aria-label="ひと目で">
           <a href="#list" className="laws-stat"><span>載せている件数</span><strong>{(data.laws.length + data.policies.length).toLocaleString('ja-JP')}件</strong><small>法律{data.laws.length.toLocaleString('ja-JP')}本＋政策{data.policies.length}件</small></a>
-          <a href="?side=confirmed#list" className="laws-stat hit"><span>確かな額</span><strong>{confirmed.length}本</strong><small>国賊側{loss}本・国士側{confirmed.length - loss}本（影響の段階まで確認）</small></a>
-          <a href="?side=amount#list" className="laws-stat"><span>参考の額</span><strong>{(amounted.length - confirmed.length).toLocaleString('ja-JP')}本</strong><small>産業・経済全体の差など。確かな額と足さない</small></a>
+          <a href="?side=confirmed#list" className="laws-stat hit"><span>確かな額（高・中）</span><strong>{confirmed.length}本</strong><small>国賊側{loss}本・国士側{confirmed.length - loss}本（経済全体の指標でも同じ向きを確認）</small></a>
+          <a href="?side=low#list" className="laws-stat"><span>確かさ低</span><strong>{lows.length}本</strong><small>段階1で、経済全体では未確認。うち{lowStraddle}本は幅が0をまたぐ。確かな額に入れない</small></a>
+          <a href="?side=amount#list" className="laws-stat"><span>参考の額</span><strong>{(amounted.length - confirmed.length - lows.length).toLocaleString('ja-JP')}本</strong><small>産業・経済全体の差など。確かな額と足さない</small></a>
           <a href="?side=none#list" className="laws-stat"><span>額なし（理由つき）</span><strong>{noAmount.toLocaleString('ja-JP')}件</strong><small>法律{(data.laws.length - amounted.length).toLocaleString('ja-JP')}本＋政策{data.policies.filter(policy => !policy.amount).length}件。測れていないだけで「影響なし」ではない</small></a>
         </section>
-        {confirmed.length > 0 && <section aria-label="額の大きい順" id="top-amounts">
-          <h3>{sideTop.length ? (toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順') : '額の大きい順'}（確かな額の上位{topList.length}本）</h3>
+        {(confirmed.length > 0 || lows.length > 0) && <section aria-label="額の大きい順" id="top-amounts">
+          <h3>{sideTop.length ? (toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順') : '額の大きい順'}（確かな額（高・中）の上位{topList.length}本）</h3>
           <p className="fine-note">赤は国賊側（損失）、緑は国士側（便益）。太い棒が中央値、細い線が幅です。棒を押すと、下の一覧でその法律の詳しい中身が開きます。</p>
-          <RankBars caption="額が出た法律の額の大きい順" format={formatYen} items={topList.map(law => ({ id: law.id, label: law.what ? plainLawName(law.what) : law.title, value: law.amount!.median, low: law.amount!.low, high: law.amount!.high, side: law.side ?? 'loss', note: `${law.what ? `名前はAI要約・正式名：${law.title}・` : ''}${law.side === 'loss' ? '国賊側（損失）' : '国士側（便益）'}・${law.field}${law.marks.length ? `・${law.marks.filter(mark => !mark.startsWith('同じ')).join('・') || '印なし'}` : ''}`, href: `#${encodeURIComponent(law.id)}` }))} />
+          <RankBars caption="確かな額（高・中）の大きい順" format={formatYen} items={topList.map(barItem)} />
           <p className="fine-note">同じ観測（同じ額の系列・同じ期間）の法律は同じ額を共有するので、棒には代表の1本だけを並べています。足し合わせないでください。ほかの法律と参考の額は下の一覧にあります。上の「国賊／国士」を切り替えると、反対側の上位に変わります。</p>
+          {lowList.length > 0 && <>
+            <h3>確かさ低（段階1）：額の大きい順（順位の根拠にはしません）</h3>
+            <p className="fine-note">確かさ低は、比べた国との差が続いたことまでは確かめましたが、経済全体の指標では同じ向きを確かめられていません。額が出ていても「確かな額」には数えず、上の高・中の順位にも混ぜません。ここでは並び順を見やすくするためだけに額の大きい順に並べていて、順位として読まないでください。幅が0をまたぐ法律は、損失か便益かの向きが定まりません（{lows.length}本中{lowStraddle}本）。</p>
+            <RankBars caption="確かさ低の額の大きい順（順位の根拠にしない）" format={formatYen} items={lowList.map(barItem)} />
+          </>}
         </section>}
         <LawCatalog data={data} />
         <details className="law-funnel-box">
