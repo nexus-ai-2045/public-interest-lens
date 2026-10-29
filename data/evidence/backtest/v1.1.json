@@ -1,0 +1,664 @@
+{
+ "schema": "backtest/v1",
+ "version": "backtest-v1.1",
+ "spec_version": "method-spec-v2.3",
+ "target": 0.95,
+ "min_n": 10,
+ "inputs": {
+  "cases": "b9ce9a681b165c66635591cc0e21c20fc2570a52d0ec95ce0ae14d8b86418aa8",
+  "mapping": "603ae695e897a46a726362851eab4d217643e5b9f5ffddb988c39ad716ae6944",
+  "alignment": "ca7e9beb93205cb0da2441348491cc1c4aed8ee57a4de362552ac2cfcc0591be",
+  "impact": "d3df8aaeb78a122cc92b70fd798c500e0c5c7684b3856f762adbe1fd4c65e956",
+  "laws": "69e974959c49bdf75e9a6c02ff4eb4628915907e9eefd72dead8baeb0365421b",
+  "laws_total": 3415
+ },
+ "cases_total": 49,
+ "funnel": {
+  "total": 49,
+  "excluded_by_reason": {
+   "ラベル保留": 7,
+   "正解の向きが定まらない": 5,
+   "日本の研究ではない": 27,
+   "対応する法律が現行の計算に無い": 1
+  },
+  "scorable_l2": 9,
+  "scorable_l1": 5,
+  "scorable_l0": 0
+ },
+ "headline": {
+  "level": "L0",
+  "n": 0,
+  "hits": 0,
+  "rate": null,
+  "wilson95": null,
+  "verdict": "判定不能",
+  "baseline_always_benefit_rate": null,
+  "cases": [],
+  "name": "本命",
+  "definition": "識別が強い（差の差・操作変数・RCT）／日本の研究／結果が生産か雇用／研究の対象がその法律の出来事そのもの"
+ },
+ "headline_aligned": {
+  "level": "M0",
+  "n": 0,
+  "hits": 0,
+  "rate": null,
+  "wilson95": null,
+  "verdict": "判定不能",
+  "cases": [],
+  "name": "本命（v1.1）",
+  "definition": "識別が強い／日本の研究／研究の結果指標が計算の指標と同じ／計算がその指標で判定を出している"
+ },
+ "levels": [
+  {
+   "level": "L0",
+   "n": 0,
+   "hits": 0,
+   "rate": null,
+   "wilson95": null,
+   "verdict": "判定不能",
+   "baseline_always_benefit_rate": null,
+   "cases": [],
+   "name": "本命",
+   "definition": "識別が強い（差の差・操作変数・RCT）／日本の研究／結果が生産か雇用／研究の対象がその法律の出来事そのもの"
+  },
+  {
+   "level": "L1",
+   "n": 5,
+   "hits": 0,
+   "rate": 0.0,
+   "wilson95": [
+    0.0,
+    0.43449149475208104
+   ],
+   "verdict": "判定不能",
+   "baseline_always_benefit_rate": 0.2,
+   "cases": [
+    {
+     "id": "bt-014",
+     "policy": "大規模小売店舗法の廃止（2000年）と大店立地法",
+     "source": "Matsuura, Toshiyuki; Sugano, Saki (2009)",
+     "truth": 1,
+     "predicted": -1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-142-49",
+       "year": 1998,
+       "side": "loss",
+       "certainty": "低"
+      }
+     ]
+    },
+    {
+     "id": "bt-022",
+     "policy": "最低賃金の引き上げの雇用効果（日本）",
+     "source": "Kawaguchi, Daiji; Mori, Yuko (2009)",
+     "truth": -1,
+     "predicted": 1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-166-82",
+       "year": 2007,
+       "side": "benefit",
+       "certainty": "参考"
+      }
+     ]
+    },
+    {
+     "id": "bt-023",
+     "policy": "最低賃金の引き上げの雇用効果（日本）",
+     "source": "Motohashi, Naoki (2023)",
+     "truth": -1,
+     "predicted": 1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-166-82",
+       "year": 2007,
+       "side": "benefit",
+       "certainty": "参考"
+      }
+     ]
+    },
+    {
+     "id": "bt-025",
+     "policy": "最低賃金の引き上げの雇用効果（日本）",
+     "source": "Kanayama, Hayato; Miyaji, Sho; Otani, Suguru (2026)",
+     "truth": -1,
+     "predicted": 1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-166-82",
+       "year": 2007,
+       "side": "benefit",
+       "certainty": "参考"
+      }
+     ]
+    },
+    {
+     "id": "bt-026",
+     "policy": "最低賃金の引き上げの雇用効果（日本）",
+     "source": "Morikawa, Masayuki (2026)",
+     "truth": -1,
+     "predicted": 1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-166-82",
+       "year": 2007,
+       "side": "benefit",
+       "certainty": "参考"
+      }
+     ]
+    }
+   ],
+   "name": "条件を緩めた参考1",
+   "definition": "識別が強いか中程度／日本の研究／結果が生産か雇用／出来事そのもの、または同じ政策分野"
+  },
+  {
+   "level": "L2",
+   "n": 9,
+   "hits": 1,
+   "rate": 0.1111111111111111,
+   "wilson95": [
+    0.019890371327130535,
+    0.4350062147680601
+   ],
+   "verdict": "判定不能",
+   "baseline_always_benefit_rate": 0.5555555555555556,
+   "cases": [
+    {
+     "id": "bt-013",
+     "policy": "航空規制緩和（日本の2000年運賃自由化・参入規制緩和・LCC参入）",
+     "source": "Murakami, Hideki; Amano, Yoshihisa (2013)",
+     "truth": 1,
+     "predicted": 1,
+     "hit": true,
+     "laws": [
+      {
+       "id": "閣法-145-46",
+       "year": 1999,
+       "side": "benefit",
+       "certainty": "参考"
+      }
+     ]
+    },
+    {
+     "id": "bt-014",
+     "policy": "大規模小売店舗法の廃止（2000年）と大店立地法",
+     "source": "Matsuura, Toshiyuki; Sugano, Saki (2009)",
+     "truth": 1,
+     "predicted": -1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-142-49",
+       "year": 1998,
+       "side": "loss",
+       "certainty": "低"
+      }
+     ]
+    },
+    {
+     "id": "bt-015",
+     "policy": "大規模小売店舗法の廃止（2000年）と大店立地法",
+     "source": "Matsuura, Toshiyuki; Sunada, Mitsuru (2009)",
+     "truth": 1,
+     "predicted": -1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-142-49",
+       "year": 1998,
+       "side": "loss",
+       "certainty": "低"
+      }
+     ]
+    },
+    {
+     "id": "bt-019",
+     "policy": "金融ビッグバン（1996-2001年）",
+     "source": "Jose A. Lopez, Mark M. Spiegel (2009)",
+     "truth": 1,
+     "predicted": -1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-142-86",
+       "year": 1998,
+       "side": "loss",
+       "certainty": "参考"
+      },
+      {
+       "id": "衆法-143-16",
+       "year": 1998,
+       "side": "loss",
+       "certainty": "参考"
+      }
+     ]
+    },
+    {
+     "id": "bt-021",
+     "policy": "金融ビッグバン（1996-2001年）",
+     "source": "Takatoshi Ito, Michael Melvin (1999)",
+     "truth": 1,
+     "predicted": -1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-142-86",
+       "year": 1998,
+       "side": "loss",
+       "certainty": "参考"
+      },
+      {
+       "id": "衆法-143-16",
+       "year": 1998,
+       "side": "loss",
+       "certainty": "参考"
+      }
+     ]
+    },
+    {
+     "id": "bt-022",
+     "policy": "最低賃金の引き上げの雇用効果（日本）",
+     "source": "Kawaguchi, Daiji; Mori, Yuko (2009)",
+     "truth": -1,
+     "predicted": 1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-166-82",
+       "year": 2007,
+       "side": "benefit",
+       "certainty": "参考"
+      }
+     ]
+    },
+    {
+     "id": "bt-023",
+     "policy": "最低賃金の引き上げの雇用効果（日本）",
+     "source": "Motohashi, Naoki (2023)",
+     "truth": -1,
+     "predicted": 1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-166-82",
+       "year": 2007,
+       "side": "benefit",
+       "certainty": "参考"
+      }
+     ]
+    },
+    {
+     "id": "bt-025",
+     "policy": "最低賃金の引き上げの雇用効果（日本）",
+     "source": "Kanayama, Hayato; Miyaji, Sho; Otani, Suguru (2026)",
+     "truth": -1,
+     "predicted": 1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-166-82",
+       "year": 2007,
+       "side": "benefit",
+       "certainty": "参考"
+      }
+     ]
+    },
+    {
+     "id": "bt-026",
+     "policy": "最低賃金の引き上げの雇用効果（日本）",
+     "source": "Morikawa, Masayuki (2026)",
+     "truth": -1,
+     "predicted": 1,
+     "hit": false,
+     "laws": [
+      {
+       "id": "閣法-166-82",
+       "year": 2007,
+       "side": "benefit",
+       "certainty": "参考"
+      }
+     ]
+    }
+   ],
+   "name": "条件を緩めた参考2",
+   "definition": "日本の研究で、法律と結べて、向きが定まるもの全部（価格や余剰も便益の向きに直して比べる）"
+  }
+ ],
+ "aligned_levels": [
+  {
+   "level": "M0",
+   "n": 0,
+   "hits": 0,
+   "rate": null,
+   "wilson95": null,
+   "verdict": "判定不能",
+   "cases": [],
+   "name": "本命（v1.1）",
+   "definition": "識別が強い／日本の研究／研究の結果指標が計算の指標と同じ／計算がその指標で判定を出している"
+  },
+  {
+   "level": "M1",
+   "n": 1,
+   "hits": 0,
+   "rate": 0.0,
+   "wilson95": [
+    0.0,
+    0.7934567085261071
+   ],
+   "verdict": "判定不能",
+   "cases": [
+    {
+     "id": "bt-014",
+     "policy": "大規模小売店舗法の廃止（2000年）と大店立地法",
+     "source": "Matsuura, Toshiyuki; Sugano, Saki (2009)",
+     "truth": 1,
+     "predicted": -1,
+     "hit": false,
+     "indicator": "卸売・小売業の付加価値",
+     "alignment": "proxy"
+    }
+   ],
+   "name": "条件を緩めた参考1（v1.1）",
+   "definition": "識別が強いか中程度／結果指標が計算の指標と同じか近い代理／計算が判定を出している"
+  },
+  {
+   "level": "M2",
+   "n": 1,
+   "hits": 0,
+   "rate": 0.0,
+   "wilson95": [
+    0.0,
+    0.7934567085261071
+   ],
+   "verdict": "判定不能",
+   "cases": [
+    {
+     "id": "bt-014",
+     "policy": "大規模小売店舗法の廃止（2000年）と大店立地法",
+     "source": "Matsuura, Toshiyuki; Sugano, Saki (2009)",
+     "truth": 1,
+     "predicted": -1,
+     "hit": false,
+     "indicator": "卸売・小売業の付加価値",
+     "alignment": "proxy"
+    }
+   ],
+   "name": "条件を緩めた参考2（v1.1）",
+   "definition": "日本の研究で、結果指標が計算の指標と同じか近い代理で、計算が判定を出しているもの全部"
+  }
+ ],
+ "alignment_gap": {
+  "japan_linked_cases": 15,
+  "by_alignment": {
+   "none": 10,
+   "保留": 4,
+   "proxy": 1
+  },
+  "none_by_outcome_class": {
+   "other": 2,
+   "price_surplus": 5,
+   "employment": 3
+  },
+  "stopped_by": {
+   "計算に同じ指標が無い": 10,
+   "指標の対応が保留": 4
+  },
+  "reading": "『計算に同じ指標が無い』の件数が多い。研究が見ている集団・指標（賃金、特定集団の雇用、価格・余剰、手数料）を計算側に足さないと、同じものを測れない。"
+ },
+ "amount_and_interval": {
+  "status": "測れない",
+  "n": 0,
+  "reason": "正解は『生産性が年1.6%上がった』『料金が23bp下がった』のような指標ごとの効果で、現行の計算が出す法律ごとの円の額（全産業か産業の付加価値の差）とは単位も範囲も違う。円に直せる件数が0なので、額の誤差と、予測区間が正解を含む割合は出せない。暫定の区間（設計書5.1）を出す計算が入った後の測定で測る。"
+ },
+ "excluded": [
+  {
+   "id": "bt-001",
+   "policy": "通信の自由化（1985年電電公社民営化・NTT）",
+   "source": "Madden, G. G.; Savage, S. J.; Ng, J. (2003)",
+   "reason": "ラベル保留（2系統の判定が割れた：country）"
+  },
+  {
+   "id": "bt-002",
+   "policy": "通信の自由化（1985年電電公社民営化・NTT）",
+   "source": "Nakamura, A.（中村彰宏） (2015)",
+   "reason": "ラベル保留（2系統の判定が割れた：benefit_sign）"
+  },
+  {
+   "id": "bt-003",
+   "policy": "電力小売全面自由化（2016年）と卸・発送電の自由化",
+   "source": "Ishihara, T.; Ida, T. (2019)",
+   "reason": "正解の向きが定まらない（有意でない・混在・記述のみ）"
+  },
+  {
+   "id": "bt-004",
+   "policy": "民泊（住宅宿泊事業法2018年・Airbnb）",
+   "source": "Zervas, G.; Proserpio, D.; Byers, J. W. (2017)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-005",
+   "policy": "民泊（住宅宿泊事業法2018年・Airbnb）",
+   "source": "Barron, K.; Kung, E.; Proserpio, D. (2021)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-006",
+   "policy": "民泊（住宅宿泊事業法2018年・Airbnb）",
+   "source": "García-López, M.-À.; Jofre-Monseny, J.; Martínez-Mazza, R.; Segú, M. (2020)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-007",
+   "policy": "民泊（住宅宿泊事業法2018年・Airbnb）",
+   "source": "Farronato, C.; Fradkin, A. (2018)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-008",
+   "policy": "労働者派遣法（1999年原則自由化・2004年製造業解禁・2012/2015年改正）",
+   "source": "Machikita, Tomohiro; Sato, Hitoshi (2011)",
+   "reason": "ラベル保留（2系統の判定が割れた：design・outcome_class）"
+  },
+  {
+   "id": "bt-009",
+   "policy": "労働者派遣法（1999年原則自由化・2004年製造業解禁・2012/2015年改正）",
+   "source": "Okudaira, Hiroko; Ohtake, Fumio; Kume, Koichi; Tsuru, Kotaro (2011)",
+   "reason": "ラベル保留（2系統の判定が割れた：outcome_class）"
+  },
+  {
+   "id": "bt-010",
+   "policy": "郵政民営化（2007年）",
+   "source": "Ken-Ichiro Oohama; Yoshihiro Asai (2011)",
+   "reason": "正解の向きが定まらない（有意でない・混在・記述のみ）"
+  },
+  {
+   "id": "bt-011",
+   "policy": "郵政民営化（2007年）",
+   "source": "Kazumine Kondo (2010)",
+   "reason": "正解の向きが定まらない（有意でない・混在・記述のみ）"
+  },
+  {
+   "id": "bt-012",
+   "policy": "郵政民営化（2007年）",
+   "source": "Chul-Ju Kim; Michael C. Huang (2019)",
+   "reason": "正解の向きが定まらない（有意でない・混在・記述のみ）"
+  },
+  {
+   "id": "bt-016",
+   "policy": "国鉄民営化（1987年）",
+   "source": "Fumitoshi Mizutani; Shuji Uranishi (2005)",
+   "reason": "対応する法律が現行の計算に無い（法律の一覧は1998年以降）"
+  },
+  {
+   "id": "bt-017",
+   "policy": "タクシー規制緩和（2002年）と再規制（2009年）",
+   "source": "Miyoshi, Y., Tsuzuki, H., Itakura, H. (2020)",
+   "reason": "ラベル保留（2系統の判定が割れた：outcome_class）"
+  },
+  {
+   "id": "bt-018",
+   "policy": "タクシー規制緩和（2002年）と再規制（2009年）",
+   "source": "橋本由紀、小前和智 (2019)",
+   "reason": "ラベル保留（2系統の判定が割れた：design・outcome_class）"
+  },
+  {
+   "id": "bt-020",
+   "policy": "金融ビッグバン（1996-2001年）",
+   "source": "Heather Montgomery, Yuki Takahashi (2011)",
+   "reason": "ラベル保留（2系統の判定が割れた：outcome_class）"
+  },
+  {
+   "id": "bt-024",
+   "policy": "最低賃金の引き上げの雇用効果（日本）",
+   "source": "Morikawa, Masayuki (2019)",
+   "reason": "正解の向きが定まらない（有意でない・混在・記述のみ）"
+  },
+  {
+   "id": "bt-027",
+   "policy": "米国の航空規制緩和（1978年）",
+   "source": "Severin Borenstein, Nancy L. Rose (2014)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-028",
+   "policy": "米国の航空規制緩和（1978年）",
+   "source": "David Card (1996)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-029",
+   "policy": "米国の航空規制緩和（1978年）",
+   "source": "Severin Borenstein (2011)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-030",
+   "policy": "米国の通信自由化（1996年電気通信法）",
+   "source": "Przemyslaw Jeziorski (2014)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-031",
+   "policy": "米国の通信自由化（1996年電気通信法）",
+   "source": "Robert W. Crandall, Allan T. Ingraham, Hal J. Singer (2004)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-032",
+   "policy": "英国の民営化と電力・通信・Big Bang",
+   "source": "Megginson, W. L.; Netter, J. M. (2001)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-033",
+   "policy": "英国の民営化と電力・通信・Big Bang",
+   "source": "Foreman-Peck, J. (1989)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-034",
+   "policy": "EUローミング規制（2017年）と携帯市場",
+   "source": "Grzybowski, L.; Muñoz-Acevedo, A. (2021)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-035",
+   "policy": "EUローミング規制（2017年）と携帯市場",
+   "source": "Canzian, G.; Mazzarella, G.; Verboven, F.; Verzillo, S.; Ronchail, L. (2021)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-036",
+   "policy": "EUローミング規制（2017年）と携帯市場",
+   "source": "Quinn, M.; Godinho de Matos, M.; Peukert, C. (2022)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-037",
+   "policy": "EUローミング規制（2017年）と携帯市場",
+   "source": "Quinn, M.; Godinho de Matos, M.; Peukert, C. (2021)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-038",
+   "policy": "各国の電力自由化の事後評価（欧米・豪州・NZ）",
+   "source": "Markiewicz, K.; Rose, N. L.; Wolfram, C. (2004)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-039",
+   "policy": "各国の電力自由化の事後評価（欧米・豪州・NZ）",
+   "source": "Davis, L. W.; Wolfram, C. (2011)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-040",
+   "policy": "各国の電力自由化の事後評価（欧米・豪州・NZ）",
+   "source": "Cicala, S. (2017)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-041",
+   "policy": "各国の電力自由化の事後評価（欧米・豪州・NZ）",
+   "source": "Borenstein, S.; Bushnell, J. (2015)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-042",
+   "policy": "ドイツ・Hartz改革（労働市場改革）",
+   "source": "Krebs, T.; Scheffel, M. (2013)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-043",
+   "policy": "ドイツ・Hartz改革（労働市場改革）",
+   "source": "Hochmuth, B.; Kohlbrecher, B.; Merkl, C.; Gartner, H. (2021)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-044",
+   "policy": "ドイツ・Hartz改革（労働市場改革）",
+   "source": "Hertweck, M. S.; Sigrist, O. (2013)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-045",
+   "policy": "ドイツ・Hartz改革（労働市場改革）",
+   "source": "Amable, B.; Françon, B. (2014)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-046",
+   "policy": "韓国・台湾の産業政策の事後評価（半導体・造船・自動車）",
+   "source": "Nathan Lane (2025)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-047",
+   "policy": "韓国・台湾の産業政策の事後評価（半導体・造船・自動車）",
+   "source": "Jaedo Choi; Andrei A. Levchenko (2021)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-048",
+   "policy": "韓国・台湾の産業政策の事後評価（半導体・造船・自動車）",
+   "source": "Jong-Wha Lee (1995)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  },
+  {
+   "id": "bt-049",
+   "policy": "韓国・台湾の産業政策の事後評価（半導体・造船・自動車）",
+   "source": "Nobuya Fukugawa; Kuo-I Chang (2025)",
+   "reason": "日本の研究ではない（現行の計算は日本の法律だけ）"
+  }
+ ],
+ "label": "v1.1",
+ "date": "2026-10-29",
+ "note": "v1.1：研究の結果指標と計算の指標をそろえて測り直し。v1 は残してある。計算式は変えていない（method-spec-v2.3）"
+}

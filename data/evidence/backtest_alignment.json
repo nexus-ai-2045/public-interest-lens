@@ -1,0 +1,218 @@
+{
+ "schema": "backtest-alignment/v1",
+ "note": "研究の結果指標が、計算（data/derived/impact-v1-triage-v2/indicator-map.csv の指標）のどれと同じものを測っているか。系統1は私、系統2はHaikuが独立に付け、一致した分だけ使う。same＝同じ集団・同じ量、proxy＝同じ産業や分野だが集団や量が違う、none＝計算に同じ指標が無い。",
+ "line1": {
+  "bt-002": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "価格とTFPは計算に無い"
+  },
+  "bt-003": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "料金プランの選択確率は計算に無い"
+  },
+  "bt-008": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "臨時労働者比率は計算に無い"
+  },
+  "bt-009": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "特定集団の正規雇用確率・賃金は計算に無い"
+  },
+  "bt-010": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "株価反応は計算に無い"
+  },
+  "bt-011": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "預金金利は計算に無い"
+  },
+  "bt-012": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "郵便物数は計算に無い"
+  },
+  "bt-013": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "運賃・消費者余剰は計算に無い"
+  },
+  "bt-014": {
+   "indicator": "卸売・小売業の付加価値",
+   "alignment": "proxy",
+   "why": "研究は地域の中小店の売上。計算は産業全体の付加価値"
+  },
+  "bt-015": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "消費者厚生は計算に無い"
+  },
+  "bt-016": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "TFPは計算に無い"
+  },
+  "bt-017": {
+   "indicator": "旅客輸送の付加価値",
+   "alignment": "proxy",
+   "why": "研究はタクシーの実車キロ。計算は旅客輸送全体の付加価値"
+  },
+  "bt-018": {
+   "indicator": "旅客輸送の付加価値",
+   "alignment": "proxy",
+   "why": "研究はタクシーの輸送人員・営業収入。計算は旅客輸送全体の付加価値"
+  },
+  "bt-019": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "引受手数料は計算に無い"
+  },
+  "bt-020": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "銀行のROA・効率は計算に無い"
+  },
+  "bt-021": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "為替スプレッドは計算に無い"
+  },
+  "bt-022": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "年齢・性別集団の就業率は計算に無い"
+  },
+  "bt-023": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "非正規の採用確率は計算に無い"
+  },
+  "bt-024": {
+   "indicator": "労働生産性",
+   "alignment": "proxy",
+   "why": "研究は企業・都道府県の労働生産性。計算の労働生産性は産業の代理"
+  },
+  "bt-025": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "影響を受ける賃金帯の雇用は計算に無い"
+  },
+  "bt-026": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "企業の従業員数は計算に無い"
+  }
+ },
+ "line2": {
+  "bt-002": {
+   "indicator": "通信業の付加価値",
+   "alignment": "proxy",
+   "why": "同じ通信業だが、研究の結果は長距離通話料金（価格）とTFP成長率で、計算の付加価値とは量が違う。"
+  },
+  "bt-003": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "時間帯別料金プランの選択確率は計算側に対応する指標がない。"
+  },
+  "bt-008": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "臨時労働者（派遣・臨時雇用）の総労働投入に占める比率は特定集団の雇用割合で、計算側の就業者数とは量も集団も違う。"
+  },
+  "bt-009": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "派遣就業者の正規雇用確率と時給は特定集団の雇用・賃金で、計算側に同じ量が無い。"
+  },
+  "bt-010": {
+   "indicator": "金融・保険業の付加価値",
+   "alignment": "proxy",
+   "why": "競合する民間銀行（金融業の一部）の株価反応で、産業全体の付加価値とは集団も量も違う。"
+  },
+  "bt-011": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "信用組合・信用金庫の預金金利と郵貯支店比率の係数は金利（価格）で、計算側に対応する指標がない。"
+  },
+  "bt-012": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "国内郵便物数の変化率は郵便の数量で、計算側の付加価値・就業者数などに同じ量が無い。"
+  },
+  "bt-013": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "航空運賃（価格）と消費者余剰は計算側に対応する指標がなく、旅客輸送の付加価値とも量が違う。"
+  },
+  "bt-014": {
+   "indicator": "卸売・小売業の付加価値",
+   "alignment": "proxy",
+   "why": "同じ小売業の分野だが、研究は地域の中小小売の売上・雇用・賃金で、産業全体の付加価値とは集団と量が違う。"
+  },
+  "bt-015": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "消費者厚生の変化（補償変分）は計算側に対応する指標がない。"
+  },
+  "bt-016": {
+   "indicator": "旅客輸送の付加価値",
+   "alignment": "proxy",
+   "why": "同じ鉄道（旅客輸送）分野だが、研究はJRのTFP成長率と資本過剰度で、付加価値とは量が違う。"
+  },
+  "bt-017": {
+   "indicator": "旅客輸送の付加価値",
+   "alignment": "proxy",
+   "why": "同じ旅客輸送（タクシー）分野だが、研究は実車キロで、産業全体の付加価値とは量が違う。"
+  },
+  "bt-018": {
+   "indicator": "旅客輸送の付加価値",
+   "alignment": "proxy",
+   "why": "同じ旅客輸送（タクシー）分野だが、研究は輸送人員・営業収入・運転者賃金で、産業全体の付加価値とは集団と量が違う。"
+  },
+  "bt-019": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "サムライ債の引受手数料（価格）は計算側に対応する指標がない。"
+  },
+  "bt-020": {
+   "indicator": "金融・保険業の付加価値",
+   "alignment": "proxy",
+   "why": "同じ銀行（金融・保険業）だが、研究は銀行個社のROA・ROEと効率性で、産業全体の付加価値とは量が違う。"
+  },
+  "bt-021": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "為替のビッド・アスク・スプレッドとボラティリティは価格・市場指標で、計算側に同じ量が無い。"
+  },
+  "bt-022": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "年齢・性別グループ別の就業率は特定集団の雇用で、計算側の就業者数（全体の人数）とは集団も量も違う。"
+  },
+  "bt-023": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "非正規労働者の新規採用確率は特定集団の雇用で、計算側に同じ量が無い。"
+  },
+  "bt-024": {
+   "indicator": "労働生産性",
+   "alignment": "same",
+   "why": "研究の結果指標は労働生産性（LP）そのもので、都道府県・企業のパネルで測っている点だけが計算側と違う。"
+  },
+  "bt-025": {
+   "indicator": null,
+   "alignment": "none",
+   "why": "最低賃金の影響帯（特定の賃金帯）の雇用は特定集団の雇用で、計算側に同じ量が無い。"
+  },
+  "bt-026": {
+   "indicator": "就業者数",
+   "alignment": "proxy",
+   "why": "同じ雇用人数の量だが、研究は最低賃金の影響を受ける企業の従業員数で、就業者数（全体）とは集団が違う。"
+  }
+ }
+}

@@ -7,10 +7,14 @@ export type BacktestLevel = {
   level: string; name: string; definition: string; n: number; hits: number; rate: number | null;
   wilson95: [number, number] | null; verdict: '達成' | '未達' | '判定不能'; cases: BacktestCase[];
 };
+export type AlignedCase = { id: string; policy: string; source: string; truth: number; predicted: number; hit: boolean; indicator: string; alignment: string };
+export type AlignmentGap = { japan_linked_cases: number; by_alignment: Record<string, number>; none_by_outcome_class: Record<string, number>; stopped_by: Record<string, number>; reading: string };
 export type BacktestRun = {
   label: string; date: string; note: string; spec_version: string; target: number; min_n: number;
   cases_total: number; funnel: { excluded_by_reason: Record<string, number> };
   levels: BacktestLevel[];
+  aligned_levels?: (Omit<BacktestLevel, 'cases'> & { cases: AlignedCase[] })[];
+  alignment_gap?: AlignmentGap;
   amount_and_interval: { status: string; n: number; reason: string };
   excluded: { id: string; policy: string; source: string; reason: string }[];
 };
