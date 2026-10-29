@@ -26,8 +26,19 @@ jobs:
     env:
       PYTHONUTF8: '1'
       GH_TOKEN: ${{ github.token }}
+      # preflight.yml と同じ固定先（repo-preflight v0.10.0）
+      PREFLIGHT_REF: 5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      # daily_update.py の事前チェック（個人名義）が使う repo-preflight を、固定 SHA で隣に置く
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: nexus-ai-2045/repo-preflight
+          ref: ${{ env.PREFLIGHT_REF }}
+          path: tool
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '22'
@@ -38,17 +49,21 @@ jobs:
           python-version: '3.12'
       - run: npm ci
         working-directory: app
-      # 取得と再計算。落ちた段階は報告に残して次へ進む（daily_update.py の作り）。検査は PR 側の verify に任せる。
-      - name: 取得と再計算
-        id: update
+      # 公開用の名義を、取得より前に設定する（commit_identity の事前チェックが見る）
+      - name: 公開用の名義を設定
         run: |
-          mkdir -p .local/daily-update
-          python3 scripts/daily_update.py --fetch --rebuild --report .local/daily-update/report.md | tee .local/daily-update/log.txt || echo "failed=true" >> "$GITHUB_OUTPUT"
-      - name: 変化があれば PR を作る
-        run: |
-          set -euo pipefail
           git config user.name "nexus_ai"
           git config user.email "273569186+nexus-ai-2045@users.noreply.github.com"
+      # 取得と再計算。落ちた段階は報告に残して次へ進む（daily_update.py の作り）。検査は PR 側の verify に任せる。
+      - name: 取得と再計算
+        env:
+          REPO_PREFLIGHT_ROOT: ${{ github.workspace }}/tool
+        run: |
+          mkdir -p .local/daily-update
+          python3 scripts/daily_update.py --fetch --rebuild --report .local/daily-update/report.md 2>&1 | tee .local/daily-update/log.txt || true
+      - name: 変化があれば個人名義検査を通して PR を作る
+        run: |
+          set -euo pipefail
           if [ -z "$(git status --porcelain -- data app/public)" ]; then
             echo "変化なし。PR は作らない。"
             exit 0
@@ -57,6 +72,8 @@ jobs:
           git checkout -b "$branch"
           git add -- data app/public
           git commit -m "週2回の自動更新（$(TZ=Asia/Tokyo date +%Y-%m-%d)）：取得の記録と再計算"
+          # 生成した変更を含むコミットに、push 前と同じ個人名義検査を回す。不合格なら送らない。
+          python3 tool/scripts/local_identity_guard.py --public-name nexus-ai-2045 --public-name nexus_ai check --range "origin/main..HEAD"
           git push origin "$branch"
           {
             echo "週2回の自動更新（月・木 3:00 JST）。取得と再計算の結果です。"
