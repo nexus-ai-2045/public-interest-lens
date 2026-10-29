@@ -57,16 +57,22 @@ SPEC_VERSION = 'io-ripple-v1'
 def fetch() -> None:
     RAW.mkdir(parents=True, exist_ok=True)
     rows = []
+    mf = ACQ / 'manifest.csv'
+    prev = {r['file']: r['fetched_at'] for r in csv.DictReader(open(mf, encoding='utf-8'))} if mf.exists() else {}
     for name, (url, title) in SOURCES.items():
         p = RAW / name
         if not p.exists():
             req = urllib.request.Request(url, headers={'User-Agent': UA})
             p.write_bytes(urllib.request.urlopen(req, timeout=120).read())
+            prev[name] = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%MZ')
+        # 取得時刻はダウンロードしたときだけ記録し、保存済みの原本を使う再実行では前回の値を保つ（不明なら register_once の更新時刻にまかせる）
+        fetched_at = prev.get(name)
+        observed = datetime.strptime(fetched_at, '%Y-%m-%dT%H:%MZ').replace(tzinfo=timezone.utc).isoformat(timespec='seconds') if fetched_at else None
         # 原本は外部資料として登録する（AGENTS.md。中身の確かさは unverified から。同じ日・URL・中身は登録し直さない）
         register_once(input_path=p, source_url=url, task_id=TASK_ID, title=f'産業連関表の原本（{name}）', purpose=title,
-                      storage_root=ROOT / '.local' / 'external-materials', observed_at=datetime.now(timezone.utc).isoformat(timespec='seconds'))
+                      storage_root=ROOT / '.local' / 'external-materials', observed_at=observed)
         rows.append({'file': name, 'url': url, 'title': title, 'sha256': hashlib.sha256(p.read_bytes()).hexdigest(),
-                     'bytes': p.stat().st_size, 'fetched_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%MZ')})
+                     'bytes': p.stat().st_size, 'fetched_at': fetched_at or datetime.fromtimestamp(p.stat().st_mtime, timezone.utc).strftime('%Y-%m-%dT%H:%MZ')})
     with open(ACQ / 'manifest.csv', 'w', newline='', encoding='utf-8') as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
