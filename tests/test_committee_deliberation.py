@@ -104,6 +104,20 @@ class CommitteeDeliberationTest(unittest.TestCase):
             self.assertTrue(r['宣告のURL'].startswith('https://kokkai.ndl.go.jp/'), r)
             self.assertIn(r['修正案の結果'], ('可決', '否決', '撤回', ''))
 
+    def test_published_bill_committee_csv_if_present(self) -> None:
+        d = ROOT / 'data/acquired/committee-deliberation'
+        for house in ('衆議院', '参議院'):
+            p = d / f'bill_committee_{house}.csv'
+            if not p.exists():
+                continue
+            rows = list(csv.DictReader(p.open(encoding='utf-8', newline='')))
+            self.assertTrue(rows)
+            for r in rows:
+                self.assertEqual(r['院'], house)
+                self.assertTrue(r['会議数'].isdigit(), r)
+                if int(r['会議数']):
+                    self.assertTrue(r['出席委員(出席数/会議数)'], r)  # 会議があれば委員名簿がある
+
 
 def _rec(order, speaker, speech):
     return {'speechOrder': order, 'speaker': speaker, 'speech': speech, 'speechURL': f'u{order}', 'speakerPosition': '委員長' if speaker.startswith('委員長') else ''}
@@ -242,7 +256,82 @@ class CommitteeFlowTest(unittest.TestCase):
                 _ch(2, '修正案の撤回を許可することに決しました。次に、原案について採決いたします。起立多数。よって、本案は原案のとおり可決すべきものと決しました。')]
         r = F.analyze_meeting(_meeting(recs), KOU)
         self.assertEqual(len(r['votes']), 1)
-        self.assertEqual(F.RESULT_RE.search(r['votes'][0]['speech']).group(1), '可決すべきもの')
+        self.assertEqual(r['votes'][0]['_own'][0], '可決すべきもの')
+
+    def test_other_items_result_in_same_speech_is_not_the_bills_vote(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _ch(2, '起立少数。よって、枝野幸男君外八名提出の各案は否決すべきものと決しました。次に、甲法の一部を改正する法律案について採決いたします。起立多数。よって、本案は可決すべきものと決しました。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual([v['_own'][0] for v in r['votes']], ['可決すべきもの'])
+        self.assertEqual(F.vote_fields(r['votes'][0]['_own'][1], '可決すべきもの')[0], '起立多数')
+
+    def test_previous_items_result_before_the_bills_vote_call_is_not_counted(self) -> None:
+        recs = [_ch(1, '乙法の一部を改正する法律案を議題といたします。'),
+                _ch(2, '起立多数。よって、本件は承認すべきものと決しました。次に、甲法の一部を改正する法律案について採決いたします。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual(r['votes'], [])
+
+    def test_attendance_leaves_out_witnesses_and_officials(self) -> None:
+        header = '出席委員\n委員長 山田一郎君\n理事 佐藤二郎君\n鈴木三郎君 事務総長谷福丸君 外の出席者議長伊藤宗一郎君 参考人(中野総合病院長)池澤康郎君\n本日の会議に付した案件'
+        names = [n for n, _ in F.parse_attendance(header, '衆議院')]
+        self.assertEqual(names, ['山田一郎', '佐藤二郎', '鈴木三郎'])
+
+    def test_joint_vote_call_and_result_in_separate_speeches(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案及び乙法の一部を改正する法律案を議題といたします。'),
+                _ch(2, '起立少数。よって、枝野幸男君外八名提出の各案は否決すべきものと決しました。次に、内閣提出、甲法の一部を改正する法律案及び乙法の一部を改正する法律案の各案を一括して採決いたします。'),
+                _ch(3, '起立多数。よって、内閣提出の各案は原案のとおり可決すべきものと決しました。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual([v['_own'][0] for v in r['votes']], ['可決すべきもの'])
+
+    def test_same_title_bill_by_another_proposer_is_not_the_bills_vote(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _ch(2, 'まず、原口一博君外四名提出、甲法の一部を改正する法律案について採決いたします。'),
+                _ch(3, '起立少数。よって、本案は否決すべきものと決しました。次に、内閣提出、甲法の一部を改正する法律案について採決いたします。'),
+                _ch(4, '起立多数。よって、本案は原案のとおり可決すべきものと決しました。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual([v['_own'][0] for v in r['votes']], ['可決すべきもの'])
+
+    def test_title_containing_treaty_word_keeps_the_bills_vote(self) -> None:
+        title = '丙国際連合条約の実施に関する法律案'
+        recs = [_ch(1, title + 'を議題といたします。'), _ch(2, '起立多数。よって、本案は原案のとおり可決すべきものと決しました。')]
+        r = F.analyze_meeting(_meeting(recs, '本日の会議に付した案件\n' + title), {'題名': title})
+        self.assertEqual([v['_own'][0] for v in r['votes']], ['可決すべきもの'])
+
+    def test_amendment_proposer_in_the_title_sentence_keeps_the_bills_vote(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _ch(2, '甲法の一部を改正する法律案に対する山田太郎君外二名提出の修正案について採決いたします。起立多数。よって、本修正案は可決されました。次に、修正部分を除く原案について採決いたします。'),
+                _ch(3, '起立多数。よって、本案は修正議決すべきものと決しました。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual([v['_own'][0] for v in r['votes']], ['修正議決すべきもの'])
+
+    def test_attendance_splits_a_name_missing_its_honorific(self) -> None:
+        header = '出席委員\n   委員長 村井  仁君\n      中村 哲治君    肥田 美代子\n      平岡 秀夫君    山内  功君\n本日の会議に付した案件'
+        names = [n for n, _ in F.parse_attendance(header, '衆議院')]
+        self.assertEqual(names, ['村井仁', '中村哲治', '肥田美代子', '平岡秀夫', '山内功'])
+
+    def test_vote_kept_when_the_same_title_follows_in_the_resolution_motion(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _ch(2, '甲法の一部を改正する法律案について採決いたします。'),
+                _ch(3, '起立多数。よって、本案は原案のとおり可決すべきものと決しました。この際、甲法の一部を改正する法律案に対する附帯決議を付すべしとの動議が提出されております。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual([v['_own'][0] for v in r['votes']], ['可決すべきもの'])
+
+    def test_pronoun_for_the_bill_does_not_end_the_bills_vote(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _ch(2, '甲法の一部を改正する法律案及び甲法の関係法律案について、これより両法律案を一括して採決いたします。'),
+                _ch(3, '起立多数。よって、両案は原案のとおり可決すべきものと決しました。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual([v['_own'][0] for v in r['votes']], ['可決すべきもの'])
+
+    def test_long_name_split_by_a_space_stays_one_member(self) -> None:
+        header = '出席委員\n   委員長 村井  仁君\n      もとむら 賢太郎君    平岡 秀夫君\n本日の会議に付した案件'
+        names = [n for n, _ in F.parse_attendance(header, '衆議院')]
+        self.assertEqual(names, ['村井仁', 'もとむら賢太郎', '平岡秀夫'])
+
+    def test_attendance_heading_at_line_end_is_not_a_member(self) -> None:
+        header = '出席委員\n 出席\n   委員長 村井  仁君\n      中村 哲治君    肥田 美代子\n本日の会議に付した案件'
+        names = [n for n, _ in F.parse_attendance(header, '衆議院')]
+        self.assertEqual(names, ['村井仁', '中村哲治', '肥田美代子'])
 
     def test_long_hiragana_proposer_name(self) -> None:
         recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。この際、本案に対し、とかしきなおみ君外五名から、修正案が提出されております。')]
