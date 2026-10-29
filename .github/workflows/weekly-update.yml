@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-      # daily_update.py の事前チェック（個人名義）が使う repo-preflight を、固定 SHA で隣に置く
+      # daily_update.py の事前チェック（個人名義）が使う repo-preflight を、固定 SHA で置く
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: nexus-ai-2045/repo-preflight
@@ -49,11 +49,12 @@ jobs:
           python-version: '3.12'
       - run: npm ci
         working-directory: app
-      # 公開用の名義を、取得より前に設定する（commit_identity の事前チェックが見る）
-      - name: 公開用の名義を設定
+      # 公開用の名義を設定し、書き込みの前に identity guard の config を通す。不合格ならここで止まり、何も書かない。
+      - name: 公開用の名義を設定して identity guard の config を通す
         run: |
           git config user.name "nexus_ai"
           git config user.email "273569186+nexus-ai-2045@users.noreply.github.com"
+          python3 tool/scripts/local_identity_guard.py --public-name nexus-ai-2045 --public-name nexus_ai config
       # 取得と再計算。落ちた段階は報告に残して次へ進む（daily_update.py の作り）。検査は PR 側の verify に任せる。
       - name: 取得と再計算
         env:
