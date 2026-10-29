@@ -25,3 +25,4 @@
 .votes-member-detail{padding:0 12px 12px}
 .votes-member-detail ul{padding-left:1.2em;margin:6px 0;font-size:14px;line-height:1.7}
 @media(min-width:720px){.votes-rows>li:not(.votes-member){grid-template-columns:6.5em minmax(0,1fr) auto auto auto;align-items:center;gap:10px}.votes-member>button{grid-template-columns:8em minmax(0,1fr) auto;align-items:center;gap:12px}}
+.votes-links a{display:inline-flex;align-items:center;min-height:24px}

@@ -66,16 +66,18 @@ function ToneFx({ tone }: { tone: Tone }) {
 export function SiteShell({ active, label, className = '', children, extra }: { active: string; label: string; className?: string; children: ReactNode; extra?: ReactNode }) {
   const [tone] = useTone();
   return <div className={`app-shell research-page site-tone ${className}`.trim()} data-theme={tone === 'harm' ? 'dark' : 'light'} data-tone={tone}>
+    <a className="skip-link" href="#main">本文へ移動</a>
     <SiteHeader active={active} label={label} extra={extra} />
     {children}
   </div>;
 }
 
-export function SiteHeader({ active, label, extra }: { active: string; label: string; extra?: ReactNode }) {
+/** サイト名は、ページごとの h1 がある画面では段落にする（見出し一覧がページ名になる）。ページ名の h1 が無い仮データ画面だけ siteTitleHeading で h1 にする。 */
+export function SiteHeader({ active, label, extra, siteTitleHeading = false }: { active: string; label: string; extra?: ReactNode; siteTitleHeading?: boolean }) {
   const [tone] = useTone();
   useToneSound(tone);
   return <header className="topbar site-header">
-    <a className="brand" href="/"><h1>{toneTitle(tone)}</h1><span className="prototype-label">{label}</span></a>
+    <a className="brand" href="/">{siteTitleHeading ? <h1 className="brand-name">{toneTitle(tone)}</h1> : <p className="brand-name">{toneTitle(tone)}</p>}<span className="prototype-label">{label}</span></a>
     <ToneSwitch />
     <SoundToggle tone={tone} />
     <SiteNav active={active} extra={extra} />
