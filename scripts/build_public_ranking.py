@@ -254,7 +254,7 @@ def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
         notes.append(f"施行日は{ESTIMATED}")
     if int(row["施行日"][:4]) >= 2020:
         notes.append("コロナ期と重なる")
-    origin = {"振り分け": "振り分けの分野", "AI 2系統": "AI 2系統の分野", "対応表なし": "対応表なしのため全産業", "同じ題名にそろえた": "同じ法律の改正の分野にそろえた", COVID_ORIGIN: ""}[row["分野の由来"]]
+    origin = {"振り分け": "振り分けの分野", "AI 2系統": "AI 2系統の分野", "対応表なし": "対応表なしのため全産業", "同じ題名にそろえた": "同じ法律の改正の分野にそろえた", COVID_ORIGIN: "", "AI 3段の再判定": "AI 3段の再判定による産業"}[row["分野の由来"]]
     return {
         "id": row["id"],
         "title": row["題名"],
