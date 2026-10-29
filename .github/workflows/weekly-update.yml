@@ -79,7 +79,8 @@ jobs:
           fi
           branch="report/weekly-update-$(date -u +%Y%m%d-%H%M)"
           git checkout -b "$branch"
-          git add -- data app/public
+          python3 scripts/roadmap_check.py --update
+          git add -- data app/public docs/ロードマップ.md
           git commit -m "週2回の自動更新（$(TZ=Asia/Tokyo date +%Y-%m-%d)）：取得の記録と再計算"
           # 生成した変更を含むコミットに、push 前と同じ個人名義検査を回す。不合格なら送らない。
           python3 tool/scripts/local_identity_guard.py --public-name nexus-ai-2045 --public-name nexus_ai check --range "origin/main..HEAD"
