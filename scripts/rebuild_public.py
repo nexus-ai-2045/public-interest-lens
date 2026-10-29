@@ -13,7 +13,7 @@ tests/test_public_sync.py が、公開データ同士の照合値（SHA-256）�
   3. 全法律の結果（scripts/build_all_laws_outcomes.py）
   4. コロナ対応の費用便益（scripts/build_covid_benefit.py）→ 全体指標の参考の額（scripts/build_macro_amounts.py）
   5. 公開ランキング ranking.json と出典チェック（scripts/source_check.rebuild）
-  6. 閣法の所管の省庁（scripts/build_ministry_bills.py build）→ 税の帳簿（scripts/build_tax_ledger.py）→ 団体の帳簿（scripts/build_org_ledger.py）→ 背後の力の結び付け（scripts/build_backing_forces.py）→ 自動の関与（scripts/build_auto_involvements.py）→ 反対票の一覧（scripts/build_opposing_votes.py）→ 採決ごとの会派（scripts/build_vote_parties.py）→ 議員ページ members.json（scripts/build_public_members.mjs）→ もう一度出典チェック
+  6. 閣法の所管の省庁（scripts/build_ministry_bills.py build）→ 税の帳簿（scripts/build_tax_ledger.py）→ 団体の帳簿（scripts/build_org_ledger.py）→ 経済界の帳簿（scripts/build_business_ledger.py）→ 背後の力の結び付け（scripts/build_backing_forces.py）→ 自動の関与（scripts/build_auto_involvements.py）→ 反対票の一覧（scripts/build_opposing_votes.py）→ 採決ごとの会派（scripts/build_vote_parties.py）→ 議員ページ members.json（scripts/build_public_members.mjs）→ もう一度出典チェック
   7. 全議員の表 members-reference.json（参考の額を印つきの別の欄で配る。scripts/build_reference_members.mjs）
   8. 法律の一覧 laws.json と laws-detail/、法律の「何をする」の一文の表 law-names.json（scripts/build_laws_catalog.py）→ 暫定評価 provisional.json（scripts/build_provisional.py）
   9. 物価の換算表 price-index.json（scripts/build_price_index.py）→ データベース data/db/kokuzoku.sqlite（Git に入れない）と、グラフ用の集計 charts.json（scripts/build_database.py）。
@@ -96,6 +96,8 @@ def rebuild(record: Record = _print) -> bool:
     if not _command(record, "税の帳簿", [sys.executable, "scripts/build_tax_ledger.py"]):
         return False
     if not _command(record, "団体の帳簿・省庁の抵抗の件数", [sys.executable, "scripts/build_org_ledger.py"]):
+        return False
+    if not _command(record, "経済界の帳簿", [sys.executable, "scripts/build_business_ledger.py"]):
         return False
     if not _command(record, "背後の力の結び付け", [sys.executable, "scripts/build_backing_forces.py"]):
         return False

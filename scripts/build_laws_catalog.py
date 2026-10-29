@@ -448,6 +448,21 @@ def dump_one_per_line(index: dict) -> str:
     return "{" + ",\n".join(head + parts) + "}\n"
 
 
+def dump_bundle_one_per_line(bundle: dict) -> str:
+    """laws-detail/<束>.json の文字列。items（id → 詳細）を1本1行に並べる。中身は1行形と同じ。"""
+    def dumps(value: object) -> str:
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+    parts = []
+    for key, value in bundle.items():
+        if key == "items":
+            body = ",\n".join(f"{dumps(item_id)}:{dumps(item)}" for item_id, item in value.items())
+            parts.append(f'"items":{{\n{body}\n}}' if value else '"items":{}')
+        else:
+            parts.append(f"{dumps(key)}:{dumps(value)}")
+    return "{" + ",\n".join(parts) + "}\n"
+
+
 def main() -> int:
     index, bundles = split(build())
     OUTPUT.write_text(dump_one_per_line(index), encoding="utf-8")
@@ -456,7 +471,7 @@ def main() -> int:
         if stale.stem not in bundles:
             stale.unlink()
     for name, bundle in bundles.items():
-        (DETAIL_DIR / f"{name}.json").write_text(json.dumps(bundle, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+        (DETAIL_DIR / f"{name}.json").write_text(dump_bundle_one_per_line(bundle), encoding="utf-8")
     NAMES_OUTPUT.write_text(json.dumps(law_names(index), ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
     print(json.dumps(index["counts"], ensure_ascii=False))
     return 0

@@ -3,7 +3,7 @@
  "rule": "record names a law → amendments/enactments of that law ordered by promulgation date; points are not changed",
  "inputs": {
   "data/acquired/bill-census-full/enacted.csv": "f8ec2d1b14c988aad522dafcee33037e6288d0972613eed18a938b7616c8c94b",
-  "data/derived/backing-forces-v1/law-aliases.csv": "9878cde743460dacc0a223c887d34bd98669f0d9df6ea1cd2b991e0d49774587"
+  "data/derived/backing-forces-v1/law-aliases.csv": "576424a2b246252c9c1d78428f892d2f8842ba0e1809f71ab26fb9a42d194a07"
  },
  "ledgers": {
   "省庁の抵抗": {
@@ -36,10 +36,10 @@
  },
  "counts": {
   "記録": 410,
-  "結べない": 176,
-  "結べた": 234,
-  "結んだ法律": 117,
-  "結び付けの行": 229,
-  "結べなかった記載": 47
+  "結べない": 175,
+  "結べた": 235,
+  "結んだ法律": 119,
+  "結び付けの行": 231,
+  "結べなかった記載": 46
  }
 }
