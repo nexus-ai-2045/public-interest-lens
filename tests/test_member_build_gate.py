@@ -29,6 +29,9 @@ class MemberBuildGateTests(unittest.TestCase):
             dist.mkdir(parents=True)
             (root / "app/node_modules").mkdir()
             (dist / "ranking.json").write_text(json.dumps(ranking), encoding="utf-8")
+            # 賛否とグラフ用の集計はこの検査の対象外。generate_artifacts.py が作り直さないよう、架空の空ファイルを置く
+            for unused in ("votes.json", "charts.json"):
+                (dist / unused).write_text("{}", encoding="utf-8")
             package = json.loads((ROOT / "app/package.json").read_text(encoding="utf-8"))
             package["scripts"]["build"] = 'node -e "require(\'fs\').writeFileSync(\'build-reached\', \'yes\')"'
             (root / "app/package.json").write_text(json.dumps(package), encoding="utf-8")
