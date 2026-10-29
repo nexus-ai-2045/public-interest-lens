@@ -42,6 +42,7 @@ INPUTS = {
     # まとめて説明された法案の、その法案の部分（どの発言を「区別できない」とするかが変わるので、入力として記録する）
     "segments": ACQUIRED / "bill-speeches" / "segments.csv",
     "industryVa": ACQUIRED / "oecd-industry" / "industry_va.csv",
+    "covidBenefit": DERIVED / "covid-benefit-v1" / "benefit.csv",
 }
 # 無くても一覧は作れる入力（概要の原料と、その AI 要約、桁外れの印に使う日本の付加価値）
 OPTIONAL = {"speeches", "overviews", "segments", "industryVa"}
@@ -58,7 +59,7 @@ CERTAINTY = {
     "参考": "参考の額",
 }
 # 額が出ない法律の結果 → どこまで進んだか
-OUTCOME_STEP = {"評価対象外": "enacted", "保留（振り分け）": "enacted", "施行日が未確定": "evaluated", "保留（影響の判定）": "dated", "未測定（系列・比較群が足りない）": "staged"}
+OUTCOME_STEP = {"評価対象外": "enacted", "保留（振り分け）": "enacted", "施行日が未確定": "evaluated", "保留（影響の判定）": "dated", "未測定（系列・比較群が足りない）": "staged", "額は未計算（コロナ対応・規模のみ記録）": "dated"}
 # 確かさ高・中の法律で、関わった議員の記録（提出・参議院の賛否）がまだそろわず議員ページに入っていないものの印。
 MEMBERS_PENDING = "関わった議員の記録を集めている途中（議員ランキングにはまだ入っていない）"
 STEPS = ["enacted", "evaluated", "dated", "staged", "amounted", "published"]
@@ -121,8 +122,15 @@ def source_links(urls: list[str]) -> list[dict[str, str]]:
             return "国会会議録"
         if "sangiin.go.jp" in url:
             return "参議院の資料"
+        if not any(host in url for host in ("shugiin.go.jp", "sangiin.go.jp")):
+            return "官公庁の一次資料（支出・係数）"
         return "国会の議案情報（審議の経過）"
     return [{"label": label(url), "url": url} for url in urls]
+
+
+def covid_chain_step(row: dict[str, str]) -> dict[str, str]:
+    """コロナ対応の費用便益（covid-benefit-v1）の計算の筋道。式、法律ごとの対象範囲、確認できなかった点（規則の根拠）をそのまま出す。"""
+    return {"step": "費用便益の計算", "result": row["計算式の要素"], "note": row["根拠"]}
 
 
 def outcome_chain(row: dict[str, str] | None, certainty: str | None = None) -> list[dict[str, str]]:
@@ -266,6 +274,7 @@ def build() -> dict:
         return frozenset(source for source, kind in (("説明のURL", "説明"), ("反対のURL", "反対"))
                          if row.get(source) and uses[row[source]] > 1 and (law_id, kind, row[source]) not in split)
 
+    covid_benefit = {row["id"]: row for row in _rows("covidBenefit") if row["結果"] == "額"}
     items = []
     for census in _rows("enacted"):
         law_id = f"{census['種別']}-{census['提出回次']}-{census['番号']}"
@@ -315,6 +324,8 @@ def build() -> dict:
             item["summary"] = ("損失" if law["side"] == "loss" else "便益") + f"の推計（{law['window']}・{law['indicator']}）"
             known = {source["url"] for source in item["sources"]}
             item["sources"] += [link for link in source_links(law["sources"]) if link["url"] not in known]
+            if law_id in covid_benefit:
+                item["chain"].append(covid_chain_step(covid_benefit[law_id]))
             if law_id in member_law and member_law[law_id].get("attributed"):
                 item["attributed"] = member_law[law_id]["attributed"]
             if law["certainty"] in ("高", "中") and law_id not in member_law:

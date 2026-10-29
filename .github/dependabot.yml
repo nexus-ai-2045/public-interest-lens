@@ -17,3 +17,6 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 2
+    # nexus-ai-2045 の自前 workflow（preflight-gate など）は固定先を人が上げるので、ここでは上げない。
+    ignore:
+      - dependency-name: "nexus-ai-2045/*"
