@@ -76,11 +76,11 @@ export function SiteShell({ active, label, className = '', children, extra }: { 
 export function SiteHeader({ active, label, extra, siteTitleHeading = false }: { active: string; label: string; extra?: ReactNode; siteTitleHeading?: boolean }) {
   const [tone] = useTone();
   useToneSound(tone);
-  return <header className="topbar site-header">
+  return <><div className="joke-banner" role="note">ジョークサイトです</div><header className="topbar site-header">
     <a className="brand" href="/">{siteTitleHeading ? <h1 className="brand-name">{toneTitle(tone)}</h1> : <p className="brand-name">{toneTitle(tone)}</p>}<span className="prototype-label">{label}</span></a>
     <ToneSwitch />
     <SoundToggle tone={tone} />
     <SiteNav active={active} extra={extra} />
     <ToneFx tone={tone} />
-  </header>;
+  </header></>;
 }

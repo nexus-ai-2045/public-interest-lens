@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { GrowthBars, LatestTable, worldBaseYear, worldLineSeries, type WorldView } from './WorldGdpPage';
+import { DEFAULT_METRIC, GrowthBars, LatestTable, MissedGrowthSummary, parseWorldView, worldBaseYear, worldLineSeries, type WorldView } from './WorldGdpPage';
 import { parseWorldGdp } from './world-gdp';
 
 const data = parseWorldGdp(readFileSync(new URL('../public/distribution/world-gdp.json', import.meta.url), 'utf8'));
@@ -30,5 +30,20 @@ describe('世界のGDP比較の表示', () => {
     expect(bars).toMatch(/日本は<strong>\d+か国・地域中\d+位<\/strong>/);
     expect(bars).not.toContain('台湾');
     expect(bars).not.toContain('NaN');
+  });
+  it('既定の指標は名目ではなく実質成長率で、実質の系列は全ての国にあります', () => {
+    expect(DEFAULT_METRIC).toBe('realGrowth');
+    expect(parseWorldView('').metric).toBe('realGrowth');
+    expect(parseWorldView('?metric=nominal').metric).toBe('nominalUsd');
+    expect(parseWorldView('?metric=unknown').metric).toBe('realGrowth');
+    expect(data.countries.every(country => (country.series.realGrowth ?? []).length > 0)).toBe(true);
+  });
+  it('原因の軸の結論は3行で、失敗型の国の注記と式へのリンクを持ち、原因を断定しません', () => {
+    const html = renderToStaticMarkup(<MissedGrowthSummary />);
+    expect(html.match(/<li>/g)).toHaveLength(3);
+    for (const name of ['イタリア', 'ロシア', 'ブラジル']) expect(html).toContain(name);
+    expect(html).toContain('href="/methodology#spec-cause-axis"');
+    expect(html).toContain('暫定');
+    expect(html).toContain('原因は特定せず');
   });
 });

@@ -11,7 +11,7 @@
     ],
     "methodSpecVersion": "method-spec-v2.3",
     "codeHashes": {
-      "app/src/method-spec.ts": "5f4fe629be8eae551770e279bf516fbf3836a3d49c5dd4a4c511ced01e2b54bb",
+      "app/src/method-spec.ts": "5ab02bbcf714988bcb14306df202b1621372e6214dd6f16dd7c7815e4fbc33bb",
       "scripts/build_public_ranking.py": "253ba89727fe09ab0f3ee05ee2c69f0da32d4d03ab867fd64f8a72ec73783fb3",
       "scripts/generation_provenance.py": "7305f180fe2a415389bc00604f5806485c2eb559be545ae0669d616359b6b742",
       "scripts/path_guard.py": "aa7114e249f6591514297de30c97ee3428526ffa51babb999ab2d17a5aafe3c1"
