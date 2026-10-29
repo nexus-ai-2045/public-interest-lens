@@ -4,7 +4,8 @@
 
 ## 式
 B = (I − (I − M̂)A)⁻¹、A_ij = Z_ij / X_j、M̂_i = 輸入計_i / 国内需要合計_i（競争輸入型）
-r_S = Σ_{k∈S} w_k ·(1 / (v_k B_kk)) · Σ_{i∉S} v_i B_ik、w_k = VA_k / Σ_{k∈S} VA_k
+S の最終需要の減 f を B[S,S] f = w / v で解く（w_k = VA_k / Σ_{k∈S} VA_k。S 内の付加価値の減少がちょうど 1 になり、S 内部門どうしの波及も合わせる）
+r_S = Σ_{i∉S} v_i (B[i,S] f)　（S が1部門のときは w=1 で r = (1 / (v_k B_kk)) · Σ_{i≠k} v_i B_ik）
 波及の額 = Loss(0.5) · r_S、波及を含む額 = Loss(0.5) · (1 + r_S · e^{∓h})（−h が絶対値の小さい側、+h が大きい側。額は符号つき：正は損失、負は便益で、符号は変わらない）。v は付加価値率、h は下の半幅。
 出典（定番）：Miller & Blair, Input-Output Analysis (2nd ed., 2009), ch. 2, 6。
 
