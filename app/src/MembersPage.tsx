@@ -11,6 +11,7 @@ import { distributionActivityUrl, readActivity, type MemberActivity, type Member
 import { ROLE_LABEL as CAUSAL_ROLE_LABEL, type MemberEvidence, type MemberLaw, type PublicMember, type PublicMemberLaw, type PublicMembers, type PartyRanking, allocatedAmount } from './members-build';
 import { DEFAULT_KNOBS, isDefaultKnobs, readKnobs, writeKnobs, type CausalRole, type Knobs } from './causal-allocation';
 import { adjustMembers } from './members-knobs';
+import { BLOCS as VOTE_BLOCS } from './votes';
 import { AllMembers } from './AllMembers';
 import { distributionReferenceUrl } from './all-members-view';
 import type { PublicMembersReference } from './members-reference';
@@ -244,7 +245,7 @@ export function PartyRankingPanel({ ranking }: { ranking: PartyRanking }) {
       <thead><tr><th scope="col">順位</th><th scope="col">会派の系統</th><th scope="col">1人あたり</th><th scope="col">1本あたり</th><th scope="col">1票あたり</th><th scope="col">純額（参考）</th><th scope="col">人数</th><th scope="col">本数（賛成／反対）</th><th scope="col">賛成した法律のうち損失</th><th scope="col">確かさ</th></tr></thead>
       <tbody>{rows.map((b, i) => <tr key={b.bloc} className={b.net.median < 0 ? 'loss' : 'benefit'}>
         <td>{i + 1}</td>
-        <th scope="row"><span className="party-side">{b.net.median < 0 ? '国賊側' : '国士側'}</span> {b.bloc}<details><summary>会派名</summary><small>{b.parties.join('、')}</small></details></th>
+        <th scope="row"><span className="party-side">{b.net.median < 0 ? '国賊側' : '国士側'}</span> {b.bloc}{(VOTE_BLOCS as readonly string[]).includes(b.bloc) && <> <a className="party-votes-link" href={`/votes?party=${encodeURIComponent(b.bloc)}`}>賛否を見る</a></>}<details><summary>会派名</summary><small>{b.parties.join('、')}</small></details></th>
         <td>{signedYen(b.perPerson)}</td><td>{signedYen(b.perLaw)}</td><td>{signedYen(b.perVote)}</td><td>{signedYen(b.net.median)}</td>
         <td>{b.people}人</td><td>{b.laws}本（{b.yesLaws}／{b.noLaws}）</td><td>{Math.round(b.lossShareOfYes * 100)}%</td><td>{cert(b.certainty)}</td>
       </tr>)}</tbody>

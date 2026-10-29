@@ -39,6 +39,9 @@ describe('政党ランキング', () => {
     expect(blocOf('社会民主党・護憲連合')).toBe('社民');
     expect(blocOf('民主党・新緑風会')).toBe('民主系');
     expect(blocOf('みんなの党')).toBe('その他');
+    expect(blocOf('中道改革連合・無所属')).toBe('中道改革連合');
+    expect(blocOf('チームみらい・無所属の会')).toBe('チームみらい');
+    expect(blocOf('日本保守党')).toBe('日本保守党');
   });
   it('並べ方を変えると順位が変わり、総額は参考として選べる', () => {
     const b = (bloc: string, net: number, people: number, laws: number) => ({ bloc, parties: [bloc], people, laws, yesLaws: laws, noLaws: 0, lossShareOfYes: 1, certainty: { 低: laws },
