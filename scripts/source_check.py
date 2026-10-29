@@ -289,7 +289,7 @@ def check_law(law: dict, ctx: dict) -> list[dict[str, str]]:
 
     # 原本（手元にあるときだけ）
     urls = {url for url in recorded if url}
-    urls |= {row.get("出典URL", "") for row in ctx["oecd_rows"] if row["産業"] == industry}
+    urls |= {ctx["oecd_sources"].get(row["国"], "") for row in ctx["oecd_rows"] if row["産業"] == industry}
     for url in sorted(urls):
         for path, digest in ctx["manifest"].get(url, []):
             if path.exists():
@@ -325,6 +325,7 @@ def context(acquired: Path = ACQUIRED, derived: Path = DERIVED, local_root: Path
     return {
         "census": census, "enforcement": enforcement, "loss": loss, "covidSources": covid_sources, "covidAmounts": covid_amounts,
         "oecd": Oecd(oecd_path), "oecd_rows": _read(oecd_path) if oecd_path.exists() else [],
+        "oecd_sources": {r["国"]: r["出典URL"] for r in _read(acquired / "oecd-industry" / "sources.csv")},
         "manifest": manifest, "raw_present": present,
     }
 

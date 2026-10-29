@@ -8,7 +8,8 @@ loss-rule-v1 が比較国の「同じ定義の分野の実質付加価値」を�
   （各コードを OECD が実際に返すか、集約コード（M_N など）があるかは、この環境から確かめていない。取得後に industry_va.csv の産業を確かめる）
 
 原本は raw ディレクトリに国ごとに保存し、URL・sha256・HTTP の結果を manifest.csv に残します（原本は Git に入れない）。
-整えた表は industry_va.csv（列: 国,産業,指標,価格,年,値,単位,基準年,出典URL）に書きます。
+整えた表は industry_va.csv（列: 国,産業,指標,価格,年,値,単位,基準年）に書きます。出典URL は国ごとに1つなので、行ごとに持たず sources.csv（国,出典URL）に書きます
+（行ごとに書くと約4MBが同じ URL の繰り返しになり、Git に入れられる大きさを超える）。
 欠けた年は書きません（0で埋めない・補間しない）。
 
 使い方:
@@ -50,6 +51,10 @@ ACTIVITIES = {
     'R': '芸術・娯楽・レクリエーション（ISIC Rev.4 R）',
     'S': 'その他のサービス（ISIC Rev.4 S）',
     'T': '雇用主としての世帯（ISIC Rev.4 T）',
+    # macro-v1 が分野を産業に結ぶ読み替え（2026-10-29）で足した節。E（水・廃棄物）は OECD が日本について別に返さず、
+    # 水道・廃棄物の分野も作らない方針のままなので足さない。
+    'B': '鉱業・採石業（ISIC Rev.4 B）',
+    'D': '電気・ガス・蒸気・空調供給業（ISIC Rev.4 D）',
 }
 PRICES = {
     'V': '名目（current prices）',
@@ -60,7 +65,8 @@ BASE = 'https://sdmx.oecd.org/public/rest/data/OECD.SDD.NAD,DSD_NAMAIN10@DF_TABL
 ACCEPT = 'application/vnd.sdmx.data+csv; charset=utf-8'
 INTERVAL_SECONDS = 1.1
 UA = 'public-interest-lens oecd-industry (research; GitHub nexus-ai-2045/public-interest-lens)'
-OUT_COLUMNS = ['国', '産業', '指標', '価格', '年', '値', '単位', '基準年', '出典URL']
+OUT_COLUMNS = ['国', '産業', '指標', '価格', '年', '値', '単位', '基準年']
+SOURCE_COLUMNS = ['国', '出典URL']
 MANIFEST_COLUMNS = ['url', 'path', 'sha256', 'http', 'fetched_at']
 
 
@@ -159,9 +165,13 @@ def main(argv: list[str] | None = None) -> int:
             continue
         all_rows.extend(parse_table(body.decode('utf-8'), url))
     with (ns.out / 'industry_va.csv').open('w', encoding='utf-8', newline='') as fh:
-        w = csv.DictWriter(fh, fieldnames=OUT_COLUMNS)
+        w = csv.DictWriter(fh, fieldnames=OUT_COLUMNS, extrasaction='ignore')
         w.writeheader()
         w.writerows(all_rows)
+    with (ns.out / 'sources.csv').open('w', encoding='utf-8', newline='') as fh:
+        w = csv.writer(fh)
+        w.writerow(SOURCE_COLUMNS)
+        w.writerows(sorted({(r['国'], r['出典URL']) for r in all_rows}))
     print(f'{len(all_rows)} 行を書きました。取得できなかった国: {failed or "なし"}')
     return 1 if failed else 0
 

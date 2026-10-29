@@ -260,6 +260,22 @@ def build(root: Path = ROOT) -> list[dict[str, str]]:
     dates = {r["id"]: r["施行日"].strip() for r in read_csv(acquired / "enforcement-dates" / "enforcement.csv")}
     st = Stages(derived)
     rows = [decide(enacted[t["id"]], t, dates.get(t["id"], ""), st) for t in triage]
+    return apply_exclusion_overrides(rows, read_csv(derived / "all-laws-v1" / "exclusion-overrides.csv") if (derived / "all-laws-v1" / "exclusion-overrides.csv").exists() else [])
+
+
+REEXAMINED = "再判定（実質変更）"
+
+
+def apply_exclusion_overrides(rows: list[dict[str, str]], overrides: list[dict[str, str]]) -> list[dict[str, str]]:
+    """定例・対象外と決めた法律のうち、AI 3段の再判定で実質的な制度変更を含むとされたものを、保留に戻す。
+
+    保留に戻した行は macro-v1（全体指標の参考の額）が拾う。規則 RT1〜RT8 と種類による対象外の語は変えない
+    （規則の誤りを1本ずつ直さず、再判定の表 exclusion-overrides.csv を1か所の根拠にする）。
+    """
+    reason = {r["id"]: r["理由"] for r in overrides}
+    for out in rows:
+        if out["id"] in reason and out["結果"] in ("効果なし（定例）", "評価対象外"):
+            out.update(結果="保留", 経路=REEXAMINED, 理由=f"{reason[out['id']]}（旧：{out['結果']}・{out['経路']}）。実質的な制度変更を含むと再判定したので、全体指標の参考の額で測る")
     return rows
 
 

@@ -510,10 +510,11 @@ def year_ranges(years: list[int]) -> str:
 
 def load_series(db: Db) -> None:
     seen: dict[str, set] = {}
+    oecd_urls = {r["国"]: r["出典URL"] for r in read_csv(ACQ / "oecd-industry" / "sources.csv")}
     for r in read_csv(ACQ / "oecd-industry" / "industry_va.csv"):
         add_series(db, seen, sid=f"oecd-t6:{r['国']}:{r['産業']}:{r['価格']}", dataset="oecd-industry/industry_va.csv", domain="付加価値", country=r["国"],
                    label=r["指標"], breakdown=r["産業"], price=PRICE.get(r["価格"], r["価格"]), unit=r["単位"], base=r["基準年"], kind="暦年",
-                   url=r["出典URL"], year=r["年"], value=r["値"])
+                   url=oecd_urls[r["国"]], year=r["年"], value=r["値"])
     for name in ("intl-stats/intl-stats.csv", "r3-series/r3-series.csv"):
         for r in read_csv(ACQ / name):
             add_series(db, seen, sid=f"{name.split('/')[0]}:{r['国']}:{r['指標']}", dataset=name, domain=domain_of(r["指標"]), country=r["国"], label=r["指標"],

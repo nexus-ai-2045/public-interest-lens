@@ -42,6 +42,9 @@ ENFORCEMENT = ROOT / "data" / "acquired" / "enforcement-dates" / "enforcement.cs
 OECD = ROOT / "data" / "acquired" / "oecd-industry" / "industry_va.csv"
 OUT = DERIVED / "macro-v1" / "macro.csv"
 COVID_LABELS = DERIVED / "covid-response-v1" / "labels.csv"
+# 全産業で測っていた法律の産業への結び直し（AI 3段の判定。ai-field-v1 の後の再判定）。根拠の判定は docs/学習記録/macro-sector-v2.md。
+SECTOR_OVERRIDES = DERIVED / "macro-v1" / "sector-overrides.csv"
+OVERRIDE_ORIGIN = "AI 3段の再判定"
 COVID_BENEFIT = DERIVED / "covid-benefit-v1" / "benefit.csv"
 COVID_FIELD, COVID_ORIGIN, COVID_INDUSTRY = "コロナ対応", "コロナ対応の費用便益", "COVID"
 COVID_REASON = "コロナ対応の法律（{kind}）：全体指標の差はコロナの落ち込みそのもので、この法律の効果ではない。定説（財政乗数・雇用維持の効果）では落ち込みを和らげる向き（便益）。支出の規模を結ぶ規則（covid-benefit-v1）に無いため額は未計算"
@@ -50,15 +53,18 @@ HEADER = ["id", "題名", "分野", "分野の由来", "産業", "施行日", "�
           "比較国", "計算式の要素", "結果", "理由"]
 SKIP = {"額あり", "評価対象外", "効果なし（定例）"}
 WHOLE = "経済全体"
-# 分野 → OECD 表6 の節（ISIC Rev.4）。取得していない節（D・E・O）や1つの節に決まらない分野は全産業にする。
+# 分野 → OECD 表6 の節（ISIC Rev.4）。取得していない節（E・O）や1つの節に決まらない分野は全産業にする。
+# エネルギーは D（電気・ガス・蒸気・空調供給）で測る。D の外のエネルギー（石油・石炭・原子力規制）も含めた代理で、確かさは「参考」のまま。
 INDUSTRY = {
     "交通・移動": "H", "宿泊・観光": "I", "通信・ネット": "J", "金融": "K", "半導体・電子": "C",
     "農林水産": "A", "建設": "F", "住宅・不動産": "L", "教育": "P", "医療・福祉": "Q", "製造業": "C",
     "商業": "G", "専門サービス・研究開発": "M", "文化・娯楽・生活サービス": "R",
+    "エネルギー": "D", "鉱業・採石": "B",
 }
 INDUSTRY_LABEL = {"_T": "全産業", "H": "運輸・保管", "I": "宿泊・飲食", "J": "情報通信", "K": "金融・保険", "C": "製造業",
                   "A": "農林水産業", "F": "建設業", "L": "不動産業", "P": "教育", "Q": "保健衛生・社会事業", "G": "卸売・小売業",
-                  "M": "専門・科学技術サービス業", "R": "芸術・娯楽"}
+                  "M": "専門・科学技術サービス業", "R": "芸術・娯楽",
+                  "D": "電気・ガス・蒸気・空調供給業", "B": "鉱業・採石業"}
 COVID_START = 2020
 ESTIMATED = "推定（公布日）"
 
@@ -93,6 +99,20 @@ def publication_field(field: str, ai: str, agreement: str | None) -> tuple[str, 
 
 
 ALIGNED = "同じ題名にそろえた"
+# 節 → 分野の名前（結び直しで使う。C は製造業に寄せる）
+SECTION_FIELD = {"A": "農林水産", "B": "鉱業・採石", "C": "製造業", "D": "エネルギー", "F": "建設", "G": "商業", "H": "交通・移動",
+                 "I": "宿泊・観光", "J": "通信・ネット", "K": "金融", "L": "住宅・不動産", "M": "専門サービス・研究開発", "P": "教育",
+                 "Q": "医療・福祉", "R": "文化・娯楽・生活サービス"}
+
+
+def apply_sector_overrides(picks: dict[str, tuple[str, str, str]], overrides: list[dict[str, str]]) -> dict[str, tuple[str, str, str]]:
+    """結び直しの表（id, 節）を、振り分けで産業が決まっていない行にだけ当てる。振り分けで決まった行は変えない。"""
+    out = dict(picks)
+    for row in overrides:
+        law_id, section = row["id"], row["節"]
+        if law_id in out and section in SECTION_FIELD and out[law_id][1] != "振り分け":
+            out[law_id] = (SECTION_FIELD[section], OVERRIDE_ORIGIN, section)
+    return out
 
 
 def base_title(title: str) -> str:
@@ -163,6 +183,7 @@ def build() -> list[dict[str, str]]:
         {law["id"]: publication_field(law["分野"], ai.get(law["id"], ""), agreement.get(law["id"])) for law in laws},
         {law["id"]: law["題名"] for law in laws},
     )
+    picks = apply_sector_overrides(picks, _read(SECTOR_OVERRIDES))
     rows = []
     for law in laws:
         dated = enforcement.get(law["id"], {})
