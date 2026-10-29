@@ -44,6 +44,9 @@ INPUTS = {
     "enforcement": ACQUIRED / "enforcement-dates" / "enforcement.csv",
     "macro": DERIVED / "macro-v1" / "macro.csv",
     "covidBenefit": DERIVED / "covid-benefit-v1" / "benefit.csv",
+    "covidRules": DERIVED / "covid-benefit-v1" / "rules.csv",
+    "covidSpending": ACQUIRED / "covid-spending" / "spending.csv",
+    "covidParams": ACQUIRED / "covid-spending" / "params.csv",
 }
 RULES = ["bill-triage-v2", "impact-rule-v1", "loss-rule-v1", "benefit-rule-v1.2", "macro-v1", "covid-benefit-v1"]
 # 全体指標（macro-v1）の額の印。影響の段階を経ていない参考の額で、合計・議員への配分に使わない。
@@ -144,6 +147,21 @@ def _sources(law_id: str, enacted: dict[str, dict[str, str]], enforcement: dict[
     if not urls:
         raise ValueError(f"一次資料の URL がありません: {law_id}")
     return list(dict.fromkeys(urls))
+
+
+# 費用便益で使った係数（params.csv）。型ごとに、帰属の根拠になったグループ。消費に回る割合（限界消費性向）はどの型でも使う。
+COVID_PARAM_GROUPS = {"給付の差押禁止": "A", "雇用の維持": "B", "納税の猶予": "", "保険料の引下げ": "B"}
+COVID_MPC = "限界消費性向"
+ITEM_ID = re.compile(r"\[([^\]]+)\]")
+
+
+def _covid_sources(rule: dict[str, str], spending: dict[str, dict[str, str]], params: list[dict[str, str]]) -> list[str]:
+    """費用便益の支出（spending.csv の項目）と係数（params.csv のグループ）の一次資料 URL。"""
+    ids = {i for q in ("下", "中", "上") for col in ("支出", "帰属") for i in ITEM_ID.findall(rule[f"{col}_{q}"])}
+    urls = [spending[i]["出典URL"] for i in sorted(ids)]
+    groups = COVID_PARAM_GROUPS[rule["型"]]
+    urls += [row["出典URL"] for row in params if (groups and row["グループ"] == groups) or COVID_MPC in row["名前"]]
+    return list(dict.fromkeys(url for url in urls if url))
 
 
 def _short(text: str, limit: int = REASON_LIMIT) -> str:
@@ -254,7 +272,8 @@ def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
         "window": row["窓"],
         "comparisonCountries": row["比較国"].split("・") if row["比較国"] else [],
         "benefitStatus": "費用便益（財源調達の超過負担は未控除）" if covid else "未測定（全体指標の差だけ）",
-        "group": f"{MACRO_GROUP}-{'コロナ費用便益' if covid else row['産業']}",
+        # 独立した支出から計算するので、同じ窓でも法律ごとに別の観測（グループに法律の id を付ける）。
+        "group": f"{MACRO_GROUP}-コロナ費用便益-{row['id']}" if covid else f"{MACRO_GROUP}-{row['産業']}",
         "sources": sources,
     }
 
@@ -348,13 +367,17 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
     macro = {row["id"]: row for row in _rows("macro", captured) if row["結果"] == "額"}
     # コロナ対応で規模は取れたが額にしない法律は、規模つきの理由を出す（covid-benefit-v1）。
     covid_scale = {row["id"]: row["理由"] for row in _rows("covidBenefit", captured) if row["結果"] == "理由"}
+    covid_rules = {row["id"]: row for row in _rows("covidRules", captured) if row["結果"] == "額"}
+    covid_spending = {row["項目ID"]: row for row in _rows("covidSpending", captured)}
+    covid_params = _rows("covidParams", captured)
     laws, others = [], []
     for law_id, census_row in enacted.items():
         row = publish.get(law_id)
         title = census_row["題名"]
         if not row or row["損失または便益"] == "保留":
             if approve_all and law_id in macro and law_id not in held_by_check:
-                laws.append(_macro_law(macro[law_id], _sources(law_id, enacted, enforcement)))
+                extra = _covid_sources(covid_rules[law_id], covid_spending, covid_params) if law_id in covid_rules else []
+                laws.append(_macro_law(macro[law_id], list(dict.fromkeys(_sources(law_id, enacted, enforcement) + extra))))
             elif law_id in covid_scale:
                 others.append(_other(law_id, title, "covid_scale", covid_scale[law_id]))
             else:

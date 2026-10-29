@@ -119,6 +119,8 @@ def source_links(urls: list[str]) -> list[dict[str, str]]:
             return "国会会議録"
         if "sangiin.go.jp" in url:
             return "参議院の資料"
+        if not any(host in url for host in ("shugiin.go.jp", "sangiin.go.jp")):
+            return "官公庁の一次資料（支出・係数）"
         return "国会の議案情報（審議の経過）"
     return [{"label": label(url), "url": url} for url in urls]
 

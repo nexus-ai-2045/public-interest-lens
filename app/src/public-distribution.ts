@@ -124,13 +124,13 @@ export function parsePublicRanking(text: string): PublicRanking {
     // 四分位の幅は0をまたぐことがある（中央値は側の向きに正。幅はそのまま見せる）。
     const edges = signedYen;
     if (!yen(law.amountMedianYen) || !edges(law.amountLowYen) || !edges(law.amountHighYen) || law.amountLowYen > law.amountMedianYen || law.amountMedianYen > law.amountHighYen) throw new Error('額の幅が不正です。');
-    // コロナ対応の費用便益（covid-benefit-v1）は支出の規模から計算するので比較国を持たない。
-    const noComparison = law.group === COVID_BENEFIT_GROUP;
+    // コロナ対応の費用便益（covid-benefit-v1）は支出の規模から計算するので比較国を持たず、官公庁（go.jp）の支出・係数の資料も出典に持つ。
+    const noComparison = law.group.startsWith(`${COVID_BENEFIT_GROUP}-`);
     if (!Array.isArray(law.comparisonCountries) || (noComparison ? law.comparisonCountries.length : !law.comparisonCountries.length) || !law.comparisonCountries.every(code => /^[A-Z]{3}$/.test(code))) throw new Error('比較国が不正です。');
     if (!Array.isArray(law.sources) || !law.sources.length) throw new Error('一次資料がありません。');
     for (const source of law.sources) {
       const url = new URL(source);
-      if (url.protocol !== 'https:' || !SOURCE_HOSTS.has(url.hostname) || url.username || url.password) throw new Error('一次資料の URL が不正です。');
+      if (url.protocol !== 'https:' || !(SOURCE_HOSTS.has(url.hostname) || (noComparison && url.hostname.endsWith('.go.jp'))) || url.username || url.password) throw new Error('一次資料の URL が不正です。');
     }
   }
   for (const item of value.others) {

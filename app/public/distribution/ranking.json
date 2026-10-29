@@ -12,7 +12,7 @@
     "methodSpecVersion": "method-spec-v2.3",
     "codeHashes": {
       "app/src/method-spec.ts": "2fbd61c7c1bbf38f0da1e00982ee373d3afcaf76ed11c4b1dd6ed49d4dce75e3",
-      "scripts/build_public_ranking.py": "7b97508524abbac9f3744cdacc78f97b04ebc9793d9b9b6fd8f2fcc1678a4a50",
+      "scripts/build_public_ranking.py": "0a1eba858a948fb68ed0c8f25f833ce1e4076c55956cbbf64933368727683cc0",
       "scripts/generation_provenance.py": "7305f180fe2a415389bc00604f5806485c2eb559be545ae0669d616359b6b742",
       "scripts/path_guard.py": "aa7114e249f6591514297de30c97ee3428526ffa51babb999ab2d17a5aafe3c1"
     },
@@ -26,8 +26,11 @@
       "loss": "50cf7e07151c6ee5cec3b77c341d97fd9ce50f5ef8f6e3cb8f51352cb8c1e77d",
       "publish": "61aeb6ee78a039ac3f5577f976b7e897d2753ab1f025143a3e89342631b091b2",
       "enforcement": "b5ba88726efbc30088831ee102b740f86f73ea2bee82e74083fcb3a7c503c3b7",
-      "macro": "8662aac4c75caa51dea56e1ce9f0c8f52a70cce547ebe903441d9b94844f2fa4",
-      "covidBenefit": "95461e6ed5ede14abe26275dcc85b8aa0c43050283400e7c1e624e51038f0b18"
+      "macro": "36d5d403d9da2c84d56220912291742aab5c62d317e924401c675f19ad814a07",
+      "covidBenefit": "f5dc007722167dea1c51f6f9c4b3cf50f573e755cf37042aa28c4492f19200cd",
+      "covidRules": "787476d651bbf5c9d70be4b2e480cc393d5ba6195c648e0791dddc2aff3d8e1c",
+      "covidSpending": "7ed7d7d25eca6b0904a3bce735db976f83b3a61543e7af229848501037f9a0cc",
+      "covidParams": "522d604683a7adac4f205838e4af1b508b23f9312f8e7371918c7360320dfd7d"
     },
     "parameters": {
       "heldOut": [
@@ -99891,10 +99894,14 @@
       "window": "2020〜2022年",
       "comparisonCountries": [],
       "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
-      "group": "全体指標-コロナ費用便益",
+      "group": "全体指標-コロナ費用便益-閣法-201-59",
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF3DA.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200612054.htm"
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200612054.htm",
+        "https://www.mhlw.go.jp/content/11601000/000995223.pdf",
+        "https://www.mhlw.go.jp/content/11601000/001156732.pdf",
+        "https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf",
+        "https://www.mhlw.go.jp/content/11600000/000966746.pdf"
       ]
     },
     {
@@ -105103,10 +105110,12 @@
       "window": "2020〜2021年",
       "comparisonCountries": [],
       "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
-      "group": "全体指標-コロナ費用便益",
+      "group": "全体指標-コロナ費用便益-閣法-201-54",
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF31E.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200430025.htm"
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200430025.htm",
+        "https://www.nta.go.jp/information/release/pdf/0022007-132.pdf",
+        "https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf"
       ]
     },
     {
@@ -106021,10 +106030,14 @@
       "window": "2022〜2022年",
       "comparisonCountries": [],
       "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
-      "group": "全体指標-コロナ費用便益",
+      "group": "全体指標-コロナ費用便益-閣法-208-14",
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD51D6.htm",
-        "https://laws.e-gov.go.jp/law/349AC0000000116"
+        "https://laws.e-gov.go.jp/law/349AC0000000116",
+        "https://www.mhlw.go.jp/content/11601000/000873665.pdf",
+        "https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf",
+        "https://www.mhlw.go.jp/content/11600000/000966746.pdf",
+        "https://www.mhlw.go.jp/content/11601000/000995223.pdf"
       ]
     },
     {
@@ -106754,10 +106767,16 @@
       "window": "2020〜2020年",
       "comparisonCountries": [],
       "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
-      "group": "全体指標-コロナ費用便益",
+      "group": "全体指標-コロナ費用便益-衆法-201-10",
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF32A.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200430027.htm"
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200430027.htm",
+        "https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup07/sankou.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001546569.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001121231.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001283515.pdf",
+        "https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf",
+        "https://www.courts.go.jp/assets/db2026_212.pdf"
       ]
     },
     {
@@ -107019,10 +107038,16 @@
       "window": "2021〜2021年",
       "comparisonCountries": [],
       "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
-      "group": "全体指標-コロナ費用便益",
+      "group": "全体指標-コロナ費用便益-衆法-207-7",
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD4D3A.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20720211220085.htm"
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20720211220085.htm",
+        "https://www.cao.go.jp/yosan/pdf/r4/03016800_naikakufu.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001546569.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001121231.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001283515.pdf",
+        "https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf",
+        "https://www.courts.go.jp/assets/db2026_212.pdf"
       ]
     },
     {
@@ -107045,10 +107070,16 @@
       "window": "2021〜2021年",
       "comparisonCountries": [],
       "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
-      "group": "全体指標-コロナ費用便益",
+      "group": "全体指標-コロナ費用便益-衆法-204-12",
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD229E.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210421021.htm"
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210421021.htm",
+        "https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup07/sankou.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001546569.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001121231.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001283515.pdf",
+        "https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf",
+        "https://www.courts.go.jp/assets/db2026_212.pdf"
       ]
     },
     {
@@ -107071,10 +107102,17 @@
       "window": "2020〜2020年",
       "comparisonCountries": [],
       "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
-      "group": "全体指標-コロナ費用便益",
+      "group": "全体指標-コロナ費用便益-衆法-201-24",
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF42A.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200612055.htm"
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200612055.htm",
+        "https://www.mhlw.go.jp/content/000634465.pdf",
+        "https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup07/sankou.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001546569.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001121231.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001283515.pdf",
+        "https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf",
+        "https://www.courts.go.jp/assets/db2026_212.pdf"
       ]
     },
     {
@@ -107097,10 +107135,16 @@
       "window": "2022〜2022年",
       "comparisonCountries": [],
       "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
-      "group": "全体指標-コロナ費用便益",
+      "group": "全体指標-コロナ費用便益-衆法-208-42",
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5A2E.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220613064.htm"
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220613064.htm",
+        "https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup10/omonasesaku.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001546569.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001121231.pdf",
+        "https://www.mhlw.go.jp/content/12400000/001283515.pdf",
+        "https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf",
+        "https://www.courts.go.jp/assets/db2026_212.pdf"
       ]
     }
   ],
@@ -109227,7 +109271,7 @@
       "id": "衆法-211-19",
       "title": "戦没者の遺骨収集の推進に関する法律の一部を改正する法律案",
       "outcome": "額は未計算（コロナ対応・規模のみ記録）",
-      "reason": "遺骨収集の予算は年3.35億円（厚労省）。遺骨収集の価値は経済の付加価値で測れず、金額に換算しない。額は未計算"
+      "reason": "遺骨収集の予算は年33.5億円（厚労省）。遺骨収集の価値は経済の付加価値で測れず、金額に換算しない。額は未計算"
     },
     {
       "id": "衆法-211-51",
