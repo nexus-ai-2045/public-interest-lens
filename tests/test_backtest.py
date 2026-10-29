@@ -85,6 +85,77 @@ class BacktestRunTest(unittest.TestCase):
                 self.assertEqual(value, self.result[key], f"{path.name} の {key} が、同じ入力での再計算と違う")
         print(f"\n固定した結果のうち、入力が同じで再現を確かめたもの: {checked}")
 
+class BacktestTransplantTest(unittest.TestCase):
+    """v2：外国の研究から日本の向きを当てる（設計決定0021）。"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.result = bt.run()["transplant"]
+        cls.pool = json.loads(bt.tr.POOL.read_text(encoding="utf-8"))["entries"]
+        cls.match = json.loads(bt.tr.MATCH.read_text(encoding="utf-8"))
+        cls.labels = json.loads(bt.tr.LABELS.read_text(encoding="utf-8"))
+
+    def test_targets_are_japanese_cases_with_a_direction(self):
+        cases = {c["id"]: c for c in json.loads(bt.CASES.read_text(encoding="utf-8"))["cases"]}
+        for item in self.result["levels"][0]["cases"]:
+            a = cases[item["id"]]["labels"]["agreed"]
+            self.assertEqual(a["country"], "日本")
+            self.assertIn(a["benefit_sign"], (1, -1))
+
+    def test_every_pool_entry_is_labeled_and_matches_point_to_the_pool(self):
+        ids = {e["id"] for e in self.pool}
+        self.assertEqual(set(self.labels["entries"]), ids)
+        for line in self.match["targets"].values():
+            for rows in line.values():
+                self.assertTrue({r["fg"] for r in rows} <= ids)
+
+    def test_unusable_labels_never_become_predictions(self):
+        flab = bt.tr.foreign_labels(self.pool, self.labels)
+        held = {i for i, v in flab.items() if not v["usable"]}
+        for lv in self.result["levels"]:
+            for c in lv["cases"]:
+                for f in c["foreign"]:
+                    self.assertNotIn(f["fg"], held)
+
+    def test_relaxed_levels_contain_the_headline_predictions(self):
+        t0 = {c["id"] for c in self.result["levels"][0]["cases"] if c["predicted"] is not None}
+        t1 = {c["id"] for c in self.result["levels"][1]["cases"] if c["predicted"] is not None}
+        t2 = {c["id"] for c in self.result["levels"][2]["cases"] if c["predicted"] is not None}
+        self.assertLessEqual(t0, t1)
+        self.assertLessEqual(t0, t2)
+
+    def test_verdict_needs_enough_cases_and_groups_and_unpredicted_are_not_misses(self):
+        for lv in self.result["levels"]:
+            scored = [c for c in lv["cases"] if c["predicted"] is not None]
+            self.assertEqual(lv["n"], len(scored))
+            if lv["n"] < bt.tr.MIN_N or lv["groups"] < bt.tr.MIN_GROUPS:
+                self.assertEqual(lv["verdict"], "判定不能")
+            for c in lv["cases"]:
+                if c["predicted"] is None:
+                    self.assertFalse(c["hit"])
+                    self.assertTrue(c["reason"])
+
+    def test_a_split_among_foreign_studies_gives_no_prediction(self):
+        pool_by_id = {e["id"]: e for e in self.pool}
+        flab = {"a": {"usable": True, "outcome_class": "employment", "benefit_sign": 1, "event": "x"},
+                "b": {"usable": True, "outcome_class": "employment", "benefit_sign": -1, "event": "y"}}
+        pool_by_id = {"a": {"authors": "A", "year": 2000, "country": "米国"}, "b": {"authors": "B", "year": 2001, "country": "英国"}}
+        match = {"targets": {"t": {"line1": [{"fg": "a", "d": True}, {"fg": "b", "d": True}], "line2": [{"fg": "a", "d": True}, {"fg": "b", "d": True}]}}}
+        target = {"id": "t", "labels": {"agreed": {"outcome_class": "employment"}}}
+        out = bt.tr.predict(target, "T0", pool_by_id, flab, match)
+        self.assertIsNone(out["predicted"])
+        self.assertEqual(out["reason"], "外国の研究の向きが割れた")
+        # 同じ出来事の研究は1つに数える
+        flab["b"]["event"] = "x"
+        flab["b"]["benefit_sign"] = 1
+        self.assertEqual(bt.tr.predict(target, "T0", pool_by_id, flab, match)["predicted"], 1)
+
+    def test_v2_is_recorded_and_v1_is_kept(self):
+        v2 = json.loads((bt.SNAP_DIR / "v2.json").read_text(encoding="utf-8"))
+        self.assertIn("transplant", v2)
+        self.assertTrue((bt.SNAP_DIR / "v1.json").exists() and (bt.SNAP_DIR / "v1.1.json").exists())
+
+
 class BacktestPublishedFilesTest(unittest.TestCase):
     def test_public_json_and_doc_are_built_from_the_snapshots(self):
         runs = sorted((json.loads(p.read_text(encoding="utf-8")) for p in bt.snapshot_files()), key=lambda r: (r["date"], r["label"]))

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""計算式のバックテスト（backtest-v1）。答えの分かっている事例（学術文献の事後評価）を正解にして、現行の計算の向きを当てる。
+"""計算式のバックテスト（backtest-v2）。答えの分かっている事例（学術文献の事後評価）を正解にして、現行の計算の向きを当てる。
 
 正解   data/evidence/backtest_cases.json   事例集の「照合＝一致」49件。識別・指標・便益の向きは2系統が一致したラベルだけ使う
 対応表 data/evidence/backtest_mapping.json 政策グループ → 現行の計算の法律（結果を見る前に固定）
 予測   app/public/distribution/laws.json   法律ごとの向き（side：loss＝国賊側／benefit＝国士側）と参考の額
-定義   docs/adr/0020-backtest-accuracy-definition.md
+定義   docs/adr/0020-backtest-accuracy-definition.md（v1・v1.1）、docs/adr/0021-backtest-transplant-v2.md（v2：外国の研究から日本の向きを当てる）
 
 使い方:
   python3 scripts/backtest.py                          今のデータで測って表示する（書かない。CI はこれを毎回回す）
   python3 scripts/backtest.py --snapshot v1 --date 2026-10-29   結果を data/evidence/backtest/v1.json に固定し、配布用を更新
   python3 scripts/backtest.py --publish                snapshots から app/public/distribution/backtest.json を作り直す
   python3 scripts/backtest.py --json                   結果を JSON で標準出力に出す
-2回目の測定は、実装が済んだあとに --snapshot v2 --date <日付> を回すだけでよい。
+実装が済んだあとの測定は、新しい名前で --snapshot <名前> --date <日付> を回すだけでよい（固定済みの名前は上書きしない）。
 """
 from __future__ import annotations
 
@@ -24,6 +24,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import backtest_transplant as tr  # noqa: E402  v2：外国の研究から日本の向きを当てる（設計決定0021）
+
 ROOT = Path(__file__).resolve().parents[1]
 CASES = ROOT / "data" / "evidence" / "backtest_cases.json"
 MAPPING = ROOT / "data" / "evidence" / "backtest_mapping.json"
@@ -34,7 +37,7 @@ SPEC = ROOT / "app" / "src" / "method-spec.ts"
 SNAP_DIR = ROOT / "data" / "evidence" / "backtest"
 PUBLIC = ROOT / "app" / "public" / "distribution" / "backtest.json"
 DOC = ROOT / "docs" / "バックテスト.md"
-VERSION = "backtest-v1.1"
+VERSION = "backtest-v2"
 TARGET = 0.95   # 合格の線（ねく 2026-10-29）
 MIN_N = 10      # これ未満は判定しない（評価方法設計書 5.3）
 COMPARABLE = {"output", "employment"}   # 現行の計算の指標（産業の付加価値）と同じ向きで読める結果指標
@@ -258,7 +261,7 @@ def run() -> dict:
         "spec_version": spec_version(),
         "target": TARGET,
         "min_n": MIN_N,
-        "inputs": {"cases": sha(CASES), "mapping": sha(MAPPING), "alignment": sha(ALIGN), "impact": sha(IMPACT), "laws": sha(LAWS), "laws_total": len(laws)},
+        "inputs": {"cases": sha(CASES), "mapping": sha(MAPPING), "alignment": sha(ALIGN), "impact": sha(IMPACT), "laws": sha(LAWS), "laws_total": len(laws), "foreign_pool": sha(tr.POOL), "foreign_labels": sha(tr.LABELS), "foreign_match": sha(tr.MATCH)},
         "cases_total": len(items),
         "funnel": {
             "total": len(items),
@@ -271,6 +274,7 @@ def run() -> dict:
         "headline_aligned": aligned_levels[0],
         "levels": levels,
         "aligned_levels": aligned_levels,
+        "transplant": tr.run(cases["cases"]),
         "alignment_gap": {
             "japan_linked_cases": len(jp_linked),
             "by_alignment": gap_alignment,
@@ -296,8 +300,13 @@ def render(result: dict) -> str:
         lines.append(f"  {lv['level']} {lv['name']}: 向きの一致 {lv['hits']}/{lv['n']} = {rate}{ci} → {lv['verdict']}")
     lines.append(f"  除外の理由: {result['funnel']['excluded_by_reason']}")
     lines.append(f"  指標の対応（日本の研究で法律と結べた {result['alignment_gap']['japan_linked_cases']} 件）: {result['alignment_gap']['by_alignment']}、止まった理由 {result['alignment_gap']['stopped_by']}")
+    t = result["transplant"]
+    for lv in t["levels"]:
+        rate = "—" if lv["rate"] is None else f"{lv['rate'] * 100:.0f}%"
+        lines.append(f"  {lv['level']} {lv['name']}: 向きの一致 {lv['hits']}/{lv['n']} = {rate}（出せた割合 {lv['n']}/{lv['targets']}、政策 {lv['groups']} グループ）→ {lv['verdict']}")
     lines.append(f"  額・区間: {result['amount_and_interval']['status']}")
     lines.append(f"  本命の判定（v1.1・指標をそろえた M0）: {h['verdict']}（合格の線 {result['target'] * 100:.0f}%、判定に要る件数 {result['min_n']}）")
+    lines.append(f"  本命の判定（v2・外国の研究から当てる T0）: {t['headline']['verdict']}（件数 {result['min_n']} 以上かつ政策 {t['min_groups']} グループ以上）")
     return "\n".join(lines)
 
 
@@ -307,6 +316,28 @@ def snapshot_files() -> list[Path]:
 
 def pct(x: float | None) -> str:
     return "—" if x is None else f"{x * 100:.0f}%"
+
+
+def render_transplant_doc(t: dict) -> list[str]:
+    """v2：外国の同種の研究から日本の向きを当てる（設計決定0021）の節。"""
+    sign = {1: "便益（国士側）", -1: "損失（国賊側）", 0: "効果なし", None: "—"}
+    pool = t["pool"]
+    out = ["", "### 外国の研究から日本の向きを当てる（v2、設計決定0021）", "",
+           "日本の研究（向きが +1／−1 で定まるもの）を正解とし、**外国の同種の政策の研究だけ**から向きを当てられるかを測る。現行の計算は使わない。同種の判定とラベルは、日本の結果を見せない2系統が独立に付け、一致したものだけ使う。",
+           f"外国の研究のプール：{pool['entries']} 件（事例集の外国の研究 {pool['from_cases']} 件＋日本の結果を見せずに調査員が集めた {pool['from_search']} 件）。ラベルが2系統で一致して使えるのは {pool['usable']} 件、割れて外したのは {len(pool['labels_held'])} 件。同種の判定が2系統で割れた組は {t['match_splits']} 組。", "",
+           "| 段 | 条件 | 向きの一致 | 一致率（Wilson 95%区間） | 予測を出せた割合 | 政策グループ | 基準 | 判定 |", "|---|---|---|---|---|---|---|---|"]
+    for lv in t["levels"]:
+        ci = "" if not lv["wilson95"] else f"（{pct(lv['wilson95'][0])}〜{pct(lv['wilson95'][1])}）"
+        out.append(f"| {lv['level']} {lv['name']} | {lv['definition']} | {lv['hits']}/{lv['n']} | {pct(lv['rate'])}{ci} | {lv['n']}/{lv['targets']} | {lv['groups']} | {pct(lv['baseline'])} | {lv['verdict']} |")
+    out += ["", f"合格は一致率{pct(t['target'])}以上、かつ予測を出せた事例が{t['min_n']}件以上・政策が{t['min_groups']}グループ以上。基準は、予測を出せた事例で毎回最頻の向きを答えたときの一致率。", "",
+            "結果指標の種類ごとの本命（T0）：" + "、".join(f"{k} {v['hits']}/{v['n']}（対象 {v['targets']} 件、{v['verdict']}、暫定の向き・額は{v['provisional_value']}）" for k, v in t["by_outcome_class"].items()) + "。", "",
+            "| 日本の事例 | 研究 | 正解の向き | 本命(T0)の予測 | 使った外国の研究（向き） |", "|---|---|---|---|---|"]
+    for c in t["levels"][0]["cases"]:
+        used = "、".join(f"{f['authors'].split(',')[0].split(';')[0]} {f['year']}（{sign[f['sign']]}）" for f in c["foreign"]) or "—"
+        pred = sign[c["predicted"]] if c["predicted"] is not None else f"出せない（{c['reason']}）"
+        out.append(f"| {c['policy'].split('（')[0]} | {c['source']} | {sign[c['truth']]} | {pred} | {used} |")
+    out += ["", t["note"], ""]
+    return out
 
 
 def render_doc(runs: list[dict]) -> str:
@@ -322,6 +353,7 @@ def render_doc(runs: list[dict]) -> str:
         "- 予測：現行の計算が出す、その政策に当たる法律の向き（国賊側／国士側）。",
         "- 一致率：正解の向きと計算の向きが同じだった割合。件数が10件未満なら「判定不能」で、95%に届いたとも届かないとも言わない。",
         "- 本命（L0）の条件が厳しく件数が足りないので、条件を緩めた数字（L1・L2）も並べる。どれも同じデータ、同じ規則で出している。",
+        "- v2（T0〜T2）：外国の同種の政策の研究だけから日本の向きを当てる。予測が出せなかった事例は外れに数えず、出せた割合（カバー率）を併記する。基準は毎回最頻の向きを答えたときの一致率。",
         "",
     ]
     for r in runs:
@@ -345,6 +377,8 @@ def render_doc(runs: list[dict]) -> str:
                 sign2 = {1: "便益（国士側）", -1: "損失（国賊側）", 0: "同数"}
                 out += [f"| {c['policy']} | {c['source']} | {c['indicator']}（{c['alignment']}） | {sign2[c['truth']]} | {sign2[c['predicted']]} | {'○' if c['hit'] else '×'} |" for c in r["aligned_levels"][2]["cases"]]
                 out.append("")
+        if r.get("transplant"):
+            out += render_transplant_doc(r["transplant"])
         f = r["funnel"]
         out += ["", f"事例 {f['total']} 件のうち採点できなかった理由：" + "、".join(f"{k} {v}件" for k, v in f["excluded_by_reason"].items()) + "。", ""]
         out += ["額の誤差・予測区間が正解を含む割合：**" + r["amount_and_interval"]["status"] + "**。" + r["amount_and_interval"]["reason"], ""]
