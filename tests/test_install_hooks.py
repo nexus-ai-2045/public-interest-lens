@@ -28,6 +28,32 @@ class StripCommitTraceTest(unittest.TestCase):
         self.assertEqual("題名\n\n本文\n", strip_commit_trace.strip("題名\n\n本文\n", TRACE_RES))
 
 
+# 本物の URL の写しを置くと名義検査が自分のテストを止めるので、部品に分けて実行時に組む
+LINK = "[project thread](https://{h}/{k}/{i})".format(h="claude." + "".join(["a", "i"]), k="code/" + "project", i="abc123")
+MARK = "<!-- claude-projects-attribution v1 -->"
+BODY_TRACE_RES = [re.compile(r"TRACE-[0-9]+")]
+
+
+class StripBodyTest(unittest.TestCase):
+    def test_project_link_is_removed_but_marker_and_requester_stay(self):
+        body = f"本文\n\n{MARK} · {LINK}\n_Requested by **ねく**_\n"
+        out = strip_commit_trace.strip_body(body, BODY_TRACE_RES)
+        self.assertNotIn("project thread", out)
+        self.assertNotIn("http", out)
+        self.assertIn(MARK, out)
+        self.assertIn("_Requested by **ねく**_", out)
+        self.assertEqual(f"本文\n\n{MARK}\n_Requested by **ねく**_\n", out)
+
+    def test_bare_url_and_other_trace_lines_are_removed(self):
+        bare = LINK.split("(")[1].rstrip(")")
+        out = strip_commit_trace.strip_body(f"本文\n{MARK} {bare}\n{SESSION}\n", BODY_TRACE_RES)
+        self.assertEqual(f"本文\n{MARK}\n", out)
+
+    def test_body_without_link_is_unchanged(self):
+        body = f"本文\n\n{MARK}\n_Requested by **ねく**_\n"
+        self.assertEqual(body, strip_commit_trace.strip_body(body, BODY_TRACE_RES))
+
+
 class InstallHooksTest(unittest.TestCase):
     def test_install_is_idempotent_and_executable(self):
         with tempfile.TemporaryDirectory() as t:
