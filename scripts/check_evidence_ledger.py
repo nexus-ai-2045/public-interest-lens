@@ -17,6 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 LEDGER = ROOT / "data" / "evidence" / "ledger.json"
 MAPPING = ROOT / "data" / "evidence" / "mapping.json"
+CANDIDATES = ROOT / "data" / "evidence" / "candidates.json"
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
@@ -142,10 +143,42 @@ def check(ledger, mapping=None):
     return errs
 
 
+CAND_REQUIRED = ["id", "authors", "year", "title", "quantity", "value_raw", "locator", "quote", "status"]
+
+
+def check_candidates(cands, ledger, mapping=None):
+    """候補（未照合）の検査：形・ID の重複・status。台帳や mapping が候補を参照していたら落とす。"""
+    errs = []
+    entries = cands.get("entries", [])
+    ids = [e.get("id") for e in entries]
+    for d in {x for x in ids if ids.count(x) > 1}:
+        errs.append(f"候補の ID が重複: {d}")
+    for e in entries:
+        for k in CAND_REQUIRED:
+            if e.get(k) in (None, ""):
+                errs.append(f"{e.get('id', '?')}: 候補の必須項目 {k} がない")
+        if e.get("status") != "candidate":
+            errs.append(f"{e.get('id', '?')}: 候補の status は candidate（台帳に昇格したものは候補から外す）")
+    have = set(ids)
+    for le in ledger.get("entries", []):
+        if le.get("id") in have:
+            errs.append(f"台帳の ID が候補と重なっている: {le.get('id')}")
+    if mapping is not None:
+        for m in mapping.get("mechanisms", []):
+            for q in m.get("ledger_ids", []):
+                if q in have:
+                    errs.append(f"mapping の {m.get('id')} が候補（未照合）を参照: {q}")
+    return errs
+
+
 def main():
     ledger = json.loads(LEDGER.read_text(encoding="utf-8"))
     mapping = json.loads(MAPPING.read_text(encoding="utf-8")) if MAPPING.exists() else None
     errs = check(ledger, mapping)
+    if CANDIDATES.exists():
+        cands = json.loads(CANDIDATES.read_text(encoding="utf-8"))
+        errs += check_candidates(cands, ledger, mapping)
+        print(f"候補 {len(cands.get('entries', []))} 件（未照合・計算には使わない）")
     n = len(ledger.get("entries", []))
     ver = sum(1 for e in ledger.get("entries", []) if e.get("verification", {}).get("status") == "verified")
     print(f"台帳 {n} 件（verified {ver}・held {n - ver}）")

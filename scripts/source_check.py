@@ -72,6 +72,16 @@ def _shugiin_date(enforcement: dict[str, str]) -> str | None:
         return None
     hit = _shugiin_index().get((shugiin.era_of(promulgation), promulgation[:4], kanji_num(number.group(1))))
     return (shugiin.judge(hit[1], promulgation)[0] or None) if hit else None
+
+
+def _retroactive_by_clause(enforced_on: str, enforcement: dict[str, str]) -> bool:
+    """公布日より前の施行日を認める唯一の条件：衆議院の附則の種別が「日付の明示」で、別経路の再計算が台帳の施行日と一致する。
+    計算で出した日（公布の日から○日など）や推定日が公布日より前になるのは取り込みの誤りなので通さない。"""
+    if enforcement.get("取得方法", "") not in SHUGIIN_METHODS or enforcement.get("備考", "") != "附則に日付を明示":
+        return False
+    return _shugiin_date(enforcement) == enforced_on == enforcement.get("施行日", "")
+
+
 TOLERANCE_YEN = 1
 # 費用便益の式は帰属と乗数を有効数字4桁で載せているので、計算し直すと丸めの差が出る。
 COVID_RELATIVE_TOLERANCE = 5e-4
@@ -237,7 +247,13 @@ def check_law(law: dict, ctx: dict) -> list[dict[str, str]]:
         if promulgated is None:
             add("公布日との順序", law["enforcedOn"], census["公布日"] if census else "", NA, "議案台帳の公布日を読めない")
         else:
-            add("公布日との順序", law["enforcedOn"], promulgated, OK if law["enforcedOn"] >= promulgated else NG, "施行日は公布日より前にならない")
+            if law["enforcedOn"] >= promulgated:
+                add("公布日との順序", law["enforcedOn"], promulgated, OK)
+            elif _retroactive_by_clause(law["enforcedOn"], enforcement):
+                # 遡及施行（例：4月1日施行の税制改正を4月末に公布）。附則が公布前の日付をそのまま書いているものに限り通す。
+                add("公布日との順序", law["enforcedOn"], promulgated, OK, "遡及施行：附則が公布日より前の日付を明示（衆議院の附則を別経路で再計算して一致）")
+            else:
+                add("公布日との順序", law["enforcedOn"], promulgated, NG, "施行日は公布日より前にならない（附則が日付を明示した遡及のみ例外）")
             if enforcement.get("公布日"):
                 add("公布日", enforcement["公布日"], promulgated, OK if enforcement["公布日"] == promulgated else NG, "施行日台帳と議案台帳")
 

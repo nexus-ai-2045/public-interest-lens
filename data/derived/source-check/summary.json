@@ -1,14 +1,9 @@
 {
   "checkedLaws": 2818,
   "items": 29931,
-  "match": 29628,
-  "mismatch": 4,
+  "match": 29632,
+  "mismatch": 0,
   "notApplicable": 299,
-  "heldOut": [
-    "閣法-169-16",
-    "閣法-169-3",
-    "閣法-169-4",
-    "閣法-169-5"
-  ],
+  "heldOut": [],
   "memberMismatch": 0
 }
