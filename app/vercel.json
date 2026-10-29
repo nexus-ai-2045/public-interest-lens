@@ -10,9 +10,6 @@
     }
   ],
   "git": {
-    "deploymentEnabled": {
-      "claude/**": false,
-      "report/**": false
-    }
+    "deploymentEnabled": false
   }
 }

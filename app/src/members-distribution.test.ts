@@ -23,6 +23,7 @@ it('配布している members.json は、いまの派生データから同じ�
     voteParties: read('data/derived/allocation-v1/vote-parties.csv'),
     ministries: read('data/derived/ministry-v1/cabinet-bills.csv'),
     taxLedger: read('data/derived/tax-v1/consumption-tax.csv'),
+    taxRevenueForecasts: read('data/acquired/tax-revenue-estimates/estimates.csv'),
     resistance: read('data/derived/org-ledger-v1/ministry-resistance.csv'),
     orgStances: read('data/derived/org-ledger-v1/org-stances.csv'),
     listed: JSON.parse(read('app/public/distribution/ranking.json')).laws.map((l: { id: string }) => l.id),
@@ -30,9 +31,10 @@ it('配布している members.json は、いまの派生データから同じ�
   });
   // pending（配分にまだ入っていない法律の一覧）は公開ランキングから付けるので、計算の一致からは外し、下で別に確かめる。
   const { inputs, pending, generatedFrom, ...published } = JSON.parse(read('app/public/distribution/members.json'));
-  expect(Object.keys(inputs).sort()).toEqual(['autoInvolvements', 'autoVotes', 'enacted', 'involvements', 'loss', 'ministries', 'opposing', 'orgStances', 'publish', 'ranking', 'resistance', 'taxLedger', 'voteParties', 'votes']);
+  expect(Object.keys(inputs).sort()).toEqual(['autoInvolvements', 'autoVotes', 'enacted', 'involvements', 'loss', 'ministries', 'opposing', 'orgStances', 'publish', 'ranking', 'resistance', 'taxLedger', 'taxRevenueForecasts', 'voteParties', 'votes']);
   expect(generatedFrom.methodSpecVersion).toBe(SPEC_VERSION);
   expect(generatedFrom.codeHashes['app/src/members-build.ts']).toMatch(/^[a-f0-9]{64}$/);
+
   expect(published).toEqual(JSON.parse(JSON.stringify(built)));
   const ranking = JSON.parse(read('app/public/distribution/ranking.json'));
   const included = new Set(published.laws.map(l => l.id));
@@ -51,9 +53,15 @@ it('配布している members.json は、いまの派生データから同じ�
   const assigned = new Set(published.ministries.flatMap(m => m.laws.map(l => l.lawId)));
   const officeTotal = sum(published.members.flatMap(m => m.laws.filter(l => assigned.has(l.lawId)).map(l => l.office.median)));
   expect(sum(published.ministries.flatMap(m => m.laws.map(l => l.share.median)))).toBe(officeTotal);
-  // 税の帳簿は別の物差し：引上げは損失、延期は便益で、年ごとの額を足すと合計になる。
+  // 支持でない質疑（中立・反対）は記録として context にだけ出し、配分の証拠（evidence）には入れない。
+  for (const m of published.members) for (const l of m.laws) {
+    for (const e of l.evidence) expect(['質疑（中立）', '質疑（反対）']).not.toContain(e.actionLabel);
+    for (const e of l.context.filter(x => x.action === 'question')) expect(['質疑（法案を支持）', '質疑（中立）', '質疑（反対）']).toContain(e.actionLabel);
+  }
+  // 消費税率の帳簿だけを法律に結び、政府予測を混ぜない。
   for (const t of published.taxLedger) {
     expect(sum(t.years.map(y => y.amount))).toBe(t.total);
+    expect(['引上げ', '延期']).toContain(t.kind);
     expect(t.kind === '引上げ' ? t.total < 0 : t.total > 0).toBe(true);
     expect(t.certainty).toBe('低');
   }
