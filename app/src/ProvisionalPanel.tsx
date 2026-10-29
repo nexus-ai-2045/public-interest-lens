@@ -22,6 +22,7 @@ function CardView({ card }: { card: ProvisionalCard }) {
       ? <p><strong>比較国との差の差：{formatGapRange(card.effect)}</strong>（開始後{card.window.post[1] - card.window.post[0] + 1}年の終わりの水準の差。比較国{card.comparatorsUsed?.length}か国ごとの最小〜最大。点の値は出しません）{card.spansZero && <span className="prov-flag">幅が0をまたぐ</span>}</p>
       : <p>測れていません：{card.reason}</p>}
     <p className="fine-note">測った量：{card.measure}。窓：開始前{card.window.pre[0]}〜{card.window.pre[1]}年／開始後{card.window.post[0]}〜{card.window.post[1]}年。{card.crisisYears.length > 0 && <>窓に危機の年（{card.crisisYears.join('・')}）が入っています。</>}確かさの元：{card.sourceCertainty}。</p>
+    <p className="fine-note">出典と照合の状態：{card.source}。数値が計算できたことは、政策の年月日・内容が確認済みという意味ではありません。</p>
     <p className={`fine-note prov-apply ${card.applicableToJapan ? 'yes' : 'no'}`}>{card.applicableToJapan ? '日本の法律に当てる対象' : '日本の法律には当てない'}：{card.applicabilityNote}</p>
   </li>;
 }
