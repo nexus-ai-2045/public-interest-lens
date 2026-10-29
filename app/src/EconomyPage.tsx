@@ -67,8 +67,8 @@ export function EconomyPage() {
   const format = (value: number) => new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 1 }).format(value / (metric.includes('per_capita') ? 10000 : metric === 'population' ? 10000 : 1e12));
   const unit = metric.includes('per_capita') ? '万円／人' : metric === 'population' ? '万人' : '兆円';
   const outcomes = (data?.outcomes ?? []).filter(outcome => points.length > 0 && Number(outcome.observationFrom.slice(0, 4)) <= points[points.length - 1].year && Number(outcome.observationTo.slice(0, 4)) >= points[0].year);
-  return <SiteShell active="/history" label="日本の長期推移"><main>
-    <h2>日本の経済は、どう変わりましたか？</h2><p>まず観測された変化を確認し、政策・制度・人物の関与を別に調べます。グラフの増減だけで誰かの責任とは判定しません。</p>
+  return <SiteShell active="/history" label="日本の長期推移"><main id="main">
+    <h1>日本の経済は、どう変わりましたか？</h1><p>まず観測された変化を確認し、政策・制度・人物の関与を別に調べます。グラフの増減だけで誰かの責任とは判定しません。</p>
     <section className="real-intake"><label>見る指標<select value={metric} onChange={event => change(event.target.value, period)}>{data?.series.map(series => <option key={series.id} value={series.id}>{series.label}</option>)}</select></label><label>見る期間<select value={period} onChange={event => change(metric, event.target.value)}>{[40, 30, 8, 4, 2].map(years => <option key={years} value={years}>{years}年</option>)}<option value="custom">任意の期間</option></select></label>{period === 'custom' && <><label>開始年<input type="number" value={from} onChange={event => change(metric, period, event.target.value, to)} /></label><label>終了年<input type="number" value={to} onChange={event => change(metric, period, from, event.target.value)} /></label></>}</section>
     {(error || periodError) && <p role="alert">{error || periodError}</p>}
     {sourceNote && <p className="state-banner" role="status">{sourceNote}</p>}

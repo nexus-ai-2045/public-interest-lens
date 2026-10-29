@@ -71,5 +71,5 @@ export function CaseChain({ initialStep = 'implementation' }: { initialStep?: St
 
 export function ActorsPage() {
   useEffect(() => { document.title = PUBLIC_SITE ? '人物と団体｜試作版・政策事例の判定つき' : '人物と団体｜国賊／国士ランキング'; }, []);
-  return <SiteShell active="/actors" label="人物と団体"><main><h2>資料に残った行動と、点数にしない関係</h2><p>所属、名簿、会見での説明は、影響の点数ではありません。点数が付くのは、判定結果に載せた行動だけです。{!PUBLIC_SITE && '保存済みの評価版は別の入口です。'}</p><CaseChain initialStep="actors" /></main></SiteShell>;
+  return <SiteShell active="/actors" label="人物と団体"><main id="main"><h1>資料に残った行動と、点数にしない関係</h1><p>所属、名簿、会見での説明は、影響の点数ではありません。点数が付くのは、判定結果に載せた行動だけです。{!PUBLIC_SITE && '保存済みの評価版は別の入口です。'}</p><CaseChain initialStep="actors" /></main></SiteShell>;
 }

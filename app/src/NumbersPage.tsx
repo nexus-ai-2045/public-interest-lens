@@ -171,8 +171,8 @@ export function NumbersPage() {
   const confirmed = counts.filter(c => c.certainty !== '参考').reduce((s, c) => s + c.laws, 0);
   const reference = counts.find(c => c.certainty === '参考')?.laws ?? 0;
   return <SiteShell active="/numbers" label="数字で見る" className="law-ranking numbers-page">
-    <main>
-      <h2>数字で見る</h2>
+    <main id="main">
+      <h1>数字で見る</h1>
       <p className="nc-lead">法律ごとの額、施行の年ごとの推移、議員と党への配り先を、同じデータベースから描いています。計算の式は<a href="/methodology#formulas">計算方法</a>、元の表は <a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/データベース.md" target="_blank" rel="noopener noreferrer">データベースの説明</a>にあります。</p>
       {error && <p className="state-banner">{error}</p>}
       {!charts && !error && <p className="empty-state">読み込み中…</p>}
