@@ -162,8 +162,12 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
     # 運動団体：声明・要望の事実を、法案の結果（台帳にある＝成立）に結ぶ。属性・思想では書かない。
     group_rows = []
     skipped = 0
+    unverified = 0
     for r in positions:
         if r.get('立場') not in ('推進', '反対') or not has_url(r.get('出典URL', '')):
+            continue
+        if not r.get('確度', '').startswith('原本照合済み'):
+            unverified += 1
             continue
         if r.get('行動種別') not in LOBBY_ACTIONS or r.get('団体区分') not in GROUP_KINDS:
             skipped += 1
@@ -171,13 +175,13 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
         group_rows.append({
             '団体名': r['団体名'], '団体区分': r['団体区分'], '分野': r.get('分野') or field_of.get(r.get('法律ID', ''), ''), '法律ID': r.get('法律ID', ''),
             '立場': r['立場'], '行動種別': r.get('行動種別', ''), '法案の結果': '成立' if r.get('法律ID') in field_of else '台帳に無い（不成立または所管不明）',
-            '要旨': r.get('要旨', ''), '出典URL': r['出典URL']})
+            '要旨': r.get('要旨', ''), '出典URL': r['出典URL'], '確度': r['確度']})
 
     summary = {
         '版': 'zoku-v1', '閾値': {'委員長の回次数': MIN_CHAIR_SESSIONS, '推す行動の本数': MIN_BILLS, '推す行動の年数': MIN_YEARS, '金銭（円）': MIN_MONEY_YEN},
         '議員×分野の行': len(rows), '継続的な関わり': sum(r['分野との継続的な関わり'] == 'はい' for r in rows),
         '議員': len({r['氏名'] for r in rows}), '議連の名簿行': sum(1 for r in leagues if r.get('分野')),
-        '運動団体の立場行': len(group_rows), '行動種別・団体区分が決まりに合わず除いた行': skipped,
+        '運動団体の立場行': len(group_rows), '行動種別・団体区分が決まりに合わず除いた行': skipped, '原本照合済みでなく除いた行': unverified,
         '入力が空の表': [n for n, v in (('議員連盟', leagues), ('運動団体の立場', positions), ('政治資金の関係団体', relations)) if not v],
         '限界': ['衆法・参法は所管が決まらず分野に入らない', '委員長の記録は国会回次ごとの在任者のみ（理事・委員は無い）',
                  '議員連盟の名簿・運動団体の声明は、一次資料から足した行だけ（空のときは判定に入らない）'],
@@ -216,7 +220,7 @@ def main(argv=None) -> int:
     rows, groups, summary = build(read_csv(CHAIRS), inv, read_csv(OPPOSING), read_csv(BILLS), read_csv(LEAGUES), read_csv(POSITIONS),
                                   org_fields_from_shingikai(), relations)
     write(OUT / 'member-field-ties.csv', HEADER, rows)
-    write(OUT / 'pressure-group-positions.csv', ['団体名', '団体区分', '分野', '法律ID', '立場', '行動種別', '法案の結果', '要旨', '出典URL'], groups)
+    write(OUT / 'pressure-group-positions.csv', ['団体名', '団体区分', '分野', '法律ID', '立場', '行動種別', '法案の結果', '要旨', '出典URL', '確度'], groups)
     (OUT / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
     print(json.dumps(summary, ensure_ascii=False))
     return 0

@@ -63,8 +63,10 @@ class ZokuTest(unittest.TestCase):
         self.assertEqual(len(rows), 1)
 
     def test_lobby_row_needs_kind_action_and_result(self):
-        p = {'団体名': 'Y会', '団体区分': 'メディア', '分野': '総務省', '法律ID': '閣法-1-1', '立場': '反対', '行動種別': '要望', '要旨': '', '出典URL': U}
+        p = {'団体名': 'Y会', '団体区分': 'メディア', '分野': '総務省', '法律ID': '閣法-1-1', '立場': '反対', '行動種別': '要望', '要旨': '', '出典URL': U, '確度': '原本照合済み（2系統一致）'}
         _, groups, s = run(positions=[p, {**p, '行動種別': '論調'}, {**p, '団体区分': '思想'}, {**p, '立場': '中立'}])
+        _, g2, s2 = run(positions=[{**p, '確度': '保留：読み手の判定なし'}])
+        self.assertEqual((g2, s2['原本照合済みでなく除いた行']), ([], 1))
         self.assertEqual(len(groups), 1)
         self.assertEqual(groups[0]['法案の結果'], '成立')
         self.assertEqual(s['行動種別・団体区分が決まりに合わず除いた行'], 2)
