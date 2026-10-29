@@ -406,6 +406,14 @@ class CommitteeFlowTest(unittest.TestCase):
         self.assertFalse(F.names_other_bill('公職選挙法の一部を改正する法律案に対する附帯決議', short))  # 修正案の宣告では断片も同じ法案として扱う
         self.assertTrue(F.names_other_bill('公職選挙法の一部を改正する法律案に対する附帯決議', short, loose=False))
 
+    def test_upper_house_decision_wording_is_taken_as_the_declaration(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _rec(2, '塚田', '○塚田君 附帯決議案について提出者として趣旨を説明いたします。案文を朗読いたします。 一 進めること。'),
+                _ch(3, '多数と認めます。よって、塚田君提出の附帯決議案は多数をもって本委員会の決議とすることに決定いたしました。ただいまの決議に対し、財務大臣から発言を求められております。'),
+                _rec(4, '安住', '○安住財務大臣 ただいまの附帯決議の趣旨を尊重いたします。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual([(len(d), len(p)) for _, d, p in r['reso_pairs']], [(1, 1)])
+
     def test_minister_who_is_also_a_committee_chair_is_not_a_chair(self) -> None:
         r = {'speech': '○国務大臣（泉信也君） ただいま可決されました附帯決議につきましては、適切に対処してまいります。', 'speakerPosition': '国務大臣（国家公安委員会委員長）'}
         self.assertEqual(F.speaker_kind(r), 'other')

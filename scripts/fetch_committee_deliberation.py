@@ -553,7 +553,7 @@ def analyze_meeting(m: dict, bill: dict) -> dict | None:
                 re.search(r'右決議|決議する|朗読|(?:^|[\s　。])一[、\s　]', t):  # 案文がある発言だけ（過去の決議への質疑は除く）
             reso.append(r)
     res['resolutions'] = reso
-    res['reso_decided'] = [r for r in seg_chairs if '附帯決議' in r['speech'] and re.search(r'付する|付すること|附すること|付すべし|異議なし|決しました|可決', r['speech'])]
+    res['reso_decided'] = [r for r in seg_chairs if '附帯決議' in r['speech'] and re.search(r'付する|付すること|附すること|付すべし|異議なし|決しました|可決|決議とすることに決定', r['speech'])]
     res['reso_reply'] = [r for r in seg if speaker_kind(r) != 'chair' and '附帯決議' in r['speech'][:300] and re.search(r'尊重|所信|努力', r['speech']) and r not in reso
                          and re.match(r'○[^\s　]{0,15}(?:国務大臣|大臣|副大臣|政務官|政務次官|長官)', r['speech'])]  # 政府側の発言だけ
     # 決議ごとの対応づけ：次の決議の案文より前にある宣告と、その後の政府の所信だけ。確定できなければ空欄
