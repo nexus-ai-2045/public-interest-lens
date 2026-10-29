@@ -23,8 +23,8 @@ export function MotionGalleryPage() {
   const [indexed, setIndexed] = useState(true);
   const items = useMemo(() => people.map(item => side === 'loss' ? item : { ...item, value: item.benefitValue, low: item.benefitValue * 0.6, high: item.benefitValue * 1.25, side: 'benefit' as const }).sort((a, b) => b.value - a.value), [side]);
   return <SiteShell active="/demo" label="見せ方の試作（架空データ）" className="motion-gallery">
-    <main>
-      <h2>同じ部品で、法律・議員・各国比較を見せる</h2>
+    <main id="main">
+      <h1>同じ部品で、法律・議員・各国比較を見せる</h1>
       <p>ここの名前と数字はすべて架空です。国賊（損失）は暗く沈み、国士（便益）は明るく浮きます。動きは一度だけで、端末の「視差効果を減らす」設定では止まります。</p>
       <section aria-label="議員ランキングの試作">
         <h3>議員ランキング（並べ替えると行が滑って入れ替わる）</h3>

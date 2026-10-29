@@ -127,8 +127,8 @@ export function WorldGdpPage() {
   const missing = data?.countries.filter(country => !country.series[shown.metric] && !shown.hidden.includes(country.code)) ?? [];
   const toggle = (code: string, visible: boolean) => change({ hidden: visible ? shown.hidden.filter(item => item !== code) : [...shown.hidden, code] }, 'replace');
   const metricNames: Record<WorldMetric, string> = { nominalUsd: '名目GDP', realGrowth: '実質成長率', perCapitaPpp: '一人あたりGDP（購買力平価）' };
-  return <SiteShell active="/world" label="世界のGDP比較" className="world-page"><main>
-    <h2>日本の経済は、世界と比べてどうですか？</h2>
+  return <SiteShell active="/world" label="世界のGDP比較" className="world-page"><main id="main">
+    <h1>日本の経済は、世界と比べてどうですか？</h1>
     <p>世界の主要国（名目GDPの上位国と、中国・韓国・台湾・東南アジアなど）を、同じ統計で並べます。日本は色付きの線、ほかの国は灰色です。グラフの差だけで、原因や誰かの責任とは判定しません。</p>
     <section className="real-intake world-controls" aria-label="表示の切り替え">
       <div className="world-segment" role="group" aria-label="見る指標">{(Object.keys(METRIC_PARAM) as WorldMetric[]).map(metric => <button key={metric} type="button" aria-pressed={shown.metric === metric} onClick={() => change({ metric })}>{metricNames[metric]}</button>)}</div>
