@@ -137,8 +137,8 @@ export function VotesPage() {
   }
   const laws = useMemo(() => data ? fromYear(data.laws, start) : [], [data, start]);
   const latest = data?.laws.map(dateOf).reduce((a, b) => b > a ? b : a, '') ?? '';
-  return <SiteShell active="/votes" label="政党・議員の賛否" className="votes-page"><main>
-    <h2>どの政党・議員が、どの法律に賛成・反対したか</h2>
+  return <SiteShell active="/votes" label="政党・議員の賛否" className="votes-page"><main id="main">
+    <h1>どの政党・議員が、どの法律に賛成・反対したか</h1>
     <p>成立した法律について、衆議院は会派ごと、参議院は押しボタン式の採決で議員ごとの賛否を並べます。点数や責任の判定ではなく、記録そのものです。</p>
     {error && <p className="state-banner" role="alert">{error}</p>}
     {data && <>
