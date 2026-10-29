@@ -11,7 +11,7 @@ tests/test_public_sync.py が、公開データ同士の照合値（SHA-256）�
   1. 振り分け v2 系統2（scripts/triage_v2_line2.py）
   2. 判定ルール（app/scripts）：振り分け v2 系統1 → 影響 → 損失 → 便益と公開判定
   3. 全法律の結果（scripts/build_all_laws_outcomes.py）
-  4. 全体指標の参考の額（scripts/build_macro_amounts.py）
+  4. コロナ対応の費用便益（scripts/build_covid_benefit.py）→ 全体指標の参考の額（scripts/build_macro_amounts.py）
   5. 公開ランキング ranking.json と出典チェック（scripts/source_check.rebuild）
   6. 閣法の所管の省庁（scripts/build_ministry_bills.py build）→ 税の帳簿（scripts/build_tax_ledger.py）→ 団体の帳簿（scripts/build_org_ledger.py）→ 経済界の帳簿（scripts/build_business_ledger.py）→ 背後の力の結び付け（scripts/build_backing_forces.py）→ 自動の関与（scripts/build_auto_involvements.py）→ 反対票の一覧（scripts/build_opposing_votes.py）→ 採決ごとの会派（scripts/build_vote_parties.py）→ 議員ページ members.json（scripts/build_public_members.mjs）→ もう一度出典チェック
   7. 全議員の表 members-reference.json（参考の額を印つきの別の欄で配る。scripts/build_reference_members.mjs）
@@ -73,6 +73,9 @@ def rebuild(record: Record = _print) -> bool:
         if not _command(record, f"再計算：{args[1]}", args, cwd=ROOT / "app"):
             return False
     if not _command(record, "再計算：全法律の結果", [py, "scripts/build_all_laws_outcomes.py"]):
+        return False
+    # コロナ対応の費用便益（支出の規模 × 帰属 × 乗数）。macro.csv のコロナ対応の行がこの出力を読むので、先に回す。
+    if not _command(record, "再計算：コロナ対応の費用便益", [py, "scripts/build_covid_benefit.py"]):
         return False
     if not _command(record, "再計算：全体指標の参考の額", [py, "-m", "scripts.build_macro_amounts"]):
         return False

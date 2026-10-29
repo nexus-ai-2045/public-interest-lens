@@ -2,7 +2,7 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parsePublicRanking, RANKING_TEXT_LIMIT } from './public-distribution';
+import { COVID_BENEFIT_GROUP, isCovidBenefitGroup, parsePublicRanking, RANKING_TEXT_LIMIT } from './public-distribution';
 
 const committed = readFileSync(new URL('../public/distribution/ranking.json', import.meta.url), 'utf8');
 const note = '法律単位の結果を全件公開（2026-10-17 ユーザー承認、議員の実名は別承認）';
@@ -22,6 +22,25 @@ function approved() {
 }
 
 describe('公開ランキングの配布データ', () => {
+  it('コロナ対応の費用便益のグループだけを見分ける', () => {
+    expect(isCovidBenefitGroup(`${COVID_BENEFIT_GROUP}-衆法-201-10`)).toBe(true);
+    expect(isCovidBenefitGroup('全体指標-コロナ対応')).toBe(false);
+    expect(isCovidBenefitGroup(undefined)).toBe(false);
+  });
+  it('コロナ対応の費用便益だけは比較国を持たず、ほかの法律は比較国が要る', () => {
+    const covid = { ...law, certainty: '参考', group: `${COVID_BENEFIT_GROUP}-衆法-1-1`, comparisonCountries: [] };
+    const value = approved(); value.laws = [covid];
+    expect(() => parsePublicRanking(JSON.stringify(value))).not.toThrow();
+    const other = approved(); other.laws = [{ ...law, comparisonCountries: [] }];
+    expect(() => parsePublicRanking(JSON.stringify(other))).toThrow();
+    const wrong = approved(); wrong.laws = [{ ...covid, comparisonCountries: ['USA'] }];
+    expect(() => parsePublicRanking(JSON.stringify(wrong))).toThrow();
+    const govSource = 'https://www.mhlw.go.jp/content/12400000/001546569.pdf';
+    const withGov = approved(); withGov.laws = [{ ...covid, sources: [...covid.sources, govSource] }];
+    expect(() => parsePublicRanking(JSON.stringify(withGov))).not.toThrow();
+    const otherGov = approved(); otherGov.laws = [{ ...law, sources: [...law.sources, govSource] }];
+    expect(() => parsePublicRanking(JSON.stringify(otherGov))).toThrow();
+  });
   it('方法版・生成元・保留条件の欠落した配布を拒否する', () => {
     for (const change of [v => { delete v.generatedFrom.codeHashes; },
       v => { v.generatedFrom.methodSpecVersion = 'method-spec-v999.0'; },

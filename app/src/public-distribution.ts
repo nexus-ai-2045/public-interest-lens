@@ -1,6 +1,10 @@
 import type { PublicMembers } from './members-build';
 import type { PublicMembersReference } from './members-reference';
 import { validGenerationMetadata, type GenerationMetadata } from './generation-metadata';
+/** コロナ対応の費用便益（covid-benefit-v1）の観測グループ。比較国を持たない。 */
+export const COVID_BENEFIT_GROUP = '全体指標-コロナ費用便益';
+/** コロナ対応の費用便益（支出×帰属×乗数）のグループか。法律ごとに「-<法律id>」が付く。 */
+export const isCovidBenefitGroup = (group?: string) => !!group && group.startsWith(`${COVID_BENEFIT_GROUP}-`);
 export type PublicCitation = { id: string; title: string; url: string; license: string; locator: string; quote: string };
 export type PublicActor = { id: string; label: string; date: string; action: string; identityNote: string; citationIds: string[]; identityCitationIds?: string[] };
 export type PublicCase = {
@@ -122,11 +126,13 @@ export function parsePublicRanking(text: string): PublicRanking {
     // 四分位の幅は0をまたぐことがある（中央値は側の向きに正。幅はそのまま見せる）。
     const edges = signedYen;
     if (!yen(law.amountMedianYen) || !edges(law.amountLowYen) || !edges(law.amountHighYen) || law.amountLowYen > law.amountMedianYen || law.amountMedianYen > law.amountHighYen) throw new Error('額の幅が不正です。');
-    if (!Array.isArray(law.comparisonCountries) || !law.comparisonCountries.length || !law.comparisonCountries.every(code => /^[A-Z]{3}$/.test(code))) throw new Error('比較国が不正です。');
+    // コロナ対応の費用便益（covid-benefit-v1）は支出の規模から計算するので比較国を持たず、官公庁（go.jp）の支出・係数の資料も出典に持つ。
+    const noComparison = isCovidBenefitGroup(law.group);
+    if (!Array.isArray(law.comparisonCountries) || (noComparison ? law.comparisonCountries.length : !law.comparisonCountries.length) || !law.comparisonCountries.every(code => /^[A-Z]{3}$/.test(code))) throw new Error('比較国が不正です。');
     if (!Array.isArray(law.sources) || !law.sources.length) throw new Error('一次資料がありません。');
     for (const source of law.sources) {
       const url = new URL(source);
-      if (url.protocol !== 'https:' || !SOURCE_HOSTS.has(url.hostname) || url.username || url.password) throw new Error('一次資料の URL が不正です。');
+      if (url.protocol !== 'https:' || !(SOURCE_HOSTS.has(url.hostname) || (noComparison && url.hostname.endsWith('.go.jp'))) || url.username || url.password) throw new Error('一次資料の URL が不正です。');
     }
   }
   for (const item of value.others) {

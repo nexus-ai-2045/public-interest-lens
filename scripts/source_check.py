@@ -73,6 +73,8 @@ def _shugiin_date(enforcement: dict[str, str]) -> str | None:
     hit = _shugiin_index().get((shugiin.era_of(promulgation), promulgation[:4], kanji_num(number.group(1))))
     return (shugiin.judge(hit[1], promulgation)[0] or None) if hit else None
 TOLERANCE_YEN = 1
+# 費用便益の式は帰属と乗数を有効数字4桁で載せているので、計算し直すと丸めの差が出る。
+COVID_RELATIVE_TOLERANCE = 5e-4
 
 
 def _read(path: Path) -> list[dict[str, str]]:
@@ -194,6 +196,7 @@ def check_law(law: dict, ctx: dict) -> list[dict[str, str]]:
         for url in enforcement.get("出典URL", "").split(";"):
             m = re.fullmatch(r"https://laws\.e-gov\.go\.jp/api/2/law_revisions/([0-9A-Z]+)", url)
             recorded.add(f"https://laws.e-gov.go.jp/law/{m.group(1)}" if m else url)
+    recorded |= ctx.get("covidSources", {}).get(law["id"], set())
     for url in law.get("sources", []):
         if not is_primary(url):
             add("出典URL", url, "官公庁・国際機関のドメイン", NG, "一次資料でないドメイン")
@@ -237,6 +240,18 @@ def check_law(law: dict, ctx: dict) -> list[dict[str, str]]:
             add("公布日との順序", law["enforcedOn"], promulgated, OK if law["enforcedOn"] >= promulgated else NG, "施行日は公布日より前にならない")
             if enforcement.get("公布日"):
                 add("公布日", enforcement["公布日"], promulgated, OK if enforcement["公布日"] == promulgated else NG, "施行日台帳と議案台帳")
+
+    # コロナ対応の費用便益：公開した式（支出の規模×帰属×乗数、下・中・上）から額を計算し直して公開値と突き合わせる。
+    covid = ctx.get("covidAmounts", {}).get(law["id"])
+    if covid:
+        terms = re.findall(r"(\d+)円×([0-9.e-]+)×([0-9.e-]+)", covid["計算式の要素"])
+        if len(terms) != 3:
+            add("再計算", law["amountMedianYen"], "式を読めない", NG)
+            return rows
+        low, median, high = (int(s_) * float(a_) * float(m_) for s_, a_, m_ in terms)
+        for label, pub, rec in zip(("額の下端", "額の中央値", "額の上端"), (law["amountLowYen"], law["amountMedianYen"], law["amountHighYen"]), (low, median, high)):
+            add(label, pub, round(rec), OK if abs(pub - rec) <= max(TOLERANCE_YEN, abs(rec) * COVID_RELATIVE_TOLERANCE) else NG, "費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）")
+        return rows
 
     # 統計の原値と再計算（OECD 表6）
     formula = loss.get("計算式の要素", "") if loss else ""
@@ -293,10 +308,22 @@ def context(acquired: Path = ACQUIRED, derived: Path = DERIVED, local_root: Path
     for r in _read(macro_path) if macro_path.exists() else []:
         if r["結果"] == "額":
             loss.setdefault(r["id"], r)
+    # コロナ対応の費用便益（covid-benefit-v1）の出典は、議案台帳に加えて、規則が使った支出（spending.csv）と係数（params.csv）の資料。
+    from scripts import build_public_ranking as ranking_builder
+    rules_path, spending_path = derived / "covid-benefit-v1" / "rules.csv", acquired / "covid-spending" / "spending.csv"
+    covid_sources: dict[str, set[str]] = {}
+    benefit_path = derived / "covid-benefit-v1" / "benefit.csv"
+    covid_amounts = {r["id"]: r for r in _read(benefit_path) if r["結果"] == "額"} if benefit_path.exists() else {}
+    if rules_path.exists() and spending_path.exists():
+        spending = {r["項目ID"]: r for r in _read(spending_path)}
+        params = _read(acquired / "covid-spending" / "params.csv")
+        for rule in _read(rules_path):
+            if rule["結果"] == "額":
+                covid_sources[rule["id"]] = set(ranking_builder._covid_sources(rule, spending, params))
     oecd_path = acquired / "oecd-industry" / "industry_va.csv"
     manifest, present = _manifest_hashes(acquired, local_root)
     return {
-        "census": census, "enforcement": enforcement, "loss": loss,
+        "census": census, "enforcement": enforcement, "loss": loss, "covidSources": covid_sources, "covidAmounts": covid_amounts,
         "oecd": Oecd(oecd_path), "oecd_rows": _read(oecd_path) if oecd_path.exists() else [],
         "manifest": manifest, "raw_present": present,
     }

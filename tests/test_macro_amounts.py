@@ -17,7 +17,8 @@ class MacroAmountsTest(unittest.TestCase):
         for r in self.rows:
             self.assertIn(r["結果"], ("額", "理由"), r["id"])
             if r["結果"] == "額":
-                self.assertTrue(r["中央値"] and r["窓"] and r["比較国"], r["id"])
+                # コロナ対応の費用便益（covid-benefit-v1）は支出の規模から計算するので比較国を持たない。
+                self.assertTrue(r["中央値"] and r["窓"] and (r["比較国"] or r["産業"] == macro.COVID_INDUSTRY), r["id"])
             else:
                 self.assertTrue(r["理由"], r["id"])
                 self.assertEqual(r["中央値"], "", r["id"])
@@ -25,7 +26,7 @@ class MacroAmountsTest(unittest.TestCase):
     @requires_data("industry_va")
     def test_amounts_recompute_from_oecd(self):
         oecd = Oecd(macro.OECD)
-        for r in [r for r in self.rows if r["結果"] == "額"][::50]:
+        for r in [r for r in self.rows if r["結果"] == "額" and r["産業"] != macro.COVID_INDUSTRY][::50]:
             end = macro.COVID_START - 1 if int(r["施行日"][:4]) < macro.COVID_START else 9999
             got = recompute(oecd, r["産業"], r["施行日"], end, r["比較国"].split("・"))
             self.assertEqual(got["median"], int(r["中央値"]), r["id"])
