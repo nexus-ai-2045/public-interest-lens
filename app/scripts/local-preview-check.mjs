@@ -15,6 +15,7 @@ const PAGES = {
   '/ranking': '法律・政策ランキング',
   '/members': '議員・実名',
   '/world': '世界のGDP比較',
+  '/stop-side': '技術を止めた側と判決',
   '/methodology': '計算方法',
 };
 const out = resolve('..', '.local', 'preview', new Date().toISOString().slice(0, 10));

@@ -1,0 +1,30 @@
+/* 技術を止めた側と判決（/stop-side）。スマホ幅を先に作る。 */
+.stop-page main{overflow-wrap:anywhere}
+.stop-counts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;padding:0;list-style:none}
+.stop-counts li{border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--quiet);font-size:14px}
+.stop-counts strong{font-size:20px;font-variant-numeric:tabular-nums;margin-right:4px}
+.stop-controls{display:grid;gap:10px;margin:12px 0}
+.stop-controls label{display:grid;gap:4px;font-size:14px;max-width:460px}
+.stop-seg{display:flex;flex-wrap:wrap;gap:6px}
+.stop-seg button{min-height:40px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-size:14px}
+.stop-seg button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.stop-about{margin:4px 0 8px;line-height:1.7;color:var(--muted);font-size:14px}
+.stop-list{list-style:none;padding:0;margin:10px 0;display:grid;gap:8px}
+.stop-item{border:1px solid var(--line);border-radius:9px;padding:12px 14px;display:grid;gap:4px;line-height:1.7}
+.stop-item h4{margin:0;font-size:16px}
+.stop-head{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.stop-date{font-size:12px;color:var(--muted)}
+.stop-pill{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;width:fit-content}
+.stop-state{font-size:12px;border-radius:999px;padding:2px 10px;border:1px solid var(--line);width:fit-content}
+.stop-state.is-c{border-color:var(--accent);color:var(--accent);font-weight:600}
+.stop-state.is-r{border-color:var(--accent);color:var(--accent)}
+.stop-state.is-h{background:var(--quiet);color:var(--ink)}
+.stop-state.is-u{border-style:dashed;color:var(--muted)}
+.stop-meta{font-size:13px;color:var(--muted)}
+.stop-nolink{font-size:13px;color:var(--muted)}
+.stop-more{margin:8px 0}
+.stop-ruling dl{display:grid;gap:2px 12px;margin:4px 0;font-size:14px}
+.stop-ruling dt{color:var(--muted);font-size:12px}
+.stop-ruling dd{margin:0 0 4px}
+.stop-held li{font-size:14px;line-height:1.7}
+@media(min-width:720px){.stop-ruling dl{grid-template-columns:7em minmax(0,1fr)}.stop-ruling dd{margin:0}}
