@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""族議員と利権団体の機械判定（設計決定0017）。
+"""族議員と利権団体の機械判定（設計決定0018）。
 
 材料はすべて一次資料から作った追跡済みの表。人の判断は入れず、ADR の閾値だけで「関係がある」の印を付ける。
 - 委員長：data/acquired/office-holders/committee-chairs.csv（委員会 → 分野の対応は COMMITTEE_FIELD に固定）。
