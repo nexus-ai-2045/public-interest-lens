@@ -128,13 +128,17 @@ def search_names(law: str, aliases: dict[str, list[str]]) -> list[str]:
     return aliases.get(unicodedata.normalize('NFKC', law), [law])
 
 
+REGULATION_TAIL = re.compile(r'[^\s、，,。（）()]{0,60}?(?:規則|省令|政令|府令)(?![^\s、，,。]*法)')
+
+
 def statutes(text: str) -> list[str]:
     """該当法令 欄から、法律の名前（政省令・通知は除く）を重複なく取り出す。通称は正式名称へ。"""
     out: list[str] = []
     text = text or ''
     for m in STATUTE.finditer(text):
         name = m.group(1)
-        if text[m.end():].startswith(('施行令', '施行規則', '施行細則')) or name.endswith(NOT_STATUTE_SUFFIX) or name in ('同法', '本法', '当該法', '新法', '現行法', '各法', '法'):
+        # 規則・省令の正式名称に親法律名が埋まっている場合（「…法律の施行に伴う…規則」）は、その規則を指すので法律としては取らない。
+        if REGULATION_TAIL.match(text[m.end():]) or text[m.end():].startswith(('施行令', '施行規則', '施行細則')) or name.endswith(NOT_STATUTE_SUFFIX) or name in ('同法', '本法', '当該法', '新法', '現行法', '各法', '法'):
             continue
         name = TRUNCATED.get(name, name)
         if name not in out:

@@ -30,6 +30,8 @@ class BusinessLedgerTest(unittest.TestCase):
         self.assertEqual(bl.search_names("カルタヘナ法", bl.load_aliases()), ["遺伝子組換え生物等の使用等の規制による生物の多様性の確保に関する法律"])
         self.assertEqual(bl.statutes("記載なし"), [])
         self.assertEqual(bl.statutes("著作権法30条の4"), ["著作権法"])
+        self.assertEqual(bl.statutes("行政手続等における情報通信の技術の利用に関する法律の施行に伴う国家公安委員会関係規則第5条"), [])
+        self.assertEqual(bl.statutes("銀行法第10条、銀行法施行規則"), ["銀行法"])
 
     def test_title_has_rejects_longer_law_names(self) -> None:
         self.assertTrue(bl.title_has("銀行法等の一部を改正する法律案", "銀行法"))
