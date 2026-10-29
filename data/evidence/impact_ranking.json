@@ -1,0 +1,179 @@
+{
+ "version": "impact-rank-v0",
+ "formula": "影響度 = 産業内の効果量（GDP水準換算%）× 対象産業のGDP比 × 確かさ重み（高1.0・中0.6・低0.3）",
+ "thresholds": {
+  "優先": 1.0,
+  "次点": 0.3
+ },
+ "rows": [
+  {
+   "id": "I1",
+   "mechanism": "ICT資本の使い込みの遅れ（日米差）",
+   "actor": "規制・団体（ICT導入を阻む慣行）",
+   "ledger_ids": [
+    "ict-05",
+    "ict-01"
+   ],
+   "effect_basis": "日本0.54、米国比較定義0.88 の差0.34 %pt/年を30年（1995〜2025）",
+   "effect_in_sector_pct": 10.2,
+   "gdp_share": 1.0,
+   "gdp_level_pct": 10.2,
+   "confidence": "中",
+   "weight": 0.6,
+   "impact": 6.12,
+   "note": "全経済への寄与なので GDP 比1.0",
+   "rank": 1,
+   "decision": "深掘り（優先）"
+  },
+  {
+   "id": "I4",
+   "mechanism": "需要側の金融政策（QQE）",
+   "actor": "日銀・内閣（需要側、別枠）",
+   "ledger_ids": [
+    "trade-8",
+    "trade-7"
+   ],
+   "effect_basis": "QQE後のGDP水準押上げ+1.55%",
+   "effect_in_sector_pct": 1.55,
+   "gdp_share": 1.0,
+   "gdp_level_pct": 1.55,
+   "confidence": "中",
+   "weight": 0.6,
+   "impact": 0.93,
+   "note": "全経済。技術阻害ではなく需要側なので別枠",
+   "rank": 2,
+   "decision": "深掘り（次点）"
+  },
+  {
+   "id": "I2",
+   "mechanism": "参入障壁・規制（ネットワーク産業の競争導入）",
+   "actor": "規制・議員（参入規制の維持）",
+   "ledger_ids": [
+    "regprod-02",
+    "regprod-04"
+   ],
+   "effect_basis": "大きな参入障壁引下げ後5年で付加価値+10.09%",
+   "effect_in_sector_pct": 10.09,
+   "gdp_share": 0.13,
+   "gdp_level_pct": 1.31,
+   "confidence": "中",
+   "weight": 0.6,
+   "impact": 0.79,
+   "note": "対象＝電気ガス水道・運輸郵便・情報通信（約13%、概算）",
+   "rank": 3,
+   "decision": "深掘り（次点）"
+  },
+  {
+   "id": "I3",
+   "mechanism": "資源配分の歪み・新陳代謝の弱さ（日本の純参入効果は米国の1/3）",
+   "actor": "規制・団体（退出と参入を妨げる制度）",
+   "ledger_ids": [
+    "entry-05",
+    "entry-06",
+    "entry-04"
+   ],
+   "effect_basis": "純参入効果 日本0.09・米国0.27 の差0.18 %pt/年を30年",
+   "effect_in_sector_pct": 5.4,
+   "gdp_share": 0.2,
+   "gdp_level_pct": 1.08,
+   "confidence": "中",
+   "weight": 0.6,
+   "impact": 0.65,
+   "note": "対象＝製造業（約20%、概算）。上限の参考＝entry-04 の40%（中国の値、日本には適用しない）",
+   "rank": 4,
+   "decision": "深掘り（次点）"
+  },
+  {
+   "id": "I5",
+   "mechanism": "貿易自由化・EPA",
+   "actor": "議員・団体（市場開放の遅れ）",
+   "ledger_ids": [
+    "trade-5",
+    "trade-4"
+   ],
+   "effect_basis": "日米貿易協定の実質GDP押上げ+0.8%（政府公式CGE）",
+   "effect_in_sector_pct": 0.8,
+   "gdp_share": 1.0,
+   "gdp_level_pct": 0.8,
+   "confidence": "中",
+   "weight": 0.6,
+   "impact": 0.48,
+   "note": "全経済（CGE の GDP 水準）",
+   "rank": 5,
+   "decision": "深掘り（次点）"
+  },
+  {
+   "id": "I7",
+   "mechanism": "行政手続コスト",
+   "actor": "省庁・議員（手続の新設・維持）",
+   "ledger_ids": [
+    "admin-1",
+    "regprod-10"
+   ],
+   "effect_basis": "重点分野の手続コスト8,208億円/年",
+   "effect_in_sector_pct": 0.16,
+   "gdp_share": 1.0,
+   "gdp_level_pct": 0.16,
+   "confidence": "高",
+   "weight": 1.0,
+   "impact": 0.16,
+   "note": "名目GDPを約500兆円として 8,208億円÷500兆円＝0.16%（概算）。コスト（損失）であり付加価値の増減とは別",
+   "rank": 6,
+   "decision": "暫定値のまま止める"
+  },
+  {
+   "id": "I6",
+   "mechanism": "R&D 税制・補助",
+   "actor": "議員・省庁（税制設計）",
+   "ledger_ids": [
+    "rd-09",
+    "rd-02"
+   ],
+   "effect_basis": "2003年改正で総R&D+3.2% × 生産弾力性0.08",
+   "effect_in_sector_pct": 0.26,
+   "gdp_share": 1.0,
+   "gdp_level_pct": 0.26,
+   "confidence": "中",
+   "weight": 0.6,
+   "impact": 0.15,
+   "note": "全経済。日本の R&D 集約度は既に高く伸びしろは限定的",
+   "rank": 7,
+   "decision": "暫定値のまま止める"
+  }
+ ],
+ "reference": [
+  {
+   "id": "C1",
+   "mechanism": "【天井】日米の市場部門TFP差",
+   "actor": "（仕組みの特定前の総差）",
+   "ledger_ids": [
+    "ict-08",
+    "ict-03"
+   ],
+   "effect_basis": "日本0.4 vs 米国1.6 の差1.2 %/年を30年",
+   "effect_in_sector_pct": 36.0,
+   "gdp_share": 0.85,
+   "gdp_level_pct": 30.6,
+   "confidence": "中",
+   "weight": 0.6,
+   "impact": 18.36,
+   "note": "個々の仕組みの合計の上限。仕組みに帰属できるのは一部"
+  },
+  {
+   "id": "X1",
+   "mechanism": "人口の高齢化・労働投入",
+   "actor": "帰属対象外（人口動態）",
+   "ledger_ids": [
+    "stagnation-04"
+   ],
+   "effect_basis": "労働寄与 -0.32 %pt/年を30年",
+   "effect_in_sector_pct": -9.6,
+   "gdp_share": 1.0,
+   "gdp_level_pct": -9.6,
+   "confidence": "中",
+   "weight": 0.6,
+   "impact": 5.76,
+   "note": "政策の帰属対象にしない。基準線として表示"
+  }
+ ]
+}
