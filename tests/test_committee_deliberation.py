@@ -338,6 +338,10 @@ class CommitteeFlowTest(unittest.TestCase):
         names = [n for n, _ in F.parse_attendance(header, '参議院')]
         self.assertEqual(names, ['田村公平', '山下英利'])
 
+    def test_attendance_counts_a_name_listed_twice_once(self) -> None:
+        header = '出席委員\n   委員長 村井  仁君\n      中村 哲治君    村井  仁君\n      中村 哲治君\n本日の会議に付した案件'
+        self.assertEqual(F.parse_attendance(header, '衆議院'), [('村井仁', '委員長'), ('中村哲治', '委員')])
+
     def test_long_hiragana_proposer_name(self) -> None:
         recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。この際、本案に対し、とかしきなおみ君外五名から、修正案が提出されております。')]
         r = F.analyze_meeting(_meeting(recs), KOU)

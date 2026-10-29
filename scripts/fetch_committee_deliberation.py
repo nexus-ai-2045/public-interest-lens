@@ -242,7 +242,12 @@ def parse_attendance(header: str, house: str) -> list[tuple[str, str]]:
             if named and 3 <= len(''.join(buf)) <= 7:
                 add(''.join(buf))
             buf = []
-    return out
+    # 同じ会議で名前が複数回載る（役職つきと委員の欄など）ときは1人にして、高い役職を残す
+    best: dict[str, str] = {}
+    for name, r in out:
+        if name not in best or ROLE_RANK.get(r, 9) < ROLE_RANK.get(best[name], 9):
+            best[name] = r
+    return list(best.items())
 
 
 def agenda_text(header: str) -> str:
