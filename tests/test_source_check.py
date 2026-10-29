@@ -3,6 +3,7 @@ import csv
 import json
 import re
 import unittest
+from unittest import mock
 
 from scripts import build_public_ranking, source_check
 from _data_gate import requires_data  # noqa: E402
@@ -19,6 +20,18 @@ class SourceCheckTests(unittest.TestCase):
         self.assertEqual(source_check.wareki_to_iso("令和元年 5月 1日"), "2019-05-01")
         self.assertEqual(source_check.wareki_to_iso("昭和64年1月7日"), "1989-01-07")
         self.assertIsNone(source_check.wareki_to_iso("不明"))
+
+    def test_retroactive_enforcement_needs_an_explicit_date_in_the_clause(self):
+        # 遡及施行（4月1日施行の税制改正を4月末に公布）は、附則が日付を書いていて別経路の再計算と一致するときだけ通す。
+        method = sorted(source_check.SHUGIIN_METHODS)[0]
+        row = {"取得方法": method, "備考": "附則に日付を明示", "施行日": "2008-04-01", "公布日": "2008-04-30", "法令番号": "平成二十年法律第二十三号"}
+        with mock.patch.object(source_check, "_shugiin_date", return_value="2008-04-01"):
+            self.assertTrue(source_check._retroactive_by_clause("2008-04-01", row))
+            # 計算で出した日・推定日が公布日より前になるのは取り込みの誤りなので通さない
+            self.assertFalse(source_check._retroactive_by_clause("2008-04-01", {**row, "備考": "公布の日から1月を経過した日"}))
+            self.assertFalse(source_check._retroactive_by_clause("2008-04-01", {**row, "取得方法": "e-Gov 改正履歴"}))
+        with mock.patch.object(source_check, "_shugiin_date", return_value="2008-05-01"):
+            self.assertFalse(source_check._retroactive_by_clause("2008-04-01", row))
 
     def test_primary_hosts(self):
         self.assertTrue(source_check.is_primary("https://laws.e-gov.go.jp/law/426AC1000000104"))
