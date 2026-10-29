@@ -42,9 +42,21 @@ class MatchTest(unittest.TestCase):
 
     def test_alias_and_reason(self) -> None:
         names, _ = bf.mentioned_names("薬機法（医薬品の販売制度）", {"薬事法"}, bf.load_aliases())
-        self.assertIn("薬事法", names)
+        self.assertIn("薬事法", names[0])  # 改称前後の正式名は1つの組
         self.assertEqual(bf.mentioned_names("記載なし", set(), {})[1], "法令名の記載なし")
         self.assertIn("法令名ではない", bf.mentioned_names("食品表示基準のガイドライン", {"医師法"}, {})[1])
+
+    def test_child_rules_are_not_the_parent_law(self) -> None:
+        self.assertEqual(bf.mentioned_names("旅館業法施行規則第4条", {"旅館業法"}, {})[0], [])
+        self.assertEqual(bf.mentioned_names("旅館業法第4条、旅館業法施行令", {"旅館業法"}, {})[0], [["旅館業法"]])
+
+    def test_renamed_family_picks_one_previous_amendment(self) -> None:
+        old = law("閣法-1-1", "薬事法の一部を改正する法律案", "2013-11-01")
+        new = law("閣法-2-1", "医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律の一部を改正する法律案", "2022-11-01")
+        heads = {h: [x] for x in (old, new) for h in x["heads"]}
+        names, _ = bf.mentioned_names("薬機法", set(heads), bf.load_aliases())
+        got = [(p, g["id"]) for grp in names for p, g in bf.candidate_laws(grp, heads, "2023-03-08")]
+        self.assertEqual(got, [(bf.AFTER, "閣法-2-1")])  # 旧名の最後の改正（2013年）は「直前」にならない
 
     def test_order_only_no_window(self) -> None:
         got = dict(bf.candidate_laws("医師法", self.heads, "2015-06-01"))

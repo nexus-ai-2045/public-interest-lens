@@ -52,6 +52,7 @@ ISO = re.compile(r'(\d{4})-(\d{2})-(\d{2})')
 ERA_BASE = {'昭和': 1925, '平成': 1988, '令和': 2018}
 ZEN_PAREN = re.compile(r'[（(][^）)]*[）)]')
 NAME_END = ('法', '法律')
+CHILD_RULE = re.compile(r'(施行|規則|細則|省令|政令|令)')
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -117,8 +118,8 @@ def load_aliases(path: Path = ALIASES) -> dict[str, list[str]]:
     return out
 
 
-def mentioned_names(text: str, known: set[str], aliases: dict[str, list[str]]) -> tuple[list[str], str]:
-    """記録の欄から、法令名を取り出す（長い名前を先に取り、取った所は重ねて数えない）。
+def mentioned_names(text: str, known: set[str], aliases: dict[str, list[str]]) -> tuple[list[list[str]], str]:
+    """記録の欄から、法令名を取り出す（1つの言及ごとに、同じ法令を指す名前の組。略称は改称前後の正式名の組に広がる）（長い名前を先に取り、取った所は重ねて数えない）。
 
     直前が漢字・かなのときは別の名前の一部とみなして取らない（例：歯科医師法の中の医師法）。取れなければ理由を返す。
     """
@@ -127,7 +128,7 @@ def mentioned_names(text: str, known: set[str], aliases: dict[str, list[str]]) -
         return [], '法令名の記載なし'
     candidates = sorted(known | set(aliases), key=len, reverse=True)
     taken = [False] * len(t)
-    names: list[str] = []
+    names: list[list[str]] = []
     for cand in candidates:
         start = 0
         while True:
@@ -139,11 +140,13 @@ def mentioned_names(text: str, known: set[str], aliases: dict[str, list[str]]) -
                 continue
             if i > 0 and re.match(r'[぀-ヿ一-鿿]', t[i - 1]):
                 continue
+            if CHILD_RULE.match(t[i + len(cand):]):
+                continue  # 施行令・施行規則・省令は親の法律とは別の法令（国会の法律改正に結ばない）
             for k in range(i, i + len(cand)):
                 taken[k] = True
-            for n in aliases.get(cand, [cand]):
-                if n not in names:
-                    names.append(n)
+            group = aliases.get(cand, [cand])
+            if group not in names:
+                names.append(group)
     if names:
         return names, ''
     if not re.search(r'法|令|条例', t):
@@ -151,9 +154,13 @@ def mentioned_names(text: str, known: set[str], aliases: dict[str, list[str]]) -
     return [], '成立した法律の題名に無い法令名（未改正の法令・施行令・略称が表に無い）'
 
 
-def candidate_laws(name: str, laws_by_head: dict[str, list[dict]], date: str) -> list[tuple[str, dict]]:
-    """法令名 name の成立した法律のうち、記録の日付に対する (時期, 法律) を返す（順序だけで決める）。"""
-    group = laws_by_head.get(name, [])
+def candidate_laws(name: str | list[str], laws_by_head: dict[str, list[dict]], date: str) -> list[tuple[str, dict]]:
+    """法令名 name の成立した法律のうち、記録の日付に対する (時期, 法律) を返す（順序だけで決める）。
+
+    name が複数（改称前後の正式名など、同じ法令を指す名前の組）のときは、候補をまとめてから前後を選ぶ。
+    """
+    names = [name] if isinstance(name, str) else name
+    group = list({g['id']: g for n in names for g in laws_by_head.get(n, [])}.values())
     if not group:
         return []
     if not date:
@@ -186,9 +193,7 @@ def build_links(laws: list[dict], recs: list[dict], aliases: dict[str, list[str]
         who = rec['省庁'] if is_min else rec['団体']
         names, reason = mentioned_names(rec['法令'], known, aliases)
         date = iso_date(rec['日付'])
-        hits = []
-        for n in names:
-            hits.extend(candidate_laws(n, laws_by_head, date))
+        hits = [h for group in names for h in candidate_laws(group, laws_by_head, date)]
         if not hits:
             unlinked[(ledger, unicodedata.normalize('NFKC', rec['法令']).strip(), reason or '名指しした法令名に、記録の前後の成立した法律が無い')] += 1
             stats['結べない'] += 1
@@ -239,8 +244,8 @@ def build_contacts(relations: list[dict[str, str]], recs: list[dict], laws: list
         if rec['技術']:
             o['tech'].add(rec['技術'])
         names, _ = mentioned_names(rec['法令'], known, aliases)
-        for n in names:
-            for period, law in candidate_laws(n, laws_by_head, iso_date(rec['日付'])):
+        for group in names:
+            for period, law in candidate_laws(group, laws_by_head, iso_date(rec['日付'])):
                 if period == BEFORE:
                     o['laws'].add(law['id'])
         o['urls'].add(rec['出典URL'])
