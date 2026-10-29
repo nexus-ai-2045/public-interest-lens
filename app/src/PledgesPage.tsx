@@ -15,6 +15,7 @@ export function PledgeItems({ items, filter }: { items: PledgeItem[]; filter: Pl
     <ul className="votes-rows">{rows.slice(0, limit).map(i => <li key={i.id}>
       <span className="votes-date">{i.id}</span>
       <span className="votes-title">{i.text}</span>
+      <span className="votes-date">2系統の判定：{i.judges.map(j => ({ enacted: '成立', no_law_found: '法律が見当たらない', no_law_needed: '法律を要さない' } as Record<string, string>)[j] ?? '—').join(' / ')}</span>
       <span className={`votes-pill ${i.status === 'enacted' ? 'is-yes' : i.status === 'review' ? 'is-split' : 'is-none'}`}>{STATUS_LABEL[i.status]}</span>
       {i.laws.length > 0 && <span className="votes-links">{i.laws.map(l => <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer">{l.title}（この党：{STANCE_LABEL[l.stance]}）</a>)}</span>}
     </li>)}</ul>
@@ -34,7 +35,7 @@ export function PledgeParty({ data, name }: { data: PublicPledges; name: string 
       {!p.governing && t.laws > 0 && <>対応する成立法{t.laws}本のうち、この党が衆議院で賛成側にいたのは{t.yes}本・反対側{t.no}本・会派で割れ{t.split}本・記載なし{t.none}本。</>}
       {p.governing && <>政権党（与党）の党です。野党と成立の割合を直接比べないでください。</>}
     </p>
-    <p className="fine-note">出典：<a href={p.source.url} target="_blank" rel="noopener noreferrer">{p.name}の公式公約</a>{p.source.note && `（${p.source.note}）`}</p>
+    <p className="fine-note">出典：<a href={p.source.url} target="_blank" rel="noopener noreferrer">{p.name}の公式公約</a>（取得日 {p.source.observedAt}）{p.source.note && `　${p.source.note}`}</p>
     <div className="votes-seg" role="group" aria-label="絞り込み">{(['all', ...STATUS_ORDER] as const).map(k => <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)}>{k === 'all' ? `すべて ${p.total}` : `${STATUS_LABEL[k]} ${p.counts[k]}`}</button>)}</div>
     <PledgeItems key={name + filter} items={p.items} filter={filter} />
   </div>;

@@ -3,8 +3,8 @@ export const distributionPledgesUrl = '/distribution/pledges.json';
 
 export type PledgeStatus = 'enacted' | 'review' | 'none' | 'no_law';
 export type PledgeLaw = { id: string; title: string; url: string; stance: 'yes' | 'no' | 'split' | 'none' };
-export type PledgeItem = { id: string; text: string; status: PledgeStatus; laws: PledgeLaw[] };
-export type PledgeParty = { name: string; governing: boolean; source: { url: string; note: string }; total: number; counts: Record<PledgeStatus, number>; items: PledgeItem[] };
+export type PledgeItem = { id: string; text: string; status: PledgeStatus; judges: string[]; laws: PledgeLaw[] };
+export type PledgeParty = { name: string; governing: boolean; source: { url: string; note: string; observedAt: string }; total: number; counts: Record<PledgeStatus, number>; items: PledgeItem[] };
 export type PublicPledges = { schema: 'public-pledges/v1'; election: { name: string; date: string }; lawsAsOf: string; notes: string[]; parties: PledgeParty[] };
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
