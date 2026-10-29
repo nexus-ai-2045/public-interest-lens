@@ -89,3 +89,20 @@ class RebuildTests(unittest.TestCase):
             sources = f.load_sources(out / 'sources.csv')
             self.assertEqual(f.source_url(sources, 'JPN', 'J'), old_url)
             self.assertEqual(f.source_url(sources, 'JPN', 'B'), f.build_url('JPN'))
+
+    def test_rebuild_without_existing_sources_keeps_the_base_row_and_has_one_value_per_key(self):
+        import csv
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            raw, out = Path(tmp, 'raw'), Path(tmp, 'out')
+            raw.mkdir()
+            out.mkdir()
+            # 通常の原本にも B があり、値が新版と食い違っても、B・D は新版の原本の1行だけを採る
+            (raw / 'table6-JPN.csv').write_text('\n'.join([HEAD, line(act='J', val='1'), line(act='B', val='7')]), encoding='utf-8')
+            (raw / 'table6-bd-JPN.csv').write_text('\n'.join([HEAD, line(act='B', val='5')]), encoding='utf-8')
+            f.main(['--raw', str(raw), '--out', str(out), '--rebuild'])
+            rows = list(csv.DictReader((out / 'industry_va.csv').open(encoding='utf-8')))
+            self.assertEqual(sorted((r['産業'], r['値']) for r in rows), [('B', '5'), ('J', '1')])
+            sources = f.load_sources(out / 'sources.csv')
+            self.assertEqual(f.source_url(sources, 'JPN', 'J'), f.build_url('JPN'))

@@ -170,6 +170,7 @@ def main(argv: list[str] | None = None) -> int:
     all_rows: list[dict[str, str]] = []
     pinned = load_sources(ns.out / 'sources.csv') if (ns.out / 'sources.csv').exists() else {}
     supplement: set[tuple[str, str, str]] = set()
+    base_sources: set[tuple[str, str, str]] = set()
     for c in COUNTRIES:
         url = build_url(c)
         dest = ns.raw / f'table6-{c}.csv'
@@ -179,7 +180,9 @@ def main(argv: list[str] | None = None) -> int:
             # 固定した表は、旧版の原本（table6-<国>.csv）と、B・D だけを足した新版の原本（table6-bd-<国>.csv）の合わせ。両方を読む
             if body is not None and bd_dest.exists():
                 base_url = pinned.get((c, ANY_INDUSTRY)) or url
-                all_rows.extend(parse_table(body.decode('utf-8'), base_url))
+                # B・D は新版の原本から取る。旧版の原本にも B・D があれば除く（値と出典の対応を1つにする）
+                all_rows.extend(r for r in parse_table(body.decode('utf-8'), base_url) if r['産業'] not in ('B', 'D'))
+                base_sources.add((c, ANY_INDUSTRY, base_url))
                 all_rows.extend(r for r in parse_table(bd_dest.read_bytes().decode('utf-8'), url) if r['産業'] in ('B', 'D'))
                 supplement.add((c, 'B+D', url))
                 continue
@@ -189,6 +192,7 @@ def main(argv: list[str] | None = None) -> int:
             failed.append(c)
             continue
         all_rows.extend(parse_table(body.decode('utf-8'), url))
+        base_sources.add((c, ANY_INDUSTRY, url))
     with (ns.out / 'industry_va.csv').open('w', encoding='utf-8', newline='') as fh:
         w = csv.DictWriter(fh, fieldnames=OUT_COLUMNS, extrasaction='ignore')
         w.writeheader()
@@ -196,7 +200,7 @@ def main(argv: list[str] | None = None) -> int:
     with (ns.out / 'sources.csv').open('w', encoding='utf-8', newline='') as fh:
         w = csv.writer(fh)
         w.writerow(SOURCE_COLUMNS)
-        w.writerows(sorted({(r['国'], ANY_INDUSTRY, r['出典URL']) for r in all_rows if (r['国'], 'B+D', r['出典URL']) not in supplement}))
+        w.writerows(sorted(base_sources))
         w.writerows(sorted(supplement))
     print(f'{len(all_rows)} 行を書きました。取得できなかった国: {failed or "なし"}')
     return 1 if failed else 0
