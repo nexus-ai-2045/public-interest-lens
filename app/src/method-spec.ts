@@ -37,7 +37,6 @@ export const STANDARD_METHODS: StandardMethod[] = [
   { name: '費用便益分析', use: '規制の便益を公的な単価で円にし、損失から差し引く。税や交付金などの移転は数えない', refs: ['Boardman et al., Cost-Benefit Analysis: Concepts and Practice', '国土交通省「公共事業評価の費用便益分析に関する技術指針」'], sections: ['benefit'] },
   { name: 'シャープレイ＝シュービック投票力指数', use: '1票が法律の成立にどれだけ効いたか', refs: ['Shapley & Shubik (1954), American Political Science Review 48(3)'], sections: ['allocation-v0', 'allocation-v1', 'reference-members'] },
   { name: '実質化（GDP デフレーター）', use: '違う年の円を、同じ年の円にそろえる', refs: ['United Nations et al., System of National Accounts 2008, ch. 15'], sections: ['price'] },
-  { name: '産業連関分析', use: '産業の付加価値の減が、仕入れ先の産業へ広がる分（川上への波及）を、公的な産業連関表から計算する', refs: ['Miller & Blair, Input-Output Analysis: Foundations and Extensions (2nd ed., 2009), ch. 2, 6', '総務省ほか10府省庁「産業連関表」（令和2年・平成27年・平成23年）'], sections: ['io-ripple'] },
   { name: '成長会計', use: '差を、働く人の数・資本・生産性の分に分ける', refs: ['Solow (1957), Review of Economics and Statistics 39(3)', 'OECD, Measuring Productivity (2001)'], sections: ['cause-axis'] },
 ];
 
@@ -125,30 +124,6 @@ export const SPEC_SECTIONS: SpecSection[] = [
     rules: [
       '物価の表は1994年から。b がそれより前の額は換算せず、名目円だけを出す。',
       '割り引き（現在価値）はしない。過去の額を割り戻す率に定番の決め方がなく、社会的割引率は将来の費用便益のためのものなので。',
-    ],
-  },
-  {
-    id: 'io-ripple',
-    title: '産業連関による波及（川上への広がり、額とは別欄）',
-    version: 'io-ripple-v1',
-    status: '採用',
-    code: ['scripts/io_ripple.py', 'data/derived/io-ripple-v1/spec.md'],
-    lead: '損失額（loss-rule-v1）は、その産業自身の付加価値の差です。産業連関表で、仕入れ先など他産業の付加価値がどれだけ巻き込まれるかを、額には足さず別欄の「波及を含む上限」として出します。川下（その産業の製品を使う側）は数えません。',
-    formulas: [
-      { tex: 'B = \\bigl(I - (I-\\hat M)A\\bigr)^{-1},\\qquad A_{ij}=\\frac{Z_{ij}}{X_j},\\quad \\hat M_i = \\frac{\\text{輸入計}_i}{\\text{国内需要合計}_i}', note: '国内生産の波及を表す逆行列（競争輸入型。公式の逆行列係数表と一致を確認）' },
-      { tex: 'r_S = \\sum_{k\\in S} w_k \\,\\frac{1}{v_k B_{kk}} \\sum_{i\\notin S} v_i B_{ik},\\qquad w_k = \\frac{\\mathrm{VA}_k}{\\sum_{k\\in S}\\mathrm{VA}_k}', note: '産業 S の付加価値が1円減ったとき、S の外の付加価値が何円減るか' },
-      { tex: '\\text{波及の額} = \\mathrm{Loss}^{(0.5)} \\cdot r_S,\\qquad \\text{波及を含む上限} = \\mathrm{Loss}^{(0.5)}\\,\\bigl(1 + r_S\\, e^{h}\\bigr)', note: 'h は表との年の差で決める半幅（基本分類の表：5年以内 0.40、10年以内 0.50。統合中分類の表（2000・2005年）：5年以内 0.80。それより遠い法律は保留）' },
-    ],
-    symbols: [
-      ['Z_{ij},\\ X_j', '部門 i から j への投入額と、j の国内生産額（産業連関表の基本分類、約380部門）'],
-      ['v_k,\\ \\mathrm{VA}_k', '部門 k の付加価値率と付加価値額'],
-      ['S', '産業（OECD STAN／ISIC Rev.4 の大分類を、基本分類の部門コードの先頭で対応づける。対応表は scripts/io_ripple.py の ISIC_TO_IO）'],
-    ],
-    rules: [
-      '使う表は、法律の施行年に最も近い年（2000・2005・2011・2015・2020）の名目の表。2011年以降は基本分類（約380部門）、2000・2005年は統合中分類（105部門）で、中分類は基本分類より高めに出るため、産業ごとの集計差（2011・2015年の平均）を引いてから使う。表との差が基本分類で10年、中分類で5年を超える法律は保留。',
-      '全産業（_T）の額には足さない（全産業にはすでに川上が含まれる）。',
-      '需要側の固定係数モデルで、価格・代替・供給制約はない。規制が供給を止めた場合の川上への波及は過大になりうる。長期は代替で小さくなるため、数字は「上限」として扱い、順位と議員の額には使わない。',
-      '精度の検証：2011→2015→2020（基本分類）と 2000→2005→2011→2015（統合中分類）で、(1) 前の表の逆行列と次の年の最終需要から次の年の生産額を当てる（中央値の誤差 2〜3%、直接効果だけでは65〜72%）、(2) 波及比率の5年間の動きの95%分位 0.29・0.22（対数）。基本分類の半幅 0.40 は2回の移行の最大 0.355 を超え、被覆率は 100%。中分類の半幅 0.80 は、産業単位の5〜6年の動きの最大 0.42 と集計差の補正後の残り最大 0.38 の和（0.80）。移行の回数が少ないので独立な検証ではなく、1995年の表と各年の単独表を足したら再検証する。',
     ],
   },
   {
