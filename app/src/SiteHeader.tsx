@@ -11,6 +11,7 @@ export const SITE_LINKS: { href: string; label: string | ((tone: Tone) => string
   { href: '/members', label: toneTitle },
   { href: '/ranking', label: '法律ランキング' },
   { href: '/votes', label: '政党・議員の賛否' },
+  { href: '/pledges', label: '公約と成立法' },
   { href: '/numbers', label: '数字で見る' },
   { href: '/world', label: '世界のGDP' },
   { href: '/history', label: '長期推移' },
