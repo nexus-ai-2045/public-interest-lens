@@ -26,12 +26,13 @@ it('配布している members.json は、いまの派生データから同じ�
     taxRevenueForecasts: read('data/acquired/tax-revenue-estimates/estimates.csv'),
     resistance: read('data/derived/org-ledger-v1/ministry-resistance.csv'),
     orgStances: read('data/derived/org-ledger-v1/org-stances.csv'),
+    backing: read('data/derived/backing-forces-v1/law-links.csv'),
     listed: JSON.parse(read('app/public/distribution/ranking.json')).laws.map((l: { id: string }) => l.id),
     certainty: Object.fromEntries(JSON.parse(read('app/public/distribution/ranking.json')).laws.map((l: { id: string; certainty: string }) => [l.id, l.certainty])),
   });
   // pending（配分にまだ入っていない法律の一覧）は公開ランキングから付けるので、計算の一致からは外し、下で別に確かめる。
   const { inputs, pending, generatedFrom, ...published } = JSON.parse(read('app/public/distribution/members.json'));
-  expect(Object.keys(inputs).sort()).toEqual(['autoInvolvements', 'autoVotes', 'enacted', 'involvements', 'loss', 'ministries', 'opposing', 'orgStances', 'publish', 'ranking', 'resistance', 'taxLedger', 'taxRevenueForecasts', 'voteParties', 'votes']);
+  expect(Object.keys(inputs).sort()).toEqual(['autoInvolvements', 'autoVotes', 'backing', 'enacted', 'involvements', 'loss', 'ministries', 'opposing', 'orgStances', 'publish', 'ranking', 'resistance', 'taxLedger', 'taxRevenueForecasts', 'voteParties', 'votes']);
   expect(generatedFrom.methodSpecVersion).toBe(SPEC_VERSION);
   expect(generatedFrom.codeHashes['app/src/members-build.ts']).toMatch(/^[a-f0-9]{64}$/);
 
@@ -66,3 +67,25 @@ it('配布している members.json は、いまの派生データから同じ�
     expect(t.certainty).toBe('低');
   }
 }, 60_000); // 自動の関与（約1万2千行）を含めて作り直すので、既定の5秒では足りない
+
+it('背後の力の結び付けは議員の点数に影響しない（入力に足しても引いても、議員・政党・額は同じ）', () => {
+  const read = (rel: string) => readFileSync(join(root, rel), 'utf8');
+  const base = {
+    involvements: read('data/derived/allocation-v1/involvements.csv'), publish: read('data/derived/publish-v1-triage-v2/publish.csv'),
+    loss: read('data/derived/loss-v1-triage-v2/loss.csv'), enacted: read('data/acquired/bill-census-full/enacted.csv'),
+    votes: read('data/derived/allocation-v1/votes.csv'), opposing: read('data/derived/allocation-v1/opposing.csv'),
+    ministries: read('data/derived/ministry-v1/cabinet-bills.csv'), resistance: read('data/derived/org-ledger-v1/ministry-resistance.csv'),
+  };
+  const without = buildMembers(base);
+  const withBacking = buildMembers({ ...base, backing: read('data/derived/backing-forces-v1/law-links.csv') });
+  expect(withBacking.members).toEqual(without.members);
+  expect(withBacking.parties).toEqual(without.parties);
+  expect(withBacking.laws).toEqual(without.laws);
+  // 結び付けは配分に入った法律にだけ付き、記録には必ず出典がある。
+  const ids = new Set(withBacking.laws.map(l => l.id));
+  for (const b of withBacking.backing ?? []) {
+    expect(ids.has(b.lawId)).toBe(true);
+    for (const i of b.named) { expect(i.sources.length).toBeGreaterThan(0); expect(i.count).toBeGreaterThan(0); }
+  }
+  expect((withBacking.backing ?? []).length).toBeGreaterThan(0);
+});

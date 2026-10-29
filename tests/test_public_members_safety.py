@@ -76,6 +76,25 @@ ALLOWED_PATHS = {
     ".inputs.ministries",
     ".inputs.resistance",
     ".inputs.orgStances",
+    ".inputs.backing",
+    ".backing",
+    ".backing[].lawId",
+    ".backing[].named",
+    ".backing[].named[].ledger",
+    ".backing[].named[].who",
+    ".backing[].named[].period",
+    ".backing[].named[].count",
+    ".backing[].named[].detail",
+    ".backing[].named[].technologies",
+    ".backing[].named[].technologies[]",
+    ".backing[].named[].sources",
+    ".backing[].named[].sources[]",
+    ".backing[].ministry",
+    ".backing[].ministry.name",
+    ".backing[].ministry.total",
+    ".backing[].ministry.refusals",
+    ".backing[].ministry.hearings",
+    ".backing[].ministry.followups",
     ".resistance",
     ".resistance[].ministry",
     ".resistance[].total",
@@ -311,7 +330,9 @@ ALLOWED_PATHS = {
 # roles の source は表示の文字なので、source は URL らしいときだけ検査する（下の walk）。法律の source は経路で必ず検査する。
 LINK_KEYS = {"url", "voteUrl", "sourceUrl"}
 # 内閣府 経済社会総合研究所（税の帳簿の乗数の出典、政府の公式資料）。
-OFFICIAL_HOSTS = {"kokkai.ndl.go.jp", "www.shugiin.go.jp", "www.sangiin.go.jp", "www.esri.cao.go.jp", "www.mof.go.jp"}
+OFFICIAL_HOSTS = {"kokkai.ndl.go.jp", "www.shugiin.go.jp", "www.sangiin.go.jp", "www.esri.cao.go.jp", "www.mof.go.jp",
+                  # 背後の力の記録の出典（規制改革ホットライン・審議会の議事録など、省庁・内閣府の公式資料。設計決定0017）。
+                  "www8.cao.go.jp", "www.fsa.go.jp", "www.mhlw.go.jp", "www.npa.go.jp", "www.bunka.go.jp", "www.mlit.go.jp"}
 
 
 def _paths(node, path, found):
