@@ -15,7 +15,7 @@ tests/test_public_sync.py が、公開データ同士の照合値（SHA-256）�
   5. 公開ランキング ranking.json と出典チェック（scripts/source_check.rebuild）
   6. 閣法の所管の省庁（scripts/build_ministry_bills.py build）→ 税の帳簿（scripts/build_tax_ledger.py）→ 団体の帳簿（scripts/build_org_ledger.py）→ 経済界の帳簿（scripts/build_business_ledger.py）→ 自動の関与（scripts/build_auto_involvements.py）→ 反対票の一覧（scripts/build_opposing_votes.py）→ 採決ごとの会派（scripts/build_vote_parties.py）→ 議員ページ members.json（scripts/build_public_members.mjs）→ もう一度出典チェック
   7. 全議員の表 members-reference.json（参考の額を印つきの別の欄で配る。scripts/build_reference_members.mjs）
-  8. 法律の一覧 laws.json と laws-detail/、法律の「何をする」の一文の表 law-names.json（scripts/build_laws_catalog.py）
+  8. 法律の一覧 laws.json と laws-detail/、法律の「何をする」の一文の表 law-names.json（scripts/build_laws_catalog.py）→ 暫定評価 provisional.json（scripts/build_provisional.py）
   9. 物価の換算表 price-index.json（scripts/build_price_index.py）→ データベース data/db/kokuzoku.sqlite（Git に入れない）と、グラフ用の集計 charts.json（scripts/build_database.py）。
      計算式の清書 docs/計算式.md が正本（app/src/method-spec.ts）と一致するかも確かめる
 
@@ -118,6 +118,9 @@ def rebuild(record: Record = _print) -> bool:
         return False
     # 全法律の一覧（/ranking）は、公開ランキングと議員ページを作り直したあとに並べ直す。
     if not _command(record, "法律の一覧：laws.json", [py, "scripts/build_laws_catalog.py"]):
+        return False
+    # 暫定評価（provisional-v1）。直近の法律の件数と政策カードを、laws.json に合わせて作り直す。
+    if not _command(record, "暫定評価：provisional.json", [py, "scripts/build_provisional.py"]):
         return False
     # 物価の換算表（price-v1）。法律の額を最新年の円に直して並べるのに使う。
     if not _command(record, "物価の換算表：price-index.json", [py, "scripts/build_price_index.py"]):
