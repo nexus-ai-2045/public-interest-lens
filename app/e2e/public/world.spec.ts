@@ -12,6 +12,7 @@ test.describe('/world（世界のGDP比較）', () => {
     expect(await chart.locator('path, polyline').count()).toBeGreaterThan(0);
     expect(await page.locator('.world-table tbody tr').count()).toBeGreaterThan(0);
     expect(watch.dataUrls.some(url => url.endsWith('/distribution/world-gdp.json'))).toBe(true);
+    await expect(page.getByRole('heading', { level: 3, name: /原因の軸の結論/ })).toBeVisible();
     watch.expectClean();
   });
 
@@ -19,11 +20,12 @@ test.describe('/world（世界のGDP比較）', () => {
     const watch = watchPage(page);
     await page.goto('/world');
     const heading = page.locator('#world-chart-heading');
-    await expect(heading).toContainText('名目GDP');
-
-    await page.getByRole('group', { name: '見る指標' }).getByRole('button', { name: '実質成長率' }).click();
+    // 既定は名目ではなく実質成長率（国どうしは物価と為替を除いて比べる）。
     await expect(heading).toContainText('実質成長率');
-    await expect(page).toHaveURL(/metric=growth/);
+
+    await page.getByRole('group', { name: '見る指標' }).getByRole('button', { name: '名目GDP' }).click();
+    await expect(heading).toContainText('名目GDP');
+    await expect(page).toHaveURL(/metric=nominal/);
 
     await page.getByLabel('見る期間').selectOption('2000');
     await expect(page).toHaveURL(/period=2000/);
