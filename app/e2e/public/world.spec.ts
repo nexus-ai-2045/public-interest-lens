@@ -6,7 +6,7 @@ test.describe('/world（世界のGDP比較）', () => {
     const watch = watchPage(page);
     await page.goto('/world');
     await expect(page).toHaveTitle(/世界のGDP比較/);
-    await expect(page.getByRole('heading', { level: 2, name: '日本の経済は、世界と比べてどうですか？' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: '日本の経済は、世界と比べてどうですか？' })).toBeVisible();
     const chart = page.locator('.world-chart-wrap svg[role="img"]');
     await expect(chart).toBeVisible();
     expect(await chart.locator('path, polyline').count()).toBeGreaterThan(0);

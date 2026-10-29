@@ -48,8 +48,8 @@ export function LawRankingPage() {
   const topList = collapseObservations((sideTop.length ? sideTop : confirmed).slice().sort((a, b) => b.amount!.median - a.amount!.median)).slice(0, TOP);
   return <SiteShell active="/ranking" label="法律・政策ランキング（実データ）" className="law-ranking">
     
-    <main>
-      <h2>法律と政策ごとの損失と便益</h2>
+    <main id="main">
+      <h1>法律と政策ごとの損失と便益</h1>
       <p className="laws-lead">成立した全部の法律を、一次資料（国会の議案情報・e-Gov 法令）と公的統計（OECD 国民経済計算など）で同じルールに通しました。額は比べた国との差から出した推計で、必ず幅と確かさの印を付けています。額が出ない法律も、止まった理由を付けて全部載せています。結果への責任を測るもので、提出者や賛成者の意図や予見を評価するものではありません。</p>
       <nav className="prov-mode" aria-label="ランキングの種類">
         <a href="/ranking" aria-current={!provisional}>国賊ランキング（確定）</a>

@@ -6,7 +6,7 @@ test.describe('/methodology（計算方法）', () => {
     const watch = watchPage(page);
     await page.goto('/methodology');
     await expect(page).toHaveTitle(/計算方法/);
-    await expect(page.getByRole('heading', { level: 2, name: 'どう計算しているか' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'どう計算しているか' })).toBeVisible();
     const sections = page.locator('main.methodology h3');
     expect(await sections.count()).toBeGreaterThanOrEqual(4);
     await expect(page.getByRole('heading', { level: 3, name: /この人が失わせた額・生んだ額/ })).toBeVisible();
