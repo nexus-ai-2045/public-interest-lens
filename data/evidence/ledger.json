@@ -278,10 +278,15 @@
    "quantity": "税務手続コスト（タックスコンプライアンスコスト）の売上高比：大企業と中小企業",
    "estimate": {
     "central": 0.17,
-    "low": 0.06,
+    "low": null,
     "high": null,
     "unit": "%（central=資本金1億円以下の中小企業平均、low=資本金1億円超の大企業平均。中小は大企業の約3倍。売上1%増でコスト約0.3%増）",
-    "interval_type": "報告なし"
+    "interval_type": "報告なし",
+    "other_values_not_interval": {
+     "low": 0.06,
+     "high": null,
+     "note": "区間ではなく、別の対象集団・シナリオ・時点の値（単位欄の説明を参照）"
+    }
    },
    "source": {
     "authors": "高木駿平・中嶋佑佳",
@@ -319,7 +324,7 @@
      {
       "role": "check1",
       "central": 0.17,
-      "low": 0.06,
+      "low": null,
       "high": null,
       "unit": "%（central=資本金1億円以下の中小企業平均、low=資本金1億円超の大企業平均。中小は大企業の約3倍。売上1%増でコスト約0.3%増）",
       "scope_match": true,
@@ -329,7 +334,7 @@
      {
       "role": "check2",
       "central": 0.17,
-      "low": 0.06,
+      "low": null,
       "high": null,
       "unit": "%（central=資本金1億円以下の中小企業平均、low=資本金1億円超の大企業平均。中小は大企業の約3倍。売上1%増でコスト約0.3%増）",
       "scope_match": true,
@@ -1817,10 +1822,15 @@
    "quantity": "破産処理期間の短縮（イタリア1.8年→日本0.6年）が情報通信業の存続新規企業の雇用成長（最終/初期比）：短縮後の値（low=現状値1.66）",
    "estimate": {
     "central": 1.83,
-    "low": 1.66,
+    "low": null,
     "high": null,
     "unit": "最終/初期雇用比",
-    "interval_type": "報告なし"
+    "interval_type": "報告なし",
+    "other_values_not_interval": {
+     "low": 1.66,
+     "high": null,
+     "note": "区間ではなく、別の対象集団・シナリオ・時点の値（単位欄の説明を参照）"
+    }
    },
    "source": {
     "authors": "Calvino, Criscuolo, Menon",
@@ -4378,10 +4388,15 @@
    "quantity": "中長期試算の経済前提：TFP上昇率(過去投影/成長移行/高成長実現)",
    "estimate": {
     "central": 1.1,
-    "low": 0.5,
-    "high": 1.4,
+    "low": null,
+    "high": null,
     "unit": "%/年(TFP上昇率; low=過去投影、central=成長移行、high=高成長実現)",
-    "interval_type": "範囲"
+    "interval_type": "範囲",
+    "other_values_not_interval": {
+     "low": 0.5,
+     "high": 1.4,
+     "note": "区間ではなく、別の対象集団・シナリオ・時点の値（単位欄の説明を参照）"
+    }
    },
    "source": {
     "authors": "内閣府",
@@ -4419,8 +4434,8 @@
      {
       "role": "check1",
       "central": 1.1,
-      "low": 0.5,
-      "high": 1.4,
+      "low": null,
+      "high": null,
       "unit": "%/年(TFP上昇率; low=過去投影、central=成長移行、high=高成長実現)",
       "scope_match": true,
       "locator": "本文 2.(1) 潜在成長率",
@@ -4429,8 +4444,8 @@
      {
       "role": "check2",
       "central": 1.1,
-      "low": 0.5,
-      "high": 1.4,
+      "low": null,
+      "high": null,
       "unit": "%/年(TFP上昇率; low=過去投影、central=成長移行、high=高成長実現)",
       "scope_match": true,
       "locator": "本文2.経済の中長期的な展望 『各シナリオの主要な前提』表、(1)潜在成長率",
@@ -5230,10 +5245,15 @@
    "quantity": "保育料に対する母親の労働参加弾性値（欧州・カナダ研究の平均）",
    "estimate": {
     "central": -0.19,
-    "low": -0.35,
+    "low": null,
     "high": null,
     "unit": "弾性値（-0.35は米国のみのサブサンプル平均、lowに記録）",
-    "interval_type": "範囲"
+    "interval_type": "範囲",
+    "other_values_not_interval": {
+     "low": -0.35,
+     "high": null,
+     "note": "区間ではなく、別の対象集団・シナリオ・時点の値（単位欄の説明を参照）"
+    }
    },
    "source": {
     "authors": "Akgunduz, Y. E., Plantenga, J.",
@@ -5271,7 +5291,7 @@
      {
       "role": "check1",
       "central": -0.19,
-      "low": -0.35,
+      "low": null,
       "high": null,
       "unit": "弾性値（-0.35は米国のみのサブサンプル平均、lowに記録）",
       "scope_match": true,
@@ -5281,7 +5301,7 @@
      {
       "role": "check2",
       "central": -0.19,
-      "low": -0.35,
+      "low": null,
       "high": null,
       "unit": "弾性値（-0.35は米国のみのサブサンプル平均、lowに記録）",
       "scope_match": true,
@@ -8055,10 +8075,15 @@
    "quantity": "報告税引前利益の税率差に対する準弾力性（絶対値、メタ分析の合意値）",
    "estimate": {
     "central": 1.0,
-    "low": 0.79,
-    "high": 1.5,
+    "low": null,
+    "high": null,
     "unit": "税率差1%ポイントあたりの報告利益変化(%)。low=逆分散加重平均、high=直近年に対する推定",
-    "interval_type": "範囲"
+    "interval_type": "範囲",
+    "other_values_not_interval": {
+     "low": 0.79,
+     "high": 1.5,
+     "note": "区間ではなく、別の対象集団・シナリオ・時点の値（単位欄の説明を参照）"
+    }
    },
    "source": {
     "authors": "Beer, S.; de Mooij, R.; Liu, L.",
@@ -8096,8 +8121,8 @@
      {
       "role": "check1",
       "central": 1.0,
-      "low": 0.79,
-      "high": 1.5,
+      "low": null,
+      "high": null,
       "unit": "税率差1%ポイントあたりの報告利益変化(%)。low=逆分散加重平均、high=直近年に対する推定",
       "scope_match": true,
       "locator": "要旨・序論(第3頁)、Table 1 Baseline行(加重平均0.79、平均1.59、中央値1.05)",
@@ -8106,8 +8131,8 @@
      {
       "role": "check2",
       "central": 1.0,
-      "low": 0.79,
-      "high": 1.5,
+      "low": null,
+      "high": null,
       "unit": "税率差1%ポイントあたりの報告利益変化(%)。low=逆分散加重平均、high=直近年に対する推定",
       "scope_match": true,
       "locator": "Oxford CBT WP18/15 序論 p.3-4、Table 1、Table 2付近",
@@ -8380,10 +8405,15 @@
    "quantity": "耐久財支出の増税直前2か月の上振れと施行月の落ち込み",
    "estimate": {
     "central": 23,
-    "low": 8,
+    "low": null,
     "high": null,
     "unit": "増税直前2か月（low=2か月前、central=直前月）の耐久財支出の反実仮想比上振れ(%)。施行月は-13%",
-    "interval_type": "報告なし"
+    "interval_type": "報告なし",
+    "other_values_not_interval": {
+     "low": 8,
+     "high": null,
+     "note": "区間ではなく、別の対象集団・シナリオ・時点の値（単位欄の説明を参照）"
+    }
    },
    "source": {
     "authors": "Cashin, D.",
@@ -8420,7 +8450,7 @@
      {
       "role": "check1",
       "central": 23.0,
-      "low": 8.0,
+      "low": null,
       "high": null,
       "unit": "増税直前2か月（low=2か月前、central=直前月）の耐久財支出の反実仮想比上振れ(%)。施行月は-13%",
       "scope_match": true,
@@ -8430,7 +8460,7 @@
      {
       "role": "check2",
       "central": 23,
-      "low": 8,
+      "low": null,
       "high": null,
       "unit": "増税直前2か月（low=2か月前、central=直前月）の耐久財支出の反実仮想比上振れ(%)。施行月は-13%",
       "scope_match": true,
