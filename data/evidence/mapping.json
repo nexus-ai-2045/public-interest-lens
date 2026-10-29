@@ -1,0 +1,101 @@
+{
+ "version": "mapping-v1",
+ "mechanisms": [
+  {
+   "id": "I1",
+   "name": "ICT資本の使い込みの遅れ（日米差）",
+   "actor": "規制・団体（ICT導入を阻む慣行）",
+   "ledger_ids": [
+    "ict-05",
+    "ict-01"
+   ],
+   "scale_source": "対象産業の付加価値（内閣府 国民経済計算 経済活動別GDP、概算の丸め。台帳への公式統計の追加は未了）",
+   "second_method": "M3 他国実績（設計決定0015の政策カード）／M1 実測（OECD中央値比較）。未実装",
+   "impact_rank": 1
+  },
+  {
+   "id": "I4",
+   "name": "需要側の金融政策（QQE）",
+   "actor": "日銀・内閣（需要側、別枠）",
+   "ledger_ids": [
+    "trade-8",
+    "trade-7"
+   ],
+   "scale_source": "対象産業の付加価値（内閣府 国民経済計算 経済活動別GDP、概算の丸め。台帳への公式統計の追加は未了）",
+   "second_method": "M3 他国実績（設計決定0015の政策カード）／M1 実測（OECD中央値比較）。未実装",
+   "impact_rank": 2
+  },
+  {
+   "id": "I2",
+   "name": "参入障壁・規制（ネットワーク産業の競争導入）",
+   "actor": "規制・議員（参入規制の維持）",
+   "ledger_ids": [
+    "regprod-02",
+    "regprod-04"
+   ],
+   "scale_source": "対象産業の付加価値（内閣府 国民経済計算 経済活動別GDP、概算の丸め。台帳への公式統計の追加は未了）",
+   "second_method": "M3 他国実績（設計決定0015の政策カード）／M1 実測（OECD中央値比較）。未実装",
+   "impact_rank": 3
+  },
+  {
+   "id": "I3",
+   "name": "資源配分の歪み・新陳代謝の弱さ（日本の純参入効果は米国の1/3）",
+   "actor": "規制・団体（退出と参入を妨げる制度）",
+   "ledger_ids": [
+    "entry-05",
+    "entry-06",
+    "entry-04"
+   ],
+   "scale_source": "対象産業の付加価値（内閣府 国民経済計算 経済活動別GDP、概算の丸め。台帳への公式統計の追加は未了）",
+   "second_method": "M3 他国実績（設計決定0015の政策カード）／M1 実測（OECD中央値比較）。未実装",
+   "impact_rank": 5
+  },
+  {
+   "id": "I5",
+   "name": "貿易自由化・EPA",
+   "actor": "議員・団体（市場開放の遅れ）",
+   "ledger_ids": [
+    "trade-5",
+    "trade-4"
+   ],
+   "scale_source": "対象産業の付加価値（内閣府 国民経済計算 経済活動別GDP、概算の丸め。台帳への公式統計の追加は未了）",
+   "second_method": "M3 他国実績（設計決定0015の政策カード）／M1 実測（OECD中央値比較）。未実装",
+   "impact_rank": 4
+  },
+  {
+   "id": "I7",
+   "name": "行政手続コスト",
+   "actor": "省庁・議員（手続の新設・維持）",
+   "ledger_ids": [
+    "admin-1",
+    "regprod-10"
+   ],
+   "scale_source": "対象産業の付加価値（内閣府 国民経済計算 経済活動別GDP、概算の丸め。台帳への公式統計の追加は未了）",
+   "second_method": "M3 他国実績（設計決定0015の政策カード）／M1 実測（OECD中央値比較）。未実装",
+   "impact_rank": 6
+  },
+  {
+   "id": "C1",
+   "name": "【天井】日米の市場部門TFP差",
+   "actor": "（仕組みの特定前の総差）",
+   "ledger_ids": [
+    "ict-08",
+    "ict-03"
+   ],
+   "scale_source": "対象産業の付加価値（内閣府 国民経済計算 経済活動別GDP、概算の丸め。台帳への公式統計の追加は未了）",
+   "second_method": "M3 他国実績（設計決定0015の政策カード）／M1 実測（OECD中央値比較）。未実装",
+   "impact_rank": null
+  },
+  {
+   "id": "X1",
+   "name": "人口の高齢化・労働投入",
+   "actor": "帰属対象外（人口動態）",
+   "ledger_ids": [
+    "stagnation-04"
+   ],
+   "scale_source": "対象産業の付加価値（内閣府 国民経済計算 経済活動別GDP、概算の丸め。台帳への公式統計の追加は未了）",
+   "second_method": "M3 他国実績（設計決定0015の政策カード）／M1 実測（OECD中央値比較）。未実装",
+   "impact_rank": null
+  }
+ ]
+}
