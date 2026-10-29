@@ -73,17 +73,21 @@ class BacktestRunTest(unittest.TestCase):
                 self.assertGreaterEqual(high, lv["rate"])
 
     def test_frozen_snapshot_is_reproducible_when_inputs_are_unchanged(self):
+        checked = 0
         for path in bt.snapshot_files():
             snap = json.loads(path.read_text(encoding="utf-8"))
-            if snap["inputs"] != self.result["inputs"] or snap["spec_version"] != self.result["spec_version"]:
+            if any(self.result["inputs"].get(k) != v for k, v in snap["inputs"].items()) or snap["spec_version"] != self.result["spec_version"]:
                 continue  # 入力（法律の配布データなど）が更新された。固定した結果はその時点の値として残す
-            now = {k: v for k, v in snap.items() if k not in ("label", "date", "note")}
-            self.assertEqual(now, self.result, f"{path.name} の固定結果と、同じ入力での再計算が違う")
-
+            checked += 1
+            for key, value in snap.items():
+                if key in ("label", "date", "note", "version", "inputs"):
+                    continue
+                self.assertEqual(value, self.result[key], f"{path.name} の {key} が、同じ入力での再計算と違う")
+        print(f"\n固定した結果のうち、入力が同じで再現を確かめたもの: {checked}")
 
 class BacktestPublishedFilesTest(unittest.TestCase):
     def test_public_json_and_doc_are_built_from_the_snapshots(self):
-        runs = sorted((json.loads(p.read_text(encoding="utf-8")) for p in bt.snapshot_files()), key=lambda r: r["date"])
+        runs = sorted((json.loads(p.read_text(encoding="utf-8")) for p in bt.snapshot_files()), key=lambda r: (r["date"], r["label"]))
         self.assertTrue(runs, "固定した結果が無い")
         public = json.loads(bt.PUBLIC.read_text(encoding="utf-8"))
         self.assertEqual(public, {"schema": "backtest-runs/v1", "runs": runs}, "python3 scripts/backtest.py --publish で作り直す")

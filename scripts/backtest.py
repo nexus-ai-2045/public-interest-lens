@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 import math
@@ -26,12 +27,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CASES = ROOT / "data" / "evidence" / "backtest_cases.json"
 MAPPING = ROOT / "data" / "evidence" / "backtest_mapping.json"
+ALIGN = ROOT / "data" / "evidence" / "backtest_alignment.json"
+IMPACT = ROOT / "data" / "derived" / "impact-v1-triage-v2" / "impact.csv"
 LAWS = ROOT / "app" / "public" / "distribution" / "laws.json"
 SPEC = ROOT / "app" / "src" / "method-spec.ts"
 SNAP_DIR = ROOT / "data" / "evidence" / "backtest"
 PUBLIC = ROOT / "app" / "public" / "distribution" / "backtest.json"
 DOC = ROOT / "docs" / "バックテスト.md"
-VERSION = "backtest-v1"
+VERSION = "backtest-v1.1"
 TARGET = 0.95   # 合格の線（ねく 2026-10-29）
 MIN_N = 10      # これ未満は判定しない（評価方法設計書 5.3）
 COMPARABLE = {"output", "employment"}   # 現行の計算の指標（産業の付加価値）と同じ向きで読める結果指標
@@ -129,6 +132,93 @@ def summarize(items: list[dict], level: str, laws_total: int) -> dict:
     }
 
 
+ALIGNED_LEVELS = [
+    ("M0", "本命（v1.1）", "識別が強い／日本の研究／研究の結果指標が計算の指標と同じ／計算がその指標で判定を出している"),
+    ("M1", "条件を緩めた参考1（v1.1）", "識別が強いか中程度／結果指標が計算の指標と同じか近い代理／計算が判定を出している"),
+    ("M2", "条件を緩めた参考2（v1.1）", "日本の研究で、結果指標が計算の指標と同じか近い代理で、計算が判定を出しているもの全部"),
+]
+STAGED = ("段階1", "段階2", "段階3")
+GOOD = {"貢献": 1, "上昇": 1, "悪影響": -1, "低下": -1}
+
+
+def load_alignment() -> dict:
+    """研究の結果指標 → 計算の指標。2系統（私とHaiku）が一致した分だけ使う。"""
+    doc = json.loads(ALIGN.read_text(encoding="utf-8"))
+    out = {}
+    for cid, one in doc["line1"].items():
+        two = doc["line2"].get(cid)
+        agree = two is not None and one["alignment"] == two["alignment"] and one["indicator"] == two["indicator"]
+        out[cid] = {"alignment": one["alignment"] if agree else "保留", "indicator": one["indicator"] if agree else None, "line1": one, "line2": two}
+    return out
+
+
+def load_impact() -> dict[str, list[dict]]:
+    rows: dict[str, list[dict]] = {}
+    with IMPACT.open(encoding="utf-8") as handle:
+        for r in csv.DictReader(handle):
+            rows.setdefault(r["id"], []).append(r)
+    return rows
+
+
+def classify_aligned(case: dict, base: dict, align: dict, impact: dict) -> dict:
+    """指標をそろえた判定：研究の結果指標と同じ指標で、法律ごとの影響の判定（段階1以上）の向きを読む。"""
+    a = case["labels"]["agreed"]
+    out = {"id": case["id"], "policy": case["policy"], "source": base["source"], "reason": None, "levels": [], "truth": None, "predicted": None, "hit": None, "indicator": None, "alignment": None}
+    if base["predicted"] is None:   # 日本の研究でない・ラベル保留・法律に当てられない
+        out["reason"] = base["reason"]
+        return out
+    laws = base["predicted"]["laws"]
+    if not laws:   # 対象期間外など。指標の対応の集計に入れない
+        out["reason"] = base["reason"] or "対応する法律が現行の計算に無い"
+        return out
+    al = align.get(case["id"])
+    if al is None:
+        out["reason"] = "日本の研究ではない（現行の計算は日本の法律だけ）"
+        return out
+    out["alignment"], out["indicator"] = al["alignment"], al["indicator"]
+    if al["alignment"] == "保留":
+        out["reason"] = "指標の対応が保留（2系統の判定が割れた）"
+        return out
+    if al["alignment"] == "none":
+        out["reason"] = "計算に同じ指標が無い"
+        return out
+    signs = []
+    for law in laws:
+        for row in impact.get(law["id"], []):
+            if row["指標"] == al["indicator"] and row["判定"] in STAGED and row["向き"] in GOOD:
+                signs.append(GOOD[row["向き"]])
+    if not signs:
+        out["reason"] = "計算がその指標で判定を出していない（保留・比較群なし・系列なし）"
+        return out
+    if a["benefit_sign"] == 0:
+        out["reason"] = "正解の向きが定まらない（有意でない・混在・記述のみ）"
+        return out
+    total = sum(signs)
+    out["predicted"] = (total > 0) - (total < 0)
+    out["truth"] = a["benefit_sign"]
+    out["hit"] = out["predicted"] == out["truth"]
+    out["levels"].append("M2")
+    if a["design"] in SOLID:
+        out["levels"].append("M1")
+        if a["design"] in STRONG and al["alignment"] == "same":
+            out["levels"].append("M0")
+    return out
+
+
+def summarize_aligned(items: list[dict], level: str) -> dict:
+    scored = [x for x in items if level in x["levels"]]
+    return _level_stats(level, scored, [{"id": x["id"], "policy": x["policy"], "source": x["source"], "truth": x["truth"], "predicted": x["predicted"], "hit": x["hit"], "indicator": x["indicator"], "alignment": x["alignment"]} for x in scored])
+
+
+def _level_stats(level: str, scored: list[dict], cases: list[dict]) -> dict:
+    k = sum(1 for x in scored if x["hit"])
+    n = len(scored)
+    ci = wilson(k, n)
+    rate = k / n if n else None
+    verdict = "判定不能" if n < MIN_N else ("達成" if rate >= TARGET else "未達")
+    return {"level": level, "n": n, "hits": k, "rate": rate, "wilson95": list(ci) if ci else None, "verdict": verdict, "cases": cases}
+
+
 def run() -> dict:
     cases = json.loads(CASES.read_text(encoding="utf-8"))
     mapping = json.loads(MAPPING.read_text(encoding="utf-8"))
@@ -140,6 +230,25 @@ def run() -> dict:
         key = x["reason"].split("（")[0] if x["reason"] else None
         if key:
             reasons[key] = reasons.get(key, 0) + 1
+    align = load_alignment()
+    impact = load_impact()
+    aligned_items = [classify_aligned(c, b, align, impact) for c, b in zip(cases["cases"], items)]
+    aligned_levels = [summarize_aligned(aligned_items, lv) for lv, _, _ in ALIGNED_LEVELS]
+    for entry, (_, name, definition) in zip(aligned_levels, ALIGNED_LEVELS):
+        entry["name"], entry["definition"] = name, definition
+    jp_linked = [x for x in aligned_items if x["alignment"] is not None]
+    gap_alignment: dict[str, int] = {}
+    for x in jp_linked:
+        gap_alignment[x["alignment"]] = gap_alignment.get(x["alignment"], 0) + 1
+    gap_none: dict[str, int] = {}
+    for c, x in zip(cases["cases"], aligned_items):
+        if x["alignment"] == "none":
+            k = c["labels"]["agreed"]["outcome_class"] or "保留"
+            gap_none[k] = gap_none.get(k, 0) + 1
+    gap_reasons: dict[str, int] = {}
+    for x in aligned_items:
+        if x["reason"] and x["alignment"] is not None:
+            gap_reasons[x["reason"].split("（")[0]] = gap_reasons.get(x["reason"].split("（")[0], 0) + 1
     levels = [summarize(items, lv, len(laws)) for lv, _, _ in LEVELS]
     for entry, (_, name, definition) in zip(levels, LEVELS):
         entry["name"], entry["definition"] = name, definition
@@ -149,7 +258,7 @@ def run() -> dict:
         "spec_version": spec_version(),
         "target": TARGET,
         "min_n": MIN_N,
-        "inputs": {"cases": sha(CASES), "mapping": sha(MAPPING), "laws": sha(LAWS), "laws_total": len(laws)},
+        "inputs": {"cases": sha(CASES), "mapping": sha(MAPPING), "alignment": sha(ALIGN), "impact": sha(IMPACT), "laws": sha(LAWS), "laws_total": len(laws)},
         "cases_total": len(items),
         "funnel": {
             "total": len(items),
@@ -159,7 +268,16 @@ def run() -> dict:
             "scorable_l0": levels[0]["n"],
         },
         "headline": levels[0],
+        "headline_aligned": aligned_levels[0],
         "levels": levels,
+        "aligned_levels": aligned_levels,
+        "alignment_gap": {
+            "japan_linked_cases": len(jp_linked),
+            "by_alignment": gap_alignment,
+            "none_by_outcome_class": gap_none,
+            "stopped_by": gap_reasons,
+            "reading": "『計算に同じ指標が無い』の件数が多い。研究が見ている集団・指標（賃金、特定集団の雇用、価格・余剰、手数料）を計算側に足さないと、同じものを測れない。",
+        },
         "amount_and_interval": {
             "status": "測れない",
             "n": 0,
@@ -170,15 +288,16 @@ def run() -> dict:
 
 
 def render(result: dict) -> str:
-    h = result["headline"]
+    h = result["headline_aligned"]
     lines = [f"バックテスト {result['version']}（計算式 {result['spec_version']}）事例 {result['cases_total']} 件"]
-    for lv in result["levels"]:
+    for lv in result["levels"] + result["aligned_levels"]:
         rate = "—" if lv["rate"] is None else f"{lv['rate'] * 100:.0f}%"
         ci = "" if not lv["wilson95"] else f"（95%区間 {lv['wilson95'][0] * 100:.0f}〜{lv['wilson95'][1] * 100:.0f}%）"
         lines.append(f"  {lv['level']} {lv['name']}: 向きの一致 {lv['hits']}/{lv['n']} = {rate}{ci} → {lv['verdict']}")
     lines.append(f"  除外の理由: {result['funnel']['excluded_by_reason']}")
+    lines.append(f"  指標の対応（日本の研究で法律と結べた {result['alignment_gap']['japan_linked_cases']} 件）: {result['alignment_gap']['by_alignment']}、止まった理由 {result['alignment_gap']['stopped_by']}")
     lines.append(f"  額・区間: {result['amount_and_interval']['status']}")
-    lines.append(f"  本命の判定: {h['verdict']}（合格の線 {result['target'] * 100:.0f}%、判定に要る件数 {result['min_n']}）")
+    lines.append(f"  本命の判定（v1.1・指標をそろえた M0）: {h['verdict']}（合格の線 {result['target'] * 100:.0f}%、判定に要る件数 {result['min_n']}）")
     return "\n".join(lines)
 
 
@@ -211,6 +330,21 @@ def render_doc(runs: list[dict]) -> str:
         for lv in r["levels"]:
             ci = "" if not lv["wilson95"] else f"（{pct(lv['wilson95'][0])}〜{pct(lv['wilson95'][1])}）"
             out.append(f"| {lv['level']} {lv['name']} | {lv['definition']} | {lv['hits']}/{lv['n']} | {pct(lv['rate'])}{ci} | {lv['verdict']} |")
+        if r.get("aligned_levels"):
+            out += ["", "### 指標をそろえた測り直し（v1.1）", "", "研究の結果指標と同じ指標で、法律ごとの影響の判定（段階1以上）の向きを読む。判定を出していないものは外し、外れとは数えない。", "",
+                    "| 段 | 条件 | 向きの一致 | 一致率（Wilson 95%区間） | 判定 |", "|---|---|---|---|---|"]
+            for lv in r["aligned_levels"]:
+                ci = "" if not lv["wilson95"] else f"（{pct(lv['wilson95'][0])}〜{pct(lv['wilson95'][1])}）"
+                out.append(f"| {lv['level']} {lv['name']} | {lv['definition']} | {lv['hits']}/{lv['n']} | {pct(lv['rate'])}{ci} | {lv['verdict']} |")
+            g = r["alignment_gap"]
+            out += ["", f"日本の研究で法律と結べた {g['japan_linked_cases']} 件の指標の対応：" + "、".join(f"{k} {v}件" for k, v in g["by_alignment"].items()) + "。",
+                    "計算に同じ指標が無かった事例の結果指標：" + "、".join(f"{k} {v}件" for k, v in g["none_by_outcome_class"].items()) + "。",
+                    "指標がそろった後に止まった理由：" + ("、".join(f"{k} {v}件" for k, v in g["stopped_by"].items()) or "なし") + "。", g["reading"], ""]
+            if r["aligned_levels"][2]["cases"]:
+                out += ["| 事例 | 研究 | 使った指標 | 正解の向き | 計算の向き | 一致 |", "|---|---|---|---|---|---|"]
+                sign2 = {1: "便益（国士側）", -1: "損失（国賊側）", 0: "同数"}
+                out += [f"| {c['policy']} | {c['source']} | {c['indicator']}（{c['alignment']}） | {sign2[c['truth']]} | {sign2[c['predicted']]} | {'○' if c['hit'] else '×'} |" for c in r["aligned_levels"][2]["cases"]]
+                out.append("")
         f = r["funnel"]
         out += ["", f"事例 {f['total']} 件のうち採点できなかった理由：" + "、".join(f"{k} {v}件" for k, v in f["excluded_by_reason"].items()) + "。", ""]
         out += ["額の誤差・予測区間が正解を含む割合：**" + r["amount_and_interval"]["status"] + "**。" + r["amount_and_interval"]["reason"], ""]
@@ -227,7 +361,7 @@ def render_doc(runs: list[dict]) -> str:
 
 def publish() -> dict:
     runs = [json.loads(p.read_text(encoding="utf-8")) for p in snapshot_files()]
-    runs.sort(key=lambda r: r["date"])
+    runs.sort(key=lambda r: (r["date"], r["label"]))
     doc = {"schema": "backtest-runs/v1", "runs": runs}
     PUBLIC.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     DOC.write_text(render_doc(runs), encoding="utf-8")
