@@ -1,4 +1,4 @@
-/** バックテスト（backtest-v1）の配布データ backtest.json の読み取りと表示用の整形。定義は docs/adr/0020。 */
+/** バックテストの配布データ backtest.json の読み取りと表示用の整形。定義は docs/adr/0020（v1・v1.1）と 0021（v2）。 */
 
 export const backtestUrl = '/distribution/backtest.json';
 
@@ -9,12 +9,25 @@ export type BacktestLevel = {
 };
 export type AlignedCase = { id: string; policy: string; source: string; truth: number; predicted: number; hit: boolean; indicator: string; alignment: string };
 export type AlignmentGap = { japan_linked_cases: number; by_alignment: Record<string, number>; none_by_outcome_class: Record<string, number>; stopped_by: Record<string, number>; reading: string };
+export type TransplantForeign = { fg: string; authors: string; year: number; country: string; outcome_class: string; sign: number };
+export type TransplantCase = { id: string; group: string; policy: string; source: string; outcome_class: string; truth: number; predicted: number | null; hit: boolean; reason: string | null; foreign: TransplantForeign[] };
+export type TransplantLevel = {
+  level: string; name: string; definition: string; n: number; hits: number; rate: number | null; wilson95: [number, number] | null;
+  groups: number; verdict: '達成' | '未達' | '判定不能'; targets: number; coverage: number | null; baseline: number | null; cases: TransplantCase[];
+};
+export type Transplant = {
+  target: number; min_n: number; min_groups: number; note: string; match_splits: number;
+  pool: { entries: number; usable: number; labels_held: string[]; events: number; from_cases: number; from_search: number };
+  levels: TransplantLevel[];
+  by_outcome_class: Record<string, { targets: number; n: number; hits: number; rate: number | null; verdict: string; provisional_value: string }>;
+};
 export type BacktestRun = {
   label: string; date: string; note: string; spec_version: string; target: number; min_n: number;
   cases_total: number; funnel: { excluded_by_reason: Record<string, number> };
   levels: BacktestLevel[];
   aligned_levels?: (Omit<BacktestLevel, 'cases'> & { cases: AlignedCase[] })[];
   alignment_gap?: AlignmentGap;
+  transplant?: Transplant;
   amount_and_interval: { status: string; n: number; reason: string };
   excluded: { id: string; policy: string; source: string; reason: string }[];
 };
@@ -38,4 +51,9 @@ export function formatRate(level: Pick<BacktestLevel, 'rate' | 'wilson95'>): str
 
 export function signLabel(sign: number): string {
   return sign > 0 ? '便益（国士側）' : sign < 0 ? '損失（国賊側）' : '同数';
+}
+
+/** 外国の研究の向き（+1/−1/0）。0 は有意でない・向きが定まらない。 */
+export function foreignSignLabel(sign: number | null): string {
+  return sign === null ? '—' : sign > 0 ? '便益（国士側）' : sign < 0 ? '損失（国賊側）' : '効果なし';
 }

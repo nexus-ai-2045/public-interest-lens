@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Info } from 'lucide-react';
-import { backtestUrl, formatRate, parseBacktest, signLabel, type Backtest, type BacktestRun } from './backtest';
+import { backtestUrl, foreignSignLabel, formatPercent, formatRate, parseBacktest, signLabel, type Backtest, type BacktestRun } from './backtest';
 
 function RunView({ run }: { run: BacktestRun }) {
   const l2 = run.levels[2];
@@ -22,6 +22,22 @@ function RunView({ run }: { run: BacktestRun }) {
         <tbody>{run.aligned_levels.map(lv => <tr key={lv.level}><td>{lv.level} {lv.name}</td><td>{lv.definition}</td><td>{lv.hits}/{lv.n}</td><td>{formatRate(lv)}</td><td><strong>{lv.verdict}</strong></td></tr>)}</tbody>
       </table>
       <p>日本の研究で法律と結べた{run.alignment_gap.japan_linked_cases}件の指標の対応：{Object.entries(run.alignment_gap.by_alignment).map(([k, v]) => `${k} ${v}件`).join('、')}。計算に同じ指標が無かった事例の結果指標：{Object.entries(run.alignment_gap.none_by_outcome_class).map(([k, v]) => `${k} ${v}件`).join('、')}。{run.alignment_gap.reading}</p>
+    </>}
+    {run.transplant && <>
+      <h5>外国の研究から日本の向きを当てる（v2）</h5>
+      <p>日本の研究（向きが便益か損失で定まるもの）を正解にして、外国の同種の政策の研究だけから日本の向きを当てられるかを測ります。現行の計算は使いません。同種かどうかの判定とラベルは、日本の結果を見せない2系統が独立に付け、一致したものだけ使います。外国の研究は{run.transplant.pool.entries}件（うち使えるのは{run.transplant.pool.usable}件）です。</p>
+      <table className="spec-symbols">
+        <thead><tr><th scope="col">段</th><th scope="col">条件</th><th scope="col">向きの一致</th><th scope="col">一致率（95%区間）</th><th scope="col">予測を出せた割合</th><th scope="col">政策グループ</th><th scope="col">基準</th><th scope="col">判定</th></tr></thead>
+        <tbody>{run.transplant.levels.map(lv => <tr key={lv.level}><td>{lv.level} {lv.name}</td><td>{lv.definition}</td><td>{lv.hits}/{lv.n}</td><td>{formatRate(lv)}</td><td>{lv.n}/{lv.targets}</td><td>{lv.groups}</td><td>{formatPercent(lv.baseline)}</td><td><strong>{lv.verdict}</strong></td></tr>)}</tbody>
+      </table>
+      <p>合格は一致率{Math.round(run.transplant.target * 100)}%以上、かつ予測を出せた事例が{run.transplant.min_n}件以上・政策が{run.transplant.min_groups}グループ以上。基準は、毎回最頻の向きを答えたときの一致率です。一致率が高くても件数が少なければ、また基準と同じなら、見立てに技術があるとは言いません。{run.transplant.note}</p>
+      <details>
+        <summary>日本の事例ごとの予測（本命T0）</summary>
+        <table className="spec-symbols">
+          <thead><tr><th scope="col">日本の事例</th><th scope="col">研究</th><th scope="col">正解の向き</th><th scope="col">予測</th><th scope="col">使った外国の研究（向き）</th></tr></thead>
+          <tbody>{run.transplant.levels[0].cases.map(c => <tr key={c.id}><td>{c.policy.split('（')[0]}</td><td>{c.source}</td><td>{signLabel(c.truth)}</td><td>{c.predicted === null ? `出せない（${c.reason}）` : foreignSignLabel(c.predicted)}</td><td>{c.foreign.map(f => `${f.authors.split(/[,;]/)[0]} ${f.year}（${foreignSignLabel(f.sign)}）`).join('、') || '—'}</td></tr>)}</tbody>
+        </table>
+      </details>
     </>}
     <details>
       <summary>採点した事例（条件を緩めた参考2の{l2.n}件）</summary>

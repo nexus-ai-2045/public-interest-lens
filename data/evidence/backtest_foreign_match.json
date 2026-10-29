@@ -1,0 +1,321 @@
+{
+ "schema": "backtest-foreign-match/v1",
+ "frozen": "2026-10-29",
+ "lines": {
+  "line1": "Claude Haiku",
+  "line2": "Claude Sonnet"
+ },
+ "rule": "日本の研究ごとに、外国の研究が a目的 b産業・市場 c手段 が同じと2系統が一致して判定したものだけを同種とする。d開始時期の水準（開始年の差20年以内・どちらも高所得国）は各系統が true/false を付け、一致して true のときだけ T0。判定する側には政策の説明と測った指標の名前だけを見せ、日本の結果の向きも外国の効果の数値も見せていない。",
+ "targets": {
+  "bt-013": {
+   "line1": [
+    {
+     "fg": "fg-005",
+     "d": false
+    },
+    {
+     "fg": "fg-006",
+     "d": false
+    },
+    {
+     "fg": "fg-007",
+     "d": false
+    },
+    {
+     "fg": "fg-056",
+     "d": false
+    },
+    {
+     "fg": "fg-057",
+     "d": false
+    }
+   ],
+   "line2": [
+    {
+     "fg": "fg-005",
+     "d": false
+    },
+    {
+     "fg": "fg-006",
+     "d": false
+    },
+    {
+     "fg": "fg-007",
+     "d": false
+    },
+    {
+     "fg": "fg-056",
+     "d": false
+    },
+    {
+     "fg": "fg-057",
+     "d": true
+    }
+   ]
+  },
+  "bt-014": {
+   "line1": [
+    {
+     "fg": "fg-051",
+     "d": true
+    },
+    {
+     "fg": "fg-052",
+     "d": true
+    }
+   ],
+   "line2": [
+    {
+     "fg": "fg-051",
+     "d": true
+    },
+    {
+     "fg": "fg-052",
+     "d": true
+    }
+   ]
+  },
+  "bt-015": {
+   "line1": [
+    {
+     "fg": "fg-051",
+     "d": true
+    },
+    {
+     "fg": "fg-052",
+     "d": true
+    }
+   ],
+   "line2": [
+    {
+     "fg": "fg-051",
+     "d": true
+    },
+    {
+     "fg": "fg-052",
+     "d": true
+    }
+   ]
+  },
+  "bt-016": {
+   "line1": [],
+   "line2": []
+  },
+  "bt-019": {
+   "line1": [
+    {
+     "fg": "fg-028",
+     "d": true
+    }
+   ],
+   "line2": [
+    {
+     "fg": "fg-028",
+     "d": true
+    }
+   ]
+  },
+  "bt-021": {
+   "line1": [
+    {
+     "fg": "fg-028",
+     "d": true
+    }
+   ],
+   "line2": [
+    {
+     "fg": "fg-010",
+     "d": true
+    },
+    {
+     "fg": "fg-028",
+     "d": true
+    }
+   ]
+  },
+  "bt-022": {
+   "line1": [
+    {
+     "fg": "fg-029",
+     "d": true
+    },
+    {
+     "fg": "fg-030",
+     "d": true
+    },
+    {
+     "fg": "fg-031",
+     "d": true
+    },
+    {
+     "fg": "fg-032",
+     "d": false
+    },
+    {
+     "fg": "fg-033",
+     "d": true
+    }
+   ],
+   "line2": [
+    {
+     "fg": "fg-029",
+     "d": true
+    },
+    {
+     "fg": "fg-030",
+     "d": true
+    },
+    {
+     "fg": "fg-031",
+     "d": true
+    },
+    {
+     "fg": "fg-032",
+     "d": true
+    },
+    {
+     "fg": "fg-033",
+     "d": true
+    }
+   ]
+  },
+  "bt-023": {
+   "line1": [
+    {
+     "fg": "fg-029",
+     "d": false
+    },
+    {
+     "fg": "fg-030",
+     "d": false
+    },
+    {
+     "fg": "fg-031",
+     "d": false
+    },
+    {
+     "fg": "fg-032",
+     "d": false
+    },
+    {
+     "fg": "fg-033",
+     "d": true
+    }
+   ],
+   "line2": [
+    {
+     "fg": "fg-029",
+     "d": false
+    },
+    {
+     "fg": "fg-030",
+     "d": true
+    },
+    {
+     "fg": "fg-031",
+     "d": true
+    },
+    {
+     "fg": "fg-032",
+     "d": true
+    },
+    {
+     "fg": "fg-033",
+     "d": true
+    }
+   ]
+  },
+  "bt-025": {
+   "line1": [
+    {
+     "fg": "fg-029",
+     "d": false
+    },
+    {
+     "fg": "fg-030",
+     "d": false
+    },
+    {
+     "fg": "fg-031",
+     "d": false
+    },
+    {
+     "fg": "fg-032",
+     "d": false
+    },
+    {
+     "fg": "fg-033",
+     "d": true
+    }
+   ],
+   "line2": [
+    {
+     "fg": "fg-029",
+     "d": false
+    },
+    {
+     "fg": "fg-030",
+     "d": true
+    },
+    {
+     "fg": "fg-031",
+     "d": true
+    },
+    {
+     "fg": "fg-032",
+     "d": false
+    },
+    {
+     "fg": "fg-033",
+     "d": true
+    }
+   ]
+  },
+  "bt-026": {
+   "line1": [
+    {
+     "fg": "fg-029",
+     "d": false
+    },
+    {
+     "fg": "fg-030",
+     "d": false
+    },
+    {
+     "fg": "fg-031",
+     "d": false
+    },
+    {
+     "fg": "fg-032",
+     "d": false
+    },
+    {
+     "fg": "fg-033",
+     "d": true
+    }
+   ],
+   "line2": [
+    {
+     "fg": "fg-029",
+     "d": false
+    },
+    {
+     "fg": "fg-030",
+     "d": true
+    },
+    {
+     "fg": "fg-031",
+     "d": true
+    },
+    {
+     "fg": "fg-032",
+     "d": true
+    },
+    {
+     "fg": "fg-033",
+     "d": true
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,695 @@
+{
+ "schema": "backtest-foreign-labels/v1",
+ "frozen": "2026-10-29",
+ "lines": {
+  "line1": "Claude Haiku",
+  "line2": "Claude Sonnet"
+ },
+ "rule": "結果指標の種類と便益の向きは2系統が独立に付け、一致したものだけ使う。割れたものは保留。同じ出来事かどうか（cluster）は、2系統のどちらかが同じ名前を付けた研究どうしを同じ出来事とみなす（つなぎ合わせる）。",
+ "entries": {
+  "fg-001": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": -1,
+    "cluster": "us-airbnb"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": -1,
+    "cluster": "us-airbnb"
+   }
+  },
+  "fg-002": {
+   "line1": {
+    "outcome_class": "other",
+    "benefit_sign": null,
+    "cluster": "us-airbnb"
+   },
+   "line2": {
+    "outcome_class": "other",
+    "benefit_sign": null,
+    "cluster": "us-airbnb"
+   }
+  },
+  "fg-003": {
+   "line1": {
+    "outcome_class": "other",
+    "benefit_sign": null,
+    "cluster": "other-airbnb-nbhd"
+   },
+   "line2": {
+    "outcome_class": "other",
+    "benefit_sign": null,
+    "cluster": "airbnb-other"
+   }
+  },
+  "fg-004": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 0,
+    "cluster": "us-airbnb"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-airbnb"
+   }
+  },
+  "fg-005": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-airline-1978"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-airline-1978"
+   }
+  },
+  "fg-006": {
+   "line1": {
+    "outcome_class": "wage",
+    "benefit_sign": -1,
+    "cluster": "us-airline-1978"
+   },
+   "line2": {
+    "outcome_class": "wage",
+    "benefit_sign": -1,
+    "cluster": "us-airline-1978"
+   }
+  },
+  "fg-007": {
+   "line1": {
+    "outcome_class": "other",
+    "benefit_sign": null,
+    "cluster": "us-airline-1978"
+   },
+   "line2": {
+    "outcome_class": "other",
+    "benefit_sign": null,
+    "cluster": "us-airline-1978"
+   }
+  },
+  "fg-008": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 0,
+    "cluster": "us-telecom-1996"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 0,
+    "cluster": "us-telecom-1996"
+   }
+  },
+  "fg-009": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "us-telecom-1996"
+   },
+   "line2": {
+    "outcome_class": "other",
+    "benefit_sign": null,
+    "cluster": "us-telecom-1996"
+   }
+  },
+  "fg-010": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "uk-privatization"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "uk-privatization"
+   }
+  },
+  "fg-011": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 0,
+    "cluster": "uk-privatization"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": null,
+    "cluster": "uk-privatization"
+   }
+  },
+  "fg-012": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "eu-roaming-2017"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 0,
+    "cluster": "eu-roaming-2017"
+   }
+  },
+  "fg-013": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 0,
+    "cluster": "eu-roaming-2017"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "eu-roaming-2017"
+   }
+  },
+  "fg-014": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "eu-roaming-2017"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "eu-roaming-2017"
+   }
+  },
+  "fg-015": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "eu-roaming-2017"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "eu-roaming-2017"
+   }
+  },
+  "fg-016": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-electricity-restructuring"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "us-elec-restructuring"
+   }
+  },
+  "fg-017": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "us-plant-divestiture"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "us-elec-restructuring"
+   }
+  },
+  "fg-018": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "us-electricity-restructuring"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "us-elec-restructuring"
+   }
+  },
+  "fg-019": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 0,
+    "cluster": "us-electricity-restructuring"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 0,
+    "cluster": "us-elec-restructuring"
+   }
+  },
+  "fg-020": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "de-hartz"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "de-hartz"
+   }
+  },
+  "fg-021": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "de-hartz"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "de-hartz"
+   }
+  },
+  "fg-022": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "de-hartz"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "de-hartz"
+   }
+  },
+  "fg-023": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "de-hartz"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "de-hartz"
+   }
+  },
+  "fg-024": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "kr-tw-hci"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "kr-hci"
+   }
+  },
+  "fg-025": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "kr-tw-hci"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "kr-hci"
+   }
+  },
+  "fg-026": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 0,
+    "cluster": "kr-tw-hci"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 0,
+    "cluster": "kr-industrial-policy"
+   }
+  },
+  "fg-027": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "kr-tw-hci"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "kr-tw-rd-policy"
+   }
+  },
+  "fg-028": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-interstate-branching"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-interstate-branching"
+   }
+  },
+  "fg-029": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "us-nj-minwage"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "us-nj-minwage-1992"
+   }
+  },
+  "fg-030": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-minwage-panel"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-border-county-minwage"
+   }
+  },
+  "fg-031": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-minwage-panel"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-state-minwage"
+   }
+  },
+  "fg-032": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "hu-minwage-2000"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "hu-minwage"
+   }
+  },
+  "fg-033": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "de-minwage-2015"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "de-minwage-2015"
+   }
+  },
+  "fg-034": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-electricity-restructuring"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-elec-restructuring"
+   }
+  },
+  "fg-035": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-electricity-restructuring"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "us-elec-restructuring"
+   }
+  },
+  "fg-036": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "us-plant-divestiture"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "us-elec-restructuring"
+   }
+  },
+  "fg-037": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": -1,
+    "cluster": "us-airbnb"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": -1,
+    "cluster": "us-airbnb"
+   }
+  },
+  "fg-038": {
+   "line1": {
+    "outcome_class": "other",
+    "benefit_sign": null,
+    "cluster": "us-home-sharing-la"
+   },
+   "line2": {
+    "outcome_class": "other",
+    "benefit_sign": null,
+    "cluster": "us-la-homesharing"
+   }
+  },
+  "fg-039": {
+   "line1": {
+    "outcome_class": "other",
+    "benefit_sign": null,
+    "cluster": "us-airbnb"
+   },
+   "line2": {
+    "outcome_class": "other",
+    "benefit_sign": null,
+    "cluster": "us-airbnb"
+   }
+  },
+  "fg-040": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": -1,
+    "cluster": "meta-airbnb-hotel"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": -1,
+    "cluster": "airbnb-meta"
+   }
+  },
+  "fg-041": {
+   "line1": {
+    "outcome_class": "wage",
+    "benefit_sign": -1,
+    "cluster": "de-hartz"
+   },
+   "line2": {
+    "outcome_class": "wage",
+    "benefit_sign": -1,
+    "cluster": "de-hartz"
+   }
+  },
+  "fg-042": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "de-hartz"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "de-hartz"
+   }
+  },
+  "fg-043": {
+   "line1": {
+    "outcome_class": "wage",
+    "benefit_sign": -1,
+    "cluster": "it-dual-labor-2003"
+   },
+   "line2": {
+    "outcome_class": "wage",
+    "benefit_sign": -1,
+    "cluster": "it-labor-reform-2003"
+   }
+  },
+  "fg-044": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "se-grid-privatization"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "se-grid-privatization"
+   }
+  },
+  "fg-045": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 0,
+    "cluster": "se-grid-privatization"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 0,
+    "cluster": "se-grid-privatization"
+   }
+  },
+  "fg-046": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "se-soe-privatization"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "se-soe-privatization"
+   }
+  },
+  "fg-047": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "se-soe-privatization"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "se-soe-privatization"
+   }
+  },
+  "fg-048": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "vn-equitization"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "vn-equitization"
+   }
+  },
+  "fg-049": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "vn-equitization"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "vn-equitization"
+   }
+  },
+  "fg-050": {
+   "line1": {
+    "outcome_class": "wage",
+    "benefit_sign": -1,
+    "cluster": "br-soe-privatization"
+   },
+   "line2": {
+    "outcome_class": "wage",
+    "benefit_sign": -1,
+    "cluster": "br-privatization"
+   }
+  },
+  "fg-051": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "de-shop-hours"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "de-shophours"
+   }
+  },
+  "fg-052": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "it-shop-hours"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "it-shophours"
+   }
+  },
+  "fg-053": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": -1,
+    "cluster": "fi-taxi-2018"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": -1,
+    "cluster": "fi-taxi-2018"
+   }
+  },
+  "fg-054": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 0,
+    "cluster": "fi-taxi-2018"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 0,
+    "cluster": "fi-taxi-2018"
+   }
+  },
+  "fg-055": {
+   "line1": {
+    "outcome_class": "wage",
+    "benefit_sign": -1,
+    "cluster": "fi-taxi-2018"
+   },
+   "line2": {
+    "outcome_class": "wage",
+    "benefit_sign": -1,
+    "cluster": "fi-taxi-2018"
+   }
+  },
+  "fg-056": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "ma-open-skies"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "eu-morocco-openskies"
+   }
+  },
+  "fg-057": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-open-skies"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-openskies"
+   }
+  }
+ }
+}
