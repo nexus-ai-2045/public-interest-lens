@@ -33,6 +33,7 @@ REQ_DIR = ROOT / 'data/acquired/blocking-actors/1_regulatory-requests'
 REQ_FILES = ('hotline.csv', 'hotline-h26-h27.csv', 'hotline-h29-later.csv')
 ENACTED = ROOT / 'data/acquired/bill-census-full/enacted.csv'
 OUTCOMES = ROOT / 'data/derived/all-laws-v1/outcomes.csv'
+LOBBY_DIR = ROOT / 'data/acquired/lobbying'
 OUT_DIR = ROOT / 'data/derived/business-ledger-v1'
 VERIFIED = '原本照合済み'
 
@@ -82,7 +83,20 @@ def read_hearings() -> list[dict[str, str]]:
                 if r.get('確度', '').startswith(VERIFIED) and r['発言者の区分'] == '業界団体':
                     rows.append({'受付番号': f'審議会-{path.stem}-{i}', '受付日': r['開催日'], '提案主体': org_name(r['発言者の所属・肩書']),
                                  '提案事項': r['要旨'], '所管省庁': r['所管省庁'], '対応分類': f"団体の立場：{r['立場']}", '該当法令': r['関連法令'],
-                                 '関連技術': r['関連技術'], '出典URL': r['出典URL'], '経路': '審議会・検討会での発言'})
+                                 '関連技術': r['関連技術'], '出典URL': r['出典URL'], '経路': '審議会・検討会での発言', '取込の確度': '原本照合済み（機械の照合とAI2系統が一致）'})
+    return rows
+
+
+def read_lobbying() -> list[dict[str, str]]:
+    """経団連・商工会議所などの提言・要望書・陳情（data/acquired/lobbying/、scripts/verify_lobbying_quotes.py で引用と法律名が出典の本文にあると確かめた行だけ）。"""
+    rows = []
+    for path in sorted(LOBBY_DIR.glob('*.csv')):
+        with path.open(encoding='utf-8', newline='') as f:
+            for i, r in enumerate(csv.DictReader(f), 2):
+                if r.get('確度') == '原文照合済み（機械）':
+                    rows.append({'受付番号': f'提言-{path.stem}-{i}', '受付日': r['日付'], '提案主体': r['提案主体'],
+                                 '提案事項': f"{r['題名']}：{r['求めた内容']}", '所管省庁': r.get('宛先', ''), '対応分類': '（回答の記録なし）',
+                                 '該当法令': r['該当法令'], '関連技術': '', '出典URL': r['出典URL'], '経路': r['経路'], '取込の確度': '原文照合済み（機械のみ）'})
     return rows
 
 
@@ -151,7 +165,7 @@ def title_has(title: str, law: str) -> bool:
     """改正法の題名に法令名が、別の法令名の一部としてではなく現れるか（前が漢字・ひらがなの続きなら別の法令）。"""
     for m in re.finditer(re.escape(law), title):
         before = title[m.start() - 1] if m.start() else ''
-        if not before or before in '、・「（(及':
+        if not before or before in '、・「（(' or title[:m.start()].endswith(('及び', '並びに')):
             return True
     return False
 
@@ -169,7 +183,7 @@ def load_bills() -> list[dict[str, str]]:
             bill_id = f"{r['種別']}-{r['提出回次']}-{r['番号']}"
             o = outcomes.get(bill_id, {})
             bills.append({'id': bill_id, '題名': r['題名'], '公布日': parse_wareki(r['公布日']), '結果': o.get('結果', '（結果の表に無い）'),
-                          '額の表示': (o.get('損失または便益の額', '') or '')[:60], '公開可否': o.get('公開可否', ''), '確かさ': o.get('確かさ', ''),
+                          '額の表示': o.get('損失または便益の額', '') or '', '公開可否': o.get('公開可否', ''), '確かさ': o.get('確かさ', ''),
                           '出典URL': r['経過URL']})
     return bills
 
@@ -177,7 +191,7 @@ def load_bills() -> list[dict[str, str]]:
 def build() -> dict[str, int]:
     bills = load_bills()
     requests, chain = [], []
-    for r in [{**x, '経路': '規制改革ホットライン'} for x in read_requests()] + read_hearings():
+    for r in [{**x, '経路': '規制改革ホットライン', '取込の確度': '原本照合済み（機械の照合とAI2系統が一致）'} for x in read_requests()] + read_hearings() + read_lobbying():
         d, basis = request_date(r['受付番号'], r['受付日'])
         shown, kind = proposer_kind(r['提案主体'])
         laws = statutes(r['該当法令'])
@@ -188,7 +202,7 @@ def build() -> dict[str, int]:
                 if any(title_has(b['題名'], alt) for alt in EQUIV.get(law, (law,))) and b['公布日'] and d and 0 < (date.fromisoformat(b['公布日']) - date.fromisoformat(d)).days <= WINDOW_DAYS:
                     matched.append((law, b))
         requests.append({
-            '要望ID': rid, '経路': r['経路'], '受付日': d, '日付の根拠': basis, '提案主体': shown, '区分': kind, '提案事項': r['提案事項'],
+            '要望ID': rid, '経路': r['経路'], '取込の確度': r['取込の確度'], '受付日': d, '日付の根拠': basis, '提案主体': shown, '区分': kind, '提案事項': r['提案事項'],
             '所管省庁': r['所管省庁'], '省庁の回答': r['対応分類'], '該当法令': r['該当法令'], '取り出した法律': '、'.join(laws),
             '関連技術': r['関連技術'], '要望後3年以内の改正法': len({b['id'] for _, b in matched}), '出典URL': r['出典URL'],
         })

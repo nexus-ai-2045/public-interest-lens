@@ -28,6 +28,7 @@ class BusinessLedgerTest(unittest.TestCase):
     def test_title_has_rejects_longer_law_names(self) -> None:
         self.assertTrue(bl.title_has("銀行法等の一部を改正する法律案", "銀行法"))
         self.assertTrue(bl.title_has("信託業法、銀行法の一部を改正する法律案", "銀行法"))
+        self.assertTrue(bl.title_has("医療法及び医師法の一部を改正する法律案", "医師法"))
         self.assertFalse(bl.title_has("日本銀行法の一部を改正する法律案", "銀行法"))
 
     def test_proposer_kinds(self) -> None:
@@ -56,6 +57,12 @@ class BusinessLedgerTest(unittest.TestCase):
             days = (date.fromisoformat(c["公布日"]) - date.fromisoformat(reqs[c["要望ID"]]["受付日"])).days
             self.assertTrue(0 < days <= bl.WINDOW_DAYS, c)
             self.assertIn("要望が原因とは読まない", c["対応の確かさ"])
+
+    def test_amounts_are_not_truncated(self) -> None:
+        for c in csv.DictReader((bl.OUT_DIR / "chain.csv").open(encoding="utf-8", newline="")):
+            if c["額の表示"].startswith(("損失", "便益")):
+                self.assertIn("第3四分位=", c["額の表示"], c)
+                self.assertRegex(c["額の表示"], r"第3四分位=-?\d{10,}$|第3四分位=-?\d+", c)
 
     def test_individuals_are_not_named(self) -> None:
         for name in ("requests.csv", "by-proposer.csv"):
