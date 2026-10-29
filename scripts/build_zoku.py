@@ -35,6 +35,7 @@ OUT = ROOT / 'data/derived/zoku-v1'
 CHAIRS = ROOT / 'data/acquired/office-holders/committee-chairs.csv'
 INVOLVEMENTS = [ROOT / 'data/derived/allocation-v1/involvements.csv', ROOT / 'data/derived/allocation-v1/involvements-auto.csv']
 OPPOSING = ROOT / 'data/derived/allocation-v1/opposing.csv'
+PERSONS = ROOT / 'data/derived/person-ids/persons.csv'
 ENFORCEMENT = ROOT / 'data/acquired/enforcement-dates/enforcement.csv'
 BILLS = ROOT / 'data/derived/ministry-v1/cabinet-bills.csv'
 LEAGUES = ROOT / 'data/acquired/diet-leagues/memberships.csv'
@@ -80,7 +81,7 @@ def field_of_ids(bills):
     return [b['法律ID'] for b in bills]
 
 
-def build(chairs, involvements, opposing, bills, leagues, positions, org_fields, relations, enacted=None) -> tuple[list[dict], list[dict], dict]:
+def build(chairs, involvements, opposing, bills, leagues, positions, org_fields, relations, enacted=None, ambiguous=frozenset()) -> tuple[list[dict], list[dict], dict]:
     # 成立の判定は分野（所管）の有無と分けて、公布された法律の台帳で行う
     enacted = set(field_of_ids(bills)) if enacted is None else enacted
     field_of = {b['法律ID']: b['所管_今'] for b in bills if b.get('所管_今')}
@@ -89,10 +90,22 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
         'leagues': [], 'money': defaultdict(int), 'money_urls': set(), 'pid': ''})
     names: dict[str, str] = {}
 
+    def who(name: str, pid: str = '') -> str | None:
+        """集計キー。同姓同名（名簿で複数の人物IDを持つ氏名）は、人物IDのある行だけ結ぶ（推測で合算しない）。"""
+        n = normalize_name(name)
+        if n not in ambiguous:
+            return n
+        key = pid if pid and pid != n else None
+        if key:
+            names.setdefault(key, n)
+        return key
+
     for r in chairs:
         if not has_url(r.get('出典URL', '')):
             continue
-        key = normalize_name(r['氏名'])
+        key = who(r['氏名'])
+        if key is None:
+            continue
         for field in COMMITTEE_FIELD.get(r['委員会'], []):
             t = ties[(key, field)]
             t['sessions'].add(r['国会回次'])
@@ -106,7 +119,9 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
         field = field_of.get(r['法律ID'])
         if not field:
             continue
-        key = normalize_name(r['氏名'])
+        key = who(r['氏名'], r.get('人物ID', ''))
+        if key is None:
+            continue
         t = ties[(key, field)]
         names.setdefault(key, key)
         if r.get('人物ID'):
@@ -120,15 +135,18 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
         if r['算入'] != 'はい' or not has_url(r['証拠URL']):
             continue
         field = field_of.get(r['法律ID'])
-        if field:
-            ties[(normalize_name(r['氏名']), field)]['no'].add(r['法律ID'])
+        key = who(r['氏名'], r.get('人物ID', ''))
+        if field and key is not None:
+            ties[(key, field)]['no'].add(r['法律ID'])
 
     # 議員連盟：名簿に載っている事実だけ。分野の空の行は載せない（何を推進するかが決まらない）
     league_rows = []
     for r in leagues:
         if not r.get('分野') or not has_url(r.get('出典URL', '')):
             continue
-        key = normalize_name(r['氏名'])
+        key = who(r['氏名'])
+        if key is None:
+            continue
         ties[(key, r['分野'])]['leagues'].append(f"{r['議連名']}（{r.get('役職') or '会員'}）{r['出典URL']}")
         names.setdefault(key, key)
 
@@ -136,7 +154,9 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
     for r in relations:
         if r.get('区分') not in ('受けた寄附', 'パーティー対価') or not r.get('人物ID') or not has_url(r.get('PDF_URL', '')):
             continue
-        key = normalize_name(r['関係議員名'])
+        key = who(r['関係議員名'], r['人物ID'])
+        if key is None:
+            continue
         org = r['団体名キー'] or org_key(r['相手方'])
         for field in org_fields.get(org, ()):
             t = ties[(key, field)]
@@ -197,6 +217,14 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
     return rows, group_rows, summary
 
 
+def ambiguous_names() -> set[str]:
+    """名簿で2人以上に当たる氏名（鬼木誠など）。"""
+    seen: dict[str, int] = defaultdict(int)
+    for r in read_csv(PERSONS):
+        seen[normalize_name(r['氏名'])] += 1
+    return {n for n, c in seen.items() if c > 1}
+
+
 def enacted_ids() -> set[str]:
     """公布日と法令番号が台帳にある法律（衆法・参法・所管不明の閣法を含む）。"""
     return {r['id'] for r in read_csv(ENFORCEMENT) if r.get('法令番号') and r.get('公布日')}
@@ -231,7 +259,7 @@ def main(argv=None) -> int:
     inv = [r for p in INVOLVEMENTS for r in read_csv(p)]
     relations = read_csv(args.relations) if args.relations else []
     rows, groups, summary = build(read_csv(CHAIRS), inv, read_csv(OPPOSING), read_csv(BILLS), read_csv(LEAGUES), read_csv(POSITIONS),
-                                  org_fields_from_shingikai(), relations, enacted_ids())
+                                  org_fields_from_shingikai(), relations, enacted_ids(), ambiguous_names())
     write(OUT / 'member-field-ties.csv', HEADER, rows)
     write(OUT / 'pressure-group-positions.csv', ['団体名', '団体区分', '分野', '法律ID', '立場', '行動種別', '法案の結果', '要旨', '出典URL', '確度'], groups)
     (OUT / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')

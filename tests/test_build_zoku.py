@@ -16,8 +16,8 @@ def inv(law, name, action='decide', date='2000-01-01', url=U):
 BILLS = [{'法律ID': f'閣法-1-{i}', '所管_今': '農林水産省'} for i in range(1, 8)]
 
 
-def run(chairs=(), involvements=(), leagues=(), positions=(), relations=(), org_fields=None):
-    return z.build(list(chairs), list(involvements), [], BILLS, list(leagues), list(positions), org_fields or {}, list(relations))
+def run(chairs=(), involvements=(), leagues=(), positions=(), relations=(), org_fields=None, ambiguous=frozenset()):
+    return z.build(list(chairs), list(involvements), [], BILLS, list(leagues), list(positions), org_fields or {}, list(relations), ambiguous=ambiguous)
 
 
 class ZokuTest(unittest.TestCase):
@@ -76,6 +76,14 @@ class ZokuTest(unittest.TestCase):
         p = {'団体名': 'Y会', '団体区分': '運動団体', '分野': '', '法律ID': '衆法-186-35', '立場': '推進', '行動種別': '陳情', '要旨': '', '出典URL': U, '確度': '原本照合済み'}
         _, groups, _ = z.build([], [], [], BILLS, [], [p], {}, [], enacted={'衆法-186-35'})
         self.assertEqual(groups[0]['法案の結果'], '成立')
+
+    def test_same_name_people_are_not_merged(self):
+        a = [inv(f'閣法-1-{i}', '鬼木誠', date=f'{2000 + i}-01-01') | {'人物ID': '鬼木誠（衆）'} for i in (1, 2, 3)]
+        b = [inv(f'閣法-1-{i}', '鬼木誠', date=f'{2010 + i}-01-01') | {'人物ID': '鬼木誠（参）'} for i in (4, 5)]
+        self.assertEqual(run(involvements=a + b, ambiguous={'鬼木誠'})[0], [])
+        rows, _, _ = run(involvements=a + b, ambiguous=frozenset())
+        self.assertEqual(len(rows), 1)  # 名簿で同名が分かれていなければ、氏名で結ぶ
+        self.assertEqual(run(chairs=[chair('鬼木 誠', 1), chair('鬼木 誠', 2)], ambiguous={'鬼木誠'})[0], [])
 
     def test_marks_never_say_wrongdoing(self):
         rows, _, _ = run(chairs=[chair('甲', 1), chair('甲', 2)])
