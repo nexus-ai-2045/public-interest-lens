@@ -38,7 +38,7 @@ class PreflightTest(unittest.TestCase):
 
     def test_offline_run_has_no_failures_and_summary_counts(self):
         items = preflight.run_all(offline=True)
-        failed = [i for i in items if i.status == "失敗" and i.check not in ("個人名義", "コミット名義")]  # CI の環境では名義が違う
+        failed = [i for i in items if i.status == "失敗" and i.check not in ("個人名義", "コミット名義", "フック")]  # CI の環境では名義が違い、フックも入れない
         self.assertEqual([], failed)
         self.assertIn("事前チェック：合格", preflight.summary(items))
 
