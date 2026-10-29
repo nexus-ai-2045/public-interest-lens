@@ -1,0 +1,398 @@
+{
+ "schema": "backtest-labels-line2/v1",
+ "labeler": "Haiku（系統1のラベルを見せずに、手法・結果指標・効果の欄だけで付けた）",
+ "labels": [
+  {
+   "key": "00|2003",
+   "design": "medium",
+   "outcome_class": "output",
+   "benefit_sign": 1,
+   "evidence_country": "その他",
+   "why": "アジア太平洋12事業者の固定効果GLSで、民営化係数0.0356（t=4.45）と正のTFP効果が出ている。"
+  },
+  {
+   "key": "01|2015",
+   "design": "weak",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 0,
+   "evidence_country": "日本",
+   "why": "独自推定のない文献サーベイで、料金低下も前後比較の記述にとどまるため0とした。"
+  },
+  {
+   "key": "02|2019",
+   "design": "strong",
+   "outcome_class": "other",
+   "benefit_sign": 0,
+   "evidence_country": "日本",
+   "why": "RCTの結果は情報提供の効果が−2.6%で有意でなく、結果指標も選択確率のためbenefitは0とした。"
+  },
+  {
+   "key": "03|2017",
+   "design": "strong",
+   "outcome_class": "output",
+   "benefit_sign": -1,
+   "evidence_country": "米国",
+   "why": "テキサス州都市の差の差で、Airbnb上場数が増えるとホテル客室収入が有意に減る（β=−0.039, t=−4.40）。"
+  },
+  {
+   "key": "04|2021",
+   "design": "strong",
+   "outcome_class": "other",
+   "benefit_sign": 0,
+   "evidence_country": "米国",
+   "why": "2SLSの結果は賃料・住宅価格で、指定の他分類（家賃・住宅価格）に当たるためbenefitは0とした。"
+  },
+  {
+   "key": "05|2020",
+   "design": "strong",
+   "outcome_class": "other",
+   "benefit_sign": 0,
+   "evidence_country": "その他",
+   "why": "対象はバルセロナ近隣の賃料・取引価格・掲載価格で、家賃・住宅価格は他分類のためbenefitは0とした。"
+  },
+  {
+   "key": "06|2018",
+   "design": "medium",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 1,
+   "evidence_country": "米国",
+   "why": "構造推定の反事実で消費者余剰と総厚生が増えており、厚生の増加を+1とした。"
+  },
+  {
+   "key": "07|2011",
+   "design": "medium",
+   "outcome_class": "employment",
+   "benefit_sign": 0,
+   "evidence_country": "日本",
+   "why": "対象は総労働投入に占める臨時労働者の比率で雇用量そのものではなく、向きが定まらないため0とした。"
+  },
+  {
+   "key": "08|2011",
+   "design": "medium",
+   "outcome_class": "wage",
+   "benefit_sign": 0,
+   "evidence_country": "日本",
+   "why": "失業者比では賃金が有意に高いが、直接雇用パートとの比較では正規雇用確率が下がり、効果の向きが混在するため0とした。"
+  },
+  {
+   "key": "09|2011",
+   "design": "weak",
+   "outcome_class": "other",
+   "benefit_sign": 0,
+   "evidence_country": "日本",
+   "why": "株価反応（事象研究）で指定の他分類にあたり、かつ対照のない事象研究のためbenefitは0とした。"
+  },
+  {
+   "key": "10|2010",
+   "design": "weak",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 0,
+   "evidence_country": "日本",
+   "why": "横断面回帰の係数は年により有意性と符号が異なり、向きが定まらないため0とした。"
+  },
+  {
+   "key": "11|2019",
+   "design": "weak",
+   "outcome_class": "other",
+   "benefit_sign": 0,
+   "evidence_country": "日本",
+   "why": "郵便需要の趨勢を記述しただけで因果推定ではないため、需要量（他分類）として0とした。"
+  },
+  {
+   "key": "12|2013",
+   "design": "medium",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 1,
+   "evidence_country": "日本",
+   "why": "構造モデルで参入後に運賃が下がり、消費者余剰の累計が+7,430（1,000USD）と増えている。"
+  },
+  {
+   "key": "13|2009",
+   "design": "medium",
+   "outcome_class": "output",
+   "benefit_sign": 1,
+   "evidence_country": "日本",
+   "why": "PSMで大型店進出地域の中小売上増加が有意に正（0.248 vs −0.004）だが、有意なのは郊外・地方の大規模店に限られる。"
+  },
+  {
+   "key": "14|2009",
+   "design": "medium",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 1,
+   "evidence_country": "日本",
+   "why": "構造需要モデルによる消費者厚生の年平均変化が正（3.7%と1.9%）と報告されている。"
+  },
+  {
+   "key": "15|2005",
+   "design": "weak",
+   "outcome_class": "output",
+   "benefit_sign": 1,
+   "evidence_country": "日本",
+   "why": "分解による民営化のTFP効果が年+1.62%と正の数値で示されており、向きに基づき+1とした（識別は前後比較で弱い）。"
+  },
+  {
+   "key": "16|2020",
+   "design": "medium",
+   "outcome_class": "output",
+   "benefit_sign": 0,
+   "evidence_country": "日本",
+   "why": "台数係数は規制効果ではなく、Hansen検定が棄却され操作変数の妥当性に懸念があるため0とした。"
+  },
+  {
+   "key": "17|2019",
+   "design": "medium",
+   "outcome_class": "output",
+   "benefit_sign": 0,
+   "evidence_country": "日本",
+   "why": "推計された弾力性は自家用福祉車両の効果で、規制緩和の数値推計はないため0とした。"
+  },
+  {
+   "key": "18|2009",
+   "design": "strong",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 1,
+   "evidence_country": "日本",
+   "why": "差の差＋マッチングでサムライ債の引受手数料が約16〜23bp低下し、10%水準で有意とされる。"
+  },
+  {
+   "key": "19|2011",
+   "design": "weak",
+   "outcome_class": "output",
+   "benefit_sign": 0,
+   "evidence_country": "日本",
+   "why": "ROA/ROEは平均で負、利益効率は横ばいで混在し、因果識別もないため0とした。"
+  },
+  {
+   "key": "20|1999",
+   "design": "weak",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 1,
+   "evidence_country": "日本",
+   "why": "為替自由化ダミーでビッド・アスク・スプレッドが有意に縮小（−0.008、p=0.00）している。"
+  },
+  {
+   "key": "21|2009",
+   "design": "medium",
+   "outcome_class": "employment",
+   "benefit_sign": -1,
+   "evidence_country": "日本",
+   "why": "階差回帰で影響率1%の上昇が男性若年層・既婚女性の就業率を約0.2〜0.8pt下げる（負の係数）。"
+  },
+  {
+   "key": "22|2023",
+   "design": "medium",
+   "outcome_class": "employment",
+   "benefit_sign": -1,
+   "evidence_country": "日本",
+   "why": "最低賃金変化の係数は全体（−0.00282）と女性で有意に負だが、男性は有意でないため全体の符号で−1とした。"
+  },
+  {
+   "key": "23|2019",
+   "design": "medium",
+   "outcome_class": "output",
+   "benefit_sign": 0,
+   "evidence_country": "日本",
+   "why": "都道府県パネルのLPとTFPは有意でなく、企業パネルのLPのみ5%水準で負と結果が混在するため0とした。"
+  },
+  {
+   "key": "24|2026",
+   "design": "strong",
+   "outcome_class": "employment",
+   "benefit_sign": -1,
+   "evidence_country": "日本",
+   "why": "賃金帯の差の差で影響帯の雇用が約2%減少し、最低賃金弾力性も有意に負（−0.388, SE 0.132）。"
+  },
+  {
+   "key": "25|2026",
+   "design": "strong",
+   "outcome_class": "employment",
+   "benefit_sign": -1,
+   "evidence_country": "日本",
+   "why": "隣接県の格差を操作変数にした2SLSで、最低賃金上昇により従業員数が有意に減少（−1.287, SE 0.402）している。"
+  },
+  {
+   "key": "26|2014",
+   "design": "medium",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 1,
+   "evidence_country": "米国",
+   "why": "規制時代の運賃式（SIFL）に対する反実仮想で、実績運賃が約26%低く消費者余剰が約310億ドル増えている。"
+  },
+  {
+   "key": "27|1996",
+   "design": "medium",
+   "outcome_class": "wage",
+   "benefit_sign": -1,
+   "evidence_country": "米国",
+   "why": "非航空産業との比較で航空労働者の相対所得が約10%低下し、調整後プレミアムも10〜15%下がっている。"
+  },
+  {
+   "key": "28|2011",
+   "design": "weak",
+   "outcome_class": "output",
+   "benefit_sign": 0,
+   "evidence_country": "米国",
+   "why": "国内営業の累積利益を記述的に集計しただけで、政策効果の推定ではないため0とした。"
+  },
+  {
+   "key": "29|2014",
+   "design": "medium",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 0,
+   "evidence_country": "米国",
+   "why": "聴取者余剰は+0.2%、広告主余剰は−21%と効果の向きが混在するため0とした。"
+  },
+  {
+   "key": "30|2004",
+   "design": "weak",
+   "outcome_class": "other",
+   "benefit_sign": 0,
+   "evidence_country": "米国",
+   "why": "CLEC回線の設備比率の相関的回帰で因果識別がなく、指定の他分類のため0とした。"
+  },
+  {
+   "key": "31|2001",
+   "design": "weak",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 0,
+   "evidence_country": "その他",
+   "why": "英国の文献サーベイで独自推定がなく、BA運賃低下などの引用は記述にとどまるため0とした。"
+  },
+  {
+   "key": "32|1989",
+   "design": "medium",
+   "outcome_class": "output",
+   "benefit_sign": 0,
+   "evidence_country": "その他",
+   "why": "数値は抽出できず、定性的に体制変更は効率成長にほとんど差を生まなかったとされるため0とした。"
+  },
+  {
+   "key": "33|2021",
+   "design": "strong",
+   "outcome_class": "output",
+   "benefit_sign": -1,
+   "evidence_country": "その他",
+   "why": "差の差でARPU（事業者の売上）が平均−12.6%と有意に低下し、産業の売上の量としてbenefitを−1とした（消費者側の利益とは別）。"
+  },
+  {
+   "key": "34|2021",
+   "design": "strong",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 1,
+   "evidence_country": "その他",
+   "why": "RoWを対照にした差の差で、消費者余剰の増加と総厚生の純増（年933.4百万ユーロ）が示されている。"
+  },
+  {
+   "key": "35|2022",
+   "design": "strong",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 1,
+   "evidence_country": "その他",
+   "why": "個人レベルの差の差で、利用者あたりの消費者余剰が少なくとも2.77ユーロ増加し、95%区間も正側にある。"
+  },
+  {
+   "key": "36|2021",
+   "design": "strong",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 1,
+   "evidence_country": "その他",
+   "why": "個人レベルの差の差で、1旅行日あたりの消費者余剰が少なくとも2.73ユーロ増加している。"
+  },
+  {
+   "key": "37|2004",
+   "design": "strong",
+   "outcome_class": "employment",
+   "benefit_sign": -1,
+   "evidence_country": "米国",
+   "why": "再編州のIOU発電所の差の差で従業員数が約3%減少している（非燃料費は約9%減）。雇用減を−1とし、費用減は経済的には別途評価が必要。"
+  },
+  {
+   "key": "38|2011",
+   "design": "strong",
+   "outcome_class": "output",
+   "benefit_sign": 1,
+   "evidence_country": "米国",
+   "why": "売却された原子炉の差の差で稼働率が+6.5〜10.4pt上昇し、p<0.001と記載されている。"
+  },
+  {
+   "key": "39|2017",
+   "design": "strong",
+   "outcome_class": "output",
+   "benefit_sign": 1,
+   "evidence_country": "米国",
+   "why": "段階的卸市場移行を利用した差の差で、生産費用が年約30億ドル削減されており、費用減は経済的に良いとして+1とした（規則の文言と異なる判断、要確認）。"
+  },
+  {
+   "key": "40|2015",
+   "design": "weak",
+   "outcome_class": "price_surplus",
+   "benefit_sign": 0,
+   "evidence_country": "米国",
+   "why": "州ごとの平均料金上昇率の横断面回帰で、非公益発電比率の効果は有意でなく、再編州の上昇速度差も有意性が示されていないため0とした。"
+  },
+  {
+   "key": "41|2013",
+   "design": "medium",
+   "outcome_class": "employment",
+   "benefit_sign": 1,
+   "evidence_country": "その他",
+   "why": "較正した構造モデルのHartz IV反実仮想で、長期失業率が9%から7.6%に下がるとされている。"
+  },
+  {
+   "key": "42|2021",
+   "design": "medium",
+   "outcome_class": "employment",
+   "benefit_sign": 1,
+   "evidence_country": "その他",
+   "why": "サーチ・マッチングモデルで定常失業率が−2.1ptと推定され、部分効果も約−1ptで負の向きが一致している。"
+  },
+  {
+   "key": "43|2013",
+   "design": "weak",
+   "outcome_class": "employment",
+   "benefit_sign": 1,
+   "evidence_country": "その他",
+   "why": "2003年前後の構造変化を見た前後比較で、マッチング効率が20%超改善と示されており向きに基づき+1とした。"
+  },
+  {
+   "key": "44|2014",
+   "design": "strong",
+   "outcome_class": "employment",
+   "benefit_sign": 1,
+   "evidence_country": "その他",
+   "why": "差の差＋Coxで55-59歳の交互作用が0.292（SE 0.143）と有意で、就業移行ハザードが上がっている（他年齢は非有意）。"
+  },
+  {
+   "key": "45|2025",
+   "design": "strong",
+   "outcome_class": "output",
+   "benefit_sign": 1,
+   "evidence_country": "その他",
+   "why": "重工業化の対象産業の差の差で産出量が100%超高く、事象研究とCS推定でも正の効果が示されている。"
+  },
+  {
+   "key": "46|2021",
+   "design": "strong",
+   "outcome_class": "output",
+   "benefit_sign": 1,
+   "evidence_country": "その他",
+   "why": "操作変数の長期推定で信用補助の係数が0.14（SE 0.05）と正に有意で、売上増加を示している。"
+  },
+  {
+   "key": "47|1995",
+   "design": "weak",
+   "outcome_class": "output",
+   "benefit_sign": 0,
+   "evidence_country": "その他",
+   "why": "準実験でない期間別パネル回帰で、税優遇は正・非関税障壁は負と有意な係数が混在し、向きが定まらないため0とした。"
+  },
+  {
+   "key": "48|2025",
+   "design": "strong",
+   "outcome_class": "output",
+   "benefit_sign": 1,
+   "evidence_country": "その他",
+   "why": "CS推定の差の差でTFPのATTが1.215（**）と有意に正であり、労働生産性も正（1.136）と報告されている。"
+  }
+ ]
+}
