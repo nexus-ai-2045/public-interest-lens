@@ -134,7 +134,13 @@ def goal_metrics(root: Path = ROOT) -> dict[str, int]:
     old_listed = _csv(root, "data/derived/bill-triage-old/triage.csv")
     old_done = _csv(root, "data/derived/all-laws-old/outcomes.csv")
     involvements = _csv(root, "data/derived/allocation-v1/involvements.csv")
-    ranking = json.loads((root / "app/public/distribution/ranking.json").read_text(encoding="utf-8"))["counts"]
+    ranking_file = root / "app/public/distribution/ranking.json"
+    if ranking_file.exists():
+        ranking = json.loads(ranking_file.read_text(encoding="utf-8"))["counts"]
+    else:  # Git に置かない派生物（設計決定0022）。無ければ入力から作って数える
+        sys.path.insert(0, str(root))
+        from scripts import source_check
+        ranking = source_check.generate_ranking()["counts"]
     workflows = list((root / ".github" / "workflows").glob("*.yml"))
     scheduled = [w for w in workflows if re.search(r"^\s*-?\s*cron\s*:", w.read_text(encoding="utf-8"), re.M)]
     exists = lambda rel: int((root / rel).exists())  # noqa: E731

@@ -37,6 +37,8 @@ data/db/*.sqlite
 app/public/distribution/members.json
 # 固定した OECD 表6から作る物価の換算表（設計決定0022。verify.yml と app の prebuild が作る）
 app/public/distribution/price-index.json
+# 公開ランキング（設計決定0022）。source_check.py --generate-ranking が入力から作る
+app/public/distribution/ranking.json
 data/distribution/generated/generations/*/catalog.sqlite3
 
 # 大容量の復元入力。公開可否と配布を確認するまでGitへ追加しない。
