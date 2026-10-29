@@ -3,7 +3,7 @@
 目的：額なし・全産業（_T）で測っていた法律の質を上げる。ねく（2026-10-29）「全部を数字に」「精度は95%」。
 出力（根拠は表。計算はここから読む）：
 - `data/derived/macro-v1/sector-overrides.csv`（id・節・由来）：全産業で測っていた法律を産業の節で測り直す。`scripts/build_macro_amounts.py` の `apply_sector_overrides` が読む。振り分けで産業が決まった行は変えない。
-- 定例除外の再判定の表（`exclusion-overrides.csv`）は次の PR（3/3）で足す。
+- `data/derived/all-laws-v1/exclusion-overrides.csv`（id・理由）：定例・対象外と決めた法律のうち、実質的な制度変更を含み、経済に効く経路があると再判定したもの（24本）。`scripts/build_all_laws_outcomes.py` の `apply_exclusion_overrides` が保留に戻し、macro-v1 が参考の額を付ける。規則 RT1〜RT8 の語は変えない。公務員給与・議員の歳費・選挙の手続・地方交付税などの公務内部の法律（27本）は、経済への経路が弱く全産業の額が意味を持たないので、再判定の候補から外して定例・対象外のままにした。
 木の定義：`scripts/workflows/macro-sector-tree.js`（Haiku 2系統→不一致だけ Sonnet→変更案だけ Opus）。
 
 ## 木の形と結果
