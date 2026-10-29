@@ -28,6 +28,7 @@ class BusinessLedgerTest(unittest.TestCase):
         self.assertEqual(bl.search_names("薬機法", bl.load_aliases()), ["医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律", "薬事法"])
         self.assertEqual(bl.statutes("犯罪収益移転防止法,資金決済法"), ["犯罪収益移転防止法", "資金決済法"])
         self.assertEqual(bl.search_names("カルタヘナ法", bl.load_aliases()), ["遺伝子組換え生物等の使用等の規制による生物の多様性の確保に関する法律"])
+        self.assertEqual(bl.search_names("薬事法", bl.load_aliases()), ["医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律", "薬事法"])
         self.assertEqual(bl.statutes("記載なし"), [])
         self.assertEqual(bl.statutes("著作権法30条の4"), ["著作権法"])
         self.assertEqual(bl.statutes("行政手続等における情報通信の技術の利用に関する法律の施行に伴う国家公安委員会関係規則第5条"), [])

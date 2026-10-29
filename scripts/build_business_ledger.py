@@ -125,7 +125,14 @@ def proposer_kind(name: str) -> tuple[str, str]:
 
 def search_names(law: str, aliases: dict[str, list[str]]) -> list[str]:
     """題名の照合に使う名前。通称は背後の力の結び付けと同じ表（law-aliases.csv）で正式名（改称前後の組）に広げる。"""
-    return aliases.get(unicodedata.normalize('NFKC', law), [law])
+    law = unicodedata.normalize('NFKC', law)
+    if law in aliases:
+        return aliases[law]
+    # 改称前の正式名（薬事法など）で書かれた要望も、改称後の題名の改正法へ届くよう、同じ組の名前を引く
+    for names in aliases.values():
+        if law in names:
+            return names
+    return [law]
 
 
 REGULATION_TAIL = re.compile(r'[^\s、，,。（）()]{0,60}?(?:規則|省令|政令|府令)(?![^\s、，,。]*法)')
