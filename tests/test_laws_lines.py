@@ -51,6 +51,27 @@ class LawsOnePerLineTest(unittest.TestCase):
         self.assertLess(max(len(line) for line in lines), 20_000)
         self.assertEqual(text, catalog.dump_one_per_line(data))
 
+    def test_detail_files_are_one_law_per_line_when_converted(self):
+        # laws-detail/ は数回に分けて1本1行へ移している（1回で足す行が上限を超えるため）。
+        # 移した束は、1本1行で、どの行も大きくならない。まだ移していない束は1行のまま。
+        converted = 0
+        for path in sorted((LAWS.parent / "laws-detail").glob("*.json")):
+            text = path.read_text(encoding="utf-8")
+            data = json.loads(text)
+            lines = text.split("\n")
+            if len(lines) > 3:
+                converted += 1
+                self.assertGreaterEqual(len(lines), len(data["items"]), path.name)
+                self.assertLess(max(len(line) for line in lines), 60_000, path.name)
+                self.assertEqual(text, catalog.dump_bundle_one_per_line(data), path.name)
+        self.assertGreater(converted, 0)
+
+    def test_bundle_writer_keeps_content(self):
+        bundle = {"schema": "public-laws-detail/v1", "items": {"閣法-1-1": {"a": 1}, "閣法-1-2": {"a": 2}}}
+        text = catalog.dump_bundle_one_per_line(bundle)
+        self.assertEqual(json.loads(text), bundle)
+        self.assertEqual(len(text.strip().split("\n")), 5)
+
 
 if __name__ == "__main__":
     unittest.main()
