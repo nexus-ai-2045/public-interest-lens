@@ -72,7 +72,7 @@ export function ProvisionalPanel() {
         <div><strong>{item.what}</strong><small>{item.id}・標準費用モデル（件数×時間×時給）・国賊側（事業者の負担）</small></div>
         <div>{formatYen(item.low_yen)}〜{formatYen(item.high_yen)}（{periodLabel(item.period)}・参考値）{item.period_note && <span className="fine-note"> {item.period_note}</span>}</div>
         <div className="fine-note">{item.calc_note}</div>
-        <div className="fine-note">出典：{item.sources.join('／')}</div>
+        <div className="fine-note">出典：{item.sources.join('／')}{item.source_records?.some((r) => r.status === 'unverified') && '。取得元URL・観測日時・該当ページは未記録で、一次資料での再確認待ちです'}</div>
         <div className="fine-note">数えていない義務：{item.uncomputed.join('、')}</div>
       </li>)}</ol>
       {data.theory.not_computed.length > 0 && <details className="prov-near"><summary>式は決めたが入力が足りず出さなかった法律（{data.theory.not_computed.length}本）</summary>
