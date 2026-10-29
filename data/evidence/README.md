@@ -19,4 +19,4 @@
 正解データ `backtest_cases.json`（事例集の一致49件。ラベルは2系統の一致分だけ採用、系統2は `backtest_labels_line2.json`）、対応表 `backtest_mapping.json`、固定した結果 `backtest/`。測定は `python3 scripts/backtest.py`（定義は [設計決定0020](../../docs/adr/0020-backtest-accuracy-definition.md)、結果は [docs/バックテスト.md](../../docs/バックテスト.md) と /methodology）。台帳とは別の扱い。
 
 - `backtest_r50_search.json`：R50（バックテストの本命の事例を文献で足す調査）の記録。8領域で見た候補45件の題名・出典・読めた範囲・棄却理由。採用0件。本文を読めなかった候補は「確認できなかった」と区別して残してある。
-- `backtest_foreign_pool.json` / `backtest_foreign_labels.json` / `backtest_foreign_match.json`：v2（R52、[設計決定0021](../../docs/adr/0021-backtest-transplant-v2.md)）の入力。外国の研究57件（事例集27件＋領域ごとの調査30件、効果が正・負・零のどれも入れた）、結果指標の種類・向き・出来事の2系統ラベル、日本の事例ごとの「同種」判定（2系統）。日本の結果は見せずに付けた。
+- `backtest_foreign_pool.json` / `backtest_foreign_labels.json` / `backtest_foreign_match.json`：v2（R52、[設計決定0021](../../docs/adr/0021-backtest-transplant-v2.md)）の入力。外国の研究81件（事例集27件＋領域ごとの調査54件〔v2で30件、R53で24件〕、効果が正・負・零のどれも入れた）、結果指標の種類・向き・出来事の2系統ラベル、日本の事例ごとの「同種」判定（2系統）。日本の結果は見せずに付けた。
