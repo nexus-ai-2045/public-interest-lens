@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Info } from 'lucide-react';
 import { formatYen } from './laws-catalog';
 import { plainLawName } from './law-name';
-import { directionLabel, formatGapRange, parseProvisional, provisionalUrl, type Provisional, type ProvisionalCard, type ProvisionalItem } from './provisional';
+import { directionLabel, formatGapRange, parseProvisional, periodLabel, provisionalUrl, type Provisional, type ProvisionalCard, type ProvisionalItem } from './provisional';
 
 /** 0を中央にした横軸に、幅（最小〜最大）だけを描く。点（中央値）は描かない。 */
 function RangeBar({ low, high, max }: { low: number; high: number; max: number }) {
@@ -70,7 +70,7 @@ export function ProvisionalPanel() {
       <p className="fine-note">{data.theory.status}。{data.theory.note}</p>
       <ol className="prov-list">{data.theory.items.map(item => <li className="prov-row" key={item.id}>
         <div><strong>{item.what}</strong><small>{item.id}・標準費用モデル（件数×時間×時給）・国賊側（事業者の負担）</small></div>
-        <div>{formatYen(item.low_yen)}〜{formatYen(item.high_yen)}（年・参考値）</div>
+        <div>{formatYen(item.low_yen)}〜{formatYen(item.high_yen)}（{periodLabel(item.period)}・参考値）{item.period_note && <span className="fine-note"> {item.period_note}</span>}</div>
         <div className="fine-note">{item.calc_note}</div>
         <div className="fine-note">出典：{item.sources.join('／')}</div>
         <div className="fine-note">数えていない義務：{item.uncomputed.join('、')}</div>

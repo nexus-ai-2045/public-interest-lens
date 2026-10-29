@@ -39,7 +39,7 @@ export type ProvisionalItem = {
   marks: string[];
 };
 export type NearMiss = { id: string; title: string; cardId: string; reason: string };
-export type TheoryItem = { id: string; mechanism: string; what: string; inputs: { obligation: string; count: number; hours: number; wage_in_assessment: number }[]; uncomputed: string[]; sources: string[]; low_yen: number; high_yen: number; direction: string; calc_note: string };
+export type TheoryItem = { id: string; mechanism: string; what: string; inputs: { obligation: string; count: number; hours: number; wage_in_assessment: number }[]; uncomputed: string[]; sources: string[]; low_yen: number; high_yen: number; direction: string; calc_note: string; period?: 'annual' | 'one_time' | 'unverified'; period_note?: string };
 export type Theory = { version: string; status: string; note: string; items: TheoryItem[]; not_computed: { id: string; mechanism: string; reason: string }[]; backtest: { n: number; coverage: number | null; interval_width: number | null; note: string } };
 export type Provisional = {
   schema: 'provisional/v1';
@@ -71,4 +71,8 @@ export function formatGapRange(effect: { low: number; high: number }): string {
 
 export function directionLabel(direction: ProvisionalItem['direction']): string {
   return direction === 'loss' ? '国賊側（損失の幅）' : direction === 'benefit' ? '国士側（便益の幅）' : '向きが定まらない（幅が0をまたぐ）';
+}
+
+export function periodLabel(period: TheoryItem['period']): string {
+  return period === 'annual' ? '年間' : period === 'one_time' ? '一時' : '期間未確認';
 }
