@@ -543,7 +543,7 @@ def analyze_meeting(m: dict, bill: dict) -> dict | None:
             continue  # 本文が別の法案への決議だと明示しているときは、一括審議でもその法案の決議にしない
         if re.search(r'附帯決議(案)?(\s|　)*(\（案\）)?(につきまして|について|案を|案の|を付|の趣旨)|附帯決議(\（案\）|案)', t) and \
                 re.search(r'提出者|提案者|案文|趣旨', t[:400]) and \
-                re.search(r'右決議|決議する|案文を朗読|(?:^|[\s　。])一、', t):  # 案文がある発言だけ（過去の決議への質疑は除く）
+                re.search(r'右決議|決議する|朗読|(?:^|[\s　。])一[、\s　]', t):  # 案文がある発言だけ（過去の決議への質疑は除く）
             reso.append(r)
     res['resolutions'] = reso
     res['reso_decided'] = [r for r in seg_chairs if '附帯決議' in r['speech'] and re.search(r'付する|付すること|附すること|付すべし|異議なし|決しました|可決', r['speech'])]
