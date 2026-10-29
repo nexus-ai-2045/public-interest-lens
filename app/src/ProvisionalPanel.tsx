@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Info } from 'lucide-react';
 import { formatYen } from './laws-catalog';
 import { plainLawName } from './law-name';
-import { directionLabel, formatGapRange, parseProvisional, provisionalUrl, type Provisional, type ProvisionalCard, type ProvisionalItem } from './provisional';
+import { directionLabel, formatGapRange, parseProvisional, periodLabel, provisionalUrl, type Provisional, type ProvisionalCard, type ProvisionalItem } from './provisional';
 
 /** 0を中央にした横軸に、幅（最小〜最大）だけを描く。点（中央値）は描かない。 */
 function RangeBar({ low, high, max }: { low: number; high: number; max: number }) {
@@ -65,6 +65,20 @@ export function ProvisionalPanel() {
       : <p className="state-banner">いまの政策カードに、目的・対象産業・手段・開始時期の水準の4つが合う直近の法律はありません。無理に当てていません。カードを増やすと増えます。</p>}
     {data.nearMisses.length > 0 && <details className="prov-near"><summary>近かったが当てなかった法律（{data.nearMisses.length}本）</summary>
       <ul>{data.nearMisses.map(miss => <li key={miss.id + miss.cardId}><strong>{miss.title}</strong>：{miss.reason}</li>)}</ul></details>}
+    {data.theory && <section aria-label="理論値（参考値）" id="theory">
+      <h3>理論値（参考値）：経済学の標準の式で、一次資料の数字から</h3>
+      <p className="fine-note">{data.theory.status}。{data.theory.note}</p>
+      <ol className="prov-list">{data.theory.items.map(item => <li className="prov-row" key={item.id}>
+        <div><strong>{item.what}</strong><small>{item.id}・標準費用モデル（件数×時間×時給）・国賊側（事業者の負担）</small></div>
+        <div>{formatYen(item.low_yen)}〜{formatYen(item.high_yen)}（{periodLabel(item.period)}・参考値）{item.period_note && <span className="fine-note"> {item.period_note}</span>}</div>
+        <div className="fine-note">{item.calc_note}</div>
+        <div className="fine-note">出典：{item.sources.join('／')}{item.source_records?.some((r) => r.status === 'unverified') && '。取得元URL・観測日時・該当ページは未記録で、一次資料での再確認待ちです'}</div>
+        <div className="fine-note">数えていない義務：{item.uncomputed.join('、')}</div>
+      </li>)}</ol>
+      {data.theory.not_computed.length > 0 && <details className="prov-near"><summary>式は決めたが入力が足りず出さなかった法律（{data.theory.not_computed.length}本）</summary>
+        <ul>{data.theory.not_computed.map(row => <li key={row.id}><strong>{row.id}</strong>（{row.mechanism}）：{row.reason}</li>)}</ul></details>}
+      <p className="fine-note">精度：バックテストできた本数 {data.theory.backtest.n} 本。{data.theory.backtest.note}</p>
+    </section>}
     <h3>政策カード（他国の政策1件ずつの点検）</h3>
     <p className="fine-note"><Info size={14} /> 国や人物ではなく、政策に付けます。追い上げ成長・同時期の別政策・制度の違い・統計の質の限界があります。窓と産業は結果を見る前に固定しました。</p>
     <ul className="prov-cards">{data.cards.map(card => <CardView key={card.id} card={card} />)}</ul>

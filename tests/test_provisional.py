@@ -55,5 +55,17 @@ class PublishedDataTest(unittest.TestCase):
                 self.assertFalse(card["applicableToJapan"])
 
 
+    def test_theory_values_keep_order_and_state_backtest(self):
+        theory = self.data["theory"]
+        self.assertEqual(theory["backtest"]["n"], 0)
+        self.assertIsNone(theory["backtest"]["coverage"])
+        for item in theory["items"]:
+            self.assertLessEqual(item["low_yen"], item["high_yen"])
+            expected_low = sum(i["count"] * i["hours"] * i["wage_in_assessment"] for i in item["inputs"])
+            self.assertEqual(item["low_yen"], expected_low)
+            expected_high = sum(i["count"] * i["hours"] for i in item["inputs"]) * 2543 * 1.5
+            self.assertAlmostEqual(item["high_yen"], expected_high, delta=1)
+
+
 if __name__ == "__main__":
     unittest.main()
