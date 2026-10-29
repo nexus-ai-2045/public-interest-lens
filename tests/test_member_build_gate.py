@@ -27,6 +27,7 @@ class MemberBuildGateTests(unittest.TestCase):
             shutil.copy2(ROOT / "tests/test_public_members_safety.py", root / "tests")
             dist = root / "app/public/distribution"
             dist.mkdir(parents=True)
+            (root / "app/node_modules").mkdir()
             (dist / "ranking.json").write_text(json.dumps(ranking), encoding="utf-8")
             package = json.loads((ROOT / "app/package.json").read_text(encoding="utf-8"))
             package["scripts"]["build"] = 'node -e "require(\'fs\').writeFileSync(\'build-reached\', \'yes\')"'
@@ -34,8 +35,9 @@ class MemberBuildGateTests(unittest.TestCase):
             for generator, output in (("build_public_members.mjs", "members.json"),
                                       ("build_reference_members.mjs", "members-reference.json")):
                 (root / "scripts" / generator).write_text('''
-import { readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 const out = new URL('../app/public/distribution/OUTPUT', import.meta.url);
+if (out.pathname.endsWith("members-reference.json")) appendFileSync(new URL("../app/reference-generator-runs", import.meta.url), "generated" + String.fromCharCode(10));
 if (!process.argv.includes('--no-write')) writeFileSync(out, readFileSync(new URL('OUTPUT.fixture', import.meta.url)));
 if (process.argv.includes('--attributions')) writeFileSync(process.argv[process.argv.indexOf('--attributions') + 1], 'member,name,house,lawId,role,side,median\\n');
 '''.replace("OUTPUT", output), encoding="utf-8")
@@ -55,14 +57,17 @@ if (process.argv.includes('--attributions')) writeFileSync(process.argv[process.
                      (private_field, reference, "許可していない項目が増えた"),
                      (primary, bad_reference, "配り先が無い")]
             marker = root / "app/build-reached"
+            generation_calls = root / "app/reference-generator-runs"
             for member, ref, diagnostic in cases:
                 with self.subTest(diagnostic=diagnostic):
                     marker.unlink(missing_ok=True)
+                    generation_calls.unlink(missing_ok=True)
                     for name, payload in (("members.json", member), ("members-reference.json", ref)):
                         (root / "scripts" / (name + ".fixture")).write_text(json.dumps(payload), encoding="utf-8")
                     result = subprocess.run(["npm", "--prefix", "app", "run", "build"], cwd=root,
                                             capture_output=True, text=True, timeout=30)
                     output = result.stdout + result.stderr
+                    self.assertEqual(generation_calls.read_text().splitlines(), ["generated"], output)
                     if diagnostic is None:
                         self.assertEqual(result.returncode, 0, output)
                         self.assertTrue(marker.exists())

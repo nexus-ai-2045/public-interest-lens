@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { BlocPanel, MemberSearch } from './VotesPage';
-import { blocStance, blocSummary, fromYear, lawYear, noLawsByMember, parseVotes, type VoteLaw } from './votes';
+import { BlocPanel, MemberSearch, MergerNote } from './VotesPage';
+import { BLOCS, blocStance, blocSummary, fromYear, lawYear, memberIdsOf, memberPageHref, noLawsByMember, parseVotes, shuSpan, type VoteLaw } from './votes';
 
 const data = parseVotes(readFileSync(new URL('../public/distribution/votes.json', import.meta.url), 'utf8'));
 
@@ -115,5 +115,31 @@ describe('比較可能な賛否と表示期間の回帰', () => {
     expect(html).toContain('全期間の反対票が多い順');
     expect(html).toContain('全期間：賛成 10・反対 2・欠席 3');
     expect(html).toContain('選択期間の反対法数 0本');
+  });
+});
+
+describe('新しい会派の系統と、他ページとのつながり', () => {
+  const recent = fromYear(data.laws, 'recent4');
+  it('中道改革連合・チームみらい・日本保守党は「その他」に入らず、直近の衆院に出る', () => {
+    for (const b of ['中道改革連合', 'チームみらい', '日本保守党'] as const) {
+      expect(BLOCS).toContain(b);
+      expect(recent.some(l => blocStance(l, b).shu !== 'none'), b).toBe(true);
+    }
+    const shuOthers = recent.filter(l => l.shu && [...l.shu.yes, ...l.shu.no].some(p => /中道改革|チームみらい/.test(p)) && blocStance(l, 'その他').shu !== 'none');
+    expect(shuOthers).toEqual([]);
+  });
+  it('立憲・公明の衆院会派の記録は合流前で切れ、中道改革連合は合算しない', () => {
+    const ritsu = shuSpan(data.laws, '立憲'), chudo = shuSpan(data.laws, '中道改革連合');
+    expect(ritsu.last < chudo.first).toBe(true);
+    expect(recent.every(l => blocStance(l, '立憲').shu === 'none' || l.shu!.date! <= ritsu.last)).toBe(true);
+    expect(renderToStaticMarkup(createElement(MergerNote, { laws: data.laws, bloc: '立憲' }))).toContain('中道改革連合・無所属');
+    expect(renderToStaticMarkup(createElement(MergerNote, { laws: data.laws, bloc: '共産' }))).toBe('');
+  });
+  it('議員ページへのリンクは、人物IDが一致するときだけ出す', () => {
+    const ids = memberIdsOf(JSON.stringify({ members: [{ id: '小池晃' }, { id: '鬼木誠（衆・福岡2）' }, {}] }));
+    expect(ids).toEqual(new Set(['小池晃', '鬼木誠（衆・福岡2）']));
+    expect(memberPageHref('小池晃', ids)).toBe(`/members?name=${encodeURIComponent('小池晃')}`);
+    expect(memberPageHref('鬼木誠', ids)).toBeNull();
+    expect(memberPageHref('小池晃', undefined)).toBeNull();
   });
 });

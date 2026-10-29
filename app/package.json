@@ -10,7 +10,7 @@
     "test:e2e": "playwright test",
     "test:e2e:public": "playwright test -c playwright.public.config.ts",
     "preview:check": "node scripts/local-preview-check.mjs",
-    "prebuild": "node ../scripts/build_public_members.mjs && node ../scripts/build_reference_members.mjs && python3 ../scripts/source_check.py --members-only && python3 ../tests/test_public_members_safety.py && python3 ../scripts/check_reference_members.py"
+    "prebuild": "node ../scripts/build_public_members.mjs && node ../scripts/build_reference_members.mjs --attributions node_modules/.reference-attributions.csv && python3 ../scripts/source_check.py --members-only && python3 ../tests/test_public_members_safety.py && python3 ../scripts/check_reference_members.py --attributions node_modules/.reference-attributions.csv"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^6.1.2",
