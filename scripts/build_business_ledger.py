@@ -48,6 +48,7 @@ ALIASES = {
     '廃棄物処理法': '廃棄物の処理及び清掃に関する法律',
     '景品表示法': '不当景品類及び不当表示防止法',
     '公益認定法': '公益社団法人及び公益財団法人の認定等に関する法律',
+    'カルタヘナ法': '遺伝子組換え生物等の使用等の規制による生物の多様性の確保に関する法律',
     '薬機法': '医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律',
     '医薬品医療機器等法': '医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律',
     '薬事法': '医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律',
@@ -153,7 +154,7 @@ def title_has(title: str, law: str) -> bool:
     """改正法の題名に法令名が、別の法令名の一部としてではなく現れるか（前が漢字・ひらがなの続きなら別の法令）。"""
     for m in re.finditer(re.escape(law), title):
         before = title[m.start() - 1] if m.start() else ''
-        if not before or before in '、・「（(' or title[:m.start()].endswith(('及び', '並びに')):
+        if not before or before in '、・「（(' or title[:m.start()].endswith(('及び', '並びに', 'ための')):
             return True
     return False
 

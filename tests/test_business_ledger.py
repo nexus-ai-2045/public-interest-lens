@@ -26,6 +26,7 @@ class BusinessLedgerTest(unittest.TestCase):
         self.assertEqual(bl.statutes("旅館業法、民法（転貸）"), ["旅館業法", "民法"])
         self.assertEqual(bl.statutes("薬機法第1条"), ["医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律"])
         self.assertEqual(bl.statutes("犯罪収益移転防止法,資金決済法"), ["犯罪収益移転防止法", "資金決済法"])
+        self.assertEqual(bl.statutes("カルタヘナ法第4条"), ["遺伝子組換え生物等の使用等の規制による生物の多様性の確保に関する法律"])
         self.assertEqual(bl.statutes("記載なし"), [])
         self.assertEqual(bl.statutes("著作権法30条の4"), ["著作権法"])
 
@@ -33,6 +34,7 @@ class BusinessLedgerTest(unittest.TestCase):
         self.assertTrue(bl.title_has("銀行法等の一部を改正する法律案", "銀行法"))
         self.assertTrue(bl.title_has("信託業法、銀行法の一部を改正する法律案", "銀行法"))
         self.assertTrue(bl.title_has("医療法及び医師法の一部を改正する法律案", "医師法"))
+        self.assertTrue(bl.title_has("情報通信技術の進展等の環境変化に対応するための銀行法等の一部を改正する法律案", "銀行法"))
         self.assertFalse(bl.title_has("日本銀行法の一部を改正する法律案", "銀行法"))
 
     def test_proposer_kinds(self) -> None:
