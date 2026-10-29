@@ -1,5 +1,5 @@
 import { PUBLIC_SITE } from './site-mode';
-import { PublicUnavailablePage } from './PublicSiteNotice';
+import { PublicNotFoundPage, PublicUnavailablePage } from './PublicSiteNotice';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { QuoteRef } from './evidence-evaluation';
 import { availableRealRelease, createReleaseLoader, readRealRoute, realRouteLocation, recordedIdentityCoverage, realActionHeading, REAL_RELEASE_MAX_BYTES, type RealRelease, type RealRoute } from './real-release-view';
@@ -107,5 +107,7 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   if (window.location.pathname === '/history') return <EconomyPage />;
   if (window.location.pathname === '/' && (PUBLIC_SITE || [...new URLSearchParams(window.location.search).keys()].every(key => key === 'tone'))) return <MembersPage />;
   if (!PUBLIC_SITE && (window.location.pathname === '/records' || (window.location.pathname === '/' && !window.location.search))) return <RealRecordsPage onDemo={() => navigate({ dataset: 'fiction', release: '', person: '' })} onEvaluation={() => navigate({ dataset: 'real', release: '', person: '' })} />;
+  // 公開サイトでは、ここまでに無いパスは「見つかりません」。仮データの画面（架空デモ）へは落とさない。
+  if (PUBLIC_SITE && window.location.pathname !== '/') return <PublicNotFoundPage />;
   return <>{typeof fictional === 'function' ? fictional(navigate) : fictional}</>;
 }

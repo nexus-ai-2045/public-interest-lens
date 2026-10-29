@@ -382,8 +382,8 @@ export function MembersPage() {
   const [opened, setOpened] = useState<ReadonlySet<string>>(new Set());
   const toggleOpened = (id: string, open: boolean) => setOpened(prev => prev.has(id) === open ? prev : (() => { const next = new Set(prev); if (open) next.add(id); else next.delete(id); return next; })());
   return <SiteShell active="/members" label="議員・実名・実データ" className="law-ranking members-page">
-    <main>
-      <h2>この人が失わせた額・生んだ額</h2>
+    <main id="main">
+      <h1>この人が失わせた額・生んだ額</h1>
       <p>議員ごとに、その人の行動で日本が<strong>失った額（国賊側）・生んだ額（国士側）</strong>を並べています。理由（行動→成立→損失の鎖）は、行を開くと出ます。</p>
       <details className="members-intro"><summary>この数字の意味と訂正窓口</summary>
       <p>法律が日本に与えた損失（国賊側）と便益（国士側）を、<strong>「この人の行動が無かったら、その法律は成立したか」</strong>で人に配りました。提出者が出さなければ、また参議院で賛成票が足りなければ、法律は成立せず、損失も便益も生まれません。成立のしくみ（拒否権者と過半数の投票）の中で、その人の行動が成立を決める場面の割合（Shapley 値）を出し、法律の分（ふつうは法律の額。同じ観測を共有する法律では観測の額を本数で割った分）に掛けたものが<strong>この人が失わせた額</strong>・<strong>生んだ額</strong>です。各人の欄に、行動 → 成立 → 損失のつながりを一次資料（国会会議録・参議院の投票結果・衆議院の議案情報）のリンクつきで示し、式も載せています。計算のしかたは<a href="/methodology">計算方法</a>にあります。</p>
@@ -525,8 +525,8 @@ export function MembersPage() {
 export function MethodologyPage() {
   useEffect(() => { document.title = '計算方法｜国賊／国士ランキング'; }, []);
   return <SiteShell active="/methodology" label="計算方法" className="law-ranking">
-    <main className="methodology">
-      <h2>どう計算しているか</h2>
+    <main id="main" className="methodology">
+      <h1>どう計算しているか</h1>
       <p>判断に使うのは一次資料（国会会議録、衆議院・参議院の議案情報と投票結果、e-Gov 法令）と公的統計（OECD 国民経済計算など）だけです。人の印象や報道の評価は点数に入れません。手順はすべてこのリポジトリのコードとして公開しています。</p>
       <h3>1. 法律ごとの額</h3>
       <ol>
