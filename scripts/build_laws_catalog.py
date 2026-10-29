@@ -26,6 +26,8 @@ DETAIL_DIR = DIST / "laws-detail"
 # 議員ページなど laws.json を読まない画面のための、法律の「何をする」の一文だけの表（id → 一文、無いものは理由の印）。
 NAMES_OUTPUT = DIST / "law-names.json"
 # 一覧の1行に要る項目。残り（因果の鎖・一次資料・関わった議員など）は開いた時に laws-detail/<束>.json から読む。
+# laws.json で1本1行に並べる一覧（dump_one_per_line）。
+LINE_KEYS = ("laws", "policies")
 INDEX_KEYS = ("id", "kind", "title", "year", "field", "side", "amount", "certainty", "marks", "step", "what", "whatWithheld", "summary", "membersTotal", "href", "observation", "scale")
 
 INPUTS = {
@@ -428,9 +430,27 @@ def split(payload: dict) -> tuple[dict, dict[str, dict]]:
     return index, {name: {"schema": "public-laws-detail/v1", "items": items} for name, items in bundles.items()}
 
 
+def dump_one_per_line(index: dict) -> str:
+    """laws.json の文字列。JSON としては1行形と同じ中身で、法律・政策を1本1行に並べる。
+
+    1行JSONだと1本変わるだけでファイル全体が差分になり、名義検査の「大きすぎる中身」（1コミットで足す行の上限）に
+    当たる。1本1行なら差分は変わった法律の行だけになる。読む側（JSON.parse）は変わらない。
+    """
+    def dumps(value: object) -> str:
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+    head = [f"{dumps(key)}:{dumps(value)}" for key, value in index.items() if key not in LINE_KEYS]
+    parts = []
+    for key in LINE_KEYS:
+        items = index.get(key, [])
+        body = ",\n".join(dumps(item) for item in items)
+        parts.append(f"{dumps(key)}:[\n{body}\n]" if items else f"{dumps(key)}:[]")
+    return "{" + ",\n".join(head + parts) + "}\n"
+
+
 def main() -> int:
     index, bundles = split(build())
-    OUTPUT.write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    OUTPUT.write_text(dump_one_per_line(index), encoding="utf-8")
     DETAIL_DIR.mkdir(exist_ok=True)
     for stale in DETAIL_DIR.glob("*.json"):
         if stale.stem not in bundles:

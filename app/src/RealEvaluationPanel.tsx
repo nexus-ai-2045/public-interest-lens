@@ -16,6 +16,7 @@ import { WorldGdpPage } from './WorldGdpPage';
 import { MembersPage, MethodologyPage } from './MembersPage';
 import { NumbersPage } from './NumbersPage';
 import { VotesPage } from './VotesPage';
+import { PledgesPage } from './PledgesPage';
 
 function Quotes({ quotes, release }: { quotes: QuoteRef[]; release: RealRelease }) {
   return <ul className="real-quotes">{quotes.map((q, index) => {
@@ -96,6 +97,7 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   if (['/ranking', '/ranking/'].includes(window.location.pathname)) return <LawRankingPage />;
   if (['/world', '/world/'].includes(window.location.pathname)) return <WorldGdpPage />;
   if (['/votes', '/votes/'].includes(window.location.pathname)) return <VotesPage />;
+  if (['/pledges', '/pledges/'].includes(window.location.pathname)) return <PledgesPage />;
   if (['/members', '/members/'].includes(window.location.pathname)) return <MembersPage />;
   if (['/methodology', '/methodology/'].includes(window.location.pathname)) return <MethodologyPage />;
   if (['/numbers', '/numbers/'].includes(window.location.pathname)) return <NumbersPage />;
@@ -105,8 +107,7 @@ export function EvidenceDatasetRoot({ fictional }: { fictional: React.ReactNode 
   if (PUBLIC_SITE && (route.dataset === 'real' || window.location.pathname === '/records')) return <PublicUnavailablePage />;
   if (!PUBLIC_SITE && route.dataset === 'real') return <RealEvaluationPanel route={route} navigate={navigate} />;
   if (window.location.pathname === '/history') return <EconomyPage />;
-  // トップは国賊ランキング（議員・実名）。?tone= だけの URL もトップとして扱う。
-  if (window.location.pathname === '/' && [...new URLSearchParams(window.location.search).keys()].every(key => key === 'tone')) return <MembersPage />;
+  if (window.location.pathname === '/' && (PUBLIC_SITE || [...new URLSearchParams(window.location.search).keys()].every(key => key === 'tone'))) return <MembersPage />;
   if (!PUBLIC_SITE && (window.location.pathname === '/records' || (window.location.pathname === '/' && !window.location.search))) return <RealRecordsPage onDemo={() => navigate({ dataset: 'fiction', release: '', person: '' })} onEvaluation={() => navigate({ dataset: 'real', release: '', person: '' })} />;
   // 公開サイトでは、ここまでに無いパスは「見つかりません」。仮データの画面（架空デモ）へは落とさない。
   if (PUBLIC_SITE && window.location.pathname !== '/') return <PublicNotFoundPage />;
