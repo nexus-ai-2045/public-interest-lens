@@ -4,7 +4,7 @@
  "country": "JPN",
  "measure": "総付加価値（B1G）の名目÷実質（2020年＝100）",
  "latestYear": 2024,
- "sourceUrl": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.NAD,DSD_NAMAIN10@DF_TABLE6,2.0/A.JPN.S1.S1.B1G._Z._T+J+I+K+H+A+C+F+G+L+M+N+P+Q+R+S+T._Z.XDC.V+L+LR.N.?startPeriod=1970",
+ "sourceUrl": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.NAD,DSD_NAMAIN10@DF_TABLE6,2.0/A.JPN.S1.S1.B1G._Z._T+J+I+K+H+A+C+F+G+L+M+N+P+Q+R+S+T+B+D._Z.XDC.V+L+LR.N.?startPeriod=1970",
  "deflator": {
   "1994": 110.517,
   "1995": 109.692,
