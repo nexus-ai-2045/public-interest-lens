@@ -30,7 +30,10 @@ def deflators(path: Path = INPUT) -> tuple[dict[int, float], str]:
             if row["国"] != "JPN" or row["産業"] != "_T" or row["価格"] not in ("V", "LR"):
                 continue
             values.setdefault(int(row["年"]), {})[row["価格"]] = float(row["値"])
-            source = row["出典URL"]
+    sources = path.with_name("sources.csv")
+    if sources.exists():  # 出典URL は国ごとに1つなので、行ではなく sources.csv に持つ
+        with sources.open(encoding="utf-8", newline="") as f:
+            source = next((r["出典URL"] for r in csv.DictReader(f) if r["国"] == "JPN"), "")
     out = {year: round(100 * v["V"] / v["LR"], 3) for year, v in sorted(values.items()) if v.get("LR") and "V" in v}
     return out, source
 
