@@ -14,7 +14,7 @@ export function PledgeItems({ items, filter }: { items: PledgeItem[]; filter: Pl
   return <>
     <ul className="votes-rows">{rows.slice(0, limit).map(i => <li key={i.id}>
       <span className="votes-date">{i.id}</span>
-      <span className="votes-title">{i.text}</span>
+      <span className="votes-title">{i.text}<span className="fine-note">（抜粋・全文は出典で確認）</span></span>
       <span className="votes-date">2系統の判定：{i.judges.map(j => ({ enacted: '成立', no_law_found: '法律が見当たらない', no_law_needed: '法律を要さない' } as Record<string, string>)[j] ?? '—').join(' / ')}</span>
       <span className={`votes-pill ${i.status === 'enacted' ? 'is-yes' : i.status === 'review' ? 'is-split' : 'is-none'}`}>{STATUS_LABEL[i.status]}</span>
       {i.laws.length > 0 && <span className="votes-links">{i.laws.map(l => <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer">{l.title}（この党：{STANCE_LABEL[l.stance]}）</a>)}</span>}
