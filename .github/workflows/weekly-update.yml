@@ -55,14 +55,22 @@ jobs:
           git config user.name "nexus_ai"
           git config user.email "273569186+nexus-ai-2045@users.noreply.github.com"
           python3 tool/scripts/local_identity_guard.py --public-name nexus-ai-2045 --public-name nexus_ai config
+      # 事前チェックのフック検査を通すため、更新の前に git フックを入れる（commit・push でも共通検査が動く）。
+      - name: git フックを入れる
+        env:
+          REPO_PREFLIGHT_HOME: ${{ github.workspace }}/tool
+        run: python3 scripts/install_hooks.py
       # 取得と再計算。落ちた段階は報告に残して次へ進む（daily_update.py の作り）。検査は PR 側の verify に任せる。
       - name: 取得と再計算
         env:
           REPO_PREFLIGHT_ROOT: ${{ github.workspace }}/tool
+          REPO_PREFLIGHT_HOME: ${{ github.workspace }}/tool
         run: |
           mkdir -p .local/daily-update
           python3 scripts/daily_update.py --fetch --rebuild --report .local/daily-update/report.md 2>&1 | tee .local/daily-update/log.txt || true
       - name: 変化があれば個人名義検査を通して PR を作る
+        env:
+          REPO_PREFLIGHT_HOME: ${{ github.workspace }}/tool
         run: |
           set -euo pipefail
           if [ -z "$(git status --porcelain -- data app/public)" ]; then
