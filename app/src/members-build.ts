@@ -295,7 +295,8 @@ const partyList = (text: string | undefined): string[] => (text ?? '').split(/[;
 export const covidHeld = (p: Record<string, string>): boolean => p['判定表の行'] === 'R3';
 
 export function buildMembers(input: MemberInputs): PublicMembers {
-  const publish = parseCsv(input.publish);
+  const listed = input.listed === undefined ? null : new Set(input.listed);
+  const publish = parseCsv(input.publish).filter(p => listed === null || listed.has(p.id));
   const loss = new Map(parseCsv(input.loss).map(r => [r.id, r]));
   const enacted = new Map(parseCsv(input.enacted).map(r => [`${r['種別']}-${r['提出回次']}-${r['番号']}`, r]));
   const votes = new Map([...parseCsv(input.votes), ...(input.autoVotes ? parseCsv(input.autoVotes) : [])].map(r => [r['法律ID'], r]));
@@ -321,11 +322,10 @@ export function buildMembers(input: MemberInputs): PublicMembers {
     return [l['観測グループ'], window, a.low, a.median, a.high].join('|');
   };
   const observationLaws = new Map<string, number>();
-  const listed = input.listed ? new Set(input.listed) : null;
   for (const p of publish) {
     const l = loss.get(p.id);
     const amount = parseAmount(p['損失または便益']);
-    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || (listed && !listed.has(p.id)) || covidHeld(p)) continue;
+    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || covidHeld(p)) continue;
     const key = observationKey(l, p);
     observationLaws.set(key, (observationLaws.get(key) ?? 0) + 1);
   }

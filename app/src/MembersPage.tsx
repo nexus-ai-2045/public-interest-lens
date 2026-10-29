@@ -1,3 +1,4 @@
+import { memberLocation } from './member-navigation';
 import { parsePublicMembers as readMembers, parsePublicMembersReference } from './public-distribution';
 export { parsePublicMembers as readMembers } from './public-distribution';
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
@@ -197,12 +198,12 @@ export function KnobsPanel({ knobs, onChange }: { knobs: Knobs; onChange: (k: Kn
 }
 
 /** 上位の横棒。値は純額の大きさ、幅は小さい方から並べ直す。 */
-export function topBars(members: PublicMember[], side: 'loss' | 'benefit', count = 10): RankBarItem[] {
+export function topBars(members: PublicMember[], side: 'loss' | 'benefit', count = 10, search = ''): RankBarItem[] {
   const picked = side === 'loss' ? members.filter(m => m.net.median < 0).slice(0, count) : members.filter(m => m.net.median > 0).reverse().slice(0, count);
   return picked.map(m => {
     const ends = [Math.abs(m.net.low), Math.abs(m.net.high)].sort((a, b) => a - b);
     const crosses = m.net.low < 0 && m.net.high > 0;
-    return { id: m.id, label: m.name, value: Math.abs(m.net.median), low: crosses ? 0 : ends[0], high: ends[1], side, note: `${m.rank}位・${m.laws.length}本の法律から`, href: `/members?name=${encodeURIComponent(m.id)}` };
+    return { id: m.id, label: m.name, value: Math.abs(m.net.median), low: crosses ? 0 : ends[0], high: ends[1], side, note: `${m.rank}位・${m.laws.length}本の法律から`, href: memberLocation(m.id, search) };
   });
 }
 
@@ -213,7 +214,7 @@ function ToneHero({ members }: { members: PublicMember[] }) {
   const top = side === 'loss' ? members.find(m => m.net.median < 0) : [...members].reverse().find(m => m.net.median > 0);
   if (!top) return null;
   return <Reveal tone={side} className={`tone-hero ${side}`} key={`${side}-${top.id}`}>
-    <a href={`/members?name=${encodeURIComponent(top.id)}`}>
+    <a href={memberLocation(top.id, window.location.search)}>
       <ToneFlair side={side} />
       <span className="tone-hero-badge">{side === 'loss' ? '国賊 1位' : '国士 1位'}<Burst tone={side} count={22} /></span>
       <strong className="tone-hero-name">{top.name}</strong>
@@ -228,6 +229,15 @@ export const MEMBERS_PAGE_SIZE = 30;
 /** 上から limit 人まで。それより下でも、URL や検索で指された人（focus）は並べる。 */
 export function visibleMembers(shown: PublicMember[], limit: number, focus: string): PublicMember[] {
   return shown.length <= limit ? shown : shown.filter((m, i) => i < limit || m.id === focus);
+}
+
+export function filterMembers(members: PublicMember[], side: 'all' | 'loss' | 'benefit', query: string, partyFilter: string, partyMap: ReadonlyMap<string, string>): PublicMember[] {
+  const q = query.trim();
+  const selected = q ? members.find(m => m.id === q) : undefined;
+  if (selected) return [selected];
+  const bySide = side === 'loss' ? members.filter(m => m.net.median < 0) : side === 'benefit' ? members.filter(m => m.net.median > 0).reverse() : members;
+  const byParty = partyFilter ? bySide.filter(m => partyMap.get(m.id) === partyFilter) : bySide;
+  return q ? byParty.filter(m => m.name.includes(q) || m.id.includes(q)) : byParty;
 }
 
 export type PartySort = 'perPerson' | 'perLaw' | 'perVote' | 'total';
@@ -304,11 +314,12 @@ export function MembersPage() {
   // 名前を選んだら、その人の欄を開いて画面に出す（ページの下の方に開くだけだと、押しても何も起きないように見える）。
   const [focus, setFocus] = useState(() => new URLSearchParams(window.location.search).get('name') ?? '');
   const openMember = (name: string) => {
-    setPartyFilter('');
+    setTab('members');
     setQuery(name);
     setFocus(name);
     const params = new URLSearchParams(window.location.search);
     params.set('name', name);
+    params.delete('tab');
     window.history.pushState(null, '', `${window.location.pathname}?${params}`);
   };
   useEffect(() => {
@@ -316,7 +327,7 @@ export function MembersPage() {
     requestAnimationFrame(() => document.getElementById(`member-${focus}`)?.scrollIntoView({ block: 'start' }));
   }, [focus, data]);
   useEffect(() => {
-    const restore = () => { const q = new URLSearchParams(window.location.search); const name = q.get('name') ?? ''; setQuery(name); setFocus(name); setTab(q.get('tab') === 'party' && !name ? 'party' : 'members'); };
+    const restore = () => { const q = new URLSearchParams(window.location.search); const name = q.get('name') ?? ''; setQuery(name); setFocus(name); setKnobsState(readKnobs(q)); setTab(q.get('tab') === 'party' && !name ? 'party' : 'members'); };
     window.addEventListener('popstate', restore);
     return () => window.removeEventListener('popstate', restore);
   }, []);
@@ -381,11 +392,7 @@ export function MembersPage() {
   const backingByLaw = useMemo(() => new Map((data?.backing ?? []).map(b => [b.lawId, b])), [data]);
   const names = useLawNames();
   const shown = useMemo(() => {
-    const all = members;
-    const bySide = side === 'loss' ? all.filter(m => m.net.median < 0) : side === 'benefit' ? [...all].filter(m => m.net.median > 0).reverse() : all;
-    const q = query.trim();
-    const byParty = partyFilter ? bySide.filter(m => partyMap.get(m.id) === partyFilter) : bySide;
-    return q ? byParty.filter(m => m.name.includes(q) || m.id.includes(q)) : byParty;
+    return filterMembers(members, side, query, partyFilter, partyMap);
   }, [members, side, query, partyFilter, partyMap]);
   // 537人ぶんのカードを一度に描くと重いので、上から一定数だけ並べ、「さらに表示」で足す。名前で探した結果・URL で指した人は必ず並べる。
   const [limit, setLimit] = useState(MEMBERS_PAGE_SIZE);
@@ -412,7 +419,7 @@ export function MembersPage() {
         <section aria-label="上位の議員" className="members-top" onClick={onTopClick}>
           {(tone === 'harm' ? ['loss', 'benefit'] as const : ['benefit', 'loss'] as const).map(key => <div key={key} className={`members-top-block ${key}`}>
             <h3>{key === 'loss' ? '失わせた額の上位10人（国賊側）' : '生んだ額の上位10人（国士側）'}</h3>
-            <RankBars caption={key === 'loss' ? '国賊側の純額の大きい順' : '国士側の純額の大きい順'} format={formatYen} items={topBars(members, key)} />
+            <RankBars caption={key === 'loss' ? '国賊側の純額の大きい順' : '国士側の純額の大きい順'} format={formatYen} items={topBars(members, key, 10, window.location.search)} />
           </div>)}
         </section>
         <section aria-label="議員の一覧">
