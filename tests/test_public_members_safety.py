@@ -92,7 +92,18 @@ ALLOWED_PATHS = {
     ".orgStances[].support",
     ".orgStances[].technologies",
     ".orgStances[].technologies[]",
-    ".inputs.taxLedger",
+    ".inputs.taxLedger", ".inputs.taxRevenueForecasts",
+    ".taxRevenueForecasts",
+    ".taxRevenueForecasts[].fiscalYear",
+    ".taxRevenueForecasts[].taxCategory",
+    ".taxRevenueForecasts[].fullYearOku",
+    ".taxRevenueForecasts[].firstYearOku",
+    ".taxRevenueForecasts[].method",
+    ".taxRevenueForecasts[].includesConsumptionChange",
+    ".taxRevenueForecasts[].items",
+    ".taxRevenueForecasts[].sourceUrl",
+    ".taxRevenueForecasts[].materialId",
+    ".taxRevenueForecasts[].observedAt",
     ".taxLedger",
     ".taxLedger[].lawId",
     ".taxLedger[].title",
@@ -298,9 +309,9 @@ ALLOWED_PATHS = {
     ".schema",
 }
 # roles の source は表示の文字なので、source は URL らしいときだけ検査する（下の walk）。法律の source は経路で必ず検査する。
-LINK_KEYS = {"url", "voteUrl"}
+LINK_KEYS = {"url", "voteUrl", "sourceUrl"}
 # 内閣府 経済社会総合研究所（税の帳簿の乗数の出典、政府の公式資料）。
-OFFICIAL_HOSTS = {"kokkai.ndl.go.jp", "www.shugiin.go.jp", "www.sangiin.go.jp", "www.esri.cao.go.jp"}
+OFFICIAL_HOSTS = {"kokkai.ndl.go.jp", "www.shugiin.go.jp", "www.sangiin.go.jp", "www.esri.cao.go.jp", "www.mof.go.jp"}
 
 
 def _paths(node, path, found):

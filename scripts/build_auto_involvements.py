@@ -2,7 +2,8 @@
 
 関与の一覧は法律ごとに会議録を読んで作ってきたので、確かさ高・中・低の法律の一部（17本）にしか無かった。
 その結果、議員ページに配る法律が便益側の5本だけになり、国賊側が「便益の法律に反対した議員」だけになっていた。
-ここでは、人の判断を入れずに取れる行動だけを足す（質疑・委員長・修正案は会議録を読む必要があるので足さない）。
+ここでは、人の判断を入れずに取れる行動だけを足す（委員長・修正案は会議録を読む必要があるので足さない）。
+質疑は、会議録を2系統で読み直して決めた立場の表（scripts/build_auto_questions.py の questions-auto.csv）から、ここで作った法律の分だけ足す。
 
 - 提出（decide）：衆法・参法は議案の提出者の欄（data/acquired/bill-census-full/enacted.csv）。提出者一覧があればその全員、
   無ければ「○○君」の1人だけのときに限る。提出者が決まらない法律（名前の分からない「外N名」・委員会提出）は足さない。
@@ -50,6 +51,7 @@ VOTES_INDEX = ACQUIRED / "sangiin-votes/votes_index.csv"
 BALLOTS = ACQUIRED / "sangiin-votes/ballots"
 MEMBERS = ACQUIRED / "sangiin-votes/members.csv"
 PERSONS = DERIVED / "person-ids/persons.csv"
+QUESTIONS = DERIVED / "allocation-v1/questions-auto.csv"
 OUT = DERIVED / "allocation-v1/involvements-auto.csv"
 OUT_VOTES = DERIVED / "allocation-v1/votes-auto.csv"
 VOTES_HEADER = ["法律ID", "投票ID", "日付", "賛成", "反対", "URL"]
@@ -194,6 +196,12 @@ def build() -> tuple[list[dict[str, str]], list[dict[str, str]]]:
             pid, why = person(name)
             rows.append({**wanted[r["投票ID"]], "氏名": name, "氏名_原表記": name, "院": "参議院", "行動": "vote", "当時の肩書": "", "立場区分": "other",
                          "参院本会議の賛否": "Y", "算入": "いいえ" if why else "はい", "除外理由": why, "人物ID": pid})
+    built = {v["法律ID"] for v in votes}
+    for q in _read(QUESTIONS) if QUESTIONS.exists() else []:
+        if q["法律ID"] not in built:
+            continue
+        pid, why = person(q["氏名"])
+        rows.append({**q, "算入": "いいえ" if why else q["算入"], "除外理由": why or q["除外理由"], "人物ID": pid})
     rows.sort(key=lambda r: (r["法律ID"], r["行動"], r["氏名"]))
     votes.sort(key=lambda r: r["法律ID"])
     return rows, votes
@@ -203,7 +211,7 @@ def main() -> int:
     rows, votes = build()
     _write(OUT, HEADER, rows)
     _write(OUT_VOTES, VOTES_HEADER, votes)
-    print(f"自動の関与 {len(rows)}行・法律 {len(votes)}本（提出 {sum(r['行動'] == 'decide' for r in rows)}・参議院の賛成 {sum(r['行動'] == 'vote' for r in rows)}・同姓同名で外した {sum(r['算入'] != 'はい' for r in rows)}）")
+    print(f"自動の関与 {len(rows)}行・法律 {len(votes)}本（提出 {sum(r['行動'] == 'decide' for r in rows)}・参議院の賛成 {sum(r['行動'] == 'vote' for r in rows)}・質疑 {sum(r['行動'] == 'question' for r in rows)}・同姓同名で外した {sum(r['除外理由'] == UNRESOLVED for r in rows)}）")
     return 0
 
 

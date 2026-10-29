@@ -470,12 +470,22 @@ export function MembersPage() {
         </section>}
         {data.taxLedger && data.taxLedger.length > 0 && <section aria-label="税の帳簿" className="members-parties">
           <h3>税の帳簿（消費税率を変えた法律）</h3>
-          <p className="fine-note">消費税率を変えた法律の額を、内閣府の短期マクロモデルの乗数（税率1%ポイントの引上げで実質GDPが1年目0.28%、2年目0.19%、3年目0.20%下がる）で出しました。延期した法律は、延期した期間に避けた減少を便益として数えます。確かさは「低」で、需要が短期に減る分だけです。税収の使い道（社会保障など）の効果は含みません。法律の額とは物差しが違うので、議員の点数には足していません。額は2020年の円です。</p>
+          <p className="fine-note">消費税率の変更と延期による需要の短期効果を、内閣府の短期マクロモデルで計算した参考額です。確かさは「低」。税収の使い道の効果は含みません。議員の点数や法律の額には足しません。額は2020年の円です。</p>
           <ol className="members-laws">{data.taxLedger.map(t => <li key={t.lawId} className={t.total < 0 ? 'loss' : 'benefit'}>
             <span>{t.total < 0 ? '国賊側' : '国士側'}</span>
             <strong>{t.lawId}</strong>
             <small>{t.title}・{t.changes.join('、')}・合計 {signedYen(t.total)}（{t.years.map(y => `${y.year}年 ${signedYen(y.amount)}`).join('、')}）・確かさ {t.certainty}・{t.marks.join('・')}{t.notes.length > 0 ? `・${t.notes.join('・')}` : ''}</small>
           </li>)}</ol>
+        </section>}
+        {data.taxRevenueForecasts && data.taxRevenueForecasts.length > 0 && <section aria-label="税制改正の政府増減収見込み" className="members-parties">
+          <h3>税制改正の政府増減収見込み（年度・税目別）</h3>
+          <p className="fine-note">財務省の税制改正の大綱に記載された政府予測です。単位は億円で、正は増収、負は減収、未記載は欠測です。複数の改正事項を含む総額のため、特定の法律や人物へ配分せず、GDP効果や国士・国賊の評価には変換しません。取得日時が空の記録は未記録です。</p>
+          <table><thead><tr><th>年度</th><th>税目</th><th>平年度（億円）</th><th>初年度（億円）</th><th>改正事項・出典</th></tr></thead>
+            <tbody>{data.taxRevenueForecasts.map(f => <tr key={`${f.fiscalYear}/${f.taxCategory}`}>
+              <td>{f.fiscalYear}</td><td>{f.taxCategory}</td><td>{f.fullYearOku ?? '未記載'}</td><td>{f.firstYearOku ?? '未記載'}</td>
+              <td>{f.items}・{f.method}{f.includesConsumptionChange ? '・消費税の改正を含む' : ''}・<a href={f.sourceUrl} target="_blank" rel="noreferrer">財務省資料</a>・資料ID {f.materialId}・取得 {f.observedAt || '未記録'}</td>
+            </tr>)}</tbody>
+          </table>
         </section>}
         {data.resistance && data.resistance.length > 0 && <section aria-label="省庁の抵抗の件数" className="members-parties">
           <h3>省庁の抵抗の件数（規制改革の要望への回答など）</h3>
