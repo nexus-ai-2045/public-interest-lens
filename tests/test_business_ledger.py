@@ -23,6 +23,8 @@ class BusinessLedgerTest(unittest.TestCase):
         self.assertEqual(bl.statutes("独占禁止法第3条"), ["私的独占の禁止及び公正取引の確保に関する法律"])
         self.assertEqual(bl.statutes("医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律第77条の2"),
                          ["医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律"])
+        self.assertEqual(bl.statutes("旅館業法、民法（転貸）"), ["旅館業法", "民法"])
+        self.assertEqual(bl.statutes("薬機法第1条"), ["医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律"])
         self.assertEqual(bl.statutes("記載なし"), [])
         self.assertEqual(bl.statutes("著作権法30条の4"), ["著作権法"])
 
