@@ -2761,37 +2761,12 @@
    ],
    "confidence": "低",
    "verification": {
-    "status": "verified",
+    "status": "held",
     "crossref_title_match": true,
-    "checks": [
-     {
-      "role": "collector",
-      "central": 13.7
-     },
-     {
-      "role": "check1",
-      "central": 13.7,
-      "low": null,
-      "high": null,
-      "unit": "%/年（BCR 7.3 を併記）",
-      "scope_match": true,
-      "locator": "Abstract、Section 5 本文(Figure 3付近)",
-      "version": "ワーキングペーパー版(NBER WP 23479)。刊行版JPE 2020は未読"
-     },
-     {
-      "role": "check2",
-      "central": 13.7,
-      "low": null,
-      "high": null,
-      "unit": "%/年（BCR 7.3 を併記）",
-      "scope_match": true,
-      "locator": "要旨、Sec.（感度分析）",
-      "version": "NBER WP 23479（2017年6月。題名は 'A Prototypical Early Childhood Program'。刊行版 JPE 2020 の題名は Crossref と一致）"
-     }
-    ],
     "crossref_author_match": true,
     "crossref_year_match": true,
-    "verified_at": "2026-10-29"
+    "verified_at": "2026-10-29",
+    "held_reason": "出典（NBER WP 23479 の付録）の対象は Carolina Abecedarian Project と CARE（1970年代以降のコホート）で、台帳の「Perry Preschool・1960年代介入」と対象が違う（レビュー指摘）。対象を ABC/CARE に直して再照合するまで計算に使わない"
    }
   },
   {
