@@ -1,0 +1,3 @@
+file,url,title,sha256,bytes,fetched_at
+link20.xlsx,https://www.soumu.go.jp/main_content/001019115.xlsx,平成23-27-令和2年接続産業連関表（参考）マトリックス形式の取引基本表,ec07ef0abd03d4a59378fc6b9732ab7cb0485382c7ba53c111c2eccf3589544a,3311190,2026-10-29T13:39Z
+official2020_large.xlsx,https://www.soumu.go.jp/main_content/000954326.xlsx,令和2年産業連関表 計算シートその１（統合大分類）,da34c29186d6228ec2803c062b8ed57b6381f3820f2e1789a013f6a84b49fd06,343831,2026-10-29T13:39Z

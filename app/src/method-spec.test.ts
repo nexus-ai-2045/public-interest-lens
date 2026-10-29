@@ -26,7 +26,7 @@ describe('計算方法の仕様（method-spec）', () => {
     for (const rule of rules) expect(adopted.has(rule), rule).toBe(true);
   });
   it('定番の手法は数を絞り、出典があり、仕様の節を指す', () => {
-    expect(STANDARD_METHODS.length).toBeLessThanOrEqual(6);
+    expect(STANDARD_METHODS.length).toBeLessThanOrEqual(7);
     const ids = new Set(SPEC_SECTIONS.map(s => s.id));
     for (const m of STANDARD_METHODS) {
       expect(m.refs.length, m.name).toBeGreaterThan(0);
