@@ -164,6 +164,7 @@ def evaluation_queue(derived: Path = DERIVED) -> dict[str, list[dict[str, str]]]
       （エネルギー・労働市場などは産業の節が決まっていて全産業にしているので、ラベルを足しても変わらず対象外）
     - 出典チェック：公開から外した法律（翌日も照合し直す。直らなければ原因を学習記録に残す）
     - 系統の決着：振り分け v2 の一致表が保留で、第3の判定者の記録が無いか、記録した入力（系統1・系統2の値、会議録の要約、題名）が今と違う法律。同じ入力は判定し直さない
+      （点検 R2 で保留にした法律は、一覧 r2-holds.csv の理由が決着なので、解消規則 R2 の行は載せない）
     """
     def rows(path: Path) -> list[dict[str, str]]:
         return _read(path) if path.exists() else []
@@ -186,7 +187,7 @@ def evaluation_queue(derived: Path = DERIVED) -> dict[str, list[dict[str, str]]]
     judged = {row["id"]: row for row in rows(derived / "bill-triage-v2" / "tiebreak-lines.csv")}
     now = _line_inputs(derived)
     needs_line = [{"id": row["id"], "題名": row["題名"]} for row in rows(derived / "bill-triage-v2" / "agreement.csv")
-                  if row["結果"] == "保留" and not _line_record_is_current(judged.get(row["id"]), now.get(row["id"], ("", "", "")), row["題名"])]
+                  if row["結果"] == "保留" and row.get("解消規則", "") != "R2" and not _line_record_is_current(judged.get(row["id"]), now.get(row["id"], ("", "", "")), row["題名"])]
     return {"振り分けの決着": needs_tiebreak, "分野ラベル": needs_field, "出典チェックの不一致": [{"id": i} for i in held],
             "系統の決着": needs_line}
 

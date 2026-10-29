@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Classification } from './benefit-classification';
 import type { LawResult } from './impact-batch';
 import {
-  adoptAgreed, agreementRow, compareBenefitLines, compareTriage, HELD_BY_TRIAGE, holdByTriage, parseBenefitLine2, resolveTriageDiff, triageAgreementRow,
+  adoptAgreed, agreementRow, compareBenefitLines, compareTriage, HELD_BY_TRIAGE, holdByTriage, parseBenefitLine2, R2_HOLD_CATEGORY, resolveTriageDiff, triageAgreementRow,
 } from './line-agreement';
 
 // すべて人工のデータです。実在の法律ではありません。
@@ -218,5 +218,29 @@ describe('振り分けの保留の解消（v2.1：HR3・HR4）', () => {
     const ag = compareTriage('x', row1(l('評価対象', '金融', '貸出残高')), row2(l('評価対象', '労働市場', '賃金')), 'x');
     expect(ag).toMatchObject({ agreed: false, category: '別々の分野の食い違い' });
     expect(ag.reason).toContain('v2.1の解消規則（HR3・HR4）に当たらない');
+  });
+});
+
+describe('点検 R2：D1 が第3の判定者の対応表なしを上書きした法律を保留にする', () => {
+  const l1 = { 結果: '評価対象', 分野: '通信・ネット', 指標: '通信業の付加価値', 種類: '実質改正', 理由: '人工', 規則: 'D1' };
+  const l2 = { 系統2_判定: '評価対象', 系統2_分野: '通信・ネット', 系統2_指標: '通信業の付加価値', 系統2_種類: '実質改正', 系統2_理由: '人工', 系統2_規則: 'D1' };
+  const hold = { id: '人工-1-1', 理由: '人工の理由' };
+
+  it('2系統が一致していても、一覧にある法律は採用せず理由と規則R2を残す', () => {
+    expect(compareTriage('人工-1-1', l1, l2, '人工郵便法案').agreed).toBe(true);
+    const ag = compareTriage('人工-1-1', l1, l2, '人工郵便法案', undefined, hold);
+    expect(ag.agreed).toBe(false);
+    expect(ag.rule).toBe('R2');
+    expect(ag.category).toBe(R2_HOLD_CATEGORY);
+    expect(ag.reason).toContain('点検R2：人工の理由');
+    expect(ag.resolved).toBeNull();
+  });
+  it('第3の判定者（TB2）が一致で系統1を採っていても、R2の保留を覆さない', () => {
+    const tb = { id: '人工-1-1', 採用: '系統1', 決め方: '一致', 理由: '人工' };
+    expect(compareTriage('人工-1-1', l1, l2, '人工郵便法案', tb, hold).agreed).toBe(false);
+  });
+  it('一覧に無い法律と、題名を渡さない v1 の呼び出しは変えない', () => {
+    expect(compareTriage('人工-1-2', l1, l2, '人工郵便法案', undefined, undefined).agreed).toBe(true);
+    expect(compareTriage('人工-1-1', l1, l2, undefined, undefined, hold).agreed).toBe(true);
   });
 });

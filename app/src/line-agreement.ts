@@ -165,10 +165,17 @@ export function applyLineTiebreak(line1: TriageLine | null, line2: TriageLine | 
   return { line: { ...line }, reason: `TB2：第3の判定者が${tb['採用']}を採った（${tb['決め方']}：${tb['理由']}）` };
 }
 
-export function compareTriage(id: string, line1Row: Row | undefined, line2Row: Row | undefined, title?: string, tiebreak?: Row): TriageAgreement {
+/**
+ * 点検 R2（2026-10-18、額の大きい法律の点検）：D1（題名の語で分野を決め直す）が、第3の判定者の「対応表なし」を通信・ネットなどに上書きしたもののうち、
+ * 業種の割り当てを一次情報で確かめて保留に落とした法律の一覧（bill-triage-v2/r2-holds.csv：id・理由・根拠）。
+ * 一覧にある行は、2系統が一致していても採用せず、額を出さない。第3の判定者（TB2）でも解消しない（上書きの当否を人の判断にしないため）。
+ */
+export const R2_HOLD_CATEGORY = '第3の判定者の分野を題名の語が上書き（点検R2）';
+export function compareTriage(id: string, line1Row: Row | undefined, line2Row: Row | undefined, title?: string, tiebreak?: Row, r2Hold?: Row): TriageAgreement {
   const line1 = line1Row ? { verdict: line1Row['結果'], field: line1Row['分野'], indicator: line1Row['指標'], kind: line1Row['種類'], reason: line1Row['理由'], rules: line1Row['規則'] } : null;
   const line2 = line2Row ? { verdict: line2Row['系統2_判定'], field: line2Row['系統2_分野'], indicator: line2Row['系統2_指標'], kind: line2Row['系統2_種類'], reason: line2Row['系統2_理由'], rules: line2Row['系統2_規則'] } : null;
   const base = { id, line1, line2, resolved: null as TriageLine | null, rule: '' };
+  if (r2Hold && title !== undefined) return { ...base, agreed: false, category: R2_HOLD_CATEGORY, rule: 'R2', reason: `点検R2：${r2Hold['理由']}` };
   if (!line1) return { ...base, agreed: false, category: holdCategory(line1, line2), reason: '系統1の振り分けが無い' };
   if (!line2) return { ...base, agreed: false, category: holdCategory(line1, line2), reason: '系統2の振り分けが無い' };
   if (![line1.verdict, line2.verdict].every(v => v === '評価対象' || v === '評価対象外')) {

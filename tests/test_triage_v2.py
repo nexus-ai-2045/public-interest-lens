@@ -88,6 +88,11 @@ class TriageV2Test(unittest.TestCase):
                 self.assertEqual(r["結果"], "採用", r["id"])
                 continue
             a, b = l1[r["id"]], l2[r["id"]]
+            if r["解消規則"] == "R2":
+                # 点検 R2：2系統が一致していても、r2-holds.csv にある法律は採用しない
+                self.assertEqual(r["結果"], "保留", r["id"])
+                self.assertIn(r["id"], {h["id"] for h in read(V2 / "r2-holds.csv")}, r["id"])
+                continue
             same = a["結果"] != "保留" and (a["結果"], a["分野"], a["指標"]) == (b["系統2_判定"], b["系統2_分野"], b["系統2_指標"])
             self.assertEqual(r["結果"], "採用" if same else "保留", r["id"])
 
@@ -181,12 +186,22 @@ class TriageV2Test(unittest.TestCase):
         for r in ag:
             if r["結果"] == "保留":
                 self.assertTrue(r["理由"], r["id"])
-        resolved = [r for r in ag if r["解消規則"]]
+        resolved = [r for r in ag if r["解消規則"] and r["解消規則"] != "R2"]
         self.assertLessEqual({"閣法-151-92", "閣法-185-8", "閣法-193-45", "閣法-197-5", "閣法-217-46"}, {r["id"] for r in resolved})
         for r in resolved:
             self.assertTrue(r["食い違いの区分"], r["id"])
             self.assertIn("TB2：第3の判定者が" if r["解消規則"] == "TB2" else "解消前は保留または食い違い", r["理由"], r["id"])
             self.assertEqual(r["結果"], "採用", r["id"])
+
+    def test_r2_holds_are_held_with_their_reason_and_never_adopted(self):
+        # 点検 R2：第3の判定者の対応表なしを D1 が上書きして通信業の額になっていた2本は、保留の理由と根拠を持つ
+        holds = {h["id"]: h for h in read(V2 / "r2-holds.csv")}
+        self.assertEqual(set(holds), {"閣法-169-48", "閣法-189-62"})
+        ag = {r["id"]: r for r in read(V2 / "agreement.csv")}
+        for law_id, h in holds.items():
+            self.assertTrue(h["理由"] and h["根拠"], law_id)
+            self.assertEqual((ag[law_id]["結果"], ag[law_id]["解消規則"]), ("保留", "R2"), law_id)
+            self.assertIn(h["理由"], ag[law_id]["理由"], law_id)
 
     def test_first_law_title(self):
         self.assertEqual(py.first_law("出入国管理及び難民認定法及び法務省設置法の一部を改正する法律案"), "出入国管理及び難民認定法の一部を改正する法律案")
