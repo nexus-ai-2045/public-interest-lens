@@ -1,3 +1,4 @@
+import { memberLocation } from './member-navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { formatYen } from './LawRankingPage';
 import { pageCount, pageSlice } from './law-ranking-view';
@@ -20,7 +21,7 @@ function RowDetail({ row }: { row: Row }) {
         <span>{t.role === 'proposer' ? '提出' : '参議院で賛成'}・{t.side === 'loss' ? '国賊側' : '国士側'} {formatYen(t.share)}</span>
       </li>)}</ul>
     </>}
-    {row.confirmedRank !== null && <p><a href={`?name=${encodeURIComponent(row.id)}#member-${encodeURIComponent(row.id)}`}>確かな額の順位（{row.confirmedRank}位）と一次資料のつながりを上の一覧で開く</a></p>}
+    {row.confirmedRank !== null && <p><a href={memberLocation(row.id, window.location.search, true)}>確かな額の順位（{row.confirmedRank}位）と一次資料のつながりを上の一覧で開く</a></p>}
   </div>;
 }
 
