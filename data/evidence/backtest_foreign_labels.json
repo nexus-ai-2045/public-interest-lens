@@ -690,6 +690,294 @@
     "benefit_sign": 1,
     "cluster": "us-openskies"
    }
+  },
+  "fg-058": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "norway-transatlantic-2015"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "norwegian-atlantic-2015"
+   }
+  },
+  "fg-059": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": null,
+    "cluster": "canada-open-skies"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": null,
+    "cluster": "canada-us-osa"
+   }
+  },
+  "fg-060": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "eu-air-liberalisation-1988"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "eu-air-liberalisation-1987-97"
+   }
+  },
+  "fg-061": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "france-loi-royer-1973"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "france-royer-1973"
+   }
+  },
+  "fg-062": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": -1,
+    "cluster": "italy-retail-reform-1998"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": -1,
+    "cluster": "italy-retail-1998"
+   }
+  },
+  "fg-063": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "italy-retail-reform-1998"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "italy-retail-1998"
+   }
+  },
+  "fg-064": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "uk-tcf-planning-1996"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "uk-planning-1990s"
+   }
+  },
+  "fg-065": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": -1,
+    "cluster": "uk-tcf-planning-1996"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": -1,
+    "cluster": "england-tcf-1996"
+   }
+  },
+  "fg-066": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "italy-retail-reform-1998"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "italy-retail-1998"
+   }
+  },
+  "fg-067": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "us-intrastate-branching-1978"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "us-intrastate-branching-1978-92"
+   }
+  },
+  "fg-068": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": null,
+    "cluster": "us-interstate-branching-1975"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 0,
+    "cluster": "us-interstate-branching-1975-90"
+   }
+  },
+  "fg-069": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-riegle-neal-1994"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-riegle-neal-1994"
+   }
+  },
+  "fg-070": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-riegle-neal-1994"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "us-riegle-neal-1994"
+   }
+  },
+  "fg-071": {
+   "line1": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "italy-banking-law-1990"
+   },
+   "line2": {
+    "outcome_class": "price_surplus",
+    "benefit_sign": 1,
+    "cluster": "italy-bank-1990"
+   }
+  },
+  "fg-072": {
+   "line1": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "france-banking-reform-1985"
+   },
+   "line2": {
+    "outcome_class": "output",
+    "benefit_sign": 1,
+    "cluster": "france-bank-1985"
+   }
+  },
+  "fg-073": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-minwage-138-episodes"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-minwage-1979-2016"
+   }
+  },
+  "fg-074": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-border-county-minwage"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-minwage-border-counties"
+   }
+  },
+  "fg-075": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "us-federal-minwage-2007"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "us-minwage-2007-09"
+   }
+  },
+  "fg-076": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-minwage-meta-64"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "us-minwage-meta"
+   }
+  },
+  "fg-077": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "germany-minwage-2015"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 0,
+    "cluster": "germany-minwage-2015"
+   }
+  },
+  "fg-078": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "germany-minwage-2015"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "germany-minwage-2015"
+   }
+  },
+  "fg-079": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "hungary-minwage-large-rise"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "hungary-minwage"
+   }
+  },
+  "fg-080": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "uk-nmw-1999"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": -1,
+    "cluster": "uk-nmw-1999"
+   }
+  },
+  "fg-081": {
+   "line1": {
+    "outcome_class": "employment",
+    "benefit_sign": null,
+    "cluster": "nz-youth-minwage-2001"
+   },
+   "line2": {
+    "outcome_class": "employment",
+    "benefit_sign": 1,
+    "cluster": "nz-youth-minwage-2001"
+   }
   }
  }
 }

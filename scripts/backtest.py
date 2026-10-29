@@ -324,7 +324,7 @@ def render_transplant_doc(t: dict) -> list[str]:
     pool = t["pool"]
     out = ["", "### 外国の研究から日本の向きを当てる（v2、設計決定0021）", "",
            "日本の研究（向きが +1／−1 で定まるもの）を正解とし、**外国の同種の政策の研究だけ**から向きを当てられるかを測る。現行の計算は使わない。同種の判定とラベルは、日本の結果を見せない2系統が独立に付け、一致したものだけ使う。",
-           f"外国の研究のプール：{pool['entries']} 件（事例集の外国の研究 {pool['from_cases']} 件＋日本の結果を見せずに調査員が集めた {pool['from_search']} 件）。ラベルが2系統で一致して使えるのは {pool['usable']} 件、割れて外したのは {len(pool['labels_held'])} 件。同種の判定が2系統で割れた組は {t['match_splits']} 組。", "",
+           f"外国の研究のプール：{pool['entries']} 件（事例集の外国の研究 {pool['from_cases']} 件＋日本の結果を見せずに調査員が集めた {pool['from_search']} 件）。ラベルが2系統で一致して使えるのは {pool['usable']} 件、割れて外したのは {len(pool['labels_held'])} 件。因果識別を確認できず測定から外したのは {len(pool.get('excluded', []))} 件（{'・'.join(pool.get('excluded', [])) or 'なし'}）。同種の判定が2系統で割れた組は {t['match_splits']} 組。", "",
            "| 段 | 条件 | 向きの一致 | 一致率（Wilson 95%区間） | 予測を出せた割合 | 政策グループ | 基準 | 判定 |", "|---|---|---|---|---|---|---|---|"]
     for lv in t["levels"]:
         ci = "" if not lv["wilson95"] else f"（{pct(lv['wilson95'][0])}〜{pct(lv['wilson95'][1])}）"
