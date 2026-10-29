@@ -26,6 +26,15 @@ const inputs = {
 };
 const { createServer } = await import(join(app, 'node_modules/vite/dist/node/index.js'));
 const server = await createServer({ root: app, logLevel: 'silent', server: { middlewareMode: true }, appType: 'custom' });
+// members を1人1行に並べる。JSON としての中身は1行形と同じ。1人変わっても差分がその行だけになり、
+// 名義検査の「大きすぎる中身」（1コミットで足す行の上限）に当たらない。
+function stringifyOnePerLine(payload) {
+  const parts = Object.entries(payload).map(([k, v]) => k === 'members'
+    ? `"members":[\n${v.map(m => JSON.stringify(m)).join(',\n')}\n]`
+    : `${JSON.stringify(k)}:${JSON.stringify(v)}`);
+  return '{' + parts.join(',\n') + '}\n';
+}
+
 try {
   const { buildReferenceMembers } = await server.ssrLoadModule('/src/members-reference.ts');
   const text = Object.fromEntries(Object.entries(inputs).map(([k, p]) => [k, readFileSync(p, 'utf8')]));
@@ -43,7 +52,7 @@ try {
   const ballotHash = createHash('sha256');
   ballotFiles.forEach((f, i) => ballotHash.update(f + '\n').update(ballots[i]).update('\n'));
   payload.inputs.ballots = ballotHash.digest('hex');
-  if (!noWrite) writeFileSync(join(app, 'public/distribution/members-reference.json'), JSON.stringify(payload) + '\n');
+  if (!noWrite) writeFileSync(join(app, 'public/distribution/members-reference.json'), stringifyOnePerLine(payload));
   console.log(JSON.stringify(payload.counts));
 } finally {
   await server.close();
