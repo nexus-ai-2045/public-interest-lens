@@ -43,6 +43,7 @@ INPUTS = {
     "publish": DERIVED / "publish-v1-triage-v2" / "publish.csv",
     "enforcement": ACQUIRED / "enforcement-dates" / "enforcement.csv",
     "macro": DERIVED / "macro-v1" / "macro.csv",
+    "covidBenefit": DERIVED / "covid-benefit-v1" / "benefit.csv",
 }
 RULES = ["bill-triage-v2", "impact-rule-v1", "loss-rule-v1", "benefit-rule-v1.2", "macro-v1", "covid-benefit-v1"]
 # 全体指標（macro-v1）の額の印。影響の段階を経ていない参考の額で、合計・議員への配分に使わない。
@@ -80,6 +81,7 @@ OUTCOMES = {
     "no_series": "未測定（系列・比較群が足りない）",
     "impact_hold": "保留（影響の判定）",
     "amount_hold": "保留（額の計算・公開条件）",
+    "covid_scale": "額は未計算（コロナ対応・規模のみ記録）",
 }
 REASON_LIMIT = 140
 # 出典チェック（scripts/source_check.py）が公開から外した法律。承認済みでも額を出さない。
@@ -344,6 +346,8 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
     enacted = {f"{row['種別']}-{row['提出回次']}-{row['番号']}": row for row in census}
     enforcement = {row["id"]: row for row in _rows("enforcement", captured)}
     macro = {row["id"]: row for row in _rows("macro", captured) if row["結果"] == "額"}
+    # コロナ対応で規模は取れたが額にしない法律は、規模つきの理由を出す（covid-benefit-v1）。
+    covid_scale = {row["id"]: row["理由"] for row in _rows("covidBenefit", captured) if row["結果"] == "理由"}
     laws, others = [], []
     for law_id, census_row in enacted.items():
         row = publish.get(law_id)
@@ -351,6 +355,8 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
         if not row or row["損失または便益"] == "保留":
             if approve_all and law_id in macro and law_id not in held_by_check:
                 laws.append(_macro_law(macro[law_id], _sources(law_id, enacted, enforcement)))
+            elif law_id in covid_scale:
+                others.append(_other(law_id, title, "covid_scale", covid_scale[law_id]))
             else:
                 others.append(_no_amount(law_id, title, publish, loss, impact, dated, triage))
         elif not approve_all:

@@ -56,7 +56,7 @@ CERTAINTY = {
     "参考": "参考の額",
 }
 # 額が出ない法律の結果 → どこまで進んだか
-OUTCOME_STEP = {"評価対象外": "enacted", "保留（振り分け）": "enacted", "施行日が未確定": "evaluated", "保留（影響の判定）": "dated", "未測定（系列・比較群が足りない）": "staged"}
+OUTCOME_STEP = {"評価対象外": "enacted", "保留（振り分け）": "enacted", "施行日が未確定": "evaluated", "保留（影響の判定）": "dated", "未測定（系列・比較群が足りない）": "staged", "額は未計算（コロナ対応・規模のみ記録）": "dated"}
 # 確かさ高・中の法律で、関わった議員の記録（提出・参議院の賛否）がまだそろわず議員ページに入っていないものの印。
 MEMBERS_PENDING = "関わった議員の記録を集めている途中（議員ランキングにはまだ入っていない）"
 STEPS = ["enacted", "evaluated", "dated", "staged", "amounted", "published"]
