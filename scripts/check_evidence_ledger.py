@@ -112,8 +112,10 @@ def check_entry(e):
                         errs.append(f"{i}: {r} の区間が台帳と一致しない")
                     if c.get("scope_match") is not True:
                         errs.append(f"{i}: {r} が対象（国・期間・対象）の一致を確認していない")
-        if s.get("doi") and v.get("crossref_title_match") is not True:
-            errs.append(f"{i}: DOI があるのに Crossref の題名一致が確認されていない")
+        if s.get("doi"):
+            for k, name in (("crossref_title_match", "題名"), ("crossref_author_match", "著者"), ("crossref_year_match", "年")):
+                if v.get(k) is not True:
+                    errs.append(f"{i}: DOI があるのに Crossref の{name}一致が確認されていない")
     elif not v.get("held_reason"):
         errs.append(f"{i}: held に理由（held_reason）がない")
     return errs

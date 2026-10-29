@@ -17,7 +17,7 @@ def sample(**over):
         "scope": {"countries": "OECD", "period": "1990-2000", "population_or_sector": "全体"},
         "locator": "表1", "japan_application": {"method": "そのまま", "caveat": "なし"}, "used_for": ["財政"],
         "confidence": "中",
-        "verification": {"status": "verified", "crossref_title_match": True, "checks": [
+        "verification": {"status": "verified", "crossref_title_match": True, "crossref_author_match": True, "crossref_year_match": True, "checks": [
             {"role": "collector", "central": 1.0}, {"role": "check1", "central": 1.0, "low": 0.5, "high": 1.5, "unit": "倍", "scope_match": True},
             {"role": "check2", "central": 1.0, "low": 0.5, "high": 1.5, "unit": "倍", "scope_match": True}]},
     }
@@ -75,6 +75,12 @@ class LedgerCheck(unittest.TestCase):
         e = sample()
         e["verification"]["crossref_title_match"] = None
         self.assertTrue(any("Crossref" in x for x in c.check_entry(e)))
+
+    def test_doi_requires_crossref_author_and_year(self):
+        for k in ("crossref_author_match", "crossref_year_match"):
+            e = sample()
+            e["verification"][k] = False
+            self.assertTrue(any("Crossref" in x for x in c.check_entry(e)), k)
 
     def test_held_needs_reason(self):
         e = sample(verification={"status": "held"})
