@@ -253,6 +253,9 @@ def main() -> int:
             return 2
         result = {**result, "label": args.snapshot, "date": args.date, "note": args.note}
         SNAP_DIR.mkdir(parents=True, exist_ok=True)
+        if (SNAP_DIR / f"{args.snapshot}.json").exists():
+            print(f"{args.snapshot} は固定済み。基準の測定を上書きしないので、新しい名前（例 v2）で測る", file=sys.stderr)
+            return 2
         (SNAP_DIR / f"{args.snapshot}.json").write_text(json.dumps(result, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         publish()
     print(json.dumps(result, ensure_ascii=False, indent=1) if args.json else render(result))

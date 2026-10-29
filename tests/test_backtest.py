@@ -94,5 +94,14 @@ class BacktestPublishedFilesTest(unittest.TestCase):
         self.assertIn("v1 時点", v1["note"])
 
 
+class BacktestSnapshotGuardTest(unittest.TestCase):
+    def test_existing_snapshot_name_is_refused(self):
+        import subprocess
+        before = (bt.SNAP_DIR / "v1.json").read_bytes()
+        done = subprocess.run([sys.executable, str(ROOT / "scripts" / "backtest.py"), "--snapshot", "v1", "--date", "2030-01-01"], capture_output=True, text=True)
+        self.assertEqual(done.returncode, 2)
+        self.assertEqual((bt.SNAP_DIR / "v1.json").read_bytes(), before)
+
+
 if __name__ == "__main__":
     unittest.main()
