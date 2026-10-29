@@ -42,7 +42,7 @@ export function AllMembers({ confirmed, data, error }: { confirmed: PublicMember
     {error && <p className="state-banner" role="alert">{error}</p>}
     {data && <>
       <p className="all-members-lead">公開しているのは{breakdown.total.toLocaleString('ja-JP')}人。うち現職{breakdown.current.toLocaleString('ja-JP')}人（衆{breakdown.shu}・参{breakdown.san}）で、額のある現職は{breakdown.currentWithAmount.toLocaleString('ja-JP')}人（衆{breakdown.shuWithAmount}・参{breakdown.sanWithAmount}）です。額のない衆議院の現職{(breakdown.shu - breakdown.shuWithAmount).toLocaleString('ja-JP')}人は、個人の賛否が記録に残らず（会派ごとの賛否だけ）、0円になっています。額のある人は全体で{breakdown.withAmount.toLocaleString('ja-JP')}人（参考の額は{data.counts.laws.toLocaleString('ja-JP')}本の法律から配りました）。</p>
-      <p className="fine-note">一次資料につながる「確かな額」があるのは{breakdown.confirmed.toLocaleString('ja-JP')}人だけです。参考の額の人は、一次資料の鎖ではなく、会派や提出者の記録から配った額です。</p>
+      <p className="fine-note">一次資料につながる「確かな額」があるのは{breakdown.confirmed.toLocaleString('ja-JP')}人だけです。参考の額の人は、一次資料の鎖ではなく、提出者の記録と参議院の個人別の賛成記録から配った額です（会派の賛否から個人へは配っていません）。</p>
       <div className="all-members-legend">
         <span className="badge confirmed">確かな額</span><span>影響の段階まで確かめた法律の額。上の順位と同じ。</span>
         <span className="badge reference">参考</span><span>産業や経済全体の差を法律に当てた額。確かさは低く、確かな額と足しません。</span>
