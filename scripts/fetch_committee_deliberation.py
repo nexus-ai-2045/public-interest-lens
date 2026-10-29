@@ -377,7 +377,7 @@ def mine(frag: str, short: str) -> bool:
 
 def names_other_bill(t: str, short: str) -> bool:
     """発言が法案名を挙げていて、その中にこの法案がない（別の法案の修正案）とき真。"""
-    ns = re.findall(r'([^\s、。「」『』（）()○]{2,40}?(?:法律案|法案))', _flat(t))
+    ns = re.findall(r'([^\s、。「」『』（）()○]{2,40}?(?:法律案|法案))', re.sub(r'\s+', '', t.replace('\u3000', '')))  # 法案名の途中の改行も除く
     ns = [n for n in ns if not re.fullmatch(r'(?:これより|次に|ただいま|なお)?(?:この|両|本|同|各|右の)(?:法律案|法案)', n)]  # 「この法律案」などの代名詞は別の法案ではない
     return bool(ns) and not any(mine(n, short) for n in ns)
 

@@ -392,6 +392,9 @@ class CommitteeFlowTest(unittest.TestCase):
         meeting = _meeting(recs, '本日の会議に付した案件\n甲法の一部を改正する法律案\n乙法の一部を改正する法律案')
         self.assertEqual(len(F.analyze_meeting(meeting, OTSU)['resolutions']), 1)
 
+    def test_bill_name_broken_by_a_newline_still_counts_as_this_bill(self) -> None:
+        self.assertFalse(F.names_other_bill('甲法の一部を改正する法律\n案に対する附帯決議案', F.short_title('甲法の一部を改正する法律案')))
+
     def test_long_hiragana_proposer_name(self) -> None:
         recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。この際、本案に対し、とかしきなおみ君外五名から、修正案が提出されております。')]
         r = F.analyze_meeting(_meeting(recs), KOU)
