@@ -67,7 +67,7 @@
 .member-chain > li + li::before { content: '↓'; position: absolute; left: -0.55rem; top: -0.75rem; font-size: 0.8rem; }
 .member-chain > li > strong { display: inline-block; min-width: 7em; margin-right: 0.5rem; }
 .member-chain a { margin-left: 0.4rem; white-space: nowrap; }
-.member-context summary { cursor: pointer; font-size: 0.85rem; }
+.member-context summary, .member-backing summary { cursor: pointer; font-size: 0.85rem; }
 
 .members-knobs { display: grid; gap: 0.8rem; margin: 1.2rem 0; padding: 1rem; border: 1px solid var(--line, #d0d5dd); border-radius: 12px; }
 .members-knobs h3 { margin: 0; }

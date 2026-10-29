@@ -1,0 +1,45 @@
+{
+ "version": "backing-forces-v1",
+ "rule": "record names a law → amendments/enactments of that law ordered by promulgation date; points are not changed",
+ "inputs": {
+  "data/acquired/bill-census-full/enacted.csv": "f8ec2d1b14c988aad522dafcee33037e6288d0972613eed18a938b7616c8c94b",
+  "data/derived/backing-forces-v1/law-aliases.csv": "9878cde743460dacc0a223c887d34bd98669f0d9df6ea1cd2b991e0d49774587"
+ },
+ "ledgers": {
+  "省庁の抵抗": {
+   "status": "接続済み",
+   "link": "法令名（記録ごと。この表）・所管（省庁全体。画面側で既存の2表を結ぶ）",
+   "records": 288
+  },
+  "団体の立場": {
+   "status": "接続済み",
+   "link": "法令名（記録ごと）",
+   "records": 122
+  },
+  "政治資金の関係団体": {
+   "status": "入力なし（relations.csv は Git に入れない大きな生成物）",
+   "link": "団体名キーで審議会の団体と結ぶ（接点の記録だけ）",
+   "rows": 0
+  },
+  "内閣": {
+   "status": "既存の役職の帳簿（点数外）",
+   "link": "閣法の提出者の組。決定1・9"
+  },
+  "裁判所": {
+   "status": "未接続",
+   "reason": "判決24件は法律への帰属の規則が未決。立場の記録ではなく結果の記録で、別の設計が要る"
+  },
+  "教育界": {
+   "status": "未接続",
+   "reason": "一次資料の取得が未着手。入ったら団体の立場と同じ規則で結ぶ"
+  }
+ },
+ "counts": {
+  "記録": 410,
+  "結べた": 245,
+  "結べない": 165,
+  "結んだ法律": 121,
+  "結び付けの行": 247,
+  "結べなかった記載": 38
+ }
+}
