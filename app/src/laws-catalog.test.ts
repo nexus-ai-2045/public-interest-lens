@@ -48,6 +48,17 @@ describe('全法律の一覧', () => {
   it('古い順でも新しい順でも、年の無い行は最後', () => {
     for (const sort of ['oldest', 'newest'] as const) expect(filterCatalog(catalog.laws, { ...DEFAULT_QUERY, sort }).at(-1)!.year).toBeNull();
   });
+  it('損失順は損失の行が先、便益順は便益の行が先で、それぞれ額の大きい順', () => {
+    for (const [sort, side] of [['loss', 'loss'], ['benefit', 'benefit']] as const) {
+      const list = filterCatalog(catalog.laws, { ...DEFAULT_QUERY, sort });
+      const firstOther = list.findIndex(item => item.side !== side);
+      expect(list.slice(0, firstOther).every(item => item.side === side)).toBe(true);
+      expect(list.slice(firstOther).some(item => item.side === side)).toBe(false);
+      const head = list.slice(0, firstOther).filter(item => item.step === 'published');
+      for (let i = 1; i < head.length; i++) expect(head[i - 1].amount!.median).toBeGreaterThanOrEqual(head[i].amount!.median);
+      expect(readQuery(`?sort=${sort}`).sort).toBe(sort);
+    }
+  });
   it('絞り込みは URL に書き出して読み戻せる', () => {
     const query = { text: '観光', side: 'loss' as const, field: '宿泊・観光', kind: '閣法', sort: 'newest' as const };
     expect(readQuery(writeQuery(query))).toEqual(query);

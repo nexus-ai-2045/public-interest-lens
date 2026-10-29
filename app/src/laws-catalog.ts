@@ -110,7 +110,7 @@ export function parseLawsCatalog(text: string): LawsCatalog {
 }
 
 export type SideFilter = 'all' | 'confirmed' | 'loss' | 'benefit' | 'amount' | 'none';
-export type SortKey = 'amount' | 'newest' | 'oldest' | 'progress';
+export type SortKey = 'amount' | 'loss' | 'benefit' | 'newest' | 'oldest' | 'progress';
 export type CatalogQuery = { text: string; side: SideFilter; field: string; kind: string; sort: SortKey };
 export const DEFAULT_QUERY: CatalogQuery = { text: '', side: 'all', field: '', kind: '', sort: 'amount' };
 
@@ -133,9 +133,13 @@ export function filterCatalog(items: CatalogItem[], query: CatalogQuery): Catalo
   // 年の無い行は、新しい順でも古い順でも最後に置く。
   const byYear = (a: CatalogItem, b: CatalogItem) => (a.year === null) !== (b.year === null) ? (a.year === null ? 1 : -1) : (b.year ?? 0) - (a.year ?? 0);
   const byYearAsc = (a: CatalogItem, b: CatalogItem) => (a.year === null) !== (b.year === null) ? (a.year === null ? 1 : -1) : (a.year ?? 0) - (b.year ?? 0);
+  // 損失順・便益順は、その向きの行を先に置き、あとは既定の並び（確かな額 → 額の大きい順）。向きの無い行は最後。
+  const bySide = (side: 'loss' | 'benefit') => (a: CatalogItem, b: CatalogItem) => Number(b.side === side) - Number(a.side === side) || sorters.amount(a, b);
   const sorters: Record<SortKey, (a: CatalogItem, b: CatalogItem) => number> = {
     // 確かな額 → 参考の額 → 額なしの順。同じ組の中は額の大きい順、額のない行は計算が進んだ順、同じなら新しい順。
     amount: (a, b) => Number(b.step === 'published') - Number(a.step === 'published') || (b.amount?.median ?? -1) - (a.amount?.median ?? -1) || progress(b) - progress(a) || byYear(a, b),
+    loss: (a, b) => bySide('loss')(a, b),
+    benefit: (a, b) => bySide('benefit')(a, b),
     newest: (a, b) => byYear(a, b) || progress(b) - progress(a),
     oldest: (a, b) => byYearAsc(a, b) || progress(b) - progress(a),
     progress: (a, b) => progress(b) - progress(a) || (b.amount?.median ?? -1) - (a.amount?.median ?? -1) || byYear(a, b),
@@ -179,7 +183,7 @@ export function readQuery(search: string): CatalogQuery {
     side: side && ['all', 'confirmed', 'loss', 'benefit', 'amount', 'none'].includes(side) ? side : 'all',
     field: params.get('field') ?? '',
     kind: params.get('kind') ?? '',
-    sort: sort && ['amount', 'newest', 'oldest', 'progress'].includes(sort) ? sort : 'amount',
+    sort: sort && ['amount', 'loss', 'benefit', 'newest', 'oldest', 'progress'].includes(sort) ? sort : 'amount',
   };
 }
 

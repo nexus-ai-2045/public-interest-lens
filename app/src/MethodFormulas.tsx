@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import './numbers.css';
@@ -22,7 +23,22 @@ function Section({ s }: { s: SpecSection }) {
   </details>;
 }
 
+/** #spec-… で来たら、その節を開いてそこへ移る（この画面は遅れて読み込まれるので、ブラウザ任せのスクロールは空振りする）。 */
+function openSectionFromHash() {
+  let id = '';
+  try { id = decodeURIComponent(window.location.hash.slice(1)); } catch { return; }
+  const target = id.startsWith('spec-') ? document.getElementById(id) : null;
+  if (!(target instanceof HTMLDetailsElement)) return;
+  target.open = true;
+  target.scrollIntoView({ block: 'start' });
+}
+
 export default function MethodFormulas() {
+  useEffect(() => {
+    openSectionFromHash();
+    window.addEventListener('hashchange', openSectionFromHash);
+    return () => window.removeEventListener('hashchange', openSectionFromHash);
+  }, []);
   return <section className="spec" aria-labelledby="formulas">
     <h3 id="formulas">6. 式（計算方法の仕様 {SPEC_VERSION}、{SPEC_DATE}）</h3>
     <p>上の手順を、記号の定義つきの式にしたものです。計算の仕方は版で固定し、変えるときは版を上げて、変えた理由と影響（上位がどう動くか）を<a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/adr/0013-calculation-spec-versioning.md" target="_blank" rel="noopener noreferrer">設計決定0013</a>に記録します。「案」は見直し中の式で、まだ計算に使っていません。</p>
