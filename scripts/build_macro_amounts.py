@@ -15,9 +15,10 @@
 比較国は OECD 表6 で日本以外の取得済みの国のうち、窓の年の観測がそろう国（3か国以上）。
 施行日が台帳に無い法律は、公布日を施行日とみなして推定する（判定は年単位。印「施行日は推定（公布日）」を付ける）。
 窓は施行後最大10年。2020年より前に始まる窓は2019年で切る（新型コロナの年を入れない）。2020年以降に始まる窓はそのまま使い、注意を付ける。
-コロナ対応の法律（data/derived/covid-response-v1/labels.csv、Haiku 2系統→Sonnet 突き合わせ→Opus 点検）は額を付けず理由にする。
+コロナ対応の法律（data/derived/covid-response-v1/labels.csv、Haiku 2系統→Sonnet 突き合わせ→Opus 点検）に全体指標の額は付けない。
 全体指標の差はコロナの落ち込みそのもので、その法律の効果ではない。比べるべきは「コロナはあったがその法律が無かった場合」で、
-定説（財政乗数・雇用維持の効果）では落ち込みを和らげる向き。支出の規模の一次資料が未取得なので額はまだ出さない（設計決定0014、ユーザー 2026-10-24）。
+定説（財政乗数・雇用維持の効果）では落ち込みを和らげる向き。額は支出の規模の一次資料から費用便益で出す
+（scripts/build_covid_benefit.py → data/derived/covid-benefit-v1/benefit.csv、covid-benefit-v1）。換算できないものは規模つきの理由にする。
 
 出力：data/derived/macro-v1/macro.csv
 使い方：python3 scripts/build_macro_amounts.py
@@ -26,6 +27,7 @@ from __future__ import annotations
 
 import csv
 import re
+import sys
 from collections import Counter
 from pathlib import Path
 
@@ -40,7 +42,9 @@ ENFORCEMENT = ROOT / "data" / "acquired" / "enforcement-dates" / "enforcement.cs
 OECD = ROOT / "data" / "acquired" / "oecd-industry" / "industry_va.csv"
 OUT = DERIVED / "macro-v1" / "macro.csv"
 COVID_LABELS = DERIVED / "covid-response-v1" / "labels.csv"
-COVID_REASON = "コロナ対応の法律（{kind}）：全体指標の差はコロナの落ち込みそのもので、この法律の効果ではない。定説（財政乗数・雇用維持の効果）では落ち込みを和らげる向き（便益）。支出の規模の一次資料が未取得のため額は未計算"
+COVID_BENEFIT = DERIVED / "covid-benefit-v1" / "benefit.csv"
+COVID_FIELD, COVID_ORIGIN, COVID_INDUSTRY = "コロナ対応", "コロナ対応の費用便益", "COVID"
+COVID_REASON = "コロナ対応の法律（{kind}）：全体指標の差はコロナの落ち込みそのもので、この法律の効果ではない。定説（財政乗数・雇用維持の効果）では落ち込みを和らげる向き（便益）。支出の規模を結ぶ規則（covid-benefit-v1）に無いため額は未計算"
 
 HEADER = ["id", "題名", "分野", "分野の由来", "産業", "施行日", "施行日の由来", "窓", "中央値", "第1四分位", "第3四分位",
           "比較国", "計算式の要素", "結果", "理由"]
@@ -136,12 +140,24 @@ def amount(oecd: Oecd, industry: str, start: str) -> tuple[dict | None, list[str
     return recompute(oecd, industry, start, end_year, countries), countries, ""
 
 
+def apply_covid(row: dict[str, str], label: dict[str, str], cb: dict[str, str] | None) -> None:
+    """コロナ対応の法律の行に、covid-benefit-v1 の額か規模つきの理由を入れる（全体指標の額は付けない）。"""
+    if cb and cb["結果"] == "額":
+        row.update({"分野": COVID_FIELD, "分野の由来": COVID_ORIGIN, "産業": COVID_INDUSTRY, "窓": cb["窓"], "中央値": cb["中央値"],
+                    "第1四分位": cb["第1四分位"], "第3四分位": cb["第3四分位"], "比較国": "", "結果": "額", "理由": "",
+                    "計算式の要素": cb["計算式の要素"]})
+    else:
+        row.update({"中央値": "", "第1四分位": "", "第3四分位": "", "窓": "", "比較国": "", "計算式の要素": "", "結果": "理由",
+                    "理由": cb["理由"] if cb else COVID_REASON.format(kind=label["種類"])})
+
+
 def build() -> list[dict[str, str]]:
     oecd = Oecd(OECD)
     enforcement = {r["id"]: r for r in _read(ENFORCEMENT)}
     ai = {r["id"]: r["分野"] for r in _read(AI_LABELS)}
     agreement = {r["id"]: r.get("結果", "") for r in _read(AGREEMENT)}
     covid = {r["id"]: r for r in _read(COVID_LABELS) if r["コロナ対応"] == "はい"}
+    covid_benefit = {r["id"]: r for r in _read(COVID_BENEFIT)}
     laws = [law for law in _read(OUTCOMES) if law["結果"] not in SKIP]
     picks = align_by_title(
         {law["id"]: publication_field(law["分野"], ai.get(law["id"], ""), agreement.get(law["id"])) for law in laws},
@@ -161,7 +177,7 @@ def build() -> list[dict[str, str]]:
             rows.append(row)
             continue
         if law["id"] in covid:
-            row["理由"] = COVID_REASON.format(kind=covid[law["id"]]["種類"])
+            apply_covid(row, covid[law["id"]], covid_benefit.get(law["id"]))
             rows.append(row)
             continue
         result, countries, why = amount(oecd, industry, start)
@@ -180,8 +196,19 @@ def build() -> list[dict[str, str]]:
     return rows
 
 
+def covid_only() -> list[dict[str, str]]:
+    """OECD 表6 の原本が無い環境用：保存済みの macro.csv のコロナ対応の行だけを、covid-benefit-v1 の最新で置き換える。"""
+    covid = {r["id"]: r for r in _read(COVID_LABELS) if r["コロナ対応"] == "はい"}
+    benefit = {r["id"]: r for r in _read(COVID_BENEFIT)}
+    rows = _read(OUT)
+    for row in rows:
+        if row["id"] in covid:
+            apply_covid(row, covid[row["id"]], benefit.get(row["id"]))
+    return rows
+
+
 def main() -> int:
-    rows = build()
+    rows = covid_only() if "--covid-only" in sys.argv[1:] else build()
     OUT.parent.mkdir(parents=True, exist_ok=True)
     with OUT.open("w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=HEADER, lineterminator="\n")

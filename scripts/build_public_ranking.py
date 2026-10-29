@@ -44,11 +44,14 @@ INPUTS = {
     "enforcement": ACQUIRED / "enforcement-dates" / "enforcement.csv",
     "macro": DERIVED / "macro-v1" / "macro.csv",
 }
-RULES = ["bill-triage-v2", "impact-rule-v1", "loss-rule-v1", "benefit-rule-v1.2", "macro-v1"]
+RULES = ["bill-triage-v2", "impact-rule-v1", "loss-rule-v1", "benefit-rule-v1.2", "macro-v1", "covid-benefit-v1"]
 # 全体指標（macro-v1）の額の印。影響の段階を経ていない参考の額で、合計・議員への配分に使わない。
 MACRO_GROUP = "全体指標"
 ESTIMATED = "推定（公布日）"
 MACRO_NOTE = "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）"
+# コロナ対応の法律（covid-benefit-v1）の額。全体指標の差ではなく、支出の規模（一次資料）×帰属×乗数の費用便益。
+COVID_ORIGIN = "コロナ対応の費用便益"
+COVID_NOTE = "コロナ対応の費用便益で出した参考の額（支出の規模は官公庁の一次資料、帰属と乗数は仮定の幅。財源調達の超過負担は未控除。議員への配分に使わない）"
 LAW_ID = re.compile(r"(閣法|衆法|参法)-(\d+)-(\d+)\Z")
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}\Z")
 AMOUNT = re.compile(r"中央値=(-?\d+);第1四分位=(-?\d+);第3四分位=(-?\d+)")
@@ -225,12 +228,13 @@ def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
     median, *quartiles = values
     if median <= 0:
         raise ValueError(f"全体指標の額が0です: {row['id']}")
-    notes = [MACRO_NOTE]
+    covid = row["分野の由来"] == COVID_ORIGIN
+    notes = [COVID_NOTE if covid else MACRO_NOTE]
     if row.get("施行日の由来", "") == ESTIMATED:
         notes.append(f"施行日は{ESTIMATED}")
     if int(row["施行日"][:4]) >= 2020:
         notes.append("コロナ期と重なる")
-    origin = {"振り分け": "振り分けの分野", "AI 2系統": "AI 2系統の分野", "対応表なし": "対応表なしのため全産業", "同じ題名にそろえた": "同じ法律の改正の分野にそろえた"}[row["分野の由来"]]
+    origin = {"振り分け": "振り分けの分野", "AI 2系統": "AI 2系統の分野", "対応表なし": "対応表なしのため全産業", "同じ題名にそろえた": "同じ法律の改正の分野にそろえた", COVID_ORIGIN: ""}[row["分野の由来"]]
     return {
         "id": row["id"],
         "title": row["題名"],
@@ -238,17 +242,17 @@ def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
         "certainty": "参考",
         "notes": notes,
         "field": row["分野"],
-        "indicator": f"{row['計算式の要素'].split('（')[0].removeprefix('OECD 表6 JPN ')}の実質付加価値（{origin}）",
-        "stage": "なし（全体指標）",
+        "indicator": "支出の規模（一次資料）×帰属×乗数" if covid else f"{row['計算式の要素'].split('（')[0].removeprefix('OECD 表6 JPN ')}の実質付加価値（{origin}）",
+        "stage": "なし（支出の規模から費用便益）" if covid else "なし（全体指標）",
         "enforcedOn": row["施行日"],
         "amountMedianYen": median,
         "amountLowYen": min(quartiles),
         "amountHighYen": max(quartiles),
         "lowerBound": False,
         "window": row["窓"],
-        "comparisonCountries": row["比較国"].split("・"),
-        "benefitStatus": "未測定（全体指標の差だけ）",
-        "group": f"{MACRO_GROUP}-{row['産業']}",
+        "comparisonCountries": row["比較国"].split("・") if row["比較国"] else [],
+        "benefitStatus": "費用便益（財源調達の超過負担は未控除）" if covid else "未測定（全体指標の差だけ）",
+        "group": f"{MACRO_GROUP}-{'コロナ費用便益' if covid else row['産業']}",
         "sources": sources,
     }
 

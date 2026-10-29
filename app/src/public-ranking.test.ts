@@ -2,7 +2,7 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parsePublicRanking, RANKING_TEXT_LIMIT } from './public-distribution';
+import { COVID_BENEFIT_GROUP, parsePublicRanking, RANKING_TEXT_LIMIT } from './public-distribution';
 
 const committed = readFileSync(new URL('../public/distribution/ranking.json', import.meta.url), 'utf8');
 const note = '法律単位の結果を全件公開（2026-10-17 ユーザー承認、議員の実名は別承認）';
@@ -22,6 +22,15 @@ function approved() {
 }
 
 describe('公開ランキングの配布データ', () => {
+  it('コロナ対応の費用便益だけは比較国を持たず、ほかの法律は比較国が要る', () => {
+    const covid = { ...law, certainty: '参考', group: COVID_BENEFIT_GROUP, comparisonCountries: [] };
+    const value = approved(); value.laws = [covid];
+    expect(() => parsePublicRanking(JSON.stringify(value))).not.toThrow();
+    const other = approved(); other.laws = [{ ...law, comparisonCountries: [] }];
+    expect(() => parsePublicRanking(JSON.stringify(other))).toThrow();
+    const wrong = approved(); wrong.laws = [{ ...covid, comparisonCountries: ['USA'] }];
+    expect(() => parsePublicRanking(JSON.stringify(wrong))).toThrow();
+  });
   it('方法版・生成元・保留条件の欠落した配布を拒否する', () => {
     for (const change of [v => { delete v.generatedFrom.codeHashes; },
       v => { v.generatedFrom.methodSpecVersion = 'method-spec-v999.0'; },

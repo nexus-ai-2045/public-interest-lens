@@ -6,12 +6,13 @@
       "impact-rule-v1",
       "loss-rule-v1",
       "benefit-rule-v1.2",
-      "macro-v1"
+      "macro-v1",
+      "covid-benefit-v1"
     ],
-    "methodSpecVersion": "method-spec-v2.2",
+    "methodSpecVersion": "method-spec-v2.3",
     "codeHashes": {
-      "app/src/method-spec.ts": "47ba15f8eebb382fed5b48e4ec1a5b51107ca876e8037ae7ed5336fa82d2ab77",
-      "scripts/build_public_ranking.py": "5bf3e6e31a430afca8d951e018e642c7b269662cf1e4ed20b0122980a07f8024",
+      "app/src/method-spec.ts": "2fbd61c7c1bbf38f0da1e00982ee373d3afcaf76ed11c4b1dd6ed49d4dce75e3",
+      "scripts/build_public_ranking.py": "e0087f474d1f363f8403d2fbe94712e9f0b500c897a18b0870976ddaf3b4c41c",
       "scripts/generation_provenance.py": "7305f180fe2a415389bc00604f5806485c2eb559be545ae0669d616359b6b742",
       "scripts/path_guard.py": "aa7114e249f6591514297de30c97ee3428526ffa51babb999ab2d17a5aafe3c1"
     },
@@ -25,7 +26,7 @@
       "loss": "50cf7e07151c6ee5cec3b77c341d97fd9ce50f5ef8f6e3cb8f51352cb8c1e77d",
       "publish": "61aeb6ee78a039ac3f5577f976b7e897d2753ab1f025143a3e89342631b091b2",
       "enforcement": "b5ba88726efbc30088831ee102b740f86f73ea2bee82e74083fcb3a7c503c3b7",
-      "macro": "3e0416fc42a2bd09cc6ecf460f32fdd43aa86db4c79aac372075a61d8763416d"
+      "macro": "8662aac4c75caa51dea56e1ce9f0c8f52a70cce547ebe903441d9b94844f2fa4"
     },
     "parameters": {
       "heldOut": [
@@ -99870,6 +99871,32 @@
       ]
     },
     {
+      "id": "閣法-201-59",
+      "title": "新型コロナウイルス感染症等の影響に対応するための雇用保険法の臨時特例等に関する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "コロナ対応の費用便益で出した参考の額（支出の規模は官公庁の一次資料、帰属と乗数は仮定の幅。財源調達の超過負担は未控除。議員への配分に使わない）",
+        "コロナ期と重なる"
+      ],
+      "field": "コロナ対応",
+      "indicator": "支出の規模（一次資料）×帰属×乗数",
+      "stage": "なし（支出の規模から費用便益）",
+      "enforcedOn": "2020-06-12",
+      "amountMedianYen": 1059575000000,
+      "amountLowYen": 146196000000,
+      "amountHighYen": 7489416075680,
+      "lowerBound": false,
+      "window": "2020〜2022年",
+      "comparisonCountries": [],
+      "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
+      "group": "全体指標-コロナ費用便益",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF3DA.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200612054.htm"
+      ]
+    },
+    {
       "id": "参法-197-74",
       "title": "移植に用いる造血幹細胞の適切な提供の推進に関する法律の一部を改正する法律案",
       "side": "loss",
@@ -105056,6 +105083,32 @@
       ]
     },
     {
+      "id": "閣法-201-54",
+      "title": "新型コロナウイルス感染症等の影響に対応するための国税関係法律の臨時特例に関する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "コロナ対応の費用便益で出した参考の額（支出の規模は官公庁の一次資料、帰属と乗数は仮定の幅。財源調達の超過負担は未控除。議員への配分に使わない）",
+        "コロナ期と重なる"
+      ],
+      "field": "コロナ対応",
+      "indicator": "支出の規模（一次資料）×帰属×乗数",
+      "stage": "なし（支出の規模から費用便益）",
+      "enforcedOn": "2020-04-30",
+      "amountMedianYen": 257999990000,
+      "amountLowYen": 182117640000,
+      "amountHighYen": 333882340000,
+      "lowerBound": false,
+      "window": "2020〜2021年",
+      "comparisonCountries": [],
+      "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
+      "group": "全体指標-コロナ費用便益",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF31E.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200430025.htm"
+      ]
+    },
+    {
       "id": "閣法-196-45",
       "title": "サイバーセキュリティ基本法の一部を改正する法律案",
       "side": "benefit",
@@ -105948,6 +106001,32 @@
       ]
     },
     {
+      "id": "閣法-208-14",
+      "title": "雇用保険法等の一部を改正する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "コロナ対応の費用便益で出した参考の額（支出の規模は官公庁の一次資料、帰属と乗数は仮定の幅。財源調達の超過負担は未控除。議員への配分に使わない）",
+        "コロナ期と重なる"
+      ],
+      "field": "コロナ対応",
+      "indicator": "支出の規模（一次資料）×帰属×乗数",
+      "stage": "なし（支出の規模から費用便益）",
+      "enforcedOn": "2022-04-01",
+      "amountMedianYen": 136000000000,
+      "amountLowYen": 96000000000,
+      "amountHighYen": 176000000000,
+      "lowerBound": false,
+      "window": "2022〜2022年",
+      "comparisonCountries": [],
+      "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
+      "group": "全体指標-コロナ費用便益",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD51D6.htm",
+        "https://laws.e-gov.go.jp/law/349AC0000000116"
+      ]
+    },
+    {
       "id": "参法-192-52",
       "title": "鳥獣による農林水産業等に係る被害の防止のための特別措置に関する法律の一部を改正する法律案",
       "side": "loss",
@@ -106655,6 +106734,32 @@
       ]
     },
     {
+      "id": "衆法-201-10",
+      "title": "令和二年度特別定額給付金等に係る差押禁止等に関する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "コロナ対応の費用便益で出した参考の額（支出の規模は官公庁の一次資料、帰属と乗数は仮定の幅。財源調達の超過負担は未控除。議員への配分に使わない）",
+        "コロナ期と重なる"
+      ],
+      "field": "コロナ対応",
+      "indicator": "支出の規模（一次資料）×帰属×乗数",
+      "stage": "なし（支出の規模から費用便益）",
+      "enforcedOn": "2020-04-30",
+      "amountMedianYen": 43108600000,
+      "amountLowYen": 25865160000,
+      "amountHighYen": 317989320000,
+      "lowerBound": false,
+      "window": "2020〜2020年",
+      "comparisonCountries": [],
+      "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
+      "group": "全体指標-コロナ費用便益",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF32A.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200430027.htm"
+      ]
+    },
+    {
       "id": "閣法-211-52",
       "title": "漁港漁場整備法及び水産業協同組合法の一部を改正する法律案",
       "side": "loss",
@@ -106891,6 +106996,110 @@
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBD46.htm",
         "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240412015.htm"
+      ]
+    },
+    {
+      "id": "衆法-207-7",
+      "title": "令和三年度子育て世帯等臨時特別給付金に係る差押禁止等に関する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "コロナ対応の費用便益で出した参考の額（支出の規模は官公庁の一次資料、帰属と乗数は仮定の幅。財源調達の超過負担は未控除。議員への配分に使わない）",
+        "コロナ期と重なる"
+      ],
+      "field": "コロナ対応",
+      "indicator": "支出の規模（一次資料）×帰属×乗数",
+      "stage": "なし（支出の規模から費用便益）",
+      "enforcedOn": "2021-12-20",
+      "amountMedianYen": 2844015000,
+      "amountLowYen": 1706409000,
+      "amountHighYen": 69451536000,
+      "lowerBound": false,
+      "window": "2021〜2021年",
+      "comparisonCountries": [],
+      "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
+      "group": "全体指標-コロナ費用便益",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD4D3A.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20720211220085.htm"
+      ]
+    },
+    {
+      "id": "衆法-204-12",
+      "title": "令和二年度子育て世帯生活支援特別給付金に係る差押禁止等に関する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "コロナ対応の費用便益で出した参考の額（支出の規模は官公庁の一次資料、帰属と乗数は仮定の幅。財源調達の超過負担は未控除。議員への配分に使わない）",
+        "コロナ期と重なる"
+      ],
+      "field": "コロナ対応",
+      "indicator": "支出の規模（一次資料）×帰属×乗数",
+      "stage": "なし（支出の規模から費用便益）",
+      "enforcedOn": "2021-04-21",
+      "amountMedianYen": 739500000,
+      "amountLowYen": 443700000,
+      "amountHighYen": 5454900000,
+      "lowerBound": false,
+      "window": "2021〜2021年",
+      "comparisonCountries": [],
+      "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
+      "group": "全体指標-コロナ費用便益",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD229E.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210421021.htm"
+      ]
+    },
+    {
+      "id": "衆法-201-24",
+      "title": "令和二年度ひとり親世帯臨時特別給付金等に係る差押禁止等に関する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "コロナ対応の費用便益で出した参考の額（支出の規模は官公庁の一次資料、帰属と乗数は仮定の幅。財源調達の超過負担は未控除。議員への配分に使わない）",
+        "コロナ期と重なる"
+      ],
+      "field": "コロナ対応",
+      "indicator": "支出の規模（一次資料）×帰属×乗数",
+      "stage": "なし（支出の規模から費用便益）",
+      "enforcedOn": "2020-06-12",
+      "amountMedianYen": 714680000,
+      "amountLowYen": 428808000,
+      "amountHighYen": 5271816000,
+      "lowerBound": false,
+      "window": "2020〜2020年",
+      "comparisonCountries": [],
+      "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
+      "group": "全体指標-コロナ費用便益",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF42A.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200612055.htm"
+      ]
+    },
+    {
+      "id": "衆法-208-42",
+      "title": "令和四年度子育て世帯生活支援特別給付金に係る差押禁止等に関する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "コロナ対応の費用便益で出した参考の額（支出の規模は官公庁の一次資料、帰属と乗数は仮定の幅。財源調達の超過負担は未控除。議員への配分に使わない）",
+        "コロナ期と重なる"
+      ],
+      "field": "コロナ対応",
+      "indicator": "支出の規模（一次資料）×帰属×乗数",
+      "stage": "なし（支出の規模から費用便益）",
+      "enforcedOn": "2022-06-13",
+      "amountMedianYen": 694620000,
+      "amountLowYen": 416772000,
+      "amountHighYen": 5123844000,
+      "lowerBound": false,
+      "window": "2022〜2022年",
+      "comparisonCountries": [],
+      "benefitStatus": "費用便益（財源調達の超過負担は未控除）",
+      "group": "全体指標-コロナ費用便益",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5A2E.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220613064.htm"
       ]
     }
   ],
@@ -108714,18 +108923,6 @@
       "reason": "2系統とも評価対象外で一致（対応表なし）"
     },
     {
-      "id": "衆法-201-10",
-      "title": "令和二年度特別定額給付金等に係る差押禁止等に関する法律案",
-      "outcome": "評価対象外",
-      "reason": "2系統とも評価対象外で一致（対応表なし）"
-    },
-    {
-      "id": "衆法-201-24",
-      "title": "令和二年度ひとり親世帯臨時特別給付金等に係る差押禁止等に関する法律案",
-      "outcome": "評価対象外",
-      "reason": "2系統とも評価対象外で一致（対応表なし）"
-    },
-    {
       "id": "閣法-201-1",
       "title": "地方交付税法及び特別会計に関する法律の一部を改正する法律案",
       "outcome": "評価対象外",
@@ -108756,12 +108953,6 @@
       "reason": "感染症対策で対応表なし"
     },
     {
-      "id": "閣法-201-54",
-      "title": "新型コロナウイルス感染症等の影響に対応するための国税関係法律の臨時特例に関する法律案",
-      "outcome": "評価対象外",
-      "reason": "2系統とも評価対象外で一致（対応表なし）"
-    },
-    {
       "id": "閣法-201-56",
       "title": "平成三十二年東京オリンピック競技大会・東京パラリンピック競技大会特別措置法等の一部を改正する法律案",
       "outcome": "保留（振り分け）",
@@ -108778,12 +108969,6 @@
       "title": "金融機能の強化のための特別措置に関する法律の一部を改正する法律案",
       "outcome": "未測定（系列・比較群が足りない）",
       "reason": "国内：国内に比較群がない／国際（世界銀行 銀行の不良債権比率（総貸出に対する%）、出所：WDI FB.AST.NPER.ZS（日本2010〜2022年））：比較国12か国のうち、同じ向きで条件を満たした国が8か国に届かないため保留"
-    },
-    {
-      "id": "閣法-201-59",
-      "title": "新型コロナウイルス感染症等の影響に対応するための雇用保険法の臨時特例等に関する法律案",
-      "outcome": "未測定（系列・比較群が足りない）",
-      "reason": "比較群なし：国内に影響を受けない比較群がない。雇用動向調査と労働力調査の転職の系列は取得したが、対象の法律（雇用保険法・高年齢者雇用安定法・育児介護休業法など）は全産業の労働者に及ぶため、影響を受けない産業がなく、分野対経済全体の比較群が作れない。国内の判定は行わず「比較群なし…"
     },
     {
       "id": "衆法-203-6",
@@ -108820,12 +109005,6 @@
       "title": "地震防災対策特別措置法の一部を改正する法律案",
       "outcome": "評価対象外",
       "reason": "2系統とも評価対象外で一致（対応表なし）"
-    },
-    {
-      "id": "衆法-204-12",
-      "title": "令和二年度子育て世帯生活支援特別給付金に係る差押禁止等に関する法律案",
-      "outcome": "保留（額の計算・公開条件）",
-      "reason": "参考の行（代理の指標）は合計に入れず公開の対象にしない"
     },
     {
       "id": "衆法-204-14",
@@ -108900,12 +109079,6 @@
       "reason": "参考の行（代理の指標）は合計に入れず公開の対象にしない"
     },
     {
-      "id": "衆法-207-7",
-      "title": "令和三年度子育て世帯等臨時特別給付金に係る差押禁止等に関する法律案",
-      "outcome": "保留（額の計算・公開条件）",
-      "reason": "参考の行（代理の指標）は合計に入れず公開の対象にしない"
-    },
-    {
       "id": "衆法-207-8",
       "title": "国会議員の歳費、旅費及び手当等に関する法律の一部を改正する法律案",
       "outcome": "評価対象外",
@@ -108948,12 +109121,6 @@
       "reason": "2系統とも評価対象外で一致（対応表なし）"
     },
     {
-      "id": "衆法-208-42",
-      "title": "令和四年度子育て世帯生活支援特別給付金に係る差押禁止等に関する法律案",
-      "outcome": "保留（額の計算・公開条件）",
-      "reason": "参考の行（代理の指標）は合計に入れず公開の対象にしない"
-    },
-    {
       "id": "閣法-208-4",
       "title": "地方交付税法等の一部を改正する法律案",
       "outcome": "評価対象外",
@@ -108976,12 +109143,6 @@
       "title": "特別職の職員の給与に関する法律の一部を改正する法律案",
       "outcome": "評価対象外",
       "reason": "2系統とも評価対象外で一致（対応表なし）"
-    },
-    {
-      "id": "閣法-208-14",
-      "title": "雇用保険法等の一部を改正する法律案",
-      "outcome": "未測定（系列・比較群が足りない）",
-      "reason": "比較群なし：国内に影響を受けない比較群がない。雇用動向調査と労働力調査の転職の系列は取得したが、対象の法律（雇用保険法・高年齢者雇用安定法・育児介護休業法など）は全産業の労働者に及ぶため、影響を受けない産業がなく、分野対経済全体の比較群が作れない。国内の判定は行わず「比較群なし…"
     },
     {
       "id": "閣法-208-16",
@@ -110509,9 +110670,9 @@
     "staged": 470,
     "amounted": 98,
     "publishable": 1,
-    "published": 2814,
+    "published": 2822,
     "confirmed": 78,
-    "reference": 2736,
-    "others": 601
+    "reference": 2744,
+    "others": 593
   }
 }

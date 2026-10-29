@@ -6,8 +6,8 @@
  */
 
 /** 仕様全体の版。部品の版が1つでも変われば上げる。 */
-export const SPEC_VERSION = 'method-spec-v2.2';
-export const SPEC_DATE = '2026-10-24';
+export const SPEC_VERSION = 'method-spec-v2.3';
+export const SPEC_DATE = '2026-10-29';
 
 export type SpecStatus = '採用' | '案';
 export type SpecFormula = { tex: string; note?: string };
@@ -34,7 +34,7 @@ export type StandardMethod = { name: string; use: string; refs: string[]; sectio
 export const STANDARD_METHODS: StandardMethod[] = [
   { name: '差の差', use: '法律の前後で、日本と比較国の差がどう変わったか', refs: ['Angrist & Pischke, Mostly Harmless Econometrics (2009), ch. 5'], sections: ['impact', 'loss', 'macro'] },
   { name: '合成対照と置換検定', use: '差が偶然の範囲かどうか（置換検定の順位で確かさを決める）', refs: ['Abadie, Diamond & Hainmueller (2010), Journal of the American Statistical Association 105(490)'], sections: ['cause-axis'] },
-  { name: '費用便益分析', use: '規制の便益を公的な単価で円にし、損失から差し引く。税や交付金などの移転は数えない', refs: ['Boardman et al., Cost-Benefit Analysis: Concepts and Practice', '国土交通省「公共事業評価の費用便益分析に関する技術指針」'], sections: ['benefit'] },
+  { name: '費用便益分析', use: '規制の便益を公的な単価で円にし、損失から差し引く。税や交付金などの移転は数えない', refs: ['Boardman et al., Cost-Benefit Analysis: Concepts and Practice', '国土交通省「公共事業評価の費用便益分析に関する技術指針」'], sections: ['benefit', 'covid'] },
   { name: 'シャープレイ＝シュービック投票力指数', use: '1票が法律の成立にどれだけ効いたか', refs: ['Shapley & Shubik (1954), American Political Science Review 48(3)'], sections: ['allocation-v0', 'allocation-v1', 'reference-members'] },
   { name: '実質化（GDP デフレーター）', use: '違う年の円を、同じ年の円にそろえる', refs: ['United Nations et al., System of National Accounts 2008, ch. 15'], sections: ['price'] },
   { name: '成長会計', use: '差を、働く人の数・資本・生産性の分に分ける', refs: ['Solow (1957), Review of Economics and Statistics 39(3)', 'OECD, Measuring Productivity (2001)'], sections: ['cause-axis'] },
@@ -162,6 +162,28 @@ export const SPEC_SECTIONS: SpecSection[] = [
     ],
     symbols: [['k(i)', '法律 i の産業（OECD 表6 の ISIC 節）']],
     rules: ['施行日が無ければ公布日で推定し「施行日は推定（公布日）」の印を付ける。'],
+  },
+  {
+    id: 'covid',
+    title: 'コロナ対応の法律の費用便益',
+    version: 'covid-benefit-v1',
+    status: '採用',
+    code: ['scripts/build_covid_benefit.py', 'scripts/build_macro_amounts.py（apply_covid）'],
+    lead: 'コロナ対応の法律では全体指標の差がコロナの落ち込みそのものになり、その法律の効果ではありません。比べるのは「コロナはあったが、その法律が無かった場合」です。法律に結びつく支出の規模を官公庁の一次資料から取り、定番の費用便益で便益の額にします。',
+    formulas: [
+      { tex: 'B^{(q)}_i = \\sum_{k} S_{i,k}\\; a^{(q)}_{i,k}\\; m^{(q)}_{i,k},\\qquad q\\in\\{\\text{下},\\text{中},\\text{上}\\}', note: '便益。幅の下・中・上は帰属と乗数の仮定の幅' },
+    ],
+    symbols: [
+      ['S_{i,k}', '法律 i に結びつく支出 k の規模（円）。予算額か実績額で、官公庁の一次資料の原文の抜粋つき（data/acquired/covid-spending/）'],
+      ['a_{i,k}', '法律への帰属割合。給付の差押禁止は差押えを受けうる世帯の割合（国保の差押世帯割合〜滞納世帯割合）、雇用保険の特例は財源措置が支えた割合'],
+      ['m_{i,k}', '支出が消費・付加価値に回る割合。移転は消費に回る割合12〜22%（内閣府 政策課題分析22）、所得税減税0.25・公共投資1.12（内閣府 経済社会総合研究所 2018）'],
+    ],
+    rules: [
+      '移転そのもの（給付・猶予）は便益にも損失にも数えない。数えるのは、移転が守った・下支えした消費や雇用の分だけ。',
+      '財源調達の超過負担（死荷重）は、官公庁の単価が見つからなかったので差し引いていない（総便益）。額の読み方の注意に書く。',
+      '規模は取れたが便益に換算する乗数・単価が定番の資料に無い法律は、額を出さず、規模と理由を残す。',
+      '確かさは常に「参考」。議員への配分に使わない。全体指標の差の額は、コロナ対応の法律には付けない。',
+    ],
   },
   {
     id: 'observation',
