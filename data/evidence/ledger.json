@@ -9904,6 +9904,701 @@
     "crossref_year_match": true,
     "verified_at": "2026-10-29"
    }
+  },
+  {
+   "id": "lit-132",
+   "mechanism": "ICT資本の使い込みの遅れ（日米差）の裏づけ",
+   "quantity": "Extra IT intensity of US establishments relative to other multinationals",
+   "estimate": {
+    "central": 32.0,
+    "low": null,
+    "high": null,
+    "unit": "percentage points",
+    "interval_type": "報告なし"
+   },
+   "source": {
+    "authors": "Bloom, Sadun, Van Reenen",
+    "year": 2012,
+    "title": "Americans Do IT Better: US Multinationals and the Productivity Miracle",
+    "venue": "American Economic Review 102",
+    "doi": "10.1257/aer.102.1.167",
+    "url": "https://doi.org/10.1257/aer.102.1.167",
+    "study_type": "single-study",
+    "n_studies": null
+   },
+   "scope": {
+    "countries": "UK establishments (ABI panel, manufacturing and services incl. retail, wholesale), comparing US multinationals, non-US multinationals and domestic firms; macro ",
+    "period": "1995-2003 (UK establishment panel)",
+    "population_or_sector": "UK establishments (ABI panel, manufacturing and services incl. retail, wholesale), comparing US multinationals, non-US multinationals and domestic firms; macro "
+   },
+   "locator": "Section II, Table 1：「US establishments are 32 percentage points more IT intensive than other multinationals.」",
+   "japan_application": {
+    "method": "他国・他産業の値は、日本へそのまま当てず、比較の外側の目安か検算の下限・上限として使う。",
+    "caveat": "Numbers come from the 2007 NBER working paper, not the paywalled AER text, so published values may differ; the results are UK-only OLS/fixed-effects correlations with limited identification (takeover design, no instrument), a 1995-2003 sample, and do not cover Japan."
+   },
+   "used_for": [
+    "ICT導入・デジタル化政策の効果の外側の目安"
+   ],
+   "confidence": "中",
+   "literature_row": 132,
+   "verification": {
+    "status": "verified",
+    "crossref_title_match": true,
+    "checks": [
+     {
+      "role": "collector",
+      "central": 32.0
+     },
+     {
+      "role": "check1",
+      "central": 32,
+      "low": null,
+      "high": null,
+      "unit": "percentage points",
+      "scope_match": true,
+      "locator": "本文 Section I〜II の要素比較（Table 1 直後の記述、WP p.11）",
+      "version": "NBER Working Paper 13085（2007年5月版）。AER 2012 刊行版は未読（publisher 403）。"
+     },
+     {
+      "role": "check2",
+      "central": 32,
+      "low": null,
+      "high": null,
+      "unit": "percentage points",
+      "scope_match": true,
+      "locator": "第III節冒頭（UK Establishment Panel の結果）、p.180",
+      "version": "American Economic Review 102(1), 2012（AER 版と判断できる頁付き PDF、HBS 配布のコピー）。"
+     }
+    ],
+    "verified_at": "2026-10-29",
+    "crossref_author_match": true,
+    "crossref_year_match": true
+   }
+  },
+  {
+   "id": "lit-135",
+   "mechanism": "ICT資本の使い込みの遅れ（日米差）の裏づけ",
+   "quantity": "US*IT interaction in IT-using intensive sectors, fixed effects",
+   "estimate": {
+    "central": 0.0278,
+    "low": null,
+    "high": null,
+    "unit": "coefficient (log output per log IT capital)",
+    "interval_type": "報告なし"
+   },
+   "source": {
+    "authors": "Bloom, Sadun, Van Reenen",
+    "year": 2012,
+    "title": "Americans Do IT Better: US Multinationals and the Productivity Miracle",
+    "venue": "American Economic Review 102",
+    "doi": "10.1257/aer.102.1.167",
+    "url": "https://doi.org/10.1257/aer.102.1.167",
+    "study_type": "single-study",
+    "n_studies": null
+   },
+   "scope": {
+    "countries": "UK establishments (ABI panel, manufacturing and services incl. retail, wholesale), comparing US multinationals, non-US multinationals and domestic firms; macro ",
+    "period": "1995-2003 (UK establishment panel)",
+    "population_or_sector": "UK establishments (ABI panel, manufacturing and services incl. retail, wholesale), comparing US multinationals, non-US multinationals and domestic firms; macro "
+   },
+   "locator": "Table 3 column (7)：「A doubling of the IT capital stock is associated with 1% higher productivity for a domestic establishment and 1.6% for a non-US multinational, but 3.9% higher productivity for an establishment owned by a US multinational.」",
+   "japan_application": {
+    "method": "他国・他産業の値は、日本へそのまま当てず、比較の外側の目安か検算の下限・上限として使う。",
+    "caveat": "Numbers come from the 2007 NBER working paper, not the paywalled AER text, so published values may differ; the results are UK-only OLS/fixed-effects correlations with limited identification (takeover design, no instrument), a 1995-2003 sample, and do not cover Japan."
+   },
+   "used_for": [
+    "ICT導入・デジタル化政策の効果の外側の目安"
+   ],
+   "confidence": "中",
+   "literature_row": 135,
+   "verification": {
+    "status": "held",
+    "held_reason": "値が不一致 収集=0.0278 照合1=0.0278 照合2=0.0368",
+    "crossref_title_match": null,
+    "verified_at": "2026-10-29",
+    "crossref_author_match": null,
+    "crossref_year_match": null
+   }
+  },
+  {
+   "id": "lit-138",
+   "mechanism": "ICT資本の使い込みの遅れ（日米差）の裏づけ",
+   "quantity": "Productivity growth revival, 1995-99 versus 1972-95",
+   "estimate": {
+    "central": 1.35,
+    "low": null,
+    "high": null,
+    "unit": "percentage points",
+    "interval_type": "報告なし"
+   },
+   "source": {
+    "authors": "Gordon",
+    "year": 2000,
+    "title": "Does the \"New Economy\" Measure up to the Great Inventions of the Past?",
+    "venue": "Journal of Economic Perspectives 14",
+    "doi": "10.1257/jep.14.4.49",
+    "url": "https://doi.org/10.1257/jep.14.4.49",
+    "study_type": "single-study",
+    "n_studies": null
+   },
+   "scope": {
+    "countries": "United States, private economy: durable manufacturing (computers, peripherals, telecommunications equipment) versus the rest. The paper compares the \"New Econom",
+    "period": "1995-99 compared with 1972-95; the \"golden age\" of 1913-72; Great Inventions of 1860-1900",
+    "population_or_sector": "United States, private economy: durable manufacturing (computers, peripherals, telecommunications equipment) versus the rest. The paper compares the \"New Econom"
+   },
+   "locator": "Abstract, NBER WP 7833, p. 1：「separates the revival of 1.35 percentage points (comparing 1995-99 with 1972-95) into 0.54 of an unsustainable cyclical effect and 0.81 points of acceleration in trend growth」",
+   "japan_application": {
+    "method": "他国・他産業の値は、日本へそのまま当てず、比較の外側の目安か検算の下限・上限として使う。",
+    "caveat": "This is the working-paper version and only the abstract and introduction were read; the decomposition tables and the JEP edition were not checked. The estimates are U.S. growth-accounting results for the short 1995-99 window, and the cyclical/trend split is not a causal identification, so the finding should not be carried over to Japan directly."
+   },
+   "used_for": [
+    "ICT導入・デジタル化政策の効果の外側の目安"
+   ],
+   "confidence": "中",
+   "literature_row": 138,
+   "verification": {
+    "status": "held",
+    "held_reason": "値が不一致 収集=1.35 照合1=1.35 照合2=1.23",
+    "crossref_title_match": null,
+    "verified_at": "2026-10-29",
+    "crossref_author_match": null,
+    "crossref_year_match": null
+   }
+  },
+  {
+   "id": "lit-140",
+   "mechanism": "ICT資本の使い込みの遅れ（日米差）の裏づけ",
+   "quantity": "Trend acceleration component of the revival",
+   "estimate": {
+    "central": 0.81,
+    "low": null,
+    "high": null,
+    "unit": "percentage points",
+    "interval_type": "報告なし"
+   },
+   "source": {
+    "authors": "Gordon",
+    "year": 2000,
+    "title": "Does the \"New Economy\" Measure up to the Great Inventions of the Past?",
+    "venue": "Journal of Economic Perspectives 14",
+    "doi": "10.1257/jep.14.4.49",
+    "url": "https://doi.org/10.1257/jep.14.4.49",
+    "study_type": "single-study",
+    "n_studies": null
+   },
+   "scope": {
+    "countries": "United States, private economy: durable manufacturing (computers, peripherals, telecommunications equipment) versus the rest. The paper compares the \"New Econom",
+    "period": "1995-99 compared with 1972-95; the \"golden age\" of 1913-72; Great Inventions of 1860-1900",
+    "population_or_sector": "United States, private economy: durable manufacturing (computers, peripherals, telecommunications equipment) versus the rest. The paper compares the \"New Econom"
+   },
+   "locator": "Abstract, p. 1：「0.81 points of acceleration in trend growth」",
+   "japan_application": {
+    "method": "他国・他産業の値は、日本へそのまま当てず、比較の外側の目安か検算の下限・上限として使う。",
+    "caveat": "This is the working-paper version and only the abstract and introduction were read; the decomposition tables and the JEP edition were not checked. The estimates are U.S. growth-accounting results for the short 1995-99 window, and the cyclical/trend split is not a causal identification, so the finding should not be carried over to Japan directly."
+   },
+   "used_for": [
+    "ICT導入・デジタル化政策の効果の外側の目安"
+   ],
+   "confidence": "中",
+   "literature_row": 140,
+   "verification": {
+    "status": "verified",
+    "crossref_title_match": true,
+    "checks": [
+     {
+      "role": "collector",
+      "central": 0.81
+     },
+     {
+      "role": "check1",
+      "central": 0.81,
+      "low": null,
+      "high": null,
+      "unit": "percentage points",
+      "scope_match": true,
+      "locator": "Abstract（WP 冒頭要旨）",
+      "version": "NBER Working Paper 7833（2000年8月版）。JEP 刊行版は未読。"
+     },
+     {
+      "role": "check2",
+      "central": 0.81,
+      "low": null,
+      "high": null,
+      "unit": "percentage points",
+      "scope_match": true,
+      "locator": "「The Productivity Growth Revival in Historical Perspective」後の節（Table 2 の解説、p.14-15 付近）",
+      "version": "NBER Working Paper 7833（ワーキングペーパー版）。JEP 2000 版は閲覧時に 403 で未読。"
+     }
+    ],
+    "verified_at": "2026-10-29",
+    "crossref_author_match": true,
+    "crossref_year_match": true
+   }
+  },
+  {
+   "id": "lit-266",
+   "mechanism": "参入障壁・規制（競争導入）の裏づけ",
+   "quantity": "OP covariance term, US manufacturing (Table 1, 1992-2001 average)",
+   "estimate": {
+    "central": 0.51,
+    "low": null,
+    "high": null,
+    "unit": "log points (as a fraction)",
+    "interval_type": "報告なし"
+   },
+   "source": {
+    "authors": "Bartelsman, Haltiwanger, Scarpetta",
+    "year": 2013,
+    "title": "Cross-Country Differences in Productivity: The Role of Allocation and Selection",
+    "venue": "American Economic Review 103",
+    "doi": "10.1257/aer.103.1.305",
+    "url": "https://doi.org/10.1257/aer.103.1.305",
+    "study_type": "single-study",
+    "n_studies": null
+   },
+   "scope": {
+    "countries": "Manufacturing in 8 countries: US, UK, Germany, France, Netherlands, plus the transition economies Hungary, Romania and Slovenia. Japan is not covered. The harmo",
+    "period": "Data cover 1992-2001 (France only to 1995). Changes in Table 2 compare the 1996-2001 average with the 1992-1995 average. The text also says 1996-2001 versus 199",
+    "population_or_sector": "Manufacturing in 8 countries: US, UK, Germany, France, Netherlands, plus the transition economies Hungary, Romania and Slovenia. Japan is not covered. The harmo"
+   },
+   "locator": "Table 1; Section 1 (about 50 log points)：「the OP covariance term for labor productivity averages about 50 log points within U.S. manufacturing industries」",
+   "japan_application": {
+    "method": "他国・他産業の値は、日本へそのまま当てず、比較の外側の目安か検算の下限・上限として使う。",
+    "caveat": "The OP covariance is a descriptive accounting moment and the distortions are inferred from a calibrated model rather than identified causally. The data are manufacturing only, 1992-2001, and use revenue-based labor productivity, and the model matches dispersion in labor productivity and TFP poorly, especially in the transition economies. The IT, regulation and entry-barrier effects the task asked "
+   },
+   "used_for": [
+    "参入規制・競争導入を伴う法律の効果の目安"
+   ],
+   "confidence": "中",
+   "literature_row": 266,
+   "verification": {
+    "status": "verified",
+    "crossref_title_match": true,
+    "checks": [
+     {
+      "role": "collector",
+      "central": 0.51
+     },
+     {
+      "role": "check1",
+      "central": 0.51,
+      "low": null,
+      "high": null,
+      "unit": "log points (as a fraction)",
+      "scope_match": true,
+      "locator": "Table 1（Within-Industry Productivity Dispersion and OP Covariance Term）、United States 行、AER p.311",
+      "version": "AER 2013 刊行版（大学サイト配布 PDF）。"
+     },
+     {
+      "role": "check2",
+      "central": 0.51,
+      "low": null,
+      "high": null,
+      "unit": "log points (as a fraction)",
+      "scope_match": true,
+      "locator": "表1（Within Industry Productivity Dispersion and OP Covariance Term）の United States 行；第2節の本文",
+      "version": "NBER Working Paper 15490（2009年11月、ワーキングペーパー版）。AER 2013 版は未読（同版の PDF はこの環境で証明書エラーのため取得できず）。"
+     }
+    ],
+    "verified_at": "2026-10-29",
+    "crossref_author_match": true,
+    "crossref_year_match": true
+   }
+  },
+  {
+   "id": "lit-278",
+   "mechanism": "参入障壁・規制（競争導入）の裏づけ",
+   "quantity": "Entry liberalisation in manufacturing (trade barriers), Table 7 eq.3",
+   "estimate": {
+    "central": 0.05,
+    "low": null,
+    "high": null,
+    "unit": "coefficient on dependent variable ΔMFP",
+    "interval_type": "報告なし"
+   },
+   "source": {
+    "authors": "Nicoletti, Scarpetta",
+    "year": 2003,
+    "title": "Regulation, productivity and growth: OECD evidence",
+    "venue": "Economic Policy 18",
+    "doi": "10.1111/1468-0327.00102",
+    "url": "https://doi.org/10.1111/1468-0327.00102",
+    "study_type": "single-study",
+    "n_studies": null
+   },
+   "scope": {
+    "countries": "18 OECD countries, including Japan. 17 manufacturing and 6 business-services industries (23 two-digit industries). Countries: Australia, Austria, Belgium, Canad",
+    "period": "1984-1998 (industry MFP panel). The regulation indicators are mostly 1998 values (economy-wide and industry-level) plus time-series indicators of entry liberali",
+    "population_or_sector": "18 OECD countries, including Japan. 17 manufacturing and 6 business-services industries (23 two-digit industries). Countries: Australia, Austria, Belgium, Canad"
+   },
+   "locator": "Table 7, col. 3; para. 55：「the table shows that this effect is (weakly) significant only for manufacturing, suggesting the need to differentiate further the analysis across industries.」",
+   "japan_application": {
+    "method": "他国・他産業の値は、日本へそのまま当てず、比較の外側の目安か検算の下限・上限として使う。",
+    "caveat": "Regulation indicators are largely 1998 cross-sections with no time dimension, so the regressions drop country dummies and identification is weak (the authors flag mis-specification and RESET concerns). Several coefficients are only significant at 10%, the simulations focus on Europe rather than Japan, the period ends in 1998, and the source is the working-paper version rather than the journal text"
+   },
+   "used_for": [
+    "参入規制・競争導入を伴う法律の効果の目安"
+   ],
+   "confidence": "中",
+   "literature_row": 278,
+   "verification": {
+    "status": "verified",
+    "crossref_title_match": true,
+    "checks": [
+     {
+      "role": "collector",
+      "central": 0.05
+     },
+     {
+      "role": "check1",
+      "central": 0.05,
+      "low": null,
+      "high": null,
+      "unit": "coefficient on dependent variable ΔMFP",
+      "scope_match": true,
+      "locator": "Table 7 列(3)、行 Entry liberalisation (MAN)、OECD ECO/WKP(2003)1 p.37",
+      "version": "OECD Economics Department WP No.347（ECO/WKP(2003)1、2003年1月版）。Economic Policy 2003 刊行版は未読（publisher 403）。"
+     },
+     {
+      "role": "check2",
+      "central": 0.05,
+      "low": null,
+      "high": null,
+      "unit": "coefficient on dependent variable ΔMFP",
+      "scope_match": true,
+      "locator": "表7（MFP regressions: The role of regulations in manufacturing and services）第3列；本文 para.55（p.37）",
+      "version": "OECD Economics Department Working Paper No. 347（ECO/WKP(2003)1、ワーキングペーパー版）。Economic Policy 2003 版は未読。"
+     }
+    ],
+    "verified_at": "2026-10-29",
+    "crossref_author_match": true,
+    "crossref_year_match": true
+   }
+  },
+  {
+   "id": "lit-279",
+   "mechanism": "参入障壁・規制（競争導入）の裏づけ",
+   "quantity": "Entry liberalisation in services (industry-level indicator), Table 8 eq.1; barriers to entry in manufacturing x technology gap 0.04 (s.e. 0.02, *)",
+   "estimate": {
+    "central": 0.04,
+    "low": null,
+    "high": null,
+    "unit": "coefficient on dependent variable ΔMFP",
+    "interval_type": "報告なし"
+   },
+   "source": {
+    "authors": "Nicoletti, Scarpetta",
+    "year": 2003,
+    "title": "Regulation, productivity and growth: OECD evidence",
+    "venue": "Economic Policy 18",
+    "doi": "10.1111/1468-0327.00102",
+    "url": "https://doi.org/10.1111/1468-0327.00102",
+    "study_type": "single-study",
+    "n_studies": null
+   },
+   "scope": {
+    "countries": "18 OECD countries, including Japan. 17 manufacturing and 6 business-services industries (23 two-digit industries). Countries: Australia, Austria, Belgium, Canad",
+    "period": "1984-1998 (industry MFP panel). The regulation indicators are mostly 1998 values (economy-wide and industry-level) plus time-series indicators of entry liberali",
+    "population_or_sector": "18 OECD countries, including Japan. 17 manufacturing and 6 business-services industries (23 two-digit industries). Countries: Australia, Austria, Belgium, Canad"
+   },
+   "locator": "Table 8, col. 1-3; para. 56：「entry liberalisation in services seems to have a positive effect on productivity in the whole economy (equations 1 and 3), the effect of such liberalisation in manufacturing ... is not significant」",
+   "japan_application": {
+    "method": "他国・他産業の値は、日本へそのまま当てず、比較の外側の目安か検算の下限・上限として使う。",
+    "caveat": "Regulation indicators are largely 1998 cross-sections with no time dimension, so the regressions drop country dummies and identification is weak (the authors flag mis-specification and RESET concerns). Several coefficients are only significant at 10%, the simulations focus on Europe rather than Japan, the period ends in 1998, and the source is the working-paper version rather than the journal text"
+   },
+   "used_for": [
+    "参入規制・競争導入を伴う法律の効果の目安"
+   ],
+   "confidence": "中",
+   "literature_row": 279,
+   "verification": {
+    "status": "held",
+    "held_reason": "照合2:mismatch",
+    "crossref_title_match": null,
+    "verified_at": "2026-10-29",
+    "crossref_author_match": null,
+    "crossref_year_match": null
+   }
+  },
+  {
+   "id": "lit-326",
+   "mechanism": "参入障壁・規制（競争導入）の裏づけ",
+   "quantity": "Implied effect of a one standard deviation rise in the change in the foreign employment share on average incumbent TFP growth (from IV column 3)",
+   "estimate": {
+    "central": 1.3,
+    "low": null,
+    "high": null,
+    "unit": "percentage points of TFP growth",
+    "interval_type": "報告なし"
+   },
+   "source": {
+    "authors": "Aghion, Blundell, Griffith, Howitt (and Prantl)",
+    "year": 2004,
+    "title": "Entry and Productivity Growth: Evidence from Microlevel Panel Data",
+    "venue": "Journal of the European Economic Association 2",
+    "doi": "10.1162/154247604323067970",
+    "url": "https://doi.org/10.1162/154247604323067970",
+    "study_type": "single-study",
+    "n_studies": null
+   },
+   "scope": {
+    "countries": "United Kingdom, domestic incumbent establishments in manufacturing (166 four-digit industries; 3,827 establishments with at least 100 employees in one year and ",
+    "period": "1980 to 1993 (sample 1981-1993 per Table 1 notes)",
+    "population_or_sector": "United Kingdom, domestic incumbent establishments in manufacturing (166 four-digit industries; 3,827 establishments with at least 100 employees in one year and "
+   },
+   "locator": "Section 3.2, discussion after Table 1; Table A.1 (mean 0.0044, sd 0.0336)：「increasing the change in the share of four-digit industry employment in foreign firms ... by one standard deviation (i.e., by 0.0336) would result in a rise of the average growth rate of incumbents' TFP by 1.3 percentage points」",
+   "japan_application": {
+    "method": "他国・他産業の値は、日本へそのまま当てず、比較の外側の目安か検算の下限・上限として使う。",
+    "caveat": "Identification rests on EU Single Market Program industry indicators and US R&D intensity as instruments. The authors themselves note that the results may also reflect selection or spillovers. The study covers only UK manufacturing in 1980-1993, and the measure is foreign-plant employment share, which also picks up expansions, contractions and exits. The IV standard errors are wide, and the first-"
+   },
+   "used_for": [
+    "参入規制・競争導入を伴う法律の効果の目安"
+   ],
+   "confidence": "中",
+   "literature_row": 326,
+   "verification": {
+    "status": "verified",
+    "crossref_title_match": true,
+    "checks": [
+     {
+      "role": "collector",
+      "central": 1.3
+     },
+     {
+      "role": "check1",
+      "central": 1.3,
+      "low": null,
+      "high": null,
+      "unit": "percentage points of TFP growth",
+      "scope_match": true,
+      "locator": "Section 3（本文、Table 1 の直後、JEEA p.274）。推計は Table 1 列3（IV）、係数 0.3814***",
+      "version": "JEEA 2004 刊行版（大学機関リポジトリ配布 PDF）。"
+     },
+     {
+      "role": "check2",
+      "central": 1.3,
+      "low": null,
+      "high": null,
+      "unit": "percentage points of TFP growth",
+      "scope_match": true,
+      "locator": "第3.2節 Empirical Results（p.274）；表1 の IV 第3列（Change(foreign plant employment) = 0.3814***）",
+      "version": "Journal of the European Economic Association 2(2-3), 2004（著者公開の PDF 版）。"
+     }
+    ],
+    "verified_at": "2026-10-29",
+    "crossref_author_match": true,
+    "crossref_year_match": true
+   }
+  },
+  {
+   "id": "lit-284",
+   "mechanism": "資源配分の歪み・新陳代謝の弱さの裏づけ",
+   "quantity": "Exit effect (including switch-out) in Japan 1994-2001",
+   "estimate": {
+    "central": -0.52,
+    "low": null,
+    "high": null,
+    "unit": "percent; share of TFP growth -0.24",
+    "interval_type": "報告なし"
+   },
+   "source": {
+    "authors": "Fukao, Kwon",
+    "year": 2006,
+    "title": "Why Did Japan's TFP Growth Slow Down in the Lost Decade? An Empirical Analysis Based on Firm-Level Data of Manufacturing Firms",
+    "venue": "The Japanese Economic Review 57",
+    "doi": "10.1111/j.1468-5876.2006.00359.x",
+    "url": "https://doi.org/10.1111/j.1468-5876.2006.00359.x",
+    "study_type": "single-study",
+    "n_studies": null
+   },
+   "scope": {
+    "countries": "Japan, manufacturing sector (30 industries), firm-level data",
+    "period": "1994-2001 (TFP growth decomposition, and TFP-gap analysis); regression for 1995-2001, split 1995-1997 and 1998-2001",
+    "population_or_sector": "Japan, manufacturing sector (30 industries), firm-level data"
+   },
+   "locator": "Table 3.3 (Japan row); Section 3, finding 1：「the average TFP level of exiting firms was higher than that of staying firms」",
+   "japan_application": {
+    "method": "他国・他産業の値は、日本へそのまま当てず、比較の外側の目安か検算の下限・上限として使う。",
+    "caveat": "The text read is the 2004 working-paper version, not the 2006 journal text. The exit measure also counts firms that shrank below the survey cut-off, merged or changed industry, and the US and Korea comparators use establishment data, so the decomposition is descriptive and does not identify causes."
+   },
+   "used_for": [
+    "退出・新陳代謝・ゾンビ企業に関わる政策の効果の目安"
+   ],
+   "confidence": "中",
+   "literature_row": 284,
+   "verification": {
+    "status": "verified",
+    "crossref_title_match": true,
+    "checks": [
+     {
+      "role": "collector",
+      "central": -0.52
+     },
+     {
+      "role": "check1",
+      "central": -0.52,
+      "low": null,
+      "high": null,
+      "unit": "percent; share of TFP growth -0.24",
+      "scope_match": true,
+      "locator": "Table 3.3（This paper、Japan、Firm、1994-2001 行）、列 Exit effect (including switch-out effect)、HI-Stat DP 本文",
+      "version": "HI-Stat Discussion Paper No.50（2004年12月版）。Japanese Economic Review 2006 刊行版は未読。"
+     },
+     {
+      "role": "check2",
+      "central": -0.52,
+      "low": null,
+      "high": null,
+      "unit": "percent; share of TFP growth -0.24",
+      "scope_match": true,
+      "locator": "表3.3（各国製造業の TFP 分解の比較、Foster-Haltiwanger-Krizan 法）の「This paper」行（Japan、Firm、1994-2001）",
+      "version": "RIETI Discussion Paper 05-E-004（ワーキングペーパー版）。JER 2006 掲載版は未読。"
+     }
+    ],
+    "verified_at": "2026-10-29",
+    "crossref_author_match": true,
+    "crossref_year_match": true
+   }
+  },
+  {
+   "id": "lit-347",
+   "mechanism": "資源配分の歪み・新陳代謝の弱さの裏づけ",
+   "quantity": "Average reallocation term of APG, 1990s",
+   "estimate": {
+    "central": -0.85,
+    "low": null,
+    "high": null,
+    "unit": "% (percentage points of APG)",
+    "interval_type": "報告なし"
+   },
+   "source": {
+    "authors": "Kwon, Narita, Narita",
+    "year": 2015,
+    "title": "Resource reallocation and zombie lending in Japan in the 1990s",
+    "venue": "Review of Economic Dynamics 18",
+    "doi": "10.1016/j.red.2015.07.001",
+    "url": "https://doi.org/10.1016/j.red.2015.07.001",
+    "study_type": "single-study",
+    "n_studies": null
+   },
+   "scope": {
+    "countries": "Japan, manufacturing plants (plant-level data on manufacturers)",
+    "period": "1981-2000 (the 1990s versus the 1980s); the zombie counterfactual compares steady states in 1989 and 1999",
+    "population_or_sector": "Japan, manufacturing plants (plant-level data on manufacturers)"
+   },
+   "locator": "Introduction, p.2：「The average reallocation term was -0.18% during the 1980s and it was -0.85% during the 1990s.」",
+   "japan_application": {
+    "method": "他国・他産業の値は、日本へそのまま当てず、比較の外側の目安か検算の下限・上限として使う。",
+    "caveat": "These numbers come from the 2009 RIETI working paper, not the published RED version. The 37% figure rests on a calibrated model whose zombie definition (below the 20th TFP percentile for 5 years) and tax-wedge identification are assumptions rather than credit data. The sample is manufacturing only, so the result cannot be extended to services."
+   },
+   "used_for": [
+    "退出・新陳代謝・ゾンビ企業に関わる政策の効果の目安"
+   ],
+   "confidence": "中",
+   "literature_row": 347,
+   "verification": {
+    "status": "verified",
+    "crossref_title_match": true,
+    "checks": [
+     {
+      "role": "collector",
+      "central": -0.85
+     },
+     {
+      "role": "check1",
+      "central": -0.85,
+      "low": null,
+      "high": null,
+      "unit": "% (percentage points of APG)",
+      "scope_match": true,
+      "locator": "Table 1（PL Aggregate Productivity and Its Decomposition）、1990s Average 行の Reallocation 列。本文 Section 3 の要約も同値",
+      "version": "RIETI Discussion Paper 09-E-052（2009年10月版）。Review of Economic Dynamics 2015 刊行版は未読。"
+     },
+     {
+      "role": "check2",
+      "central": -0.85,
+      "low": null,
+      "high": null,
+      "unit": "% (percentage points of APG)",
+      "scope_match": true,
+      "locator": "第1節（序論）本文；表1 の 1990s Average 行（Reallocation 列）",
+      "version": "RIETI Discussion Paper 09-E-052（ワーキングペーパー版）。刊行版は未読。"
+     }
+    ],
+    "verified_at": "2026-10-29",
+    "crossref_author_match": true,
+    "crossref_year_match": true
+   }
+  },
+  {
+   "id": "lit-351",
+   "mechanism": "資源配分の歪み・新陳代謝の弱さの裏づけ",
+   "quantity": "Share of the actual decline in APG due to inefficient labor reallocation that is attributable to zombie lending",
+   "estimate": {
+    "central": 37.0,
+    "low": null,
+    "high": null,
+    "unit": "%",
+    "interval_type": "報告なし"
+   },
+   "source": {
+    "authors": "Kwon, Narita, Narita",
+    "year": 2015,
+    "title": "Resource reallocation and zombie lending in Japan in the 1990s",
+    "venue": "Review of Economic Dynamics 18",
+    "doi": "10.1016/j.red.2015.07.001",
+    "url": "https://doi.org/10.1016/j.red.2015.07.001",
+    "study_type": "single-study",
+    "n_studies": null
+   },
+   "scope": {
+    "countries": "Japan, manufacturing plants (plant-level data on manufacturers)",
+    "period": "1981-2000 (the 1990s versus the 1980s); the zombie counterfactual compares steady states in 1989 and 1999",
+    "population_or_sector": "Japan, manufacturing plants (plant-level data on manufacturers)"
+   },
+   "locator": "Abstract; Section 5, Table 7：「37% of the actual decline in APG due to inefficient labor reallocation in Japan in the '90s is attributable to \"zombie lending.\"」",
+   "japan_application": {
+    "method": "他国・他産業の値は、日本へそのまま当てず、比較の外側の目安か検算の下限・上限として使う。",
+    "caveat": "These numbers come from the 2009 RIETI working paper, not the published RED version. The 37% figure rests on a calibrated model whose zombie definition (below the 20th TFP percentile for 5 years) and tax-wedge identification are assumptions rather than credit data. The sample is manufacturing only, so the result cannot be extended to services."
+   },
+   "used_for": [
+    "退出・新陳代謝・ゾンビ企業に関わる政策の効果の目安"
+   ],
+   "confidence": "中",
+   "literature_row": 351,
+   "verification": {
+    "status": "verified",
+    "crossref_title_match": true,
+    "checks": [
+     {
+      "role": "collector",
+      "central": 37.0
+     },
+     {
+      "role": "check1",
+      "central": 37,
+      "low": null,
+      "high": null,
+      "unit": "%",
+      "scope_match": true,
+      "locator": "Abstract（DP 冒頭要旨）。本文（Introduction）にも同旨の記述",
+      "version": "RIETI Discussion Paper 09-E-052（2009年10月版）。RED 2015 刊行版は未読。"
+     },
+     {
+      "role": "check2",
+      "central": 37,
+      "low": null,
+      "high": null,
+      "unit": "%",
+      "scope_match": true,
+      "locator": "要旨（Abstract）；本文の反実仮想分析の節（ワーキングペーパー版）",
+      "version": "RIETI Discussion Paper 09-E-052（2009年10月、ワーキングペーパー版）。刊行版（Review of Economic Dynamics 2015）は未読。"
+     }
+    ],
+    "verified_at": "2026-10-29",
+    "crossref_author_match": true,
+    "crossref_year_match": true
+   }
   }
  ]
 }
