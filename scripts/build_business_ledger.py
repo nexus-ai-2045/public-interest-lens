@@ -166,7 +166,8 @@ def load_bills() -> list[dict[str, str]]:
     bills = []
     with ENACTED.open(encoding='utf-8', newline='') as f:
         for r in csv.DictReader(f):
-            if '改正' not in r['題名']:
+            # 施行に伴う整備法は、題名の先頭に出る法律名が施行の契機を指すだけで、その法律自身の改正ではない。
+            if '改正' not in r['題名'] or '施行に伴う' in r['題名'] or re.search(r'整備等?に関する法律', r['題名']):
                 continue
             bill_id = f"{r['種別']}-{r['提出回次']}-{r['番号']}"
             o = outcomes.get(bill_id, {})

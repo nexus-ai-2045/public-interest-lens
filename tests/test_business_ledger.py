@@ -62,6 +62,10 @@ class BusinessLedgerTest(unittest.TestCase):
             self.assertTrue(0 < days <= bl.WINDOW_DAYS, c)
             self.assertIn("要望が原因とは読まない", c["対応の確かさ"])
 
+    def test_enforcement_adjustment_laws_are_not_linked(self) -> None:
+        titles = {c["改正法題名"] for c in csv.DictReader((bl.OUT_DIR / "chain.csv").open(encoding="utf-8", newline=""))}
+        self.assertFalse([t for t in titles if "施行に伴う" in t or "整備等に関する法律" in t], titles)
+
     def test_amounts_are_not_truncated(self) -> None:
         for c in csv.DictReader((bl.OUT_DIR / "chain.csv").open(encoding="utf-8", newline="")):
             if c["額の表示"].startswith(("損失", "便益")):
