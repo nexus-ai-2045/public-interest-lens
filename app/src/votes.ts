@@ -30,10 +30,20 @@ export function parseVotes(text: string): PublicVotes {
 
 export const lawYear = (law: VoteLaw): number => Number((law.promulgated ?? law.shu?.date ?? law.san?.date ?? '0000').slice(0, 4));
 
-export const START_YEARS = ['all', '2015', '2020', '2023', '2025'] as const;
+export const START_YEARS = ['recent4', 'all', '2015', '2020', '2023', '2025'] as const;
 export type StartYear = typeof START_YEARS[number];
-export const startLabel = (s: StartYear) => s === 'all' ? '全期間' : `${s}年以降`;
-export const fromYear = (laws: VoteLaw[], start: StartYear): VoteLaw[] => start === 'all' ? laws : laws.filter(l => lawYear(l) >= Number(start));
+export const startLabel = (s: StartYear) => s === 'all' ? '全期間' : s === 'recent4' ? 'データ最新日から4年' : `${s}年以降`;
+const dayOf = (law: VoteLaw): string => law.promulgated ?? law.shu?.date ?? law.san?.date ?? '';
+/** 公布日（なければ衆院、次に参院の採決日）の最新日が基準。4年前の同日は除き、最新日は含む。 */
+export function recentCutoff(laws: VoteLaw[]): string {
+  const latest = laws.map(dayOf).reduce((a, b) => (b > a ? b : a), '');
+  return latest ? `${Number(latest.slice(0, 4)) - 4}${latest.slice(4)}` : '';
+}
+export const fromYear = (laws: VoteLaw[], start: StartYear): VoteLaw[] => {
+  if (start === 'all') return laws;
+  if (start === 'recent4') { const cut = recentCutoff(laws); return laws.filter(l => dayOf(l) > cut); }
+  return laws.filter(l => lawYear(l) >= Number(start));
+};
 
 /** 系統（自民・公明・立憲…）。会派名は合流・改称が多いので名前の一部で寄せる（議員ページの政党ランキングと同じ分け方）。 */
 export const BLOCS = ['自民', '公明', '立憲', '共産', '国民民主', '維新', 'れいわ', '社民', '参政', '民主系', 'その他'] as const;
@@ -58,12 +68,23 @@ export function blocStance(law: VoteLaw, bloc: Bloc): BlocStance {
   return { shu, san, sanMethod: law.san?.method ?? null };
 }
 
-export type BlocSummary = { bloc: Bloc; shuYes: number; shuNo: number; shuLaws: number; sanYes: number; sanNo: number; sanLaws: number };
+export type BlocSummary = { bloc: Bloc; shuYes: number; shuNo: number; shuLaws: number; sanYes: number; sanNo: number; sanLaws: number; withLdpSame: number; withLdpLaws: number; withLdpExcluded: number };
 export function blocSummary(laws: VoteLaw[], bloc: Bloc): BlocSummary {
-  const out: BlocSummary = { bloc, shuYes: 0, shuNo: 0, shuLaws: 0, sanYes: 0, sanNo: 0, sanLaws: 0 };
+  const out: BlocSummary = { bloc, shuYes: 0, shuNo: 0, shuLaws: 0, sanYes: 0, sanNo: 0, sanLaws: 0, withLdpSame: 0, withLdpLaws: 0, withLdpExcluded: 0 };
   for (const law of laws) {
     const s = blocStance(law, bloc);
-    if (law.shu) { out.shuLaws += 1; if (s.shu === 'yes' || s.shu === 'split') out.shuYes += 1; if (s.shu === 'no' || s.shu === 'split') out.shuNo += 1; }
+    if (law.shu) {
+      if (s.shu !== 'none') out.shuLaws += 1;
+      const ldp = blocStance(law, '自民').shu;
+      if ((ldp === 'yes' || ldp === 'no') && (s.shu === 'yes' || s.shu === 'no')) {
+        out.withLdpLaws += 1;
+        if (s.shu === ldp) out.withLdpSame += 1;
+      } else {
+        out.withLdpExcluded += 1;
+      }
+      if (s.shu === 'yes' || s.shu === 'split') out.shuYes += 1;
+      if (s.shu === 'no' || s.shu === 'split') out.shuNo += 1;
+    }
     if (s.san) { out.sanLaws += 1; out.sanYes += s.san.yes; out.sanNo += s.san.no; }
   }
   return out;

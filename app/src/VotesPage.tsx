@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { PUBLIC_SITE } from './site-mode';
 import { SiteShell } from './SiteHeader';
 import {
-  BLOCS, START_YEARS, blocStance, blocSummary, distributionVotesUrl, fromYear, lawYear, noLawsByMember, parseVotes, startLabel,
+  BLOCS, START_YEARS, blocStance, blocSummary, distributionVotesUrl, fromYear, lawYear, noLawsByMember, parseVotes, recentCutoff, startLabel,
   type Bloc, type PublicVotes, type StartYear, type VoteLaw,
 } from './votes';
 import './votes.css';
@@ -44,6 +44,13 @@ export function BlocPanel({ laws, bloc }: { laws: VoteLaw[]; bloc: Bloc }) {
   return <div className="votes-bloc">
     <p className="votes-summary">
       衆議院：記載のある{summary.shuLaws}本のうち、賛成側 {summary.shuYes}本・反対側 {summary.shuNo}本。
+      {bloc !== '自民' && <>
+        {summary.withLdpLaws > 0
+          ? <>衆議院で双方の賛否が一意な{summary.withLdpLaws}本のうち、自民と同じ側（賛成か反対）は {summary.withLdpSame}/{summary.withLdpLaws}本（{Math.round(summary.withLdpSame / summary.withLdpLaws * 100)}%）。</>
+          : <>衆議院で自民と比較できる法律はありません。</>}
+        記載なし・会派で割れのため除外 {summary.withLdpExcluded}本。
+      </>}
+      会派で割れた法律は賛成側・反対側の両方に数えます。
       参議院：{summary.sanLaws}本の押しボタン採決で、賛成 {summary.sanYes.toLocaleString()}票・反対 {summary.sanNo.toLocaleString()}票。
     </p>
     <div className="votes-seg" role="group" aria-label="絞り込み">{([['no', '反対した（反対票が出た）'], ['yes', '賛成した'], ['all', 'すべて']] as const).map(([k, label]) => <button key={k} type="button" aria-pressed={filter === k} onClick={() => { setFilter(k); setLimit(30); }}>{label}</button>)}</div>
@@ -71,12 +78,12 @@ export function MemberSearch({ data, laws }: { data: PublicVotes; laws: VoteLaw[
   const visible = new Set(laws.map(l => l.id));
   return <div className="votes-members">
     <label className="votes-search">議員の名前（姓か名の一部）<input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="例：山本" /></label>
-    {!query && <p className="fine-note">名前を入れていません。反対票が多い順に10人を出しています。</p>}
+    {!query && <p className="fine-note">名前を入れていません。全期間の反対票が多い順に10人を出しています。</p>}
     <ul className="votes-rows">{shown.map(({ m, index }) => {
       const nos = noByMember[index].filter(i => visible.has(data.laws[i].id));
       return <li key={m.name} className="votes-member">
         <button type="button" aria-expanded={open === m.name} onClick={() => setOpen(open === m.name ? '' : m.name)}>
-          <strong>{m.name}</strong><span>{m.group}（最後の採決時）</span><span>賛成 {m.yes}・反対 {m.no}・欠席 {m.absent}</span>
+          <strong>{m.name}</strong><span>{m.group}（最後の採決時）</span><span>全期間：賛成 {m.yes}・反対 {m.no}・欠席 {m.absent}</span><span>選択期間の反対法数 {nos.length}本</span>
         </button>
         {open === m.name && <div className="votes-member-detail">
           <p className="fine-note">反対した法律：選んだ期間で{nos.length}本（新しい順に最大40本まで）。</p>
@@ -91,7 +98,7 @@ export function VotesPage() {
   useEffect(() => { document.title = PUBLIC_SITE ? '政党・議員の賛否｜試作版' : '政党・議員の賛否｜国賊／国士ランキング'; }, []);
   const [data, setData] = useState<PublicVotes | null>(null);
   const [error, setError] = useState('');
-  const [start, setStart] = useState<StartYear>(() => { const v = new URLSearchParams(window.location.search).get('from'); return (START_YEARS as readonly string[]).includes(v ?? '') ? v as StartYear : '2020'; });
+  const [start, setStart] = useState<StartYear>(() => { const v = new URLSearchParams(window.location.search).get('from'); return (START_YEARS as readonly string[]).includes(v ?? '') ? v as StartYear : 'recent4'; });
   const [bloc, setBloc] = useState<Bloc>(() => { const v = new URLSearchParams(window.location.search).get('party'); return (BLOCS as readonly string[]).includes(v ?? '') ? v as Bloc : '自民'; });
   useEffect(() => {
     const controller = new AbortController();
@@ -111,7 +118,7 @@ export function VotesPage() {
     window.history.replaceState(null, '', `/votes?from=${s}&party=${encodeURIComponent(b)}`);
   }
   const laws = useMemo(() => data ? fromYear(data.laws, start) : [], [data, start]);
-  const latest = data?.laws[0] ? dateOf(data.laws[0]) : '';
+  const latest = data?.laws.map(dateOf).reduce((a, b) => b > a ? b : a, '') ?? '';
   return <SiteShell active="/votes" label="政党・議員の賛否" className="votes-page"><main>
     <h2>どの政党・議員が、どの法律に賛成・反対したか</h2>
     <p>成立した法律について、衆議院は会派ごと、参議院は押しボタン式の採決で議員ごとの賛否を並べます。点数や責任の判定ではなく、記録そのものです。</p>
@@ -119,7 +126,7 @@ export function VotesPage() {
     {data && <>
       <section className="real-intake votes-controls" aria-label="表示の切り替え">
         <label>見る期間<select value={start} onChange={e => pick({ start: e.target.value as StartYear })}>{START_YEARS.map(y => <option key={y} value={y}>{startLabel(y)}</option>)}</select></label>
-        <p className="fine-note">最新の法律：{latest}公布。{laws.length.toLocaleString()}本が対象です。</p>
+        <p className="fine-note">データ最新日：{latest || '日付なし'}。公布日を使い、なければ衆院、次に参院の採決日を使います。{laws.length.toLocaleString()}本が対象です。{start === 'recent4' && latest && <>期間は{recentCutoff(data.laws)}より後から{latest}まで（開始日を除き、終了日を含む）です。</>}</p>
       </section>
       <section aria-labelledby="votes-recent-h"><h3 id="votes-recent-h">最近成立した法律の賛否</h3><RecentLaws laws={laws} /></section>
       <section aria-labelledby="votes-bloc-h"><h3 id="votes-bloc-h">政党（系統）ごとの賛否</h3>
