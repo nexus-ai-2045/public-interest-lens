@@ -158,7 +158,8 @@ def goal_metrics(root: Path = ROOT) -> dict[str, int]:
         "scheduled_workflows": len(scheduled),
         "correction_channel": exists("docs/corrections.md") + exists(".github/ISSUE_TEMPLATE/correction.yml"),
         # G7・G8 実装の有無（未実装は0。実装が入ったら数が動き、ロードマップの更新を促す）
-        "adr_0015_adopted": int(not re.search(r"状態\s*[:：]\s*検討案", _head(root / "docs/adr/0015-provisional-evaluation-by-foreign-evidence.md"))),
+        "provisional_cards": len(json.loads((root / "data/foreign-policy-v1/cards.json").read_text(encoding="utf-8"))["cards"]),
+        "provisional_matches": len(_csv(root, "data/derived/provisional-v1/matches.csv")),
         "pledge_rate_parties": len(list((root / "data/derived").glob("pledge-rate*"))),
         "loop_levels": len(re.findall(r"^\| L\d ", (root / "docs/フィードバックループ.md").read_text(encoding="utf-8"), re.M)),
     }
