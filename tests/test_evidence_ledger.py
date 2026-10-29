@@ -97,6 +97,21 @@ class LedgerCheck(unittest.TestCase):
         led = {"entries": [sample()]}
         self.assertTrue(any("mapping" in x for x in c.check(led, {"mechanisms": [{"id": "m", "ledger_ids": ["nope"]}]})))
 
+    def test_candidates_checks(self):
+        cand = {"id": "cand-001", "authors": "A", "year": 2000, "title": "T", "quantity": "q", "value_raw": "1", "locator": "p1", "quote": "x", "status": "candidate"}
+        self.assertEqual(c.check_candidates({"entries": [cand]}, {"entries": []}), [])
+        self.assertTrue(any("重複" in x for x in c.check_candidates({"entries": [cand, cand]}, {"entries": []})))
+        self.assertTrue(any("status" in x for x in c.check_candidates({"entries": [dict(cand, status="verified")]}, {"entries": []})))
+        self.assertTrue(any("候補と重なっている" in x for x in c.check_candidates({"entries": [cand]}, {"entries": [sample(id="cand-001")]})))
+        self.assertTrue(any("未照合" in x for x in c.check_candidates({"entries": [cand]}, {"entries": []}, {"mechanisms": [{"id": "m", "ledger_ids": ["cand-001"]}]})))
+
+    def test_committed_candidates_are_green(self):
+        if not c.CANDIDATES.exists():
+            self.skipTest("candidates なし")
+        ledger = json.loads(c.LEDGER.read_text(encoding="utf-8"))
+        mapping = json.loads(c.MAPPING.read_text(encoding="utf-8")) if c.MAPPING.exists() else None
+        self.assertEqual(c.check_candidates(json.loads(c.CANDIDATES.read_text(encoding="utf-8")), ledger, mapping), [])
+
     def test_committed_ledger_is_green(self):
         if not c.LEDGER.exists():
             self.skipTest("ledger なし")
