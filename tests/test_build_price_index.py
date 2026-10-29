@@ -29,7 +29,7 @@ class PriceIndexTests(unittest.TestCase):
         self.assertEqual(got['latestYear'], 2020)
 
     @requires_data("industry_va")
-    def test_committed_file_is_current(self):
+    def test_generated_file_is_current(self):
         committed = json.loads(p.OUTPUT.read_text(encoding='utf-8'))
         self.assertEqual(committed, json.loads(json.dumps(p.build(), ensure_ascii=False)))
         self.assertEqual(committed['deflator']['2020'], 100.0)
