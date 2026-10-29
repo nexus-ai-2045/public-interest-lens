@@ -537,7 +537,7 @@ def analyze_meeting(m: dict, bill: dict) -> dict | None:
         t = r['speech']
         if speaker_kind(r) == 'chair' or '附帯決議' not in t:
             continue
-        if re.match(r'○[^\s　]{0,15}(?:国務大臣|大臣|副大臣|政務官|長官)', t):
+        if re.match(r'○[^\s　]{0,15}(?:国務大臣|大臣|副大臣|政務官|政務次官|長官)', t):
             continue  # 政府の対応表明（政府の所信）は決議の趣旨説明ではない
         if names_other_bill(t[:800], short):
             continue  # 本文が別の法案への決議だと明示しているときは、一括審議でもその法案の決議にしない
@@ -548,7 +548,7 @@ def analyze_meeting(m: dict, bill: dict) -> dict | None:
     res['resolutions'] = reso
     res['reso_decided'] = [r for r in seg_chairs if '附帯決議' in r['speech'] and re.search(r'付する|付すること|附すること|付すべし|異議なし|決しました|可決', r['speech'])]
     res['reso_reply'] = [r for r in seg if speaker_kind(r) != 'chair' and '附帯決議' in r['speech'][:300] and re.search(r'尊重|所信|努力', r['speech']) and r not in reso
-                         and re.match(r'○[^\s　]{0,15}(?:国務大臣|大臣|副大臣|政務官|長官)', r['speech'])]  # 政府側の発言だけ
+                         and re.match(r'○[^\s　]{0,15}(?:国務大臣|大臣|副大臣|政務官|政務次官|長官)', r['speech'])]  # 政府側の発言だけ
     return res
 
 
