@@ -123,7 +123,8 @@ def source_links(urls: list[str]) -> list[dict[str, str]]:
     return [{"label": label(url), "url": url} for url in urls]
 
 
-def outcome_chain(row: dict[str, str] | None) -> list[dict[str, str]]:
+def outcome_chain(row: dict[str, str] | None, certainty: str | None = None) -> list[dict[str, str]]:
+    """判定の鎖。`certainty` は一覧（laws.json）の最終の確かさ。台帳の元の表記（段階・代理など）ではなく、一覧と同じ値を出す。"""
     if not row:
         return []
     chain = [{"step": "振り分け", "result": f"{row['種類'] or '—'}・{row['分野'] or '分野なし'}", "note": f"経路：{row['経路']}" + (f"／指標：{row['指標']}" if row["指標"] else "")}]
@@ -131,7 +132,7 @@ def outcome_chain(row: dict[str, str] | None) -> list[dict[str, str]]:
         chain.append({"step": "施行日", "result": row["施行日"], "note": ""})
     if row["段階"]:
         chain.append({"step": "影響の段階", "result": f"{row['段階']}・{row['向き']}".rstrip("・"), "note": row["指標の系列"]})
-    chain.append({"step": "台帳の結果", "result": row["結果"] + (f"（確かさ：{row['確かさ']}）" if row["確かさ"] else ""), "note": row["理由"]})
+    chain.append({"step": "台帳の結果", "result": row["結果"] + (f"（確かさ：{certainty or row['確かさ']}）" if certainty or row["確かさ"] else ""), "note": row["理由"]})
     if row["損失または便益の額"]:
         chain.append({"step": "額の計算", "result": row["単位"], "note": row["損失または便益の額"]})
     return chain
@@ -285,7 +286,7 @@ def build() -> dict:
             "marks": [],
             "step": "enacted",
             "summary": "",
-            "chain": outcome_chain(out),
+            "chain": outcome_chain(out, law["certainty"] if law else None),
             "sources": [],
             "members": linked.get(law_id, [])[:12],
             "membersTotal": len(linked.get(law_id, [])),
