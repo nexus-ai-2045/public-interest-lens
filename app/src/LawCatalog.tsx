@@ -8,6 +8,7 @@ import {
 import { LawName, lawNameText } from './law-name';
 import { loadPriceIndex, toLatestYen, windowBaseYear, type PriceIndex } from './price-index';
 import { CORRECTION_EMAIL, correctionIssueUrl, correctionListUrl, correctionMailUrl } from './correction-link';
+import { isCovidBenefitGroup } from './public-distribution';
 
 const PAGE = 60;
 const SIDE_OPTIONS: [CatalogQuery['side'], string][] = [['all', 'すべて'], ['confirmed', '確かな額'], ['amount', '額が出た（参考を含む）'], ['loss', '国賊側'], ['benefit', '国士側'], ['none', '額なし']];
@@ -235,7 +236,9 @@ function CatalogDetailPanel({ item }: { item: CatalogItem }) {
       <span className="laws-chain-step">{step.step}</span><strong>{step.result}</strong>
       {step.note && <details><summary>根拠を読む</summary><p>{step.note}</p></details>}
     </li>)}</ol>
-    {item.amount && <p className="laws-formula">額 ＝ 施行後の日本の伸びと、比べた国の伸びの差 × 開始前の規模（{detail.window ?? '窓'}の累積）。中央値 {formatYen(item.amount.median)}、幅 {formatYen(item.amount.low)}〜{formatYen(item.amount.high)}（比べた国の伸びの四分位）。</p>}
+    {item.amount && (isCovidBenefitGroup(detail.group)
+      ? <p className="laws-formula">額 ＝ 支出の規模（官公庁の一次資料）× 帰属 × 乗数（{detail.window ?? '窓'}）。中央値 {formatYen(item.amount.median)}、幅 {formatYen(item.amount.low)}〜{formatYen(item.amount.high)}（帰属と乗数の仮定の下・中・上。観測した値の四分位ではない）。財源調達の超過負担は引いていません。</p>
+      : <p className="laws-formula">額 ＝ 施行後の日本の伸びと、比べた国の伸びの差 × 開始前の規模（{detail.window ?? '窓'}の累積）。中央値 {formatYen(item.amount.median)}、幅 {formatYen(item.amount.low)}〜{formatYen(item.amount.high)}（比べた国の伸びの四分位）。</p>)}
     {item.amount && prices && (() => {
       const base = windowBaseYear(detail.window);
       const latest = toLatestYen(item.amount.median, base, prices);

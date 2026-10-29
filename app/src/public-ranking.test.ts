@@ -2,7 +2,7 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { COVID_BENEFIT_GROUP, parsePublicRanking, RANKING_TEXT_LIMIT } from './public-distribution';
+import { COVID_BENEFIT_GROUP, isCovidBenefitGroup, parsePublicRanking, RANKING_TEXT_LIMIT } from './public-distribution';
 
 const committed = readFileSync(new URL('../public/distribution/ranking.json', import.meta.url), 'utf8');
 const note = '法律単位の結果を全件公開（2026-10-17 ユーザー承認、議員の実名は別承認）';
@@ -22,6 +22,11 @@ function approved() {
 }
 
 describe('公開ランキングの配布データ', () => {
+  it('コロナ対応の費用便益のグループだけを見分ける', () => {
+    expect(isCovidBenefitGroup(`${COVID_BENEFIT_GROUP}-衆法-201-10`)).toBe(true);
+    expect(isCovidBenefitGroup('全体指標-コロナ対応')).toBe(false);
+    expect(isCovidBenefitGroup(undefined)).toBe(false);
+  });
   it('コロナ対応の費用便益だけは比較国を持たず、ほかの法律は比較国が要る', () => {
     const covid = { ...law, certainty: '参考', group: `${COVID_BENEFIT_GROUP}-衆法-1-1`, comparisonCountries: [] };
     const value = approved(); value.laws = [covid];
