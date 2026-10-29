@@ -57,6 +57,10 @@ class MatchTest(unittest.TestCase):
         names, _ = bf.mentioned_names("医師法（想定）、旅館業法", {"医師法", "旅館業法"}, {})
         self.assertEqual(names, [["旅館業法"]])
 
+    def test_estimated_date_is_not_a_definite_time(self) -> None:
+        self.assertEqual(bf.recorded_on("平成27年11月2日（推定）"), "")
+        self.assertEqual(bf.recorded_on("平成27年11月2日"), "2015-11-02")
+
     def test_renamed_family_picks_one_previous_amendment(self) -> None:
         old = law("閣法-1-1", "薬事法の一部を改正する法律案", "2013-11-01")
         new = law("閣法-2-1", "医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律の一部を改正する法律案", "2022-11-01")

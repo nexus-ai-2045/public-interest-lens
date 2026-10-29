@@ -84,6 +84,14 @@ def iso_date(text: str) -> str:
     return f'{year:04d}-{int(mo):02d}-{int(d):02d}'
 
 
+UNSURE_DATE = re.compile(r'推定|想定|頃|ごろ|約|不明')
+
+
+def recorded_on(text: str) -> str:
+    """記録の日付。原資料が推定・概数と留保した日付は確定した日付に数えない（前後を決めないため空にする）。"""
+    return '' if UNSURE_DATE.search(unicodedata.normalize('NFKC', text or '')) else iso_date(text)
+
+
 def law_heads(title: str) -> list[str]:
     """成立した法律の題名から、改正（制定）の対象の法令名を取る。
 
@@ -196,7 +204,9 @@ def build_links(laws: list[dict], recs: list[dict], aliases: dict[str, list[str]
         ledger = '省庁の抵抗' if is_min else '団体の立場'
         who = rec['省庁'] if is_min else rec['団体']
         names, reason = mentioned_names(rec['法令'], known, aliases)
-        date = iso_date(rec['日付'])
+        date = recorded_on(rec['日付'])
+        if names and not date and UNSURE_DATE.search(unicodedata.normalize('NFKC', rec['日付'] or '')):
+            names, reason = [], '記録の日付が推定（前後の改正を決められない）'
         hits = [h for group in names for h in candidate_laws(group, laws_by_head, date)]
         if not hits:
             unlinked[(ledger, unicodedata.normalize('NFKC', rec['法令']).strip(), reason or '名指しした法令名に、記録の前後の成立した法律が無い')] += 1
@@ -249,7 +259,7 @@ def build_contacts(relations: list[dict[str, str]], recs: list[dict], laws: list
             o['tech'].add(rec['技術'])
         names, _ = mentioned_names(rec['法令'], known, aliases)
         for group in names:
-            for period, law in candidate_laws(group, laws_by_head, iso_date(rec['日付'])):
+            for period, law in candidate_laws(group, laws_by_head, recorded_on(rec['日付'])):
                 if period == BEFORE:
                     o['laws'].add(law['id'])
         o['urls'].add(rec['出典URL'])
