@@ -1,5 +1,6 @@
 """コロナ対応の費用便益（covid-benefit-v1）：支出は一次資料つきで、額は式どおりに計算し直せて、macro.csv と同じになる。"""
 import csv
+import json
 import unittest
 
 from scripts import build_covid_benefit as cb
@@ -54,6 +55,17 @@ class CovidBenefitTest(unittest.TestCase):
                 self.assertEqual((m["中央値"], m["産業"]), (r["中央値"], macro.COVID_INDUSTRY), law_id)
             else:
                 self.assertEqual(m["理由"], r["理由"], law_id)
+
+    def test_published_covid_laws_pass_source_check(self):
+        """公開の8本は出典チェックを通る（支出・係数の資料URLと、公開した式からの再計算）。外れると rebuild_public で公開から落ちる。"""
+        from scripts import source_check
+        ranking = json.loads((cb.ROOT / "app" / "public" / "distribution" / "ranking.json").read_text(encoding="utf-8"))
+        ctx = source_check.context()
+        laws = [law for law in ranking["laws"] if law["group"].startswith("全体指標-コロナ費用便益-")]
+        self.assertEqual(len(laws), 8)
+        for law in laws:
+            bad = [row for row in source_check.check_law(law, ctx) if row["結果"] == source_check.NG]
+            self.assertEqual(bad, [], law["id"])
 
     def test_expressions_only_allow_arithmetic_on_known_items(self):
         self.assertEqual(cb.evaluate("([a#1]+[a#2])/2", {"a#1": 4, "a#2": 6}), 5)
