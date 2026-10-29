@@ -6,6 +6,7 @@
 - 通信先：一次資料のサイトと公開サイトに届くか（届かない取得元は注意。毎朝はその取得を飛ばす）。
 - 権限：GitHub のリポジトリを読めるか（push 前提の作業の前に）。
 - Vercel の枠：main の最新コミットの Vercel の状態が「上限」になっていないか（注意だけ。マージは止めない）。
+- フック：commit 時に自動付与の行を取り除くフック（scripts/install_hooks.py）が入っているか。
 - 個人名義：repo-preflight の個人名義検査（push 前の必須検査と同じもの）。
   環境変数 REPO_PREFLIGHT_ROOT があるときは、その直下の scripts/local_identity_guard.py だけを使う。
   未設定のときは、これまでどおりこのリポジトリの隣の repo-preflight を使う。
@@ -43,7 +44,7 @@ PUBLIC_SITE = "kokuzoku.nexusai2045.com"
 HELP_MODULES = ["scripts.daily_update", "scripts.build_price_index", "scripts.build_public_ranking", "scripts.eval_loop", "scripts.preflight", "scripts.person_ids",
                 "scripts.fetch_enforcement_old_egov", "scripts.fetch_r3_series", "scripts.build_old_laws_triage",
                 "scripts.build_old_laws_outcomes", "scripts.political_funds", "scripts.fetch_fiscal",
-                "scripts.fetch_fiscal_more", "scripts.fetch_target_series"]
+                "scripts.fetch_fiscal_more", "scripts.fetch_target_series", "scripts.local_verify", "scripts.release_check", "scripts.install_hooks"]
 IDENTITY_GUARD = ROOT.parent / "repo-preflight" / "scripts" / "local_identity_guard.py"
 OUT = ROOT / ".local" / "preflight"
 
@@ -180,6 +181,13 @@ def commit_identity() -> list[Item]:
                  f"{'・'.join(wrong)}の名義が運営名義でない。git config（または GIT_AUTHOR_*/GIT_COMMITTER_* の環境変数）を nexus_ai と {NOREPLY} にする")]
 
 
+def git_hooks() -> list[Item]:
+    """commit 時の自動除去と共通検査のフックが入っているか。入っていないと Claude の共著者行などがそのまま残り、名義検査で赤になる。"""
+    result = _run([sys.executable, "scripts/install_hooks.py", "--check"])
+    return [Item("フック", "合格" if result.returncode == 0 else "失敗",
+                 (result.stdout + result.stderr).strip().splitlines()[-1][:200] if (result.stdout + result.stderr).strip() else "")]
+
+
 def identity_guard() -> Path | None:
     """個人名義検査のスクリプト。無いときは None。
 
@@ -244,7 +252,7 @@ def e2e() -> list[Item]:
 
 def run_all(smoke_test: bool = False, offline: bool = False) -> list[Item]:
     items = (dry_run() + help_screens() + network(offline) + permissions(offline) + vercel_quota(offline)
-             + commit_identity() + identity() + roadmap())
+             + commit_identity() + git_hooks() + identity() + roadmap())
     if smoke_test:
         items += smoke()
         items += e2e()
