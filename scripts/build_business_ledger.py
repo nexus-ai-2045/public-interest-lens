@@ -18,6 +18,7 @@ import csv
 import json
 import re
 import sys
+import unicodedata
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
@@ -26,6 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from scripts.build_backing_forces import load_aliases  # noqa: E402
 from scripts.build_org_ledger import org_name  # noqa: E402
 from scripts.org_names import org_key  # noqa: E402
 
@@ -42,21 +44,6 @@ ANONYMOUS = {'個人': '個人', '民間企業': '民間企業', '民間団体':
 LOCAL_GOV = re.compile(r'(都|道|府|県|市|町|村|特別区)$|知事|市長|町長|村長|地方自治体|自治体')
 INDUSTRY = re.compile(r'協会|連盟|組合|連合|工業会|懇話会|協議会|連合会|振興会|団体|学会|会議所|センター|機構|公社|公益')
 
-# 法令の通称。正式名称の一部を略したもので、改正法の題名には正式名称で出る。
-ALIASES = {
-    '独占禁止法': '私的独占の禁止及び公正取引の確保に関する法律',
-    '廃棄物処理法': '廃棄物の処理及び清掃に関する法律',
-    '景品表示法': '不当景品類及び不当表示防止法',
-    '公益認定法': '公益社団法人及び公益財団法人の認定等に関する法律',
-    'カルタヘナ法': '遺伝子組換え生物等の使用等の規制による生物の多様性の確保に関する法律',
-    '薬機法': '医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律',
-    '医薬品医療機器等法': '医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律',
-    '薬事法': '医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律',
-}
-# 改称などで同じ法律が題名に別の名前で出るもの（検索に使う名前の組）。薬事法は2014-11-25 に現在の名前へ改称。
-EQUIV = {
-    '医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律': ('医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律', '薬事法'),
-}
 # 「、」で区切られる名前の後半だけを拾ってしまうもの（取り出しの規則では「、」を名前に含めない）。
 TRUNCATED = {'有効性及び安全性の確保等に関する法律': '医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律'}
 STATUTE = re.compile(r'([^\s、，,・（）()第]{1,40}?(?:法律|法))(?=第|\d|施行|、|，|,|・|$|等|\s|（|同|及び|の)')
@@ -136,6 +123,11 @@ def proposer_kind(name: str) -> tuple[str, str]:
     return name, 'その他'
 
 
+def search_names(law: str, aliases: dict[str, list[str]]) -> list[str]:
+    """題名の照合に使う名前。通称は背後の力の結び付けと同じ表（law-aliases.csv）で正式名（改称前後の組）に広げる。"""
+    return aliases.get(unicodedata.normalize('NFKC', law), [law])
+
+
 def statutes(text: str) -> list[str]:
     """該当法令 欄から、法律の名前（政省令・通知は除く）を重複なく取り出す。通称は正式名称へ。"""
     out: list[str] = []
@@ -144,7 +136,7 @@ def statutes(text: str) -> list[str]:
         name = m.group(1)
         if text[m.end():].startswith(('施行令', '施行規則', '施行細則')) or name.endswith(NOT_STATUTE_SUFFIX) or name in ('同法', '本法', '当該法', '新法', '現行法', '各法', '法'):
             continue
-        name = ALIASES.get(TRUNCATED.get(name, name), TRUNCATED.get(name, name))
+        name = TRUNCATED.get(name, name)
         if name not in out:
             out.append(name)
     return out
@@ -180,6 +172,7 @@ def load_bills() -> list[dict[str, str]]:
 
 def build() -> dict[str, int]:
     bills = load_bills()
+    aliases = load_aliases()
     requests, chain = [], []
     for r in [{**x, '経路': '規制改革ホットライン', '取込の確度': '原本照合済み（機械の照合とAI2系統が一致）'} for x in read_requests()] + read_hearings():
         d, basis = request_date(r['受付番号'], r['受付日'])
@@ -189,7 +182,7 @@ def build() -> dict[str, int]:
         matched = []
         for law in laws:
             for b in bills:
-                if any(title_has(b['題名'], alt) for alt in EQUIV.get(law, (law,))) and b['公布日'] and d and 0 < (date.fromisoformat(b['公布日']) - date.fromisoformat(d)).days <= WINDOW_DAYS:
+                if any(title_has(b['題名'], alt) for alt in search_names(law, aliases)) and b['公布日'] and d and 0 < (date.fromisoformat(b['公布日']) - date.fromisoformat(d)).days <= WINDOW_DAYS:
                     matched.append((law, b))
         requests.append({
             '要望ID': rid, '経路': r['経路'], '取込の確度': r['取込の確度'], '受付日': d, '日付の根拠': basis, '提案主体': shown, '区分': kind, '提案事項': r['提案事項'],

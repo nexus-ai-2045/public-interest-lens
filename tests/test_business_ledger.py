@@ -20,13 +20,14 @@ class BusinessLedgerTest(unittest.TestCase):
     def test_statutes(self) -> None:
         self.assertEqual(bl.statutes("銀行法第10条第2項、金融機関の信託業務の兼営等に関する法律第1条"), ["銀行法", "金融機関の信託業務の兼営等に関する法律"])
         self.assertEqual(bl.statutes("信託業法施行令第1条の2"), [])
-        self.assertEqual(bl.statutes("独占禁止法第3条"), ["私的独占の禁止及び公正取引の確保に関する法律"])
+        self.assertEqual(bl.statutes("独占禁止法第3条"), ["独占禁止法"])
+        self.assertEqual(bl.search_names("独占禁止法", bl.load_aliases()), ["私的独占の禁止及び公正取引の確保に関する法律"])
         self.assertEqual(bl.statutes("医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律第77条の2"),
                          ["医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律"])
         self.assertEqual(bl.statutes("旅館業法、民法（転貸）"), ["旅館業法", "民法"])
-        self.assertEqual(bl.statutes("薬機法第1条"), ["医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律"])
+        self.assertEqual(bl.search_names("薬機法", bl.load_aliases()), ["医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律", "薬事法"])
         self.assertEqual(bl.statutes("犯罪収益移転防止法,資金決済法"), ["犯罪収益移転防止法", "資金決済法"])
-        self.assertEqual(bl.statutes("カルタヘナ法第4条"), ["遺伝子組換え生物等の使用等の規制による生物の多様性の確保に関する法律"])
+        self.assertEqual(bl.search_names("カルタヘナ法", bl.load_aliases()), ["遺伝子組換え生物等の使用等の規制による生物の多様性の確保に関する法律"])
         self.assertEqual(bl.statutes("記載なし"), [])
         self.assertEqual(bl.statutes("著作権法30条の4"), ["著作権法"])
 
