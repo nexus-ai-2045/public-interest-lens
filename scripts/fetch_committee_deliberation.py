@@ -290,8 +290,13 @@ def kanji_num(s: str) -> int:
     return int(''.join(str(d.get(ch, 0)) for ch in s) or 0)
 
 
+GOV_RE = re.compile(r'○[^\s　]{0,15}(?:国務大臣|大臣|副大臣|政務官|政務次官|長官)')
+
+
 def speaker_kind(s: dict) -> str:
     sp = s['speech']
+    if GOV_RE.match(sp):
+        return 'other'  # 国家公安委員会委員長を兼ねる大臣など、役職に「委員長」を含む政府側の発言は委員長ではない
     if s.get('_chair') or CHAIR_RE.match(sp) or '委員長' in (s.get('speakerPosition') or '') or '会長' in (s.get('speakerPosition') or ''):
         return 'chair'
     return 'other'
@@ -369,17 +374,19 @@ def bill_segments(body: list[dict], short: str, n_items: int) -> list[tuple[int,
     return segs
 
 
-def mine(frag: str, short: str) -> bool:
+def mine(frag: str, short: str, loose: bool = True) -> bool:
     """法案名の断片 frag（題名が読点を含むと途中から切れる）がこの法案を指すか。"""
     f = re.sub(r'案$', '', frag)
-    return short in frag or (len(f) >= 12 and short.endswith(f))
+    # 断片だけが挙がる場合は、断片が題名の後ろの部分に当たるときだけ：題名が「、」（loose のときは「及び」「並びに」も）で切れる、または
+    # 題名が長くて名の抽出（最大40字）で前が切れるとき（「放送法…」は「有線テレビジョン放送法…」ではない）
+    return short in frag or (len(f) >= 12 and short.endswith(f) and (len(frag) >= 39 or bool(re.search(r'(?:、|及び|並びに)$' if loose else r'、$', short[:len(short) - len(f)]))))
 
 
-def names_other_bill(t: str, short: str) -> bool:
+def names_other_bill(t: str, short: str, loose: bool = True) -> bool:
     """発言が法案名を挙げていて、その中にこの法案がない（別の法案の修正案）とき真。"""
     ns = re.findall(r'([^\s、。「」『』（）()○]{2,40}?(?:法律案|法案))', re.sub(r'\s+', '', t.replace('\u3000', '')))  # 法案名の途中の改行も除く
     ns = [n for n in ns if not re.fullmatch(r'(?:これより|次に|ただいま|なお)?(?:この|両|本|同|各|右の)(?:法律案|法案)', n)]  # 「この法律案」などの代名詞は別の法案ではない
-    return bool(ns) and not any(mine(n, short) for n in ns)
+    return bool(ns) and not any(mine(n, short, loose) for n in ns)
 
 
 
@@ -537,16 +544,16 @@ def analyze_meeting(m: dict, bill: dict) -> dict | None:
         t = r['speech']
         if speaker_kind(r) == 'chair' or '附帯決議' not in t:
             continue
-        if re.match(r'○[^\s　]{0,15}(?:国務大臣|大臣|副大臣|政務官|政務次官|長官)', t):
+        if GOV_RE.match(t):
             continue  # 政府の対応表明（政府の所信）は決議の趣旨説明ではない
-        if names_other_bill(t, short):
+        if names_other_bill(t, short, loose=False):
             continue  # 全文が挙げる法案の中にこの法案が無い（別の法案への決議）ときは、一括審議でもこの法案の決議にしない
         if re.search(r'附帯決議(案)?(\s|　)*(\（案\）)?(につきまして|について|案を|案の|を付|の趣旨)|附帯決議(\（案\）|案)', t) and \
                 re.search(r'提出者|提案者|案文|趣旨', t[:400]) and \
                 re.search(r'右決議|決議する|朗読|(?:^|[\s　。])一[、\s　]', t):  # 案文がある発言だけ（過去の決議への質疑は除く）
             reso.append(r)
     res['resolutions'] = reso
-    res['reso_decided'] = [r for r in seg_chairs if '附帯決議' in r['speech'] and re.search(r'付する|付すること|附すること|付すべし|異議なし|決しました|可決', r['speech'])]
+    res['reso_decided'] = [r for r in seg_chairs if '附帯決議' in r['speech'] and re.search(r'付する|付すること|附すること|付すべし|異議なし|決しました|可決|決議とすることに決定', r['speech'])]
     res['reso_reply'] = [r for r in seg if speaker_kind(r) != 'chair' and '附帯決議' in r['speech'][:300] and re.search(r'尊重|所信|努力', r['speech']) and r not in reso
                          and re.match(r'○[^\s　]{0,15}(?:国務大臣|大臣|副大臣|政務官|政務次官|長官)', r['speech'])]  # 政府側の発言だけ
     # 決議ごとの対応づけ：次の決議の案文より前にある宣告と、その後の政府の所信だけ。確定できなければ空欄

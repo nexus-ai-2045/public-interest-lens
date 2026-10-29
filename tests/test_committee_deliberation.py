@@ -395,6 +395,35 @@ class CommitteeFlowTest(unittest.TestCase):
     def test_bill_name_broken_by_a_newline_still_counts_as_this_bill(self) -> None:
         self.assertFalse(F.names_other_bill('甲法の一部を改正する法律\n案に対する附帯決議案', F.short_title('甲法の一部を改正する法律案')))
 
+    def test_long_title_cut_by_the_name_length_limit_still_matches(self) -> None:
+        short = F.short_title('青年等の就農促進のための資金の貸付け等に関する特別措置法及び農業信用保証保険法の一部を改正する法律案')
+        cut = '促進のための資金の貸付け等に関する特別措置法及び農業信用保証保険法の一部を改正する法律案'
+        self.assertGreaterEqual(len(cut), 39)
+        self.assertTrue(F.mine(cut[-40:], short))
+
+    def test_resolution_for_a_part_of_a_joint_title_is_not_the_joint_bill(self) -> None:
+        short = F.short_title('国会議員の選挙等の執行経費の基準に関する法律及び公職選挙法の一部を改正する法律案')
+        self.assertFalse(F.names_other_bill('公職選挙法の一部を改正する法律案に対する附帯決議', short))  # 修正案の宣告では断片も同じ法案として扱う
+        self.assertTrue(F.names_other_bill('公職選挙法の一部を改正する法律案に対する附帯決議', short, loose=False))
+
+    def test_upper_house_decision_wording_is_taken_as_the_declaration(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _rec(2, '塚田', '○塚田君 附帯決議案について提出者として趣旨を説明いたします。案文を朗読いたします。 一 進めること。'),
+                _ch(3, '多数と認めます。よって、塚田君提出の附帯決議案は多数をもって本委員会の決議とすることに決定いたしました。ただいまの決議に対し、財務大臣から発言を求められております。'),
+                _rec(4, '安住', '○安住財務大臣 ただいまの附帯決議の趣旨を尊重いたします。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual([(len(d), len(p)) for _, d, p in r['reso_pairs']], [(1, 1)])
+
+    def test_minister_who_is_also_a_committee_chair_is_not_a_chair(self) -> None:
+        r = {'speech': '○国務大臣（泉信也君） ただいま可決されました附帯決議につきましては、適切に対処してまいります。', 'speakerPosition': '国務大臣（国家公安委員会委員長）'}
+        self.assertEqual(F.speaker_kind(r), 'other')
+
+    def test_fragment_of_a_bill_name_matches_only_a_later_part_of_the_title(self) -> None:
+        title = '有線ラジオ放送業務の運用の規正に関する法律及び有線テレビジョン放送法の一部を改正する法律案'
+        short = F.short_title(title)
+        self.assertTrue(F.mine('有線テレビジョン放送法の一部を改正する法律案', short))
+        self.assertFalse(F.mine('放送法の一部を改正する法律案', short))
+
     def test_long_hiragana_proposer_name(self) -> None:
         recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。この際、本案に対し、とかしきなおみ君外五名から、修正案が提出されております。')]
         r = F.analyze_meeting(_meeting(recs), KOU)
