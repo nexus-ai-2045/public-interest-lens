@@ -38,6 +38,9 @@ DERIVED = ROOT / "data" / "derived"
 OUTCOMES = DERIVED / "all-laws-v1" / "outcomes.csv"
 AI_LABELS = DERIVED / "ai-field-v1" / "labels.csv"
 AGREEMENT = DERIVED / "bill-triage-v2" / "agreement.csv"
+# 点検 R2：D1 が第3の判定者の「対応表なし」を通信・ネットに上書きしていたため振り分けを保留にした法律（id・理由・根拠）。
+# 振り分けの分野を使わず、題名をそろえる処理にも入れず、AI 2系統の分野が無ければ対応表なしとして全産業にする。
+R2_HOLDS = DERIVED / "bill-triage-v2" / "r2-holds.csv"
 ENFORCEMENT = ROOT / "data" / "acquired" / "enforcement-dates" / "enforcement.csv"
 OECD = ROOT / "data" / "acquired" / "oecd-industry" / "industry_va.csv"
 OUT = DERIVED / "macro-v1" / "macro.csv"
@@ -121,8 +124,8 @@ def base_title(title: str) -> str:
     return re.sub(r"法律案$", "法律", title)
 
 
-def align_by_title(picks: dict[str, tuple[str, str, str]], titles: dict[str, str]) -> dict[str, tuple[str, str, str]]:
-    """同じ元の題名の法律の分野を、産業の分野が付いた本の最多の分野にそろえる。"""
+def align_by_title(picks: dict[str, tuple[str, str, str]], titles: dict[str, str], fixed: frozenset[str] = frozenset()) -> dict[str, tuple[str, str, str]]:
+    """同じ元の題名の法律の分野を、産業の分野が付いた本の最多の分野にそろえる。fixed（点検 R2 で保留にした法律）は変えない。"""
     groups: dict[str, list[str]] = {}
     for law_id in picks:
         groups.setdefault(base_title(titles[law_id]), []).append(law_id)
@@ -133,7 +136,7 @@ def align_by_title(picks: dict[str, tuple[str, str, str]], titles: dict[str, str
             continue
         field = counts[0][0]
         for i in ids:
-            if picks[i][0] != field and picks[i][1] != "振り分け":
+            if picks[i][0] != field and picks[i][1] != "振り分け" and i not in fixed:
                 out[i] = (field, ALIGNED, INDUSTRY[field])
     return out
 
@@ -179,9 +182,11 @@ def build() -> list[dict[str, str]]:
     covid = {r["id"]: r for r in _read(COVID_LABELS) if r["コロナ対応"] == "はい"}
     covid_benefit = {r["id"]: r for r in _read(COVID_BENEFIT)}
     laws = [law for law in _read(OUTCOMES) if law["結果"] not in SKIP]
+    r2 = frozenset(r["id"] for r in _read(R2_HOLDS))
     picks = align_by_title(
-        {law["id"]: publication_field(law["分野"], ai.get(law["id"], ""), agreement.get(law["id"])) for law in laws},
+        {law["id"]: pick("", ai.get(law["id"], "")) if law["id"] in r2 else publication_field(law["分野"], ai.get(law["id"], ""), agreement.get(law["id"])) for law in laws},
         {law["id"]: law["題名"] for law in laws},
+        r2,
     )
     picks = apply_sector_overrides(picks, _read(SECTOR_OVERRIDES))
     rows = []
