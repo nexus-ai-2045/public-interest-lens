@@ -12,7 +12,7 @@ const METRIC_KEYS: Record<string, WorldMetric> = { nominal: 'nominalUsd', growth
 const METRIC_PARAM: Record<WorldMetric, string> = { nominalUsd: 'nominal', realGrowth: 'growth', perCapitaPpp: 'ppp' };
 const METRIC_LABEL: Record<WorldMetric, string> = { nominalUsd: '名目GDP（米ドル）', realGrowth: '実質成長率（年ごと）', perCapitaPpp: '一人あたりGDP（購買力平価）' };
 const METRIC_UNIT: Record<WorldMetric, string> = {
-  nominalUsd: '各年の米ドル換算。為替の動きを含みます。',
+  nominalUsd: '各年の米ドル換算。為替の動きを含むので、国どうしの比較には実質成長率か購買力平価を見てください。',
   realGrowth: '前年からの実質GDPの伸び（％）。物価の変動を除いています。',
   perCapitaPpp: '2021年基準の国際ドル。物価の差を調整した、暮らしの豊かさに近い指標です。',
 };
@@ -21,11 +21,15 @@ const METRIC_AXIS: Record<WorldMetric, string> = { nominalUsd: '米ドル（各�
 
 export type WorldView = { metric: WorldMetric; period: WorldPeriod; indexed: boolean; hidden: string[]; focus: string; basis: GrowthBasis };
 
-function readView(): WorldView {
-  const params = new URLSearchParams(window.location.search);
+/** 既定の指標。国どうしは物価と為替を除いた実質で比べるので、名目ではなく実質成長率から始めます。 */
+export const DEFAULT_METRIC: WorldMetric = 'realGrowth';
+
+/** アドレスの検索部分（?metric=…）から表示の状態を作ります。読めない値は既定に戻します。 */
+export function parseWorldView(search: string): WorldView {
+  const params = new URLSearchParams(search);
   const period = params.get('period') ?? '1990';
   return {
-    metric: METRIC_KEYS[params.get('metric') ?? ''] ?? 'nominalUsd',
+    metric: METRIC_KEYS[params.get('metric') ?? ''] ?? DEFAULT_METRIC,
     period: (WORLD_PERIODS as readonly string[]).includes(period) ? period as WorldPeriod : '1990',
     indexed: params.get('scale') === 'index',
     hidden: (params.get('hide') ?? '').split(',').filter(code => /^[A-Z]{3}$/.test(code) && code !== JAPAN),
@@ -33,6 +37,8 @@ function readView(): WorldView {
     basis: params.get('basis') === 'percapita' ? 'perCapita' : 'real',
   };
 }
+
+const readView = () => parseWorldView(window.location.search);
 
 function viewLocation(view: WorldView): string {
   const params = new URLSearchParams({ metric: METRIC_PARAM[view.metric], period: view.period });
@@ -57,6 +63,19 @@ export function worldLineSeries(data: WorldGdpSnapshot, view: WorldView): LineSe
 /** 指数表示の基準年。期間の最初の年を 100 にする。 */
 export function worldBaseYear(data: WorldGdpSnapshot, view: WorldView): number | undefined {
   return periodRange(data, view.metric, view.period)?.from;
+}
+
+/** 「伸び損ねた原因の軸」の結論と、伸び悩んだ側の国の注記。原因の断定も、額の配分もしません。 */
+export function MissedGrowthSummary() {
+  return <section className="lower-panel world-missed" aria-labelledby="world-missed-heading">
+    <h3 id="world-missed-heading">日本はなぜ伸び損ねたか：原因の軸の結論（暫定）</h3>
+    <ol className="world-missed-lines">
+      <li>いま「原因の軸にする」と言える候補はありません。官公庁の一次資料の多くを確かめられておらず、判定は暫定です。</li>
+      <li>「条件つき」の候補は7つ（金融政策・為替・デフレ、大学・研究への公的支出、ベンチャー投資と上場、配信・著作権の規制、政府のIT調達、不良債権、通信事業者主導の端末の仕組み）。決定には結べますが、因果が「中」止まりか、数字が未確認です。</li>
+      <li>名目の差の大半は物価の差でした。実質の付加価値（2000→2023年）は日本1.16倍、米国1.62倍、ドイツ1.31倍、韓国2.30倍で、実質の差は残ります。ただし原因は特定せず、額は配っていません。</li>
+    </ol>
+    <p className="fine-note">イタリア・ロシア・ブラジルは、伸び悩んだ側の例として上のグラフと順位に入れています。この3か国が伸びなかった要因は、まだ調べていません。下の「伸びている国は、なぜ伸びたのか」は伸びた国だけの説明です。<a href="/methodology#spec-cause-axis">原因の軸の式と決まり</a></p>
+  </section>;
 }
 
 export function GrowthBars({ data, view }: { data: WorldGdpSnapshot; view: WorldView }) {
@@ -164,6 +183,7 @@ export function WorldGdpPage() {
         <p><a href="/history">日本の長期推移を詳しく読む</a></p>
       </section>
     </>}
+    <MissedGrowthSummary />
     <section id="growth-causes" className="world-causes"><GrowthCauses /></section>
   </main></SiteShell>;
 }
