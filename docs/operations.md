@@ -12,7 +12,7 @@ PR作成とmainへのマージは、GitHub CIで検証します。Vercelへの�
 
 現在の設定（Git自動配信なし、`previewDeploymentsDisabled=true`）のままで足ります。追加の自動化や秘密情報は要りません。
 
-1. 配信したいmainのSHAでCI（verify・preflight）が成功していることを確認する。
+1. 配信したいmainのSHAでCI（verify・preflight）が成功していることを確認する。CIが赤・枠切れなら、そのSHAで `python3 scripts/release_check.py` を回し、すべて合格であることを代わりの根拠にする（`docs/フィードバックループ.md` のL4）。
 2. そのSHAにGitHubのリリース（タグ `release-YYYYMMDD`）を作る。配信対象の目印であり、これだけでは配信されない。
 3. ねくがリリースを指示したら、そのタグのSHAを1回だけproductionへ配信する（VercelのAPIまたはCLI）。
 4. デプロイIDとソースSHAがタグと一致し、`kokuzoku.nexusai2045.com` の更新が見えるまで読み戻す。
