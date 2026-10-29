@@ -4,11 +4,13 @@ import sys
 import unittest
 from pathlib import Path
 
-import numpy as np
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-import io_ripple as m  # noqa: E402
+try:
+    import numpy as np
+    import io_ripple as m  # noqa: E402
+except ImportError:  # CI の標準環境には numpy・openpyxl が無い
+    raise unittest.SkipTest('numpy・openpyxl が無い')
 
 HAVE_RAW = (m.RAW / 'link20.xlsx').exists() and (m.RAW / 'official2020_large.xlsx').exists()
 

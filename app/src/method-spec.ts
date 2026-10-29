@@ -6,8 +6,8 @@
  */
 
 /** 仕様全体の版。部品の版が1つでも変われば上げる。 */
-export const SPEC_VERSION = 'method-spec-v2.3';
-export const SPEC_DATE = '2026-10-29';
+export const SPEC_VERSION = 'method-spec-v2.2';
+export const SPEC_DATE = '2026-10-24';
 
 export type SpecStatus = '採用' | '案';
 export type SpecFormula = { tex: string; note?: string };
