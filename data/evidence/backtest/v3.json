@@ -11,7 +11,7 @@
   "impact": "d3df8aaeb78a122cc92b70fd798c500e0c5c7684b3856f762adbe1fd4c65e956",
   "laws": "1e03a1d87bf604dcaa164513748145df001e7ac6c38d40cd57b3fdcb06b78932",
   "laws_total": 3415,
-  "foreign_pool": "a5eca106edc7a7a78f84d11ff9d5d767108b62180c5a8098abb7a00014d17d58",
+  "foreign_pool": "c1b27c931b608737b1d602c6fcfbfc2e079ef1535e110a0f98b0a9f9404f891d",
   "foreign_labels": "a05b40dfbf9b99397582737cb503059339711fda4445ba1c8f2a34c8c9d29649",
   "foreign_match": "eca36c89c513febf5cadcf52a27f01b5a7924c72ad057443bba3a826f831c3d6"
  },
@@ -403,7 +403,10 @@
   "min_groups": 5,
   "pool": {
    "entries": 81,
-   "usable": 64,
+   "excluded": [
+    "fg-060"
+   ],
+   "usable": 63,
    "labels_held": [
     "fg-004",
     "fg-009",
@@ -417,9 +420,9 @@
     "fg-068",
     "fg-081"
    ],
-   "events": 45,
+   "events": 44,
    "from_cases": 27,
-   "from_search": 54
+   "from_search": 53
   },
   "match_splits": 32,
   "levels": [
@@ -427,17 +430,17 @@
     "level": "T0",
     "name": "本命：外国の同種の研究（目的・産業・手段・開始時期の水準・結果指標の種類が同じ）から日本の向きを当てる",
     "definition": "目的・産業・手段が同じ／開始年の差20年以内で高所得国／結果指標の種類が同じ",
-    "n": 4,
-    "hits": 4,
+    "n": 3,
+    "hits": 3,
     "rate": 1.0,
     "wilson95": [
-     0.5100999795960008,
+     0.43849391955098227,
      1.0
     ],
-    "groups": 3,
+    "groups": 2,
     "verdict": "判定不能",
     "targets": 10,
-    "coverage": 0.4,
+    "coverage": 0.3,
     "baseline": 1.0,
     "cases": [
      {
@@ -446,19 +449,10 @@
       "source": "Murakami, Hideki 2013",
       "outcome_class": "price_surplus",
       "truth": 1,
-      "predicted": 1,
-      "hit": true,
-      "reason": null,
-      "foreign": [
-       {
-        "fg": "fg-060",
-        "authors": "Youdi Schipper; Piet Rietveld; Peter Nijkamp",
-        "year": 2002,
-        "country": "EU 加盟国間の欧州域内路線",
-        "outcome_class": "price_surplus",
-        "sign": 1
-       }
-      ],
+      "predicted": null,
+      "hit": false,
+      "reason": "同種の外国の研究が無い",
+      "foreign": [],
       "group": "koku"
      },
      {
@@ -711,14 +705,6 @@
         "authors": "Alejandro Micco, Tomás Serebrisky",
         "year": 2006,
         "country": "米国（協定相手国の米国向け航空貨物）",
-        "outcome_class": "price_surplus",
-        "sign": 1
-       },
-       {
-        "fg": "fg-060",
-        "authors": "Youdi Schipper; Piet Rietveld; Peter Nijkamp",
-        "year": 2002,
-        "country": "EU 加盟国間の欧州域内路線",
         "outcome_class": "price_surplus",
         "sign": 1
        }
@@ -1174,17 +1160,17 @@
     "level": "T2",
     "name": "緩めた参考2：結果指標の種類の条件を外す",
     "definition": "目的・産業・手段が同じ／開始年の差20年以内で高所得国（結果指標の種類は問わない）",
-    "n": 5,
-    "hits": 5,
+    "n": 4,
+    "hits": 4,
     "rate": 1.0,
     "wilson95": [
-     0.5655085052479191,
+     0.5100999795960008,
      1.0
     ],
-    "groups": 3,
+    "groups": 2,
     "verdict": "判定不能",
     "targets": 10,
-    "coverage": 0.5,
+    "coverage": 0.4,
     "baseline": 1.0,
     "cases": [
      {
@@ -1193,19 +1179,10 @@
       "source": "Murakami, Hideki 2013",
       "outcome_class": "price_surplus",
       "truth": 1,
-      "predicted": 1,
-      "hit": true,
-      "reason": null,
-      "foreign": [
-       {
-        "fg": "fg-060",
-        "authors": "Youdi Schipper; Piet Rietveld; Peter Nijkamp",
-        "year": 2002,
-        "country": "EU 加盟国間の欧州域内路線",
-        "outcome_class": "price_surplus",
-        "sign": 1
-       }
-      ],
+      "predicted": null,
+      "hit": false,
+      "reason": "同種の外国の研究が無い",
+      "foreign": [],
       "group": "koku"
      },
      {
@@ -1480,17 +1457,17 @@
    "level": "T0",
    "name": "本命：外国の同種の研究（目的・産業・手段・開始時期の水準・結果指標の種類が同じ）から日本の向きを当てる",
    "definition": "目的・産業・手段が同じ／開始年の差20年以内で高所得国／結果指標の種類が同じ",
-   "n": 4,
-   "hits": 4,
+   "n": 3,
+   "hits": 3,
    "rate": 1.0,
    "wilson95": [
-    0.5100999795960008,
+    0.43849391955098227,
     1.0
    ],
-   "groups": 3,
+   "groups": 2,
    "verdict": "判定不能",
    "targets": 10,
-   "coverage": 0.4,
+   "coverage": 0.3,
    "baseline": 1.0,
    "cases": [
     {
@@ -1499,19 +1476,10 @@
      "source": "Murakami, Hideki 2013",
      "outcome_class": "price_surplus",
      "truth": 1,
-     "predicted": 1,
-     "hit": true,
-     "reason": null,
-     "foreign": [
-      {
-       "fg": "fg-060",
-       "authors": "Youdi Schipper; Piet Rietveld; Peter Nijkamp",
-       "year": 2002,
-       "country": "EU 加盟国間の欧州域内路線",
-       "outcome_class": "price_surplus",
-       "sign": 1
-      }
-     ],
+     "predicted": null,
+     "hit": false,
+     "reason": "同種の外国の研究が無い",
+     "foreign": [],
      "group": "koku"
     },
     {
@@ -1745,10 +1713,10 @@
    },
    "price_surplus": {
     "targets": 4,
-    "n": 4,
-    "hits": 4,
+    "n": 3,
+    "hits": 3,
     "rate": 1.0,
-    "groups": 3,
+    "groups": 2,
     "verdict": "判定不能",
     "provisional_value": "出さない"
    }

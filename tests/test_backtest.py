@@ -109,6 +109,14 @@ class BacktestTransplantTest(unittest.TestCase):
             for rows in line.values():
                 self.assertTrue({r["fg"] for r in rows} <= ids)
 
+    def test_excluded_studies_are_recorded_but_never_used(self):
+        excluded = {e["id"] for e in self.pool if e.get("excluded")}
+        self.assertEqual(set(self.result["pool"]["excluded"]), excluded)
+        for lv in self.result["levels"]:
+            for c in lv["cases"]:
+                for f in c["foreign"]:
+                    self.assertNotIn(f["fg"], excluded)
+
     def test_unusable_labels_never_become_predictions(self):
         flab = bt.tr.foreign_labels(self.pool, self.labels)
         held = {i for i, v in flab.items() if not v["usable"]}

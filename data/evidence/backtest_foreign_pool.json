@@ -1120,7 +1120,8 @@
    "unit": "抄録に数値なし（向きのみ）",
    "locator": "抄録（ideas.repec.org の抄録ページ）。係数・有意性は抄録になし。本文未確認",
    "quote": "standard economy fares are lower and departure frequencies are higher on fully liberalised routes",
-   "read": "abstract"
+   "read": "abstract",
+   "excluded": "因果識別を確認できない：自由化の有無の路線比較を構造推定に入れたと書かれているが、識別の源（差の差・操作変数など）を抄録で確認できなかった（R53のCodex指摘）。測定からは外し、記録だけ残す"
   },
   {
    "id": "fg-061",

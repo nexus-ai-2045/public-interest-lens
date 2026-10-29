@@ -17,7 +17,7 @@ export type TransplantLevel = {
 };
 export type Transplant = {
   target: number; min_n: number; min_groups: number; note: string; match_splits: number;
-  pool: { entries: number; usable: number; labels_held: string[]; events: number; from_cases: number; from_search: number };
+  pool: { entries: number; excluded?: string[]; usable: number; labels_held: string[]; events: number; from_cases: number; from_search: number };
   levels: TransplantLevel[];
   by_outcome_class: Record<string, { targets: number; n: number; hits: number; rate: number | null; verdict: string; provisional_value: string }>;
 };

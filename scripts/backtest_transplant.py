@@ -100,8 +100,8 @@ def predict(target: dict, level: str, pool_by_id: dict, flab: dict, match: dict)
     t_class = target["labels"]["agreed"]["outcome_class"]
     used = []
     for fg, m in agreed_matches(match, target["id"]).items():
-        lab = flab[fg]
-        if not lab["usable"]:
+        lab = flab.get(fg)
+        if lab is None or not lab["usable"]:
             continue
         same_class = lab["outcome_class"] == t_class
         ok = {"T0": m["d"] and same_class, "T1": same_class, "T2": m["d"]}[level]
@@ -143,7 +143,9 @@ def _stats(level: str, name: str, definition: str, items: list[dict], total: int
 
 
 def run(cases: list[dict]) -> dict:
-    pool = json.loads(POOL.read_text(encoding="utf-8"))["entries"]
+    all_pool = json.loads(POOL.read_text(encoding="utf-8"))["entries"]
+    # 因果識別を確認できず外した研究（excluded）は記録に残すが、測定には使わない
+    pool = [e for e in all_pool if not e.get("excluded")]
     labels = json.loads(LABELS.read_text(encoding="utf-8"))
     match = json.loads(MATCH.read_text(encoding="utf-8"))
     by_id = {e["id"]: e for e in pool}
@@ -183,7 +185,7 @@ def run(cases: list[dict]) -> dict:
     return {
         "schema": "backtest-transplant/v1",
         "target": TARGET, "min_n": MIN_N, "min_groups": MIN_GROUPS,
-        "pool": {"entries": len(pool), "usable": sum(1 for v in flab.values() if v["usable"]),
+        "pool": {"entries": len(all_pool), "excluded": sorted(e["id"] for e in all_pool if e.get("excluded")), "usable": sum(1 for v in flab.values() if v["usable"]),
                  "labels_held": held, "events": len({v["event"] for v in flab.values()}),
                  "from_cases": sum(1 for e in pool if e["origin"].startswith("cases:")), "from_search": sum(1 for e in pool if e["origin"].startswith("search:"))},
         "match_splits": split,
