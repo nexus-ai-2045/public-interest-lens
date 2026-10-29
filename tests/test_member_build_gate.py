@@ -47,6 +47,12 @@ if (process.argv.includes('--attributions')) writeFileSync(process.argv[process.
                 path = root / "data" / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("unused\n", encoding="utf-8")
+            # prebuild は固定した OECD 表6から物価の換算表を作る。架空の入力は日本の名目・実質の2点だけ
+            va = root / "data/acquired/oecd-industry/industry_va.csv"
+            va.parent.mkdir(parents=True, exist_ok=True)
+            va.write_text("国,産業,指標,価格,年,値,単位,基準年\n"
+                          "JPN,_T,総付加価値（B1G）,V,2020,100,百万JPY,\n"
+                          "JPN,_T,総付加価値（B1G）,LR,2020,100,百万JPY,2020\n", encoding="utf-8")
             bad_amount = copy.deepcopy(primary)
             bad_amount["laws"][0]["amount"]["median"] = 101
             private_field = copy.deepcopy(primary)
