@@ -220,7 +220,7 @@ def build() -> dict[str, int]:
         t = by_org[key]
         t.setdefault('name', q['提案主体'])
         t['要望'] += 1
-        t['対応不可'] += q['省庁の回答'].startswith('対応不可')
+        t['対応不可'] += '対応不可' in q['省庁の回答']
         t['改正法あり'] += q['要望後3年以内の改正法'] > 0
         for c in chain_by_req.get(q['要望ID'], []):
             t['bills'].add(c['改正法ID'])
