@@ -9,7 +9,7 @@ export const meta = {
 }
 
 const SECTIONS = ['A','B','C','D','F','G','H','I','J','K','L','M','P','Q','R','TOTAL','NONMARKET']
-const SEC_HELP = 'A=農林水産 B=鉱業 C=製造業 D=電気・ガス・蒸気 F=建設 G=卸売・小売 H=運輸・保管 I=宿泊・飲食 J=情報通信 K=金融・保険 L=不動産 M=専門・科学技術サービス(士業・研究開発・知財含む) P=教育 Q=医療・福祉 R=芸術・娯楽・その他サービス TOTAL=特定の産業に結べず経済全体に効く NONMARKET=公務・司法・防衛・選挙など市場の付加価値で測れない'
+const SEC_HELP = 'A=農林水産 B=鉱業 C=製造業 D=電気・ガス・蒸気 F=建設 G=卸売・小売 H=運輸・保管 I=宿泊・飲食 J=情報通信 K=金融・保険 L=不動産 M=専門・科学技術サービス(士業・研究開発・知財含む) P=教育 Q=医療・福祉 R=芸術・娯楽・レクリエーション（派遣・職業紹介・廃棄物処理などその他サービスは含まない。結べなければ TOTAL） TOTAL=特定の産業に結べず経済全体に効く NONMARKET=公務・司法・防衛・選挙など市場の付加価値で測れない'
 
 const A_SCHEMA = { type: 'object', properties: { items: { type: 'array', items: { type: 'object', properties: {
   id: { type: 'string' }, verdict: { enum: ['excluded_ok', 'substantive'] }, section: { enum: SECTIONS }, reason: { type: 'string' } },
