@@ -1,6 +1,6 @@
 # 国賊ランキングの目的・責務・正本
 
-更新日: 2026-10-17。製品の目的は本書、架空データの算定契約は `app/src/ranking.ts`、実資料評価の入力・改訂束縛は `app/src/evidence-evaluation.ts`、公式取得元は `data-sources/diet-official-sources.yaml` を正本とする。旧称「公益レンズ」は履歴とリポジトリ識別子に限る。現在の算定再現と不足は [検証・運用・残務](docs/operations.md) の2026-10-17記録、振り分けv2の集計・版保存・限界は [再計算報告](docs/reports/bill-triage-v2.md) を参照する。以下の過去の日付で示す配送・検証状態は、その時点の履歴として扱う。ゴール（G1〜G8）・残り・各スレッドの担当は [ロードマップ](docs/ロードマップ.md) が正本で、食い違ったらロードマップを正とする。、改善の回し方は [フィードバックループ](docs/フィードバックループ.md)、2026-10-17 の公開方針は [設計決定0008](docs/adr/0008-publish-everything-with-certainty-marks.md) を正本とする。
+更新日: 2026-10-17。製品の目的は本書、架空データの算定契約は `app/src/ranking.ts`、実資料評価の入力・改訂束縛は `app/src/evidence-evaluation.ts`、公式取得元は `data-sources/diet-official-sources.yaml` を正本とする。旧称「公益レンズ」は履歴とリポジトリ識別子に限る。現在の算定再現と不足は [検証・運用・残務](docs/operations.md) の2026-10-17記録、振り分けv2の集計・版保存・限界は [再計算報告](docs/reports/bill-triage-v2.md) を参照する。以下の過去の日付で示す配送・検証状態は、その時点の履歴として扱う。ゴール（G1〜G9）・残り・各スレッドの担当は [ロードマップ](docs/ロードマップ.md) が正本で、食い違ったらロードマップを正とする。、改善の回し方は [フィードバックループ](docs/フィードバックループ.md)、2026-10-17 の公開方針は [設計決定0008](docs/adr/0008-publish-everything-with-certainty-marks.md) を正本とする。
 
 ## 目的
 

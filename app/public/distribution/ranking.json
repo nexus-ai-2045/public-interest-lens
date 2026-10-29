@@ -10,7 +10,7 @@
     ],
     "methodSpecVersion": "method-spec-v2.2",
     "codeHashes": {
-      "app/src/method-spec.ts": "47ba15f8eebb382fed5b48e4ec1a5b51107ca876e8037ae7ed5336fa82d2ab77",
+      "app/src/method-spec.ts": "38ba0337fd66213a6fa4971aa8302ef26430280a94568baa68fed78747080606",
       "scripts/build_public_ranking.py": "5bf3e6e31a430afca8d951e018e642c7b269662cf1e4ed20b0122980a07f8024",
       "scripts/generation_provenance.py": "7305f180fe2a415389bc00604f5806485c2eb559be545ae0669d616359b6b742",
       "scripts/path_guard.py": "aa7114e249f6591514297de30c97ee3428526ffa51babb999ab2d17a5aafe3c1"

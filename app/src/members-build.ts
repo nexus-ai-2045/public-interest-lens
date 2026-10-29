@@ -216,7 +216,9 @@ export type MemberInputs = { involvements: string; publish: string; loss: string
 
 /** 参議院の会派名を系統に分ける（会派は合流・改称が多いので、名前の一部で寄せる。上から順に当てる）。 */
 const BLOCS: [RegExp, string][] = [[/自由民主/, '自民'], [/公明/, '公明'], [/立憲/, '立憲'], [/共産/, '共産'], [/社会民主|社民/, '社民'], [/国民民主/, '国民民主'],
-  [/民主党|民進|民友/, '民主系'], [/維新/, '維新'], [/れいわ/, 'れいわ'], [/参政/, '参政']];
+  [/民主党|民進|民友/, '民主系'], [/維新/, '維新'], [/れいわ/, 'れいわ'], [/参政/, '参政'],
+  // 2026年の衆院から出る会派。中道改革連合は立憲・公明の衆院会派の後に記録される別の会派なので、立憲・公明には寄せない。
+  [/中道改革/, '中道改革連合'], [/チームみらい/, 'チームみらい'], [/日本保守党/, '日本保守党']];
 export const blocOf = (party: string): string => BLOCS.find(([re]) => re.test(party))?.[1] ?? 'その他';
 const normName = (s: string): string => s.replace(/[\s　]/g, '');
 
@@ -252,7 +254,8 @@ const partyList = (text: string | undefined): string[] => (text ?? '').split(/[;
 export const covidHeld = (p: Record<string, string>): boolean => p['判定表の行'] === 'R3';
 
 export function buildMembers(input: MemberInputs): PublicMembers {
-  const publish = parseCsv(input.publish);
+  const listed = input.listed === undefined ? null : new Set(input.listed);
+  const publish = parseCsv(input.publish).filter(p => listed === null || listed.has(p.id));
   const loss = new Map(parseCsv(input.loss).map(r => [r.id, r]));
   const enacted = new Map(parseCsv(input.enacted).map(r => [`${r['種別']}-${r['提出回次']}-${r['番号']}`, r]));
   const votes = new Map([...parseCsv(input.votes), ...(input.autoVotes ? parseCsv(input.autoVotes) : [])].map(r => [r['法律ID'], r]));
@@ -278,11 +281,10 @@ export function buildMembers(input: MemberInputs): PublicMembers {
     return [l['観測グループ'], window, a.low, a.median, a.high].join('|');
   };
   const observationLaws = new Map<string, number>();
-  const listed = input.listed ? new Set(input.listed) : null;
   for (const p of publish) {
     const l = loss.get(p.id);
     const amount = parseAmount(p['損失または便益']);
-    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || (listed && !listed.has(p.id)) || covidHeld(p)) continue;
+    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || covidHeld(p)) continue;
     const key = observationKey(l, p);
     observationLaws.set(key, (observationLaws.get(key) ?? 0) + 1);
   }

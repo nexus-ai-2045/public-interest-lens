@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { describe, expect, it } from 'vitest';
-import { filterRows, joinConfirmed, partiesOf, sortRows } from './all-members-view';
+import { breakdownOf, filterRows, joinConfirmed, partiesOf, sortRows } from './all-members-view';
 
 const ref = (name, net, current = null, laws = 1, id = name) => ({ id, name, current, lastSangiinParty: '', loss: {}, credit: {}, net: { low: net, median: net, high: net }, laws, top: [], reason: laws ? '' : '記録なし' });
 const rows = joinConfirmed([
@@ -40,5 +40,8 @@ describe('全議員の表', () => {
   });
   it('会派は現職の人数の多い順', () => {
     expect(partiesOf(rows)).toEqual(['自民', '立憲']);
+  });
+  it('内訳：公開人数・現職・額のある現職（院別）・確かな額の人数', () => {
+    expect(breakdownOf(rows)).toEqual({ total: 5, current: 3, currentWithAmount: 2, shu: 2, shuWithAmount: 1, san: 1, sanWithAmount: 1, confirmed: 2, withAmount: 4 });
   });
 });
