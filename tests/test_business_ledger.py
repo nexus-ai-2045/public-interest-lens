@@ -24,6 +24,7 @@ class BusinessLedgerTest(unittest.TestCase):
         self.assertEqual(bl.statutes("医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律第77条の2"),
                          ["医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律"])
         self.assertEqual(bl.statutes("記載なし"), [])
+        self.assertEqual(bl.statutes("著作権法30条の4"), ["著作権法"])
 
     def test_title_has_rejects_longer_law_names(self) -> None:
         self.assertTrue(bl.title_has("銀行法等の一部を改正する法律案", "銀行法"))

@@ -57,7 +57,7 @@ EQUIV = {
 }
 # 「、」で区切られる名前の後半だけを拾ってしまうもの（取り出しの規則では「、」を名前に含めない）。
 TRUNCATED = {'有効性及び安全性の確保等に関する法律': '医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律'}
-STATUTE = re.compile(r'([^\s、，,・（）()第]{2,40}?(?:法律|法))(?=第|施行|、|・|$|等|\s|（|同|及び|の)')
+STATUTE = re.compile(r'([^\s、，,・（）()第]{2,40}?(?:法律|法))(?=第|\d|施行|、|・|$|等|\s|（|同|及び|の)')
 NOT_STATUTE_SUFFIX = ('施行令', '施行規則', '省令', '政令', '告示', '通知', '指針', '要綱')
 # 要望から改正法の公布までを結ぶ窓。規制改革実施計画の実施期限が通常1〜3年なので3年（1,096日）。これより離れた改正は別の動機とみなして結ばない。
 WINDOW_DAYS = 1096
@@ -88,15 +88,15 @@ def read_hearings() -> list[dict[str, str]]:
 
 
 def read_lobbying() -> list[dict[str, str]]:
-    """経団連・商工会議所などの提言・要望書・陳情（data/acquired/lobbying/、scripts/verify_lobbying_quotes.py で引用と法律名が出典の本文にあると確かめた行だけ）。"""
+    """経団連・商工会議所などの提言・要望書・陳情（data/acquired/lobbying/、scripts/verify_lobbying_quotes.py で引用と法律名が出典の本文にあると機械で確かめ、さらに独立した AI 2系統が提案主体・日付・求めた内容まで出典と一致と判定した行だけ。AGENTS.md の2系統の一致）。"""
     rows = []
     for path in sorted(LOBBY_DIR.glob('*.csv')):
         with path.open(encoding='utf-8', newline='') as f:
             for i, r in enumerate(csv.DictReader(f), 2):
-                if r.get('確度') == '原文照合済み（機械）':
+                if r.get('確度') == '原文照合済み（機械）' and r.get('AI2系統') == '一致':
                     rows.append({'受付番号': f'提言-{path.stem}-{i}', '受付日': r['日付'], '提案主体': r['提案主体'],
                                  '提案事項': f"{r['題名']}：{r['求めた内容']}", '所管省庁': r.get('宛先', ''), '対応分類': '（回答の記録なし）',
-                                 '該当法令': r['該当法令'], '関連技術': '', '出典URL': r['出典URL'], '経路': r['経路'], '取込の確度': '原文照合済み（機械のみ）'})
+                                 '該当法令': r['該当法令'], '関連技術': '', '出典URL': r['出典URL'], '経路': r['経路'], '取込の確度': '原文照合済み（機械とAI2系統が一致）'})
     return rows
 
 
