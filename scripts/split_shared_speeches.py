@@ -106,6 +106,16 @@ def segment(text: str, title: str, others: list[str], limit: int, longer: list[s
     return body if len(body) <= limit else body[: limit - 1] + "…"
 
 
+def keep_stamps(results: list[dict], previous: list[dict]) -> list[dict]:
+    """中身（抜粋・URL）が前回と同じ行は取得日時を前回のまま残す。毎回の取り直しで全行の日時だけが動き、定期更新が空振りの PR を作るのを防ぐ。"""
+    old = {(row["id"], row["区分"]): row for row in previous}
+    for row in results:
+        before = old.get((row["id"], row["区分"]))
+        if before and before["抜粋"] == row["抜粋"] and before["URL"] == row["URL"]:
+            row["取得日時"] = before["取得日時"]
+    return results
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sleep", type=float, default=0.4)
@@ -153,6 +163,8 @@ def main() -> int:
         results.extend(kept)
         print(f"取得できなかった発言 {len(failed)} 件は前回の切り出し {len(kept)} 件を残す", flush=True)
     results.sort(key=lambda row: (order[row["id"]], row["区分"]))
+    if OUT.exists():
+        results = keep_stamps(results, list(csv.DictReader(OUT.open(encoding="utf-8"))))
     with OUT.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=FIELDS)
         writer.writeheader()
