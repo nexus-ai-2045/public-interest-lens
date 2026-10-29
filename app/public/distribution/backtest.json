@@ -1656,7 +1656,7 @@
      "from_cases": 27,
      "from_search": 30
     },
-    "match_splits": 1,
+    "match_splits": 11,
     "levels": [
      {
       "level": "T0",
@@ -2551,6 +2551,7 @@
       "n": 0,
       "hits": 0,
       "rate": null,
+      "groups": 0,
       "verdict": "判定不能",
       "provisional_value": "出さない"
      },
@@ -2559,6 +2560,7 @@
       "n": 0,
       "hits": 0,
       "rate": null,
+      "groups": 0,
       "verdict": "判定不能",
       "provisional_value": "出さない"
      },
@@ -2567,6 +2569,7 @@
       "n": 2,
       "hits": 2,
       "rate": 1.0,
+      "groups": 1,
       "verdict": "判定不能",
       "provisional_value": "出さない"
      }
@@ -2840,7 +2843,7 @@
    ],
    "label": "v2",
    "date": "2026-10-29",
-   "note": "v2：外国の同種の政策の研究から日本の向きを当てる（設計決定0021）。v1・v1.1 の測定はそのまま残してある。本命 T0 は、予測を出せた事例が10件に届かず判定不能。"
+   "note": "v2：外国の同種の研究から日本の向きを当てる（設計決定0021）"
   }
  ]
 }

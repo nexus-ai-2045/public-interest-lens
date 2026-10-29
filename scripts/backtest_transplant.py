@@ -169,15 +169,17 @@ def run(cases: list[dict]) -> dict:
         scored = [x for x in sub if x["predicted"] is not None]
         k = sum(1 for x in scored if x["hit"])
         n = len(scored)
-        by_class[cls] = {"targets": len(sub), "n": n, "hits": k, "rate": k / n if n else None,
-                         "verdict": "判定不能" if n < MIN_N else ("達成" if k / n >= TARGET else "未達"),
+        groups = len({x["group"] for x in scored})
+        by_class[cls] = {"targets": len(sub), "n": n, "hits": k, "rate": k / n if n else None, "groups": groups,
+                         "verdict": "判定不能" if n < MIN_N or groups < MIN_GROUPS else ("達成" if k / n >= TARGET else "未達"),
                          "provisional_value": "出さない"}
     held = sorted(i for i, v in flab.items() if v["held"])
     split = 0
     for t in match["targets"].values():
-        a = {x["fg"] for x in t["line1"]}
-        b = {x["fg"] for x in t["line2"]}
-        split += len(a ^ b)
+        one = {x["fg"]: x["d"] for x in t["line1"]}
+        two = {x["fg"]: x["d"] for x in t["line2"]}
+        # 片方だけが挙げた研究と、両方が挙げたが開始時期の条件(d)が割れた研究
+        split += len(one.keys() ^ two.keys()) + sum(1 for fg in one.keys() & two.keys() if one[fg] != two[fg])
     return {
         "schema": "backtest-transplant/v1",
         "target": TARGET, "min_n": MIN_N, "min_groups": MIN_GROUPS,
