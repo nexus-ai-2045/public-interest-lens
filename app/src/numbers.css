@@ -56,7 +56,7 @@
 @media (forced-colors:active){.nc-bar,.nc-pbar,.nc-seg{forced-color-adjust:none}}
 /* /methodology の式（MethodFormulas.tsx） */
 .spec{margin-top:28px}.spec>p{max-width:70ch;line-height:1.7}
-.spec-section{margin:10px 0;border:1px solid var(--line);border-radius:9px;background:var(--quiet)}
+.spec-section{scroll-margin-top:150px;margin:10px 0;border:1px solid var(--line);border-radius:9px;background:var(--quiet)}
 .spec-section.draft{border-style:dashed}
 .spec-section summary{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;padding:12px 14px;cursor:pointer;min-height:44px}
 .spec-version{font-size:12px;color:var(--muted);font-family:ui-monospace,monospace}
