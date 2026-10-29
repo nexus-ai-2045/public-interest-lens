@@ -63,6 +63,14 @@ class LedgerCheck(unittest.TestCase):
         del e["source"]["authors"]
         self.assertTrue(any("source" in x for x in c.check_entry(e)))
 
+    def test_non_finite_values_rejected(self):
+        e = sample()
+        e["verification"]["checks"][1]["central"] = float("inf")
+        self.assertTrue(c.check_entry(e))
+        e = sample()
+        e["estimate"]["central"] = float("nan")
+        self.assertTrue(any("central" in x for x in c.check_entry(e)))
+
     def test_doi_requires_crossref(self):
         e = sample()
         e["verification"]["crossref_title_match"] = None

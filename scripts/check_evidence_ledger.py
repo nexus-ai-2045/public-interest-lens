@@ -8,6 +8,7 @@
 赤なら終了コード1。
 """
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -25,7 +26,7 @@ REQUIRED = ["id", "mechanism", "quantity", "estimate", "source", "scope", "locat
 
 
 def _num(x):
-    return isinstance(x, (int, float)) and not isinstance(x, bool)
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
 
 
 def agree(a, b, rel=0.02):
