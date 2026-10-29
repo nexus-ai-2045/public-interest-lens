@@ -30,9 +30,11 @@ class PriceIndexTests(unittest.TestCase):
 
     @requires_data("industry_va")
     def test_generated_file_is_current(self):
-        committed = json.loads(p.OUTPUT.read_text(encoding='utf-8'))
-        self.assertEqual(committed, json.loads(json.dumps(p.build(), ensure_ascii=False)))
-        self.assertEqual(committed['deflator']['2020'], 100.0)
+        # Git に置かない派生物なので、無ければ（単独実行・クリーンなチェックアウト）入力からここで作る。あれば入力と一致するかを見る
+        built = json.loads(json.dumps(p.build(), ensure_ascii=False))
+        if p.OUTPUT.exists():
+            self.assertEqual(json.loads(p.OUTPUT.read_text(encoding='utf-8')), built)
+        self.assertEqual(built['deflator']['2020'], 100.0)
 
 
 if __name__ == '__main__':
