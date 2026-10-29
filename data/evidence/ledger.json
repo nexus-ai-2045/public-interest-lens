@@ -65,7 +65,8 @@
       "locator": "1(3)、表１計欄",
       "version": "公的資料（内閣府PDF、改定版）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -131,7 +132,8 @@
       "locator": "1(3)の注記（※）",
       "version": "公的資料（内閣府PDF、改定版）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -198,7 +200,8 @@
       "locator": "表１ 補助金の行",
       "version": "公的資料（内閣府PDF、改定版）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -265,7 +268,8 @@
       "locator": "1(4)、表１",
       "version": "公的資料（内閣府PDF、改定版）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -332,7 +336,8 @@
       "locator": "4-1（図7の本文）、4-2の重回帰説明",
       "version": "RIETI ポリシー・ディスカッション・ペーパー（ワーキング版）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -374,7 +379,8 @@
    "verification": {
     "status": "held",
     "held_reason": "照合2:mismatch",
-    "crossref_title_match": null
+    "crossref_title_match": null,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -443,7 +449,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -513,7 +520,8 @@
       "locator": "SEC(2007)85 影響評価要約、行政負担の節",
       "version": "公的資料（欧州委員会スタッフワーキングペーパー要約）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -556,7 +564,8 @@
     "held_reason": "照合2:mismatch",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -624,7 +633,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -668,7 +678,8 @@
     "held_reason": "値が不一致 収集=2.4 照合1=4.3 照合2=2.4；照合1の区間が不一致 台帳[1.8,2.4] 照合1[1.43,8.34]；照合2の区間が不一致 台帳[1.8,2.4] 照合2[None,None]",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -712,7 +723,8 @@
     "held_reason": "値が不一致 収集=2.0 照合1=2.0 照合2=1.7；照合2の区間が不一致 台帳[1.7,2.6] 照合2[None,None]",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -781,7 +793,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -850,7 +863,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -894,7 +908,8 @@
     "held_reason": "値が不一致 収集=5500 照合1=5500 照合2=4447；照合1の区間が不一致 台帳[700,14000] 照合1[None,None]；照合2の区間が不一致 台帳[700,14000] 照合2[None,None]",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -963,7 +978,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1032,7 +1048,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1101,7 +1118,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1174,7 +1192,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1217,7 +1236,8 @@
     "held_reason": "値が不一致 収集=50 照合1=0.51 照合2=0.51",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1261,7 +1281,8 @@
     "held_reason": "値が不一致 収集=25.0 照合1=0.25 照合2=0.25；照合1の区間が不一致 台帳[20,30] 照合1[0.2,0.3]；照合2の区間が不一致 台帳[20,30] 照合2[0.2,0.3]",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1330,7 +1351,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1399,7 +1421,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1465,7 +1488,8 @@
       "locator": "表2.1（Table 2.1）日本の行（Fukao and Kwon 2004、企業単位、1994-2001）",
       "version": "ワーキングペーパー版（RIETI DP 05-E-008）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1531,7 +1555,8 @@
       "locator": "表2.1 米国の行（Foster, Haltiwanger and Krizan 1998、事業所単位、1977-87）",
       "version": "ワーキングペーパー版（RIETI DP 05-E-008）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1599,7 +1624,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1667,7 +1693,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1710,7 +1737,8 @@
     "held_reason": "照合1:unreadable；照合2:unreadable",
     "crossref_title_match": true,
     "crossref_author_match": false,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1779,7 +1807,8 @@
     ],
     "crossref_author_match": false,
     "crossref_year_match": true,
-    "held_reason": "Crossref の著者一致=False・年一致=True（Crossref 年 [2015, 2015, 2015]、台帳 2015）"
+    "held_reason": "Crossref の著者一致=False・年一致=True（Crossref 年 [2015, 2015, 2015]、台帳 2015）",
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1822,7 +1851,8 @@
     "held_reason": "照合1:unreadable；照合2:unreadable",
     "crossref_title_match": true,
     "crossref_author_match": false,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1863,7 +1893,8 @@
    "verification": {
     "status": "held",
     "held_reason": "照合1:unreadable；照合2:unreadable",
-    "crossref_title_match": null
+    "crossref_title_match": null,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1930,7 +1961,8 @@
       "locator": "第2節 2-1-1 本文、表2-1a",
       "version": "内閣府経済社会総合研究所 ESRI Research Note No.72 公的資料(PDF全文)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -1997,7 +2029,8 @@
       "locator": "2-1-3 本文、表2-3",
       "version": "内閣府経済社会総合研究所 ESRI Research Note No.72 公的資料(PDF全文)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2064,7 +2097,8 @@
       "locator": "2-1-5 本文、表2-5",
       "version": "内閣府経済社会総合研究所 ESRI Research Note No.72 公的資料(PDF全文)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2134,7 +2168,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2202,7 +2237,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2272,7 +2308,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2341,7 +2378,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2414,7 +2452,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2482,7 +2521,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2525,7 +2565,8 @@
     "held_reason": "値が不一致 収集=9.1 照合1=8.8 照合2=8.8；照合1の区間が不一致 台帳[8.7,9.5] 照合1[None,None]；照合2の区間が不一致 台帳[8.7,9.5] 照合2[None,None]",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2593,7 +2634,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2665,7 +2707,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2737,7 +2780,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2805,7 +2849,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2877,7 +2922,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -2947,7 +2993,8 @@
       "locator": "要旨および Table 1（Average 行、Total 行の min/max）",
       "version": "JICA Ogata Research Institute DP No.21（2024年3月、査読なし）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3016,7 +3063,8 @@
     ],
     "crossref_author_match": false,
     "crossref_year_match": true,
-    "held_reason": "Crossref の著者一致=False・年一致=True（Crossref 年 [2012, 2012, 2012]、台帳 2012）"
+    "held_reason": "Crossref の著者一致=False・年一致=True（Crossref 年 [2012, 2012, 2012]、台帳 2012）",
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3085,7 +3133,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3151,7 +3200,8 @@
       "locator": "内閣府ページ 3.調査研究結果（死亡による1名当たり損失額）",
       "version": "公的資料（内閣府、平成19年3月公表の概要ページ）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3217,7 +3267,8 @@
       "locator": "表－１ 車種別の時間価値原単位（マニュアル p.7）",
       "version": "公的資料（国交省 道路局・都市局『費用便益分析マニュアル』令和7年8月、ben-eki_2.pdf 第2部）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3289,7 +3340,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3355,7 +3407,8 @@
       "locator": "要旨、および本文 Table 3 の説明（0.7×0.139=0.097）",
       "version": "RIETI DP 25-E-033（2025年4月、査読なし）。要旨ページと本文PDFを両方確認"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3428,7 +3481,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3497,7 +3551,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3565,7 +3620,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3633,7 +3689,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3702,7 +3759,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3770,7 +3828,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3837,7 +3896,8 @@
       "locator": "RIETI DP 07-E-046 Table 1 Direct Contributions of ICT Capital Service Input Growth to Economic Growth、行 Market sector total、1995-2004 Japan",
       "version": "ワーキングペーパー版（RIETI DP 07-E-046、EU KLEMS 2007年3月版）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3904,7 +3964,8 @@
       "locator": "RIETI DP 07-E-046 第2節本文（Figure 2の説明）",
       "version": "ワーキングペーパー版（RIETI DP 07-E-046）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -3973,7 +4034,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4046,7 +4108,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4118,7 +4181,8 @@
       "locator": "第2節2-1-1 表2-1a、要約(1)公共投資の拡大",
       "version": "ESRI Research Note No.41 公式PDF(内閣府ESRIサイト掲載版、2018年版)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4189,7 +4253,8 @@
       "locator": "第2節2-1-3 表2-3",
       "version": "ESRI Research Note No.41 公式PDF(内閣府ESRIサイト掲載版、2018年版)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4260,7 +4325,8 @@
       "locator": "第2節2-1-5 表2-5、要約(3)",
       "version": "ESRI Research Note No.41 公式PDF(内閣府ESRIサイト掲載版、2018年版)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4302,7 +4368,8 @@
    "verification": {
     "status": "held",
     "held_reason": "照合1:mismatch",
-    "crossref_title_match": null
+    "crossref_title_match": null,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4369,7 +4436,8 @@
       "locator": "本文2.経済の中長期的な展望 『各シナリオの主要な前提』表、(1)潜在成長率",
       "version": "公的資料(刊行PDF/公式サイト、2026-10取得)(内閣府「中長期の経済財政に関する試算」2024年7月、PDF名r7chuuchouki1)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4436,7 +4504,8 @@
       "locator": "gap.xlsx シート data2『潜在成長率』行『2026.1 : 2026.2Q』",
       "version": "公的資料(刊行PDF/公式サイト、2026-10取得)(日銀分析データ gap.xlsx、取得時点の最新)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4503,7 +4572,8 @@
       "locator": "第3章 便益の算出 表-1 車種別の時間価値原単位(p.7)",
       "version": "公的資料(刊行PDF/公式サイト、2026-10取得)(費用便益分析マニュアル 令和7年8月 道路局・都市局)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4574,7 +4644,8 @@
       "locator": "第2章 第1項 社会的割引率(p.6)",
       "version": "公的資料(刊行PDF/公式サイト、2026-10取得)(技術指針 共通編 令和5年9月)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4642,7 +4713,8 @@
       "locator": "第2章 支払意思額による生命の価値(p.19-20)、表2-4(p.21)",
       "version": "公的資料(刊行PDF/公式サイト、2026-10取得)(技術指針 共通編 令和5年9月)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4713,7 +4785,8 @@
       "locator": "第2章 環境質の価値、CO2の貨幣価値原単位の計測方法(p.23-24)",
       "version": "公的資料(刊行PDF/公式サイト、2026-10取得)(技術指針 共通編 令和5年9月)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4781,7 +4854,8 @@
       "locator": "p.2『給付水準の調整終了年度と最終的な所得代替率の見通し』および経済前提表",
       "version": "公的資料(刊行PDF/公式サイト、2026-10取得)(厚労省 社保審年金部会 資料2-1、2024年7月3日)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4826,7 +4900,8 @@
     "held_reason": "照合1:unreadable",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4870,7 +4945,8 @@
     "held_reason": "照合1:unreadable",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -4939,7 +5015,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5005,7 +5082,8 @@
       "locator": "第4章 4.17項、Chart 4.B",
       "version": "英国政府公開の独立報告書（2019年11月）、gov.ukのPDF"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5073,7 +5151,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5141,7 +5220,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5210,7 +5290,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5253,7 +5334,8 @@
     "held_reason": "照合1:unreadable",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5321,7 +5403,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5363,7 +5446,8 @@
    "verification": {
     "status": "held",
     "held_reason": "値が不一致 収集=1.2 照合1=1.2 照合2=0.0118",
-    "crossref_title_match": null
+    "crossref_title_match": null,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5406,7 +5490,8 @@
     "held_reason": "照合1:unreadable",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5453,7 +5538,8 @@
     "held_reason": "照合1:unreadable",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5525,7 +5611,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5568,7 +5655,8 @@
     "held_reason": "値が不一致 収集=0.23 照合1=0.46 照合2=0.23",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5636,7 +5724,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5704,7 +5793,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5773,7 +5863,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5841,7 +5932,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5910,7 +6002,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -5976,7 +6069,8 @@
       "locator": "RIETIコラム本文（Cabinet Office, 2010の引用）",
       "version": "公的資料の二次引用（RIETIコラム、2010-03-09）。内閣府の原報告は未読"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6046,7 +6140,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6115,7 +6210,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6185,7 +6281,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6254,7 +6351,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6322,7 +6420,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6391,7 +6490,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6460,7 +6560,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6529,7 +6630,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6599,7 +6701,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6666,7 +6769,8 @@
       "locator": "sec.4 本文と表1（p.9-10）、N=5,074 / 969",
       "version": "RIETI DP 22-J-027（2022年7月）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6707,7 +6811,8 @@
    "verification": {
     "status": "held",
     "held_reason": "照合1:unreadable",
-    "crossref_title_match": null
+    "crossref_title_match": null,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6779,7 +6884,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6823,7 +6929,8 @@
     "held_reason": "値が不一致 収集=-8.5 照合1=8.5 照合2=-8.5；照合1の区間が不一致 台帳[-9,-8] 照合1[8,9]",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6891,7 +6998,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -6934,7 +7042,8 @@
     "held_reason": "値が不一致 収集=18 照合1=14 照合2=14；照合1の区間が不一致 台帳[None,None] 照合1[11,19.9]；照合2の区間が不一致 台帳[None,None] 照合2[11,14]",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7000,7 +7109,8 @@
       "locator": "図表9",
       "version": "公的資料（内閣府 政策課題分析シリーズ6（第4分冊 10seisakukadai06-4.pdf）公的資料）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7066,7 +7176,8 @@
       "locator": "図表3-4、図表9",
       "version": "公的資料（内閣府 政策課題分析シリーズ6（第4分冊 10seisakukadai06-4.pdf）公的資料）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7132,7 +7243,8 @@
       "locator": "図表9（運輸・トラック行）",
       "version": "公的資料（内閣府 政策課題分析シリーズ6（第4分冊 10seisakukadai06-4.pdf）公的資料）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7198,7 +7310,8 @@
       "locator": "図表9（電気通信・移動体通信行）",
       "version": "公的資料（内閣府 政策課題分析シリーズ6（第4分冊 10seisakukadai06-4.pdf）公的資料）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7264,7 +7377,8 @@
       "locator": "Ⅱ（3）および（4）、表『計』行",
       "version": "公的資料（規制改革推進会議 行政手続部会、令和元年7月29日改定版）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7333,7 +7447,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7399,7 +7514,8 @@
       "locator": "Section 4(Table 5)本文および表5 Private Sector 1990-98列",
       "version": "IMES ディスカッションペーパー版(2004-E-5)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7471,7 +7587,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7543,7 +7660,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7588,7 +7706,8 @@
     "held_reason": "値が読めない [1.13, None, 1.13]；照合1の区間が不一致 台帳[-0.52,1.13] 照合1[None,None]；照合2の区間が不一致 台帳[-0.52,1.13] 照合2[None,None]",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7658,7 +7777,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7726,7 +7846,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7792,7 +7913,8 @@
       "locator": "本文 '(1) Potential growth rate'",
       "version": "公的資料(内閣府 英訳版 projection2601)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7834,7 +7956,8 @@
    "verification": {
     "status": "held",
     "held_reason": "値が読めない [0.15, None, 0.15]；照合1の区間が不一致 台帳[0.0,0.3] 照合1[None,None]",
-    "crossref_title_match": null
+    "crossref_title_match": null,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7877,7 +8000,8 @@
     "held_reason": "値が不一致 収集=0.84 照合1=84 照合2=84；照合1の区間が不一致 台帳[0.84,1.05] 照合1[None,None]；照合2の区間が不一致 台帳[0.84,1.05] 照合2[None,None]",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7921,7 +8045,8 @@
     "held_reason": "値が不一致 収集=0.8 照合1=0.82 照合2=0.82",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -7990,7 +8115,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8033,7 +8159,8 @@
     "held_reason": "値が不一致 収集=-3.3 照合1=3.3 照合2=3.3",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8103,7 +8230,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8173,7 +8301,8 @@
     ],
     "crossref_author_match": false,
     "crossref_year_match": true,
-    "held_reason": "Crossref の著者一致=False・年一致=True（Crossref 年 [2012, 2012, 2012]、台帳 2012）"
+    "held_reason": "Crossref の著者一致=False・年一致=True（Crossref 年 [2012, 2012, 2012]、台帳 2012）",
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8241,7 +8370,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8309,7 +8439,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8375,7 +8506,8 @@
       "locator": "序論 p.3、4.2節",
       "version": "RIETI DP 16-E-052(2016年3月)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8418,7 +8550,8 @@
     "held_reason": "値が読めない [0, None, 0.0001]",
     "crossref_title_match": true,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8484,7 +8617,8 @@
       "locator": "KAKEN研究概要(英語版)",
       "version": "公的資料(KAKEN研究成果概要)"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8554,7 +8688,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8622,7 +8757,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8690,7 +8826,8 @@
       "locator": "第1部第5章第1節 図表5-1-3-3の本文記述",
       "version": "公的資料（総務省 平成27年版情報通信白書 HTML）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8759,7 +8896,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8828,7 +8966,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8897,7 +9036,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -8966,7 +9106,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9035,7 +9176,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9080,7 +9222,8 @@
     "held_reason": "照合2:unreadable",
     "crossref_title_match": true,
     "crossref_author_match": false,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9149,7 +9292,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9215,7 +9359,8 @@
       "locator": "CNB WP 12/2019 Table 6 'Long-Run Armington Elasticities Implied for Individual Countries' Japan行",
       "version": "CNB Working Paper 12/2019（公式PDF）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9284,7 +9429,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9352,7 +9498,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9422,7 +9569,8 @@
       "locator": "要旨・3章 結果 para.13・脚注8",
       "version": "内閣官房TPP等政府対策本部 公的資料（2019年10月29日付PDF）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9493,7 +9641,8 @@
       "locator": "RIETI DP 20-E-083 概要（日本語）／Abstract（英語）",
       "version": "RIETI DP概要ページ（本文PDFは未取得）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9561,7 +9710,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9629,7 +9779,8 @@
       "locator": "Abstract／Section 1",
       "version": "日本銀行ワーキングペーパー 25-E-2（2025年2月、公的資料）"
      }
-    ]
+    ],
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9701,7 +9852,8 @@
      }
     ],
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   },
   {
@@ -9744,7 +9896,8 @@
     "held_reason": "値が読めない [0, None, -0.002]",
     "crossref_title_match": null,
     "crossref_author_match": true,
-    "crossref_year_match": true
+    "crossref_year_match": true,
+    "verified_at": "2026-10-29"
    }
   }
  ]

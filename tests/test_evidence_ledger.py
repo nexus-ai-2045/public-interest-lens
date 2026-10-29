@@ -17,7 +17,7 @@ def sample(**over):
         "scope": {"countries": "OECD", "period": "1990-2000", "population_or_sector": "全体"},
         "locator": "表1", "japan_application": {"method": "そのまま", "caveat": "なし"}, "used_for": ["財政"],
         "confidence": "中",
-        "verification": {"status": "verified", "crossref_title_match": True, "crossref_author_match": True, "crossref_year_match": True, "checks": [
+        "verification": {"status": "verified", "verified_at": "2026-10-29", "crossref_title_match": True, "crossref_author_match": True, "crossref_year_match": True, "checks": [
             {"role": "collector", "central": 1.0}, {"role": "check1", "central": 1.0, "low": 0.5, "high": 1.5, "unit": "倍", "scope_match": True},
             {"role": "check2", "central": 1.0, "low": 0.5, "high": 1.5, "unit": "倍", "scope_match": True}]},
     }
@@ -82,8 +82,13 @@ class LedgerCheck(unittest.TestCase):
             e["verification"][k] = False
             self.assertTrue(any("Crossref" in x for x in c.check_entry(e)), k)
 
+    def test_verified_at_required(self):
+        e = sample()
+        del e["verification"]["verified_at"]
+        self.assertTrue(any("verified_at" in x for x in c.check_entry(e)))
+
     def test_held_needs_reason(self):
-        e = sample(verification={"status": "held"})
+        e = sample(verification={"status": "held", "verified_at": "2026-10-29"})
         self.assertTrue(any("held_reason" in x for x in c.check_entry(e)))
 
     def test_duplicate_and_mapping(self):

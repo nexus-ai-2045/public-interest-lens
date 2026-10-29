@@ -3,6 +3,7 @@
 
 - 必須項目・型・ID の重複
 - DOI の形式
+- 原文を取得・照合した日（verification.verified_at）
 - verified には「収集・照合1・照合2」の3者の記録があり、数値が丸めの範囲で一致していること
 - mapping.json の参照 ID が台帳に実在すること
 赤なら終了コード1。
@@ -17,6 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 LEDGER = ROOT / "data" / "evidence" / "ledger.json"
 MAPPING = ROOT / "data" / "evidence" / "mapping.json"
 
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
 STUDY_TYPES = {"meta-analysis", "systematic-review", "official-estimate", "review", "single-study"}
 STATUSES = {"verified", "held"}
@@ -91,6 +93,8 @@ def check_entry(e):
     v = e["verification"]
     if v.get("status") not in STATUSES:
         errs.append(f"{i}: verification.status は verified か held")
+    if not isinstance(v.get("verified_at"), str) or not DATE_RE.match(v["verified_at"]):
+        errs.append(f"{i}: verification.verified_at（原文を取得・照合した日 YYYY-MM-DD）がない")
     if v.get("status") == "verified":
         checks = {c.get("role"): c for c in v.get("checks", [])}
         if not all(r in checks for r in ROLES):
