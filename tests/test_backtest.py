@@ -125,12 +125,15 @@ class BacktestTransplantTest(unittest.TestCase):
                 for f in c["foreign"]:
                     self.assertNotIn(f["fg"], held)
 
-    def test_relaxed_levels_contain_the_headline_predictions(self):
-        t0 = {c["id"] for c in self.result["levels"][0]["cases"] if c["predicted"] is not None}
-        t1 = {c["id"] for c in self.result["levels"][1]["cases"] if c["predicted"] is not None}
-        t2 = {c["id"] for c in self.result["levels"][2]["cases"] if c["predicted"] is not None}
-        self.assertLessEqual(t0, t1)
-        self.assertLessEqual(t0, t2)
+    def test_relaxed_levels_use_a_superset_of_the_headline_studies(self):
+        # 条件を緩めると使う外国の研究は増える。増えた研究で向きが割れれば予測なしになりうるので、
+        # 予測の有無ではなく、使った研究の集合で比べる
+        def used(level):
+            return {c["id"]: {f["fg"] for f in c["foreign"]} for c in self.result["levels"][level]["cases"]}
+        t0, t1, t2 = used(0), used(1), used(2)
+        for cid, studies in t0.items():
+            self.assertLessEqual(studies, t1[cid])
+            self.assertLessEqual(studies, t2[cid])
 
     def test_verdict_needs_enough_cases_and_groups_and_unpredicted_are_not_misses(self):
         for lv in self.result["levels"]:
