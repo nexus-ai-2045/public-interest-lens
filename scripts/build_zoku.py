@@ -29,6 +29,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.allocation_involvements import normalize_name  # noqa: E402
+from scripts.org_names import org_key  # noqa: E402
 
 OUT = ROOT / 'data/derived/zoku-v1'
 CHAIRS = ROOT / 'data/acquired/office-holders/committee-chairs.csv'
@@ -60,7 +61,7 @@ COMMITTEE_FIELD = {
 LOBBY_ACTIONS = ('声明', '要望', '陳情', 'ヒアリング出席', '審議会委員', '意見公募への意見', '署名運動')
 GROUP_KINDS = ('業界団体', '運動団体', 'メディア', '議員連盟', '自治体', '労働団体', 'その他')
 HEADER = ['氏名', '人物ID', '分野', '委員長の回次数', '委員長の根拠URL', '推す行動の本数', '推す行動の年数', '推す行動の例（法律ID）',
-          '参院本会議で賛成した本数', '参院本会議で反対した本数', '議員連盟', '同じ分野の団体との金銭の関係', '分野との継続的な関わり', '印']
+          '参院本会議で賛成した本数', '参院本会議で反対した本数', '議員連盟', '同じ分野の団体との金銭の関係', '金銭の関係の根拠URL', '分野との継続的な関わり', '印']
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -129,7 +130,7 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
         if r.get('区分') not in ('受けた寄附', 'パーティー対価') or not r.get('人物ID') or not has_url(r.get('PDF_URL', '')):
             continue
         key = normalize_name(r['関係議員名'])
-        org = r['団体名キー'] or r['相手方']
+        org = r['団体名キー'] or org_key(r['相手方'])
         for field in org_fields.get(org, ()):
             t = ties[(key, field)]
             t['money'][org] += int(float(r.get('金額') or 0))
@@ -155,7 +156,7 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
             '委員長の回次数': len(t['sessions']), '委員長の根拠URL': ' '.join(t['chair_urls'][:3]),
             '推す行動の本数': len(t['bills']), '推す行動の年数': len(t['years']), '推す行動の例（法律ID）': ' '.join(sorted(t['bills'])[:3]),
             '参院本会議で賛成した本数': len(t['yes']), '参院本会議で反対した本数': len(t['no']),
-            '議員連盟': ' / '.join(t['leagues']), '同じ分野の団体との金銭の関係': ' / '.join(money),
+            '議員連盟': ' / '.join(t['leagues']), '同じ分野の団体との金銭の関係': ' / '.join(money), '金銭の関係の根拠URL': ' '.join(sorted(t['money_urls'])) if money else '',
             '分野との継続的な関わり': 'はい' if (by_chair or by_bills) else 'いいえ', '印': '、'.join(marks)})
 
     # 運動団体：声明・要望の事実を、法案の結果（台帳にある＝成立）に結ぶ。属性・思想では書かない。
@@ -191,7 +192,7 @@ def org_fields_from_shingikai() -> dict[str, set[str]]:
         for r in read_csv(f):
             if not r.get('確度', '').startswith('原本照合済み') or r.get('発言者の区分') != '業界団体':
                 continue
-            org = re.split(r'[\s　（(]', r['発言者の所属・肩書'].strip())[0]
+            org = org_key(re.split(r'[\s　（(]', r['発言者の所属・肩書'].strip())[0])
             for m in re.split(r'[・、,]', re.sub(r'（[^）]*）', '', r['所管省庁'])):
                 if m:
                     out[org].add(m)

@@ -53,8 +53,14 @@ class ZokuTest(unittest.TestCase):
         rel = {'区分': '受けた寄附', '人物ID': 'p', 'PDF_URL': U, '関係議員名': '壬', '団体名キー': 'X協会', '相手方': 'X協会'}
         rows, _, _ = run(relations=[{**rel, '金額': '1000000'}], org_fields={'X協会': {'農林水産省'}})
         self.assertIn('X協会', rows[0]['同じ分野の団体との金銭の関係'])
+        self.assertEqual(rows[0]['金銭の関係の根拠URL'], U)
         self.assertEqual(run(relations=[{**rel, '金額': '999999'}], org_fields={'X協会': {'農林水産省'}})[0], [])
         self.assertEqual(run(relations=[{**rel, '金額': '5000000'}], org_fields={})[0], [])
+
+    def test_corporate_form_is_normalized_on_both_sides(self):
+        rel = {'区分': '受けた寄附', '人物ID': 'p', 'PDF_URL': U, '関係議員名': '壬', '団体名キー': '', '相手方': '一般社団法人民泊協会', '金額': '2000000'}
+        rows, _, _ = run(relations=[rel], org_fields={'民泊協会': {'農林水産省'}})
+        self.assertEqual(len(rows), 1)
 
     def test_lobby_row_needs_kind_action_and_result(self):
         p = {'団体名': 'Y会', '団体区分': 'メディア', '分野': '総務省', '法律ID': '閣法-1-1', '立場': '反対', '行動種別': '要望', '要旨': '', '出典URL': U}
