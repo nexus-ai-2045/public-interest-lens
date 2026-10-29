@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, ArrowUpRight, ChevronDown, Layers, Search } from 'lucide-react';
 import { ShareButton } from './motion';
 import {
-  DEFAULT_QUERY, STEP_LABEL, collapseObservations, detailBundleUrl, filterCatalog, formatYen, groupByObservation, isOutlierMark, readQuery, sideLabel, writeQuery,
+  DEFAULT_QUERY, STEP_LABEL, isLow, isSolid, collapseObservations, detailBundleUrl, filterCatalog, formatYen, groupByObservation, isOutlierMark, readQuery, sideLabel, writeQuery,
   type CatalogDetail, type CatalogItem, type CatalogOverview, type CatalogQuery, type LawsCatalog, type OverviewQuote,
 } from './laws-catalog';
 import { LawName, lawNameText } from './law-name';
@@ -10,7 +10,7 @@ import { loadPriceIndex, toLatestYen, windowBaseYear, type PriceIndex } from './
 import { CORRECTION_EMAIL, correctionIssueUrl, correctionListUrl, correctionMailUrl } from './correction-link';
 
 const PAGE = 60;
-const SIDE_OPTIONS: [CatalogQuery['side'], string][] = [['all', 'すべて'], ['confirmed', '確かな額'], ['amount', '額が出た（参考を含む）'], ['loss', '国賊側'], ['benefit', '国士側'], ['none', '額なし']];
+const SIDE_OPTIONS: [CatalogQuery['side'], string][] = [['all', 'すべて'], ['confirmed', '確かな額（高・中）'], ['low', '確かさ低（向き未確定）'], ['amount', '額が出た（参考を含む）'], ['loss', '国賊側'], ['benefit', '国士側'], ['none', '額なし']];
 const SORT_OPTIONS: [CatalogQuery['sort'], string][] = [['amount', '額の大きい順'], ['progress', '計算が進んだ順'], ['newest', '新しい順'], ['oldest', '古い順']];
 const ROLE_LABEL: Record<string, string> = { proposer: '提出', vote: '参院で賛成', chair: '委員長' };
 
@@ -107,7 +107,8 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
 
   const hidden = filtered.length - shown.length;
   const amounted = shown.filter(item => item.amount).length;
-  const confirmed = shown.filter(item => item.step === 'published').length;
+  const confirmed = shown.filter(isSolid).length;
+  const low = shown.filter(isLow).length;
   return <section className="laws-catalog" aria-label="法律と政策の一覧">
     <h3 id="list">全部の法律と政策（{all.length.toLocaleString('ja-JP')}件）</h3>
     <p className="laws-howto">1行で「何をする法律か・額・向き・確かさ」が分かります。<strong>行を押すと</strong>、誰が出してどう決まったか・反対側の心配・計算の流れ・関わった議員・一次資料が開きます。</p>
@@ -120,7 +121,7 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
         <label>並べ替え<select value={query.sort} onChange={event => update({ sort: event.target.value as CatalogQuery['sort'] })}>{SORT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       </div>
     </div>
-    <p className="laws-count" role="status">{shown.length.toLocaleString('ja-JP')}件（確かな額{confirmed.toLocaleString('ja-JP')}・参考の額{(amounted - confirmed).toLocaleString('ja-JP')}・額なし{(shown.length - amounted).toLocaleString('ja-JP')}）{JSON.stringify(query) !== JSON.stringify(DEFAULT_QUERY) && <button type="button" onClick={() => update(DEFAULT_QUERY)}>絞り込みを外す</button>}</p>
+    <p className="laws-count" role="status">{shown.length.toLocaleString('ja-JP')}件（確かな額（高・中）{confirmed.toLocaleString('ja-JP')}・確かさ低{low.toLocaleString('ja-JP')}・参考の額{(amounted - confirmed - low).toLocaleString('ja-JP')}・額なし{(shown.length - amounted).toLocaleString('ja-JP')}）{JSON.stringify(query) !== JSON.stringify(DEFAULT_QUERY) && <button type="button" onClick={() => update(DEFAULT_QUERY)}>絞り込みを外す</button>}</p>
     {(hidden > 0 || showAll) && <p className="laws-fold" role="status">
       <Layers size={15} aria-hidden="true" />
       <span>{showAll ? '同じ観測の法律も、すべて別の行で並べています（同じ観測の法律は同じ額。足し合わせないでください）。' : <>同じ観測（同じ額の系列・同じ期間）の法律は、代表の1行にまとめています（ほか{hidden.toLocaleString('ja-JP')}本。同じ額なので足し合わせません）。</>}</span>

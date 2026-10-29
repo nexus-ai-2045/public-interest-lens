@@ -2,7 +2,7 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_QUERY, collapseObservations, detailBundleUrl, filterCatalog, groupByObservation, isOutlierMark, parseLawsCatalog, readQuery, writeQuery } from './laws-catalog';
+import { DEFAULT_QUERY, certaintyTier, collapseObservations, detailBundleUrl, filterCatalog, groupByObservation, isOutlierMark, parseLawsCatalog, readQuery, straddlesZero, writeQuery } from './laws-catalog';
 import { plainLawName } from './law-name';
 
 const catalog = parseLawsCatalog(readFileSync(new URL('../public/distribution/laws.json', import.meta.url), 'utf8'));
@@ -28,13 +28,28 @@ describe('全法律の一覧', () => {
   });
   it('既定の並びは確かな額 → 参考の額 → 額なしの順で、組の中は額の大きい順', () => {
     const list = filterCatalog(catalog.laws, DEFAULT_QUERY);
-    const rank = (step: string, amount: unknown) => step === 'published' ? 0 : amount ? 1 : 2;
     for (let i = 1; i < list.length; i++) {
       const [a, b] = [list[i - 1], list[i]];
-      expect(rank(a.step, a.amount)).toBeLessThanOrEqual(rank(b.step, b.amount));
-      if (rank(a.step, a.amount) === rank(b.step, b.amount) && a.amount && b.amount) expect(a.amount.median).toBeGreaterThanOrEqual(b.amount.median);
+      expect(certaintyTier(a)).toBeLessThanOrEqual(certaintyTier(b));
+      if (certaintyTier(a) === certaintyTier(b) && a.amount && b.amount) expect(a.amount.median).toBeGreaterThanOrEqual(b.amount.median);
     }
-    expect(filterCatalog(catalog.laws, { ...DEFAULT_QUERY, side: 'confirmed' }).every(item => item.step === 'published')).toBe(true);
+    expect(filterCatalog(catalog.laws, { ...DEFAULT_QUERY, side: 'confirmed' }).every(item => item.certainty === '高' || item.certainty === '中')).toBe(true);
+  });
+  it('確かな額は高・中だけで、確かさ低は別に数える（低は幅が0をまたぐ旨を幅から決める）', () => {
+    const solid = filterCatalog(catalog.laws, { ...DEFAULT_QUERY, side: 'confirmed' });
+    const low = filterCatalog(catalog.laws, { ...DEFAULT_QUERY, side: 'low' });
+    // 出所：public-distribution の laws.json（counts.published は高・中・低の合計）。
+    expect(solid.length + low.length).toBe(catalog.counts.published);
+    expect(low.every(item => item.certainty === '低' && item.amount)).toBe(true);
+    expect(solid.some(item => item.certainty === '低')).toBe(false);
+    // 既定の並びでも、低は高・中より後ろに来る。
+    const order = filterCatalog(catalog.laws, DEFAULT_QUERY).filter(item => item.certainty === '高' || item.certainty === '中' || item.certainty === '低');
+    expect(order.slice(0, solid.length).every(item => item.certainty !== '低')).toBe(true);
+    // 幅が0をまたぐ印は、幅そのものから決める。データの印と食い違わない。
+    for (const item of low) expect(item.marks.some(mark => mark.startsWith('向きが定まらない')) === straddlesZero(item.amount)).toBe(true);
+    expect(straddlesZero({ median: 1, low: -1, high: 2 })).toBe(true);
+    expect(straddlesZero({ median: 5, low: 1, high: 9 })).toBe(false);
+    expect(straddlesZero(null)).toBe(false);
   });
   it('検索・向き・分野で絞れる', () => {
     expect(filterCatalog(catalog.laws, { ...DEFAULT_QUERY, text: 'サイバーセキュリティ基本法' }).map(item => item.id)).toContain('衆法-186-35');
