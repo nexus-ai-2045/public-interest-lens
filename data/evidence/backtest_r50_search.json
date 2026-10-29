@@ -1,0 +1,632 @@
+{
+ "schema": "backtest-r50-search/v1",
+ "date": "2026-10-29",
+ "searcher": "Claude Haiku（領域ごとに1本）",
+ "note": "R50の文献調査の記録。採用基準は、日本の政策／因果の識別あり／結果指標が産業の生産・雇用・価格・旅客数／効果の数値を原文のとおり写せること。retail・labor・aviation は調査員の報告から手で起こした（URL・DOI は報告にあるものだけ）。他の5領域は調査員が書いたファイルのまま。read=unreadable は本文を読めなかったことを示し、その候補が条件に合わないと確かめたわけではない。",
+ "areas": [
+  {
+   "key": "electricity",
+   "name": "電力小売全面自由化",
+   "candidates": [
+    {
+     "authors": "張 砣",
+     "year": 2023,
+     "title": "電力小売全面自由化：家庭と小規模事業への影響と将来の課題（京都大学 再生可能エネルギー経済学講座 コラム No.385）",
+     "doi": "",
+     "url": "https://www.econ.kyoto-u.ac.jp/renewable_energy/stage2/contents/column0385.html",
+     "design": "双方向固定効果モデル（地域固定効果・時間固定効果）に、新規小売電力会社の市場シェアの内生性を補正する操作変数法（操作変数: 地域外から転入した家庭数）を併用",
+     "outcome": "電気料金（家庭向け低圧電灯・小規模事業向け低圧電力の電力量単価、円/kWh）",
+     "effect_quote": "操作変数回帰の分析によれば、全面的な自由化政策により、家庭用電力の単価は0.889円/kWh低下すると予測される。",
+     "read": "fulltext",
+     "verdict": "rejected",
+     "reason": "学術文献でない（大学のコラム）ため根拠の序列の外。元の研究論文は特定できておらず、追跡の手がかりとして残す。 "
+    },
+    {
+     "authors": "Xiao Jia, Kenji Takeuchi",
+     "year": 2025,
+     "title": "Impacts of electricity market liberalization on consumers and the environment: Evidence from Japan",
+     "doi": "",
+     "url": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5493062",
+     "design": "差の差（DID）と推定される（検索結果の要約による。原文未確認）",
+     "outcome": "小売価格（東京電力管内）、石炭関連CO2排出量",
+     "effect_quote": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "本文を読めず数値を確認できない。SSRN 抽象ページが HTTP 403 を返し、取得できたのは検索結果の要約のみ。要約にある「約7%の価格低下」は原文の文言を確認できていないため採用不可。年も検索メタデータから推定しており未確認。"
+    },
+    {
+     "authors": "Kong Joo Shin, Shunsuke Managi",
+     "year": 2017,
+     "title": "Liberalization of a retail electricity market: Consumer satisfaction and household switching behavior in Japan",
+     "doi": "10.1016/j.enpol.2017.07.048",
+     "url": "https://econpapers.repec.org/RePEc:eee:enepol:v:110:y:2017:i:c:p:675-685",
+     "design": "2016年自由化の前後に実施された家計調査データの利用。対照群を用いた因果識別（差の差等）は要旨からは確認できない",
+     "outcome": "消費者満足度（電力会社選択による満足）、家計の切替行動",
+     "effect_quote": "find a positive impact of liberalization on consumer satisfaction by enabling consumers to choose an electricity provider.",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "結果指標が違う（消費者満足度は採用対象の価格・生産・雇用・旅客数のいずれでもない）。また効果の大きさ（数値）が要旨に無く、因果識別も確認できない。"
+    },
+    {
+     "authors": "後藤 久典",
+     "year": 2017,
+     "title": "家庭用小売電力市場の競争状況の分析と評価－小売全面自由化後の電気料金と需要家の選択行動－（電力中央研究所 報告書 Y16005）",
+     "doi": "",
+     "url": "https://criepi.denken.or.jp/hokokusho/pb/reportDetail?reportNoUkCode=Y16005",
+     "design": "記述的比較（対照群なし）。欧州との切替率比較も記述にとどまる",
+     "outcome": "切替率、切替によって提示される料金削減率、電気料金の動向、需要家の満足・ロイヤルティ",
+     "effect_quote": "標準的な家庭で5%程度～10数%程度低い料金が提示されている。",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別が弱い（記述・横断的比較のみで因果推定ではない）。上の引用は切替時に提示された料金の割引幅であり、政策の処置効果ではない。全文（図表・脚注）にアクセスできず、本文の推定手法を確認できなかった。"
+    },
+    {
+     "authors": "",
+     "year": 2016,
+     "title": "Effect of electricity system reform on retail electricity price increases in Japan",
+     "doi": "10.1186/s40008-016-0042-y",
+     "url": "https://link.springer.com/article/10.1186/s40008-016-0042-y",
+     "design": "シミュレーションモデルによる予測（検索結果の説明による。実証的な因果識別ではない）",
+     "outcome": "小売電気料金の上昇（シミュレーション上の予測値）",
+     "effect_quote": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "本文を読めず数値を確認できない。Springer のページが IdP のログイン画面へリダイレクトされ、要旨も取得できなかった。検索結果の説明によればモデルによるシミュレーションであり、対照のある因果識別ではないため採用条件を満たさない。著者名も未確認。"
+    },
+    {
+     "authors": "荒谷優太, 瀋俊毅",
+     "year": 2022,
+     "title": "国民経済雑誌 第225巻第4号 所収論文（論文題名未確認。PDF メタデータによる）",
+     "doi": "",
+     "url": "https://da.lib.kobe-u.ac.jp/da/kernel/E0042616/E0042616.pdf",
+     "design": "未確認",
+     "outcome": "未確認（電力切替・電気料金に関する研究とされるが、本文を取得できず）",
+     "effect_quote": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "本文を読めず数値を確認できない。PDF が圧縮されたバイナリで本文テキストを抽出できず、題名・識別手法・結果指標・効果の数値のいずれも確認できなかった。年は PDF 作成日から推定。"
+    }
+   ],
+   "accepted": 0
+  },
+  {
+   "key": "minpaku",
+   "name": "民泊",
+   "candidates": [
+    {
+     "authors": "Nakamura, S.; Baskaran, A.; Selvarajan, S.K.",
+     "year": 2024,
+     "title": "Impact of Airbnb on the hotel industry in Japan",
+     "doi": "10.1016/j.jdmm.2023.100841",
+     "url": "https://knova.um.edu.my/research_publications_2021_2025/4676",
+     "design": "パネル回帰（都道府県47・宿泊施設5種・7年の年次パネル）。DiD・IV・RDD・合成コントロール・事象研究などの識別設計は確認できず。",
+     "outcome": "ホテル稼働率（全体および旅館・簡易宿所等の施設種別）",
+     "effect_quote": "the number of Airbnb listings did not have a statistically significant impact on the overall hotel occupancy rates.",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別が弱い: 施策の前後・処置群と対照群を用いない単純なパネル回帰で、因果識別の設計が確認できない（横断・時系列相関に近い）。また処置は民泊新法の施行ではなく Airbnb 掲載件数であり、政策効果ではない。本文（全文）は取得できず、引用は抄録・要旨ページ由来。DOI は Crossref で題名・著者・2024年を照合済み。"
+    },
+    {
+     "authors": "Hanazawa, K.",
+     "year": 2025,
+     "title": "Welfare Effects of Self-Preferencing by a Platform: Empirical Evidence from Airbnb",
+     "doi": "",
+     "url": "https://arxiv.org/abs/2503.04489",
+     "design": "構造推定モデル（差別化財の Bertrand 競争モデル）と反実仮想シミュレーション。DiD・IV・RDD・合成コントロールではない。対象は東京23区。",
+     "outcome": "社会厚生・Airbnb の手数料収入（ホスト・ホテルの価格設定を含むモデル内の指標）",
+     "effect_quote": "Counterfactual simulations reveal that self-preferencing reduces social welfare by 5.08% on average.",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別が弱い: 因果識別ではなく構造モデルの反実仮想計算。日本の住宅宿泊事業法の施行という政策前後の効果を推定したものではなく、結果も厚生・手数料で、採用条件の指標（生産・付加価値・雇用・価格・宿泊者数）に該当しない。"
+    },
+    {
+     "authors": "Kondo, A.; Miyamae, Y.",
+     "year": 2022,
+     "title": "Transnational displacement by short-term rentals in Japan's depopulating society: Dilemma between rent gap emergence and inbound tourist accommodations",
+     "doi": "10.1002/2475-8876.12260",
+     "url": "https://da.lib.kobe-u.ac.jp/da/kernel/90009437/90009437.pdf",
+     "design": "不明（本文を読めず）。レントギャップモデルによる枠組みの説明が要旨にあるとされるが、識別設計は確認できず。",
+     "outcome": "賃料（rent gap）・短期賃貸転用の関係（本文未確認）",
+     "effect_quote": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "本文を読めず数値を確認できない: 取得した PDF は圧縮ストリームのみでテキストを抽出できなかった。題名・著者・2022年・DOI は Crossref で照合したが、因果効果の数値（符号つき）と識別設計は確認できないため採用不可。"
+    }
+   ],
+   "accepted": 0
+  },
+  {
+   "key": "telecom",
+   "name": "通信・携帯",
+   "candidates": [
+    {
+     "authors": "Sueyoshi, Toshiyuki",
+     "year": 1998,
+     "title": "Privatization of Nippon Telegraph and Telephone: Was it a good policy decision?",
+     "doi": "10.1016/s0377-2217(96)00366-9",
+     "url": "https://iaorifors.com/paper/26039",
+     "design": "NTT の民営化前後（1985年前後）の比較。データ包絡分析（DEA）による効率性の前後比較。対照群なし",
+     "outcome": "生産ベースの効率性（DEA スコア）、費用削減努力",
+     "effect_quote": "",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別が弱い: 民営化前後の自社比較のみで、対照群や準実験デザインがない（前後比較）。要旨は確認したが本文の数値は未確認。効果の定量値も原文どおりには写せない"
+    },
+    {
+     "authors": "Oniki, Oum, Stevenson, Zhang",
+     "year": 1994,
+     "title": "The productivity effects of the liberalization of Japanese telecommunication policy",
+     "doi": "10.1007/bf01073598",
+     "url": "https://cir.nii.ac.jp/crid/1360011145892853760",
+     "design": "動学的費用モデルによる TFP の要因分解（自由化・規模・技術・稼働率）。準実験デザインは確認できず",
+     "outcome": "全要素生産性（TFP）",
+     "effect_quote": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "識別が弱い: 時系列の要因分解であり、対照群を使う因果識別ではない。本文を読めず（CiNii の書誌ページが空、DOI の書誌は Crossref で確認）、TFP 成長率の数値を原文どおり確認できない"
+    },
+    {
+     "authors": "Xing, Yuqing",
+     "year": 2001,
+     "title": "Assessing the Significance of Telecommunication Deregulation on the Growth of Japan's Mobile Phone Market",
+     "doi": "",
+     "url": "https://ideas.repec.org/p/iuj/wpaper/ems_2001_02.html",
+     "design": "1991-1999 の四半期時系列データに基づく独占的競争モデルの需要関数推計。規制緩和の前後を比べるが対照群なし",
+     "outcome": "価格（需要の価格弾力性）、加入数",
+     "effect_quote": "",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別が弱い: 時系列の構造推計で、DiD・IV・RDD・合成コントロール等の因果識別がない。結果指標は価格・需要で採用条件の指標には合うが、識別条件を満たさない。要旨の弾力性（6.4 から 2.1）は要旨ページの要約経由で、原文の符号・文は未確認"
+    },
+    {
+     "authors": "Iimi, Atsushi",
+     "year": 2005,
+     "title": "Estimating demand for cellular phone services in Japan",
+     "doi": "10.1016/j.telpol.2004.11.001",
+     "url": "https://ideas.repec.org/a/eee/telpol/v29y2005i1p3-23.html",
+     "design": "1990年代後半の日本の携帯電話データによる需要推計（ネステッドロジットと推定されるが、ページには明記なし）。政策の前後・対照を用いる準実験ではない",
+     "outcome": "需要の価格弾力性",
+     "effect_quote": "",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別が弱い: 需要モデルの推計であり、政策評価の因果識別（DiD 等）がない。結果も政策効果ではなく弾力性。ページの要約では弾力性は 1.30 から 2.43（絶対値）とあるが、本文の原文は確認できていない"
+    },
+    {
+     "authors": "Okada, Yosuke; Hatta, Keiko",
+     "year": 1999,
+     "title": "The Interdependent Telecommunications Demand and Efficient Price Structure",
+     "doi": "10.1006/jjie.1999.0433",
+     "url": "https://ideas.repec.org/a/eee/jjieco/v13y1999i4p311-335.html",
+     "design": "日本の携帯・固定通信の需要体系（AIDS 系の需要モデル）による価格弾力性とネットワーク効果の推計。準実験デザインは見当たらない",
+     "outcome": "価格弾力性、ネットワーク効果（政策の結果指標ではない）",
+     "effect_quote": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "識別が弱い: 需要体系の構造推計で、政策評価の因果識別がない。結果指標（弾力性）も採用条件の価格・生産等の政策効果ではない。本文は ScienceDirect の購読が必要で、要旨も無く数値を確認できない"
+    },
+    {
+     "authors": "Matsumura (東京大学 ISS、著者情報は未確認)",
+     "year": 0,
+     "title": "",
+     "doi": "",
+     "url": "https://www.iss.u-tokyo.ac.jp/~matsumur/mobilefinal2016.pdf",
+     "design": "不明（本文未取得）。ファイル名と検索結果の要約から、携帯電話の競争評価として ARPU を指標にした需給分析を主張する文書と推測されるが未確認",
+     "outcome": "ARPU（需給分析の指標）",
+     "effect_quote": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "本文を読めず（取得時に HTTP 503）、識別方法も効果の数値も確認できない。書誌情報（著者・題名）も本文から取れていないため、推測で埋めていない"
+    },
+    {
+     "authors": "",
+     "year": 0,
+     "title": "Asia-Pacific Telecommunications Liberalisation and Productivity Performance (MPRA paper 10884、題名は PDF メタデータによる)",
+     "doi": "",
+     "url": "https://mpra.ub.uni-muenchen.de/10884/1/MPRA_paper_10884.pdf",
+     "design": "不明（本文の PDF が圧縮されて読めず）。題名からはアジア太平洋地域の多国比較と推測されるが未確認",
+     "outcome": "生産性（題名から推測）",
+     "effect_quote": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "日本の政策でない可能性が高い（題名が地域横断）。本文を読めず、識別方法・著者・年・効果の数値を確認できない。PDF の作成日は 2019 年だが、発表年としては確認できていない"
+    },
+    {
+     "authors": "Gasmi, Farid (ほか、検索結果の著者名のみ)",
+     "year": 2011,
+     "title": "（題名未取得: 固定電話の民営化 1985-2007 の多国パネル研究として検索結果に記載）",
+     "doi": "",
+     "url": "https://publications.ut-capitole.fr/id/eprint/3592/",
+     "design": "不明（本文未取得）。検索結果の要約では 1985-2007 年の多国パネルで、民営化の効果が地域の異質性で説明されるとある",
+     "outcome": "固定電話の業績（要約による）",
+     "effect_quote": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "日本の政策でない（多国パネル）。ページ取得は HTTP 404 で本文を読めず、識別方法と数値を確認できない"
+    }
+   ],
+   "accepted": 0
+  },
+  {
+   "key": "aviation",
+   "name": "航空",
+   "candidates": [
+    {
+     "authors": "Mizutani & Sakai",
+     "year": 2021,
+     "title": "Journal of Air Transport Management",
+     "doi": "10.1016/j.jairtraman.2020.101965",
+     "url": "",
+     "design": "差の差（FSC運賃）",
+     "outcome": "運賃",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "主な対象は高速鉄道の延伸で、LCC 参入の効果は要旨で「一貫しない」。本文は403で数値を確認できない"
+    },
+    {
+     "authors": "Murakami, Amano & Asahi",
+     "year": 2015,
+     "title": "Journal of Air Transport Management",
+     "doi": "10.1016/j.jairtraman.2015.02.002",
+     "url": "",
+     "design": "不明",
+     "outcome": "",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別法と数値を確認できない"
+    },
+    {
+     "authors": "Murakami & Amano",
+     "year": 2013,
+     "title": "神戸大学 DP 2013-31",
+     "doi": "",
+     "url": "",
+     "design": "構造モデル",
+     "outcome": "",
+     "read": "fulltext",
+     "verdict": "rejected",
+     "reason": "対照群による識別ではない"
+    },
+    {
+     "authors": "Omuro & Kanda",
+     "year": 2019,
+     "title": "土木学会論文集D3",
+     "doi": "10.2208/jscejipm.75.I_835",
+     "url": "",
+     "design": "前後比較と相関",
+     "outcome": "運賃",
+     "read": "fulltext",
+     "verdict": "rejected",
+     "reason": "記述で、運賃低下の向きのみ・数値なし"
+    },
+    {
+     "authors": "Murakami",
+     "year": 2011,
+     "title": "Pacific Economic Review",
+     "doi": "10.1111/j.1468-0106.2010.00537.x",
+     "url": "",
+     "design": "不明",
+     "outcome": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "要旨・本文を読めない"
+    },
+    {
+     "authors": "Yamauchi（NBER chapter c8481）",
+     "year": 2000,
+     "title": "NBER chapter",
+     "doi": "",
+     "url": "",
+     "design": "不明",
+     "outcome": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "PDF がスキャン画像で読めない。著者・年は検索結果による未確認情報"
+    },
+    {
+     "authors": "丹生清輝",
+     "year": 2010,
+     "title": "国総研資料 No.612",
+     "doi": "",
+     "url": "",
+     "design": "記述・時系列",
+     "outcome": "",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "2003年以降のデータの記述・時系列で、2000年の自由化を差の差で測っていない"
+    }
+   ],
+   "accepted": 0
+  },
+  {
+   "key": "retail",
+   "name": "小売・酒・医薬品ネット販売",
+   "candidates": [
+    {
+     "authors": "松浦・菅野",
+     "year": 2009,
+     "title": "RIETI DP 09-E-054",
+     "doi": "",
+     "url": "",
+     "design": "傾向スコアマッチング",
+     "outcome": "小売",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "識別がマッチングで弱い（差の差・操作変数・回帰不連続でない）"
+    },
+    {
+     "authors": "Shimotsu",
+     "year": 2014,
+     "title": "RIETI DP 14-E-013",
+     "doi": "",
+     "url": "",
+     "design": "固定効果＋操作変数（1977–1992）",
+     "outcome": "価格",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "対象期間が大店法廃止（2000年）より前で、結果が価格。PDF が暗号化され効果の数値を確認できない"
+    },
+    {
+     "authors": "Abe & Kawaguchi",
+     "year": 2010,
+     "title": "Journal of the Japanese and International Economies",
+     "doi": "",
+     "url": "",
+     "design": "差の差",
+     "outcome": "既存店の価格",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "スーパー参入の効果で政策評価ではない。0.4–3.1% は二次要約からのみで原文未確認"
+    },
+    {
+     "authors": "Seya, Tomari & Chikaraishi",
+     "year": 2018,
+     "title": "土木学会論文集",
+     "doi": "",
+     "url": "",
+     "design": "差の差",
+     "outcome": "店舗の生存・売上",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "政策変更の効果ではなく参入の効果。原文の効果数値を写せない"
+    }
+   ],
+   "accepted": 0
+  },
+  {
+   "key": "labor",
+   "name": "労働者派遣・最低賃金",
+   "candidates": [
+    {
+     "authors": "Kuroki",
+     "year": 2012,
+     "title": "The Effect of Deregulation on Job Insecurity (ILR Review)",
+     "doi": "10.1177/001979391206500304",
+     "url": "",
+     "design": "差の差（2004年規制緩和）",
+     "outcome": "雇用不安感",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "結果指標が雇用不安感で、雇用量ではない"
+    },
+    {
+     "authors": "Morikawa",
+     "year": "",
+     "title": "RIETI 26-P-016/019",
+     "doi": "",
+     "url": "",
+     "design": "操作変数",
+     "outcome": "企業の雇用",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "ページに符号のみで係数・区間がなく、PDF が暗号化され読めない"
+    },
+    {
+     "authors": "Kawaguchi & Mori",
+     "year": 2021,
+     "title": "RIETI 21-E-007 / IZA DP 14086",
+     "doi": "",
+     "url": "",
+     "design": "",
+     "outcome": "個人の仕事の出入り",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "結果指標が個人の職の流れで産業雇用ではない。PDF が読めない"
+    },
+    {
+     "authors": "Kanayama, Miyaji & Otani",
+     "year": 2025,
+     "title": "arXiv:2505.04555v2",
+     "doi": "",
+     "url": "https://arxiv.org/abs/2505.04555",
+     "design": "賃金帯ごとの差の差（2023年最低賃金引き上げ）",
+     "outcome": "スポット市場の就業",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "結果が単発仕事プラットフォームの就業で、産業の雇用ではない（要旨の効果：影響帯で就業2%ポイント低下）"
+    },
+    {
+     "authors": "Tanaka",
+     "year": 2017,
+     "title": "Journal of Asian Economics",
+     "doi": "",
+     "url": "",
+     "design": "",
+     "outcome": "",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "雇用水準の差の差ではない"
+    },
+    {
+     "authors": "Machikita & Sato",
+     "year": "",
+     "title": "IDE DP 585",
+     "doi": "",
+     "url": "",
+     "design": "",
+     "outcome": "",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "雇用水準の差の差ではない"
+    }
+   ],
+   "accepted": 0
+  },
+  {
+   "key": "transport",
+   "name": "タクシー・鉄道・バス",
+   "candidates": [
+    {
+     "authors": "Akira Kawaguchi, Keizo Mizuno",
+     "year": 2011,
+     "title": "Deregulation and labour earnings: Three motor carrier industries in Japan",
+     "doi": "10.1016/j.labeco.2010.12.001",
+     "url": "https://econpapers.repec.org/RePEc:eee:labeco:v:18:y:2011:i:4:p:441-452",
+     "design": "差の差（タクシー・バス業と貨物自動車業の運転者賃金を比較）",
+     "outcome": "運転者の賃金（相対賃金）",
+     "effect_quote": "First, deregulations in the 1990s and 2000s caused the relative wages of taxi and bus drivers to decline, but this was not the case for truck drivers.",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "結果指標が採用条件に含まれない。採用条件の指標は産業の生産・付加価値・生産性、産業の雇用、価格、旅客数のいずれかで、運転者の賃金はこれに当たらない。本文を読めず効果の係数・標準誤差を確認できないため、数値を写せない。識別（差の差）は要件を満たす可能性が高く、賃金指標を別枠で扱う場合の有力候補として残す価値がある。"
+    },
+    {
+     "authors": "Hiroki Sakai, Yoshinori Takahashi",
+     "year": 2013,
+     "title": "Ten years after bus deregulation in Japan: An analysis of institutional changes and cost efficiency",
+     "doi": "10.1016/j.retrec.2012.06.016",
+     "url": "https://econpapers.repec.org/RePEc:eee:retrec:v:39:y:2013:i:1:p:215-225",
+     "design": "定性的な前後比較と費用フロンティア推計（規制変更を説明変数の一つとして投入）。差の差ではない",
+     "outcome": "費用効率性、市場構造",
+     "effect_quote": "The deregulation variable did not show significant results.",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別方法が差の差・操作変数・回帰不連続・合成コントロール・対照のある事象研究のいずれでもなく、前後比較と費用フロンティア推計にとどまる。結果指標（費用効率性・市場構造）が採用条件の指標に含まれない。規制変数の効果は有意でないと報告され、符号つきの数値も読めない。対象は2002年の乗合バス規制緩和で、タクシーではない。"
+    },
+    {
+     "authors": "Seiichiro Mizuta",
+     "year": 2020,
+     "title": "Deregulation and competition in Japanese intercity coach industry",
+     "doi": "10.1016/j.tra.2020.06.017",
+     "url": "https://econpapers.repec.org/RePEc:eee:transa:v:139:y:2020:i:c:p:17-34",
+     "design": "構造推定（Web取得の参入データに基づく競争度の推定）。差の差など準実験の識別ではない",
+     "outcome": "競争度（マークアップ）、事業者の参入",
+     "effect_quote": "",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別が構造推定で、2002年と2013年の規制緩和の効果を準実験として分離していない。結果指標（マークアップ・競争度）が採用条件の指標に含まれない。アブストラクトの要約しか読めず、原文の効果の一文を正確に写せないため effect_quote は空とした。"
+    },
+    {
+     "authors": "Fumitoshi Mizutani, Kiyoshi Nakamura",
+     "year": 1996,
+     "title": "Effects of Japan National Railways' Privatization on Labor Productivity",
+     "doi": "10.1111/j.1435-5597.1996.tb00660.x",
+     "url": "https://ideas.repec.org/a/bla/presci/v75y1996i2p177-199.html",
+     "design": "労働生産性モデルによる推計で、民鉄大手をベンチマークとして比較。差の差・合成コントロールなどの識別は記載されていない",
+     "outcome": "旅客運送部門の労働生産性・従業員数",
+     "effect_quote": "Finally, the effect of privatization on productivity growth was about 29%.",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別が差の差・合成コントロール・対照のある事象研究のいずれにも当たらず、ベンチマーク比較と生産性モデルである。本文を読めず、推計の方法（対照群の扱い、係数の推定値と標準誤差）を確認できない。効果の数値（約29%）は要旨から確認できたが、識別要件を満たさないため採用しない。"
+    },
+    {
+     "authors": "水谷文俊, 浦西秀司",
+     "year": 2005,
+     "title": "The Effects of Privatization on Productivity and Capital Adjustment",
+     "doi": "",
+     "url": "https://b.kobe-u.ac.jp/papers/2005_05/",
+     "design": "計量分析（TFP推計と資本調整の検定）。対照群や差の差の使用は確認できず",
+     "outcome": "全要素生産性（TFP）",
+     "effect_quote": "TFP growth after privatization was annually 2.97%, with privatization raising TFP growth by 1.62% annually.",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別方法を確認できない。ランディングページ（要旨）しか読めず、差の差や対照群の有無が分からない。結果指標（TFP）は採用条件の生産性に当たり、効果の数値（年1.62%ポイント）は原文の一文として確認できたが、識別要件を満たすかどうかを判断できないため採用しない。ディスカッションペーパーであり、掲載誌・査読の有無は不明。"
+    },
+    {
+     "authors": "Fumitoshi Mizutani",
+     "year": 1999,
+     "title": "An assessment of the Japan Railway companies since privatization: Performance, local rail service and debts",
+     "doi": "10.1080/014416499295574",
+     "url": "https://econpapers.repec.org/RePEc:taf:transr:v:19:y:1999:i:2:p:117-139",
+     "design": "記述的な前後比較（1987〜1997年のJR在来線の運行本数・運行時間などの推移）。対照群なし",
+     "outcome": "運行本数・運行時間（地方線サービス）、運賃、賃金、労働生産性",
+     "effect_quote": "",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別が記述的な前後比較で、対照群も差の差もない。アブストラクトに数値の効果推定がなく、効果の符号つき数値は写せない。地方線サービス（運行本数）は採用条件の旅客数・生産性のいずれにも直接当たらない。"
+    },
+    {
+     "authors": "後藤孝夫 (Takao Goto)",
+     "year": 2017,
+     "title": "Empirical Analysis of Competition and Regulation in the Taxi Market for Application to the Japanese Regional Transportation Policy",
+     "doi": "",
+     "url": "https://kaken.nii.ac.jp/en/report/KAKENHI-PROJECT-26870734/26870734seika",
+     "design": "不明（科研費最終報告書の要約のみ。差の差・対照群の記載なし）",
+     "outcome": "タクシー車両数、タクシー業の全要素生産性（TFP）",
+     "effect_quote": "both deregulation starting in 2002 and regulation of the taxi industry starting in 2009 influenced the increase and decrease in this number",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "本文（報告書PDF）を読めず、識別方法と回帰の係数・標準誤差を確認できない。要約には効果の数値がなく、2002年・2009年の政策効果を符号つきで写せない。車両数は採用条件の指標に含まれない。TFPは採用条件の生産性に当たるが、要約では『おおむね負』とあるのみで数値がない。年は2016年度最終報告書（研究期間2014年4月〜2017年3月）に基づき2017とした。"
+    },
+    {
+     "authors": "",
+     "year": 0,
+     "title": "",
+     "doi": "",
+     "url": "https://ir.lib.hiroshima-u.ac.jp/journals/JIDC/v/26/i/1-2/item/48737?locale=en",
+     "design": "差の差（検索結果の要約による。原文未確認）",
+     "outcome": "在来線旅客の時間費用（高速鉄道との競争の影響）",
+     "effect_quote": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "本文を読めず、著者・題名・年・効果の数値を確認できない。URLを開いたところ404で、ページ内容を取得できなかった。検索結果の要約では差の差とされるが、原文で確認していない。対象は新幹線との競争で、JR民営化の政策効果ではなく、結果指標（時間費用）も採用条件の指標に当たらない。"
+    }
+   ],
+   "accepted": 0
+  },
+  {
+   "key": "finance_post",
+   "name": "郵政・金融・農協",
+   "candidates": [
+    {
+     "authors": "Nakashima K.",
+     "year": 2016,
+     "title": "An econometric evaluation of bank recapitalization programs with bank- and loan-level data",
+     "doi": "10.1016/j.jbankfin.2015.11.002",
+     "url": "https://econpapers.repec.org/RePEc:eee:jbfina:v:63:y:2016:i:c:p:1-24",
+     "design": "1998・1999年の公的資本注入について、銀行パネルでの差の差（二元固定効果）。貸出先レベルでは三元固定効果モデル",
+     "outcome": "銀行のリスク、貸出、収益性（産業の生産・付加価値・生産性・雇用・価格・旅客数のいずれでもない）",
+     "effect_quote": "",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "結果指標が採用条件に該当しない。要旨では資本注入が注入銀行のリスクを下げた一方、貸出や収益性を増やさなかったとされるが、採用条件の指標（産業の生産・付加価値・生産性・雇用・価格・旅客数）ではない。要旨は開いた範囲の言い換えのみで、原文の効果文は確認できず、効果の符号・大きさも原文から写せない。DOI は Crossref で題名・著者・2016年・JBF を照合済み。"
+    },
+    {
+     "authors": "Kasahara H., Sawada Y., Suzuki M.",
+     "year": 2024,
+     "title": "The Effect of Bank Recapitalization Policy on Credit Allocation, Investment, and Productivity: Evidence from a Banking Crisis in Japan",
+     "doi": "",
+     "url": "https://www2.econ.tohoku.ac.jp/~PDesign/3012en.html",
+     "design": "ページ上では識別法（差の差、マッチング、対照群）の記述なし。1997年の銀行危機時の公的資本注入について、企業財務と銀行貸借対照表の連結データを使用",
+     "outcome": "企業の融資、設備投資、労働生産性、全要素生産性（TFP）",
+     "effect_quote": "",
+     "read": "abstract",
+     "verdict": "rejected",
+     "reason": "識別方法を確認できず、効果の符号・大きさも数値として示されていない（ページは定性的な記述のみ）。原文の効果文を写せないため数値の確認ができない。Journal of Banking & Finance 158 (2024) 107047 として出版されたとの記載はあるが、DOI は未確認のため空欄とした。CESifo WP 10622 の PDF は読めず（バイナリのみ）、本文は未読。"
+    },
+    {
+     "authors": "Sawada Y. (ほか。著者名は書誌で未確認)",
+     "year": 2013,
+     "title": "Measuring the effect of postal saving privatization on the Japanese banking industry: Evidence from the 2005 general election",
+     "doi": "10.1016/j.pacfin.2012.07.004",
+     "url": "https://www.sciencedirect.com/science/article/abs/pii/S0927538X12000546",
+     "design": "2005年総選挙を事象日とする事象研究（株価反応）。対照群の有無は未確認",
+     "outcome": "銀行株価（超過収益率）",
+     "effect_quote": "",
+     "read": "unreadable",
+     "verdict": "rejected",
+     "reason": "結果指標が株価であり、採用条件（産業の生産・付加価値・生産性・雇用・価格・旅客数）に該当しない。ScienceDirect は 403 で本文・要旨を取得できず、書誌は Crossref 検索の結果のみ（題名・第一著者・2013年・Pacific-Basin Finance Journal）。郵政民営化の効果だが、株価による評価で実体経済指標ではない。"
+    }
+   ],
+   "accepted": 0
+  }
+ ]
+}
