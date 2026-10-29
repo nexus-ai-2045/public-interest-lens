@@ -46,6 +46,16 @@ class MacroAmountsTest(unittest.TestCase):
         self.assertEqual(macro.publication_field("金融", "", "保留"), ("金融", "振り分け", "K"))
         self.assertEqual(macro.publication_field("対応表なし", "農林水産", None), ("農林水産", "AI 2系統", "A"))
 
+    def test_r2_held_laws_use_the_whole_economy_and_are_not_aligned_to_the_original_law(self):
+        # 点検 R2：振り分けの通信・ネットを使わず、元の法律（閣法-156-103 など）の分野にそろえる処理にも入れない
+        picks = {"a": macro.pick("", ""), "b": ("通信・ネット", "振り分け", "J"), "c": ("通信・ネット", "AI 2系統", "J")}
+        titles = {"a": "人工児童保護法案", "b": "人工児童保護法案", "c": "人工児童保護法の一部を改正する法律案"}
+        self.assertEqual(macro.align_by_title(picks, titles)["a"][0], "通信・ネット")
+        self.assertEqual(macro.align_by_title(picks, titles, frozenset({"a"}))["a"], ("経済全体", "対応表なし", "_T"))
+        for law_id in ("閣法-169-48", "閣法-189-62"):
+            row = next(r for r in self.rows if r["id"] == law_id)
+            self.assertEqual((row["分野"], row["分野の由来"], row["産業"]), ("経済全体", "対応表なし", "_T"), law_id)
+
     def test_kaku_142_20_publishes_the_agreed_agriculture_field(self):
         row = next(r for r in self.rows if r["id"] == "閣法-142-20")
         self.assertEqual(row["分野"], "農林水産")

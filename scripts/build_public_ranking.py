@@ -274,6 +274,8 @@ def _no_amount(
         if law_id in loss:
             return _other(law_id, title, "amount_hold", loss[law_id]["理由"])
         if row["判定"].startswith("保留（2系統"):
+            if "点検R2" in row["理由"]:
+                return _other(law_id, title, "triage_hold", "第3の判定者の分野を題名の語が上書きしていたため保留（点検R2）")
             return _other(law_id, title, "triage_hold", "振り分けの2系統が一致しない")
         if row["判定"] == "保留":
             return _other(law_id, title, "impact_hold", row["理由"])
