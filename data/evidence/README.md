@@ -14,3 +14,6 @@
 文献調査（2026-10-29）の推定値のうち、調査側の照合が「一致」の行（597件）。収集と1回の照合だけで、台帳の3者照合（盲検の2者が2%以内で一致、Crossref の題名・著者・年）は未了なので、**計算・影響度ランキングには使わない**。検査（`scripts/check_evidence_ledger.py`）は、台帳や mapping が候補を参照したら落とす。
 昇格の順番：影響度の上位の機構（ICT・参入障壁・新陳代謝）に効く行から、盲検2者で照合し、通ったものを `ledger.json` の `lit-*`（`literature_row` が元の行）へ入れる。今回は11行を審査し、8件が3者一致、3件が `held`（値の不一致2・読み取り不一致1）。
 行ごとの原本・引用は共有フォルダの文献調査の表を参照。バックテストの正解データ（答えの分かっている事例集）は台帳とは別の扱い。
+
+## バックテスト
+正解データ `backtest_cases.json`（事例集の一致49件。ラベルは2系統の一致分だけ採用、系統2は `backtest_labels_line2.json`）、対応表 `backtest_mapping.json`、固定した結果 `backtest/`。測定は `python3 scripts/backtest.py`（定義は [設計決定0020](../../docs/adr/0020-backtest-accuracy-definition.md)、結果は [docs/バックテスト.md](../../docs/バックテスト.md) と /methodology）。台帳とは別の扱い。

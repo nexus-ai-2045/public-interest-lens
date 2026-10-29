@@ -30,6 +30,7 @@ LAWS = ROOT / "app" / "public" / "distribution" / "laws.json"
 SPEC = ROOT / "app" / "src" / "method-spec.ts"
 SNAP_DIR = ROOT / "data" / "evidence" / "backtest"
 PUBLIC = ROOT / "app" / "public" / "distribution" / "backtest.json"
+DOC = ROOT / "docs" / "バックテスト.md"
 VERSION = "backtest-v1"
 TARGET = 0.95   # 合格の線（ねく 2026-10-29）
 MIN_N = 10      # これ未満は判定しない（評価方法設計書 5.3）
@@ -185,11 +186,51 @@ def snapshot_files() -> list[Path]:
     return sorted(SNAP_DIR.glob("*.json"))
 
 
+def pct(x: float | None) -> str:
+    return "—" if x is None else f"{x * 100:.0f}%"
+
+
+def render_doc(runs: list[dict]) -> str:
+    out = [
+        "# バックテスト（計算式の精度）",
+        "",
+        "このファイルは `python3 scripts/backtest.py --publish` が `data/evidence/backtest/*.json` から作ります。手で直さないでください。",
+        "定義と限界は [設計決定0020](adr/0020-backtest-accuracy-definition.md)、目標は精度95%（[評価方法設計書](評価方法設計書.md) 5章）。",
+        "",
+        "## 結果の読み方",
+        "",
+        "- 正解：学術文献の事後評価（答えの分かっている事例集、原文と一致した49件）。ラベルは2系統が独立に付け、一致したものだけ使う。",
+        "- 予測：現行の計算が出す、その政策に当たる法律の向き（国賊側／国士側）。",
+        "- 一致率：正解の向きと計算の向きが同じだった割合。件数が10件未満なら「判定不能」で、95%に届いたとも届かないとも言わない。",
+        "- 本命（L0）の条件が厳しく件数が足りないので、条件を緩めた数字（L1・L2）も並べる。どれも同じデータ、同じ規則で出している。",
+        "",
+    ]
+    for r in runs:
+        out += [f"## {r['label']}（{r['date']}、計算式 {r['spec_version']}）", "", r.get("note", ""), ""]
+        out += ["| 段 | 条件 | 向きの一致 | 一致率（Wilson 95%区間） | 判定 |", "|---|---|---|---|---|"]
+        for lv in r["levels"]:
+            ci = "" if not lv["wilson95"] else f"（{pct(lv['wilson95'][0])}〜{pct(lv['wilson95'][1])}）"
+            out.append(f"| {lv['level']} {lv['name']} | {lv['definition']} | {lv['hits']}/{lv['n']} | {pct(lv['rate'])}{ci} | {lv['verdict']} |")
+        f = r["funnel"]
+        out += ["", f"事例 {f['total']} 件のうち採点できなかった理由：" + "、".join(f"{k} {v}件" for k, v in f["excluded_by_reason"].items()) + "。", ""]
+        out += ["額の誤差・予測区間が正解を含む割合：**" + r["amount_and_interval"]["status"] + "**。" + r["amount_and_interval"]["reason"], ""]
+        out += ["### 採点した事例（L2＝条件を緩めた参考2の全件）", "", "| 事例 | 研究 | 正解の向き | 計算の向き | 一致 | 使った法律 |", "|---|---|---|---|---|---|"]
+        sign = {1: "便益（国士側）", -1: "損失（国賊側）", 0: "同数"}
+        for c in r["levels"][2]["cases"]:
+            laws = "・".join(f"{x['id']}（{x['year']}年・{'便益' if x['side'] == 'benefit' else '損失'}）" for x in c["laws"])
+            out.append(f"| {c['policy']} | {c['source']} | {sign[c['truth']]} | {sign[c['predicted']]} | {'○' if c['hit'] else '×'} | {laws} |")
+        out += ["", "### 採点しなかった事例", "", "| 事例 | 研究 | 理由 |", "|---|---|---|"]
+        out += [f"| {e['policy']} | {e['source']} | {e['reason']} |" for e in r["excluded"]]
+        out.append("")
+    return "\n".join(out)
+
+
 def publish() -> dict:
     runs = [json.loads(p.read_text(encoding="utf-8")) for p in snapshot_files()]
     runs.sort(key=lambda r: r["date"])
     doc = {"schema": "backtest-runs/v1", "runs": runs}
     PUBLIC.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    DOC.write_text(render_doc(runs), encoding="utf-8")
     return doc
 
 
@@ -203,7 +244,7 @@ def main() -> int:
     args = parser.parse_args()
     if args.publish:
         publish()
-        print(f"{PUBLIC.relative_to(ROOT)} を作り直した")
+        print(f"{PUBLIC.relative_to(ROOT)} と {DOC.relative_to(ROOT)} を作り直した")
         return 0
     result = run()
     if args.snapshot:

@@ -29,6 +29,8 @@ jobs:
       - run: node scripts/build_public_members.mjs
       - run: python -m scripts.build_public_distribution --input-root data/distribution/sources/world-bank --case data/distribution/case-source.json --output-root data/distribution/generated --public-dir app/public/distribution
       # CSV（speeches・industry_va）に頼るテストは tests/data_gated_tests.txt の分だけ skip される。一覧に無い skip は赤
+      # 計算式のバックテスト：毎回今のデータで測り直し、結果をログに出す（定義は docs/adr/0020）
+      - run: python scripts/backtest.py
       - run: python -m unittest discover -s tests -v
       - run: npm test
         working-directory: app

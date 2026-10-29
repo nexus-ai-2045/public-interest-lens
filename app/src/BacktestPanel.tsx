@@ -1,0 +1,49 @@
+import { useEffect, useState } from 'react';
+import { Info } from 'lucide-react';
+import { backtestUrl, formatRate, parseBacktest, signLabel, type Backtest, type BacktestRun } from './backtest';
+
+function RunView({ run }: { run: BacktestRun }) {
+  const l2 = run.levels[2];
+  return <section className="backtest-run" id={`backtest-${run.label}`}>
+    <h4>{run.label}（{run.date}、計算式 {run.spec_version}）</h4>
+    <p className="fine-note">{run.note}</p>
+    <table className="spec-symbols">
+      <thead><tr><th scope="col">段</th><th scope="col">条件</th><th scope="col">向きの一致</th><th scope="col">一致率（95%区間）</th><th scope="col">判定</th></tr></thead>
+      <tbody>{run.levels.map(lv => <tr key={lv.level}><td>{lv.level} {lv.name}</td><td>{lv.definition}</td><td>{lv.hits}/{lv.n}</td><td>{formatRate(lv)}</td><td><strong>{lv.verdict}</strong></td></tr>)}</tbody>
+    </table>
+    <p>合格の線は一致率{Math.round(run.target * 100)}%以上、かつ{run.min_n}件以上。件数が足りないときは「判定不能」と書き、届いたとも届かないとも言いません。</p>
+    <p>事例{run.cases_total}件のうち採点できなかった理由：{Object.entries(run.funnel.excluded_by_reason).map(([k, v]) => `${k} ${v}件`).join('、')}。</p>
+    <p><strong>額の誤差・予測区間が正解を含む割合：{run.amount_and_interval.status}。</strong>{run.amount_and_interval.reason}</p>
+    <details>
+      <summary>採点した事例（条件を緩めた参考2の{l2.n}件）</summary>
+      <table className="spec-symbols">
+        <thead><tr><th scope="col">事例</th><th scope="col">研究</th><th scope="col">正解の向き</th><th scope="col">計算の向き</th><th scope="col">一致</th></tr></thead>
+        <tbody>{l2.cases.map(c => <tr key={c.id}><td>{c.policy}</td><td>{c.source}</td><td>{signLabel(c.truth)}</td><td>{signLabel(c.predicted)}</td><td>{c.hit ? '○' : '×'}</td></tr>)}</tbody>
+      </table>
+    </details>
+  </section>;
+}
+
+export default function BacktestPanel() {
+  const [data, setData] = useState<Backtest | null>(null);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        const response = await fetch(backtestUrl, { signal: controller.signal, cache: 'no-store' });
+        if (!response.ok) throw new Error('missing');
+        setData(parseBacktest(await response.text()));
+      } catch { if (!controller.signal.aborted) setError('バックテストのデータを読み込めませんでした。'); }
+    })();
+    return () => controller.abort();
+  }, []);
+  return <section aria-labelledby="backtest">
+    <h3 id="backtest">7. 精度（バックテスト）</h3>
+    <p>答えの分かっている事例（学術文献の事後評価で、原文と数値が一致した49件）を正解にして、今の計算の向きがどれだけ合うかを測っています。目標は95%以上です。結果は良く見えるように選ばず、届かないときは届かないと書きます。実装が一通り済んだら、同じ仕組みでもう一度測ります。</p>
+    <p className="fine-note"><Info size={14} /> 計算の「向き」は、法律ごとに全産業または産業の付加価値を比較国と比べた結果論で、その法律だけの効果ではありません。正解は特定の集団・指標への効果です。同じものを測っていない分も、合わなさに含まれます（定義と限界は<a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/adr/0020-backtest-accuracy-definition.md" target="_blank" rel="noopener noreferrer">設計決定0020</a>、全件の表は<a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/バックテスト.md" target="_blank" rel="noopener noreferrer">docs/バックテスト.md</a>）。</p>
+    {error && <p className="empty-state">{error}</p>}
+    {!data && !error && <p className="empty-state">読み込み中…</p>}
+    {data?.runs.map(run => <RunView key={run.label} run={run} />)}
+  </section>;
+}

@@ -19,6 +19,7 @@ import { partyById, partyComparison, sortPartyRows, type PartySortKey } from './
 import { LawName, lawNameText, namingOf, useLawNames } from './law-name';
 import { CORRECTION_EMAIL, correctionIssueUrl, correctionListUrl, correctionMailUrl, type CorrectionTarget } from './correction-link';
 const MethodFormulas = lazy(() => import('./MethodFormulas'));
+const BacktestPanel = lazy(() => import('./BacktestPanel'));
 
 export const distributionMembersUrl = '/distribution/members.json';
 export const correctionUrl = 'https://github.com/nexus-ai-2045/public-interest-lens/issues/new?template=correction.yml';
@@ -586,6 +587,7 @@ export function MethodologyPage() {
         <li><a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/計算式.md" target="_blank" rel="noopener noreferrer">計算式（docs/計算式.md）</a>・<a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/データベース.md" target="_blank" rel="noopener noreferrer">データベース（docs/データベース.md）</a>・<a href="/numbers">数字で見る</a></li>
       </ul>
       <Suspense fallback={<p className="empty-state">式を読み込み中…</p>}><MethodFormulas /></Suspense>
+      <Suspense fallback={<p className="empty-state">精度の表を読み込み中…</p>}><BacktestPanel /></Suspense>
     </main>
   </SiteShell>;
 }
