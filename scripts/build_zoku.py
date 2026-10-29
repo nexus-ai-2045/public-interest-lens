@@ -7,6 +7,7 @@
 - 分野：閣法の所管省庁（data/derived/ministry-v1/cabinet-bills.csv の所管_今）。衆法・参法は所管が決まらないので分野に入れない。
 - 議員連盟：data/acquired/diet-leagues/memberships.csv（公表名簿・政治資金収支報告書・会議録から作る。空でも動く）。
 - 運動団体の立場：data/acquired/pressure-groups/positions.csv（公表された声明・要望だけ。空でも動く）。
+- 委員会の名簿（参考欄）：data/acquired/committee-deliberation/bill_committee_{衆議院,参議院}.csv の出席委員・理事。閣法の審議への出席と理事の本数を数えるだけで、判定にも印にも入れない（出席は賛否ではない）。
 - 政治資金の関係団体：--relations（data/derived/political-funds/relations.csv。Git に無いときは付けずに動き、その旨を summary に残す）。
 
 印は「分野との継続的な関わり」「議員連盟の名簿に載っている」「同じ分野の団体と金銭の関係が記録されている」の事実だけ。不正とは書かない。
@@ -40,6 +41,7 @@ ENFORCEMENT = ROOT / 'data/acquired/enforcement-dates/enforcement.csv'
 BILLS = ROOT / 'data/derived/ministry-v1/cabinet-bills.csv'
 LEAGUES = ROOT / 'data/acquired/diet-leagues/memberships.csv'
 POSITIONS = ROOT / 'data/acquired/pressure-groups/positions.csv'
+COMMITTEE_DELIB = [ROOT / 'data/acquired/committee-deliberation/bill_committee_衆議院.csv', ROOT / 'data/acquired/committee-deliberation/bill_committee_参議院.csv']
 SHINGIKAI = ROOT / 'data/acquired/blocking-actors/2_shingikai'
 
 # ADR 0018 の閾値（結果を見て動かさない。動かすときは ADR を先に改める）
@@ -63,7 +65,7 @@ COMMITTEE_FIELD = {
 LOBBY_ACTIONS = ('声明', '要望', '陳情', 'ヒアリング出席', '審議会委員', '意見公募への意見', '署名運動')
 GROUP_KINDS = ('業界団体', '運動団体', 'メディア', '議員連盟', '自治体', '労働団体', 'その他')
 HEADER = ['氏名', '人物ID', '分野', '委員長の回次数', '委員長の根拠URL', '推す行動の本数', '推す行動の年数', '推す行動の例（法律ID）',
-          '参院本会議で賛成した本数', '参院本会議で反対した本数', '議員連盟', '同じ分野の団体との金銭の関係', '金銭の関係の根拠URL', '分野との継続的な関わり', '印']
+          '参院本会議で賛成した本数', '参院本会議で反対した本数', '分野の閣法の審議に出席した本数（参考。賛否ではない）', '分野の閣法の審議で理事を務めた本数（参考）', '議員連盟', '同じ分野の団体との金銭の関係', '金銭の関係の根拠URL', '分野との継続的な関わり', '印']
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -81,13 +83,13 @@ def field_of_ids(bills):
     return [b['法律ID'] for b in bills]
 
 
-def build(chairs, involvements, opposing, bills, leagues, positions, org_fields, relations, enacted=None, ambiguous=frozenset()) -> tuple[list[dict], list[dict], dict]:
+def build(chairs, involvements, opposing, bills, leagues, positions, org_fields, relations, enacted=None, ambiguous=frozenset(), committee=()) -> tuple[list[dict], list[dict], dict]:
     # 成立の判定は分野（所管）の有無と分けて、公布された法律の台帳で行う
     enacted = set(field_of_ids(bills)) if enacted is None else enacted
     field_of = {b['法律ID']: b['所管_今'] for b in bills if b.get('所管_今')}
     ties: dict[tuple[str, str], dict] = defaultdict(lambda: {
         'sessions': set(), 'chair_urls': [], 'bills': set(), 'years': set(), 'yes': set(), 'no': set(),
-        'leagues': [], 'money': defaultdict(int), 'money_urls': set(), 'pid': ''})
+        'leagues': [], 'money': defaultdict(int), 'money_urls': set(), 'pid': '', 'attend': set(), 'director': set()})
     names: dict[str, str] = {}
 
     def who(name: str, pid: str = '') -> str | None:
@@ -139,6 +141,23 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
         if field and key is not None:
             ties[(key, field)]['no'].add(r['法律ID'])
 
+    # 委員会の名簿：その分野の閣法の審議に出席した本数と理事を務めた本数。参考欄で、判定・印には入れない（出席は賛否ではない）。
+    # 同姓同名は人物IDが無いので結ばない。表に出るのは、他の基準で行がある議員×分野だけ。
+    for r in committee:
+        field = field_of.get(r['法律ID'])
+        if not field:
+            continue
+        for tok in filter(None, r.get('出席委員(出席数/会議数)', '').split(';')):
+            m = re.match(r'(.+?)\((\d+)/\d+\)$', tok.strip())
+            if m and int(m.group(2)) >= 1:
+                key = who(m.group(1))
+                if key is not None:
+                    ties[(key, field)]['attend'].add(r['法律ID'])
+        for nm in filter(None, r.get('理事', '').split(';')):
+            key = who(nm.strip())
+            if key is not None:
+                ties[(key, field)]['director'].add(r['法律ID'])
+
     # 議員連盟：名簿に載っている事実だけ。分野の空の行は載せない（何を推進するかが決まらない）
     league_rows = []
     for r in leagues:
@@ -184,6 +203,7 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
             '委員長の回次数': len(t['sessions']), '委員長の根拠URL': ' '.join(t['chair_urls'][:3]),
             '推す行動の本数': len(t['bills']), '推す行動の年数': len(t['years']), '推す行動の例（法律ID）': ' '.join(sorted(t['bills'])[:3]),
             '参院本会議で賛成した本数': len(t['yes']), '参院本会議で反対した本数': len(t['no']),
+            '分野の閣法の審議に出席した本数（参考。賛否ではない）': len(t['attend']), '分野の閣法の審議で理事を務めた本数（参考）': len(t['director']),
             '議員連盟': ' / '.join(t['leagues']), '同じ分野の団体との金銭の関係': ' / '.join(money), '金銭の関係の根拠URL': ' '.join(sorted(t['money_urls'])) if money else '',
             '分野との継続的な関わり': 'はい' if (by_chair or by_bills) else 'いいえ', '印': '、'.join(marks)})
 
@@ -210,8 +230,8 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
         '議員×分野の行': len(rows), '継続的な関わり': sum(r['分野との継続的な関わり'] == 'はい' for r in rows),
         '議員': len({r['氏名'] for r in rows}), '議連の名簿行': sum(1 for r in leagues if r.get('分野')),
         '運動団体の立場行': len(group_rows), '行動種別・団体区分が決まりに合わず除いた行': skipped, '原本照合済みでなく除いた行': unverified,
-        '入力が空の表': [n for n, v in (('議員連盟', leagues), ('運動団体の立場', positions), ('政治資金の関係団体', relations)) if not v],
-        '限界': ['衆法・参法は所管が決まらず分野に入らない', '委員長の記録は国会回次ごとの在任者のみ（理事・委員は無い）',
+        '入力が空の表': [n for n, v in (('議員連盟', leagues), ('運動団体の立場', positions), ('政治資金の関係団体', relations), ('委員会の審議の名簿', committee)) if not v],
+        '限界': ['衆法・参法は所管が決まらず分野に入らない', '委員長の記録は国会回次ごとの在任者のみ。委員・理事は委員会の審議の名簿から参考欄にだけ出し、判定に入れない（出席は賛否ではない）',
                  '議員連盟の名簿・運動団体の声明は、一次資料から足した行だけ（空のときは判定に入らない）'],
     }
     return rows, group_rows, summary
@@ -258,8 +278,9 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     inv = [r for p in INVOLVEMENTS for r in read_csv(p)]
     relations = read_csv(args.relations) if args.relations else []
+    committee = [r for p in COMMITTEE_DELIB if p.exists() for r in read_csv(p)]
     rows, groups, summary = build(read_csv(CHAIRS), inv, read_csv(OPPOSING), read_csv(BILLS), read_csv(LEAGUES), read_csv(POSITIONS),
-                                  org_fields_from_shingikai(), relations, enacted_ids(), ambiguous_names())
+                                  org_fields_from_shingikai(), relations, enacted_ids(), ambiguous_names(), committee)
     write(OUT / 'member-field-ties.csv', HEADER, rows)
     write(OUT / 'pressure-group-positions.csv', ['団体名', '団体区分', '分野', '法律ID', '立場', '行動種別', '法案の結果', '要旨', '出典URL', '確度'], groups)
     (OUT / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
