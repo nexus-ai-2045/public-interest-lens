@@ -18,15 +18,15 @@
     },
     "inputs": {
       "covidLabels": "ad98eddeb1a88320ad7c08cef2f417bc2cdd60e57085fdf9f097989b3aa1e16b",
-      "industryVa": "e5ade09bf65dd72628a24120d6e5374fafb0b788d1bed38ba9b781e10ff1fd5f",
+      "industryVa": "f9e67e124a17c34ae9f6cb611c892de8365e57344b7aa32763375dc32399c41a",
       "enacted": "f8ec2d1b14c988aad522dafcee33037e6288d0972613eed18a938b7616c8c94b",
       "triage": "62bc7a90ee69c95359f3ad79be8346c05fa811d7f1bf8251227f2d42b4e8a6fb",
       "dated": "2df534d80b08bbaec5c2b793f5eb868f24904dc957a44a582964024fe05f3dc3",
       "impact": "d3df8aaeb78a122cc92b70fd798c500e0c5c7684b3856f762adbe1fd4c65e956",
-      "loss": "50cf7e07151c6ee5cec3b77c341d97fd9ce50f5ef8f6e3cb8f51352cb8c1e77d",
-      "publish": "61aeb6ee78a039ac3f5577f976b7e897d2753ab1f025143a3e89342631b091b2",
+      "loss": "250e22ef6bfa3bc818806d3c053f09d98b9c96966f8602b20d59f1a846a23385",
+      "publish": "2dd11398d4962452a4f5fd66ef776caf97767c4a65da2a3602e93948756de138",
       "enforcement": "b5ba88726efbc30088831ee102b740f86f73ea2bee82e74083fcb3a7c503c3b7",
-      "macro": "36d5d403d9da2c84d56220912291742aab5c62d317e924401c675f19ad814a07",
+      "macro": "146361418129cb2e451b964e42af143863fb849d2b06b572f9930eaec2766942",
       "covidBenefit": "f5dc007722167dea1c51f6f9c4b3cf50f573e755cf37042aa28c4492f19200cd",
       "covidRules": "787476d651bbf5c9d70be4b2e480cc393d5ba6195c648e0791dddc2aff3d8e1c",
       "covidSpending": "7ed7d7d25eca6b0904a3bce735db976f83b3a61543e7af229848501037f9a0cc",
@@ -4404,7 +4404,7 @@
       "enforcedOn": "2018-06-15",
       "amountMedianYen": 34588385639339,
       "amountLowYen": 21225693645968,
-      "amountHighYen": 46110933017956,
+      "amountHighYen": 47388821768640,
       "lowerBound": false,
       "window": "2018〜2024年",
       "comparisonCountries": [
@@ -4548,7 +4548,7 @@
       "enforcedOn": "2018-06-22",
       "amountMedianYen": 30126934975309,
       "amountLowYen": 20881333268675,
-      "amountHighYen": 42906184661130,
+      "amountHighYen": 42625555465782,
       "lowerBound": false,
       "window": "2018〜2024年",
       "comparisonCountries": [
@@ -4585,7 +4585,7 @@
       "enforcedOn": "2018-12-20",
       "amountMedianYen": 30126934975309,
       "amountLowYen": 20881333268675,
-      "amountHighYen": 42906184661130,
+      "amountHighYen": 42625555465782,
       "lowerBound": false,
       "window": "2018〜2024年",
       "comparisonCountries": [
@@ -4622,7 +4622,7 @@
       "enforcedOn": "2018-07-25",
       "amountMedianYen": 30126934975309,
       "amountLowYen": 20881333268675,
-      "amountHighYen": 42906184661130,
+      "amountHighYen": 42625555465782,
       "lowerBound": false,
       "window": "2018〜2024年",
       "comparisonCountries": [
@@ -4695,9 +4695,9 @@
       "indicator": "通信業の付加価値",
       "stage": "段階3",
       "enforcedOn": "2016-05-21",
-      "amountMedianYen": 28053525221588,
+      "amountMedianYen": 27605390527029,
       "amountLowYen": 21944415060687,
-      "amountHighYen": 39734492400527,
+      "amountHighYen": 38590945795371,
       "lowerBound": false,
       "window": "2016〜2024年",
       "comparisonCountries": [
@@ -4735,9 +4735,9 @@
       "indicator": "通信業の付加価値",
       "stage": "段階3",
       "enforcedOn": "2016-10-22",
-      "amountMedianYen": 28053525221588,
+      "amountMedianYen": 27605390527029,
       "amountLowYen": 21944415060687,
-      "amountHighYen": 39734492400527,
+      "amountHighYen": 38590945795371,
       "lowerBound": false,
       "window": "2016〜2024年",
       "comparisonCountries": [
@@ -4773,9 +4773,9 @@
       "indicator": "宿泊者数",
       "stage": "段階3",
       "enforcedOn": "2019-01-07",
-      "amountMedianYen": 23852077906780,
+      "amountMedianYen": 24002298828808,
       "amountLowYen": 20123916876072,
-      "amountHighYen": 26747876589364,
+      "amountHighYen": 26771328242334,
       "lowerBound": false,
       "window": "2019〜2024年",
       "comparisonCountries": [
@@ -4995,9 +4995,9 @@
       "indicator": "宿泊者数",
       "stage": "段階3",
       "enforcedOn": "2018-01-04",
-      "amountMedianYen": 21778896037530,
+      "amountMedianYen": 21931515758108,
       "amountLowYen": 18099175408114,
-      "amountHighYen": 24702267070786,
+      "amountHighYen": 24720580611300,
       "lowerBound": false,
       "window": "2018〜2024年",
       "comparisonCountries": [
@@ -5034,9 +5034,9 @@
       "indicator": "客室数",
       "stage": "段階3",
       "enforcedOn": "2018-06-15",
-      "amountMedianYen": 21778896037530,
+      "amountMedianYen": 21931515758108,
       "amountLowYen": 18099175408114,
-      "amountHighYen": 24702267070786,
+      "amountHighYen": 24720580611300,
       "lowerBound": false,
       "window": "2018〜2024年",
       "comparisonCountries": [
@@ -5072,9 +5072,9 @@
       "indicator": "宿泊者数",
       "stage": "段階3",
       "enforcedOn": "2018-04-18",
-      "amountMedianYen": 21778896037530,
+      "amountMedianYen": 21931515758108,
       "amountLowYen": 18099175408114,
-      "amountHighYen": 24702267070786,
+      "amountHighYen": 24720580611300,
       "lowerBound": false,
       "window": "2018〜2024年",
       "comparisonCountries": [
@@ -5188,8 +5188,8 @@
       "indicator": "宿泊者数",
       "stage": "段階3",
       "enforcedOn": "2017-03-24",
-      "amountMedianYen": 19673230265617,
-      "amountLowYen": 16485297840805,
+      "amountMedianYen": 19843972725819,
+      "amountLowYen": 16493970712761,
       "amountHighYen": 23631119113727,
       "lowerBound": false,
       "window": "2017〜2024年",
@@ -5715,46 +5715,6 @@
       ]
     },
     {
-      "id": "閣法-193-27",
-      "title": "電波法及び電気通信事業法の一部を改正する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "コロナ期と重なる",
-        "コロナ期と分離できない（元の窓の額。議員への配分に使わない）"
-      ],
-      "field": "通信・ネット",
-      "indicator": "通信業の付加価値",
-      "stage": "段階3",
-      "enforcedOn": "2017-10-01",
-      "amountMedianYen": 11378405955791,
-      "amountLowYen": 6355776995311,
-      "amountHighYen": 21615503617396,
-      "lowerBound": false,
-      "window": "2017〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "目的の分類：未測定",
-      "group": "通信業の付加価値-1",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC3A96.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19320170512027.htm",
-        "https://laws.e-gov.go.jp/law/325AC0000000131",
-        "https://laws.e-gov.go.jp/law/359AC0000000086"
-      ]
-    },
-    {
       "id": "閣法-201-31",
       "title": "地域における一般乗合旅客自動車運送事業及び銀行業に係る基盤的なサービスの提供の維持を図るための私的独占の禁止及び公正取引の確保に関する法律の特例に関する法律案",
       "side": "loss",
@@ -5790,6 +5750,46 @@
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF0A2.htm",
         "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200527032.htm"
+      ]
+    },
+    {
+      "id": "閣法-193-27",
+      "title": "電波法及び電気通信事業法の一部を改正する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "コロナ期と重なる",
+        "コロナ期と分離できない（元の窓の額。議員への配分に使わない）"
+      ],
+      "field": "通信・ネット",
+      "indicator": "通信業の付加価値",
+      "stage": "段階3",
+      "enforcedOn": "2017-10-01",
+      "amountMedianYen": 11251510475034,
+      "amountLowYen": 5015864086261,
+      "amountHighYen": 21615503617396,
+      "lowerBound": false,
+      "window": "2017〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "目的の分類：未測定",
+      "group": "通信業の付加価値-1",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC3A96.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19320170512027.htm",
+        "https://laws.e-gov.go.jp/law/325AC0000000131",
+        "https://laws.e-gov.go.jp/law/359AC0000000086"
       ]
     },
     {
@@ -5845,7 +5845,7 @@
       "enforcedOn": "2019-06-14",
       "amountMedianYen": 9849326702091,
       "amountLowYen": 1644282519001,
-      "amountHighYen": 15983597980688,
+      "amountHighYen": 15882978487106,
       "lowerBound": false,
       "window": "2019〜2024年",
       "comparisonCountries": [
@@ -5884,7 +5884,7 @@
       "enforcedOn": "2019-11-16",
       "amountMedianYen": 9849326702091,
       "amountLowYen": 1644282519001,
-      "amountHighYen": 15983597980688,
+      "amountHighYen": 15882978487106,
       "lowerBound": false,
       "window": "2019〜2024年",
       "comparisonCountries": [
@@ -5918,7 +5918,7 @@
       "stage": "段階1",
       "enforcedOn": "2022-02-20",
       "amountMedianYen": 9671571045114,
-      "amountLowYen": 4278876137680,
+      "amountLowYen": 4211178885353,
       "amountHighYen": 12421424464893,
       "lowerBound": false,
       "window": "2022〜2024年",
@@ -6732,7 +6732,7 @@
       "stage": "段階1",
       "enforcedOn": "2021-10-01",
       "amountMedianYen": 813430642986,
-      "amountLowYen": -4831791581088,
+      "amountLowYen": -4988989149217,
       "amountHighYen": 3108129620723,
       "lowerBound": false,
       "window": "2021〜2024年",
@@ -6769,7 +6769,7 @@
       "stage": "段階1",
       "enforcedOn": "2021-11-10",
       "amountMedianYen": 813430642986,
-      "amountLowYen": -4831791581088,
+      "amountLowYen": -4988989149217,
       "amountHighYen": 3108129620723,
       "lowerBound": false,
       "window": "2021〜2024年",
@@ -48296,82 +48296,6 @@
       ]
     },
     {
-      "id": "衆法-204-21",
-      "title": "令和三年東京オリンピック競技大会・東京パラリンピック競技大会特別措置法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の2本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "文化・娯楽・生活サービス",
-      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2021-06-16",
-      "amountMedianYen": 36724543495878,
-      "amountLowYen": 29273640685911,
-      "amountHighYen": 55787409257799,
-      "lowerBound": false,
-      "window": "2021〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-R",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD2466.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210616068.htm"
-      ]
-    },
-    {
-      "id": "閣法-204-20",
-      "title": "文化財保護法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の2本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "文化・娯楽・生活サービス",
-      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2021-07-23",
-      "amountMedianYen": 36724543495878,
-      "amountLowYen": 29273640685911,
-      "amountHighYen": 55787409257799,
-      "lowerBound": false,
-      "window": "2021〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-R",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1BC2.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210423022.htm"
-      ]
-    },
-    {
       "id": "閣法-155-20",
       "title": "放送大学学園法案",
       "side": "loss",
@@ -48484,6 +48408,82 @@
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17A9E.htm",
         "https://laws.e-gov.go.jp/law/325AC0000000131"
+      ]
+    },
+    {
+      "id": "衆法-204-21",
+      "title": "令和三年東京オリンピック競技大会・東京パラリンピック競技大会特別措置法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の2本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "文化・娯楽・生活サービス",
+      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2021-06-16",
+      "amountMedianYen": 36528668495881,
+      "amountLowYen": 29273640685911,
+      "amountHighYen": 55787409257799,
+      "lowerBound": false,
+      "window": "2021〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-R",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD2466.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210616068.htm"
+      ]
+    },
+    {
+      "id": "閣法-204-20",
+      "title": "文化財保護法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の2本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "文化・娯楽・生活サービス",
+      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2021-07-23",
+      "amountMedianYen": 36528668495881,
+      "amountLowYen": 29273640685911,
+      "amountHighYen": 55787409257799,
+      "lowerBound": false,
+      "window": "2021〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-R",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1BC2.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210423022.htm"
       ]
     },
     {
@@ -50828,7 +50828,7 @@
       "enforcedOn": "2022-06-01",
       "amountMedianYen": 27880439489407,
       "amountLowYen": 21264651033491,
-      "amountHighYen": 33356405402664,
+      "amountHighYen": 33262796953089,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -50867,7 +50867,7 @@
       "enforcedOn": "2022-06-22",
       "amountMedianYen": 27880439489407,
       "amountLowYen": 21264651033491,
-      "amountHighYen": 33356405402664,
+      "amountHighYen": 33262796953089,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -50906,7 +50906,7 @@
       "enforcedOn": "2022-03-31",
       "amountMedianYen": 27880439489407,
       "amountLowYen": 21264651033491,
-      "amountHighYen": 33356405402664,
+      "amountHighYen": 33262796953089,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -50964,45 +50964,6 @@
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/4946.htm",
         "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18920150918071.htm"
-      ]
-    },
-    {
-      "id": "閣法-197-11",
-      "title": "食品表示法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる"
-      ],
-      "field": "製造業",
-      "indicator": "製造業の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2021-06-01",
-      "amountMedianYen": 26353713920156,
-      "amountLowYen": 9779703625380,
-      "amountHighYen": 48819647908556,
-      "lowerBound": false,
-      "window": "2021〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-C",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCA086.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214097.htm",
-        "https://laws.e-gov.go.jp/law/425AC0000000070"
       ]
     },
     {
@@ -51504,6 +51465,45 @@
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/220A.htm",
         "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17120090624056.htm"
+      ]
+    },
+    {
+      "id": "閣法-197-11",
+      "title": "食品表示法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる"
+      ],
+      "field": "製造業",
+      "indicator": "製造業の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2021-06-01",
+      "amountMedianYen": 25610181378103,
+      "amountLowYen": 9779703625380,
+      "amountHighYen": 48819647908556,
+      "lowerBound": false,
+      "window": "2021〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-C",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCA086.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214097.htm",
+        "https://laws.e-gov.go.jp/law/425AC0000000070"
       ]
     },
     {
@@ -54371,7 +54371,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-01-05",
       "amountMedianYen": 21575828304231,
-      "amountLowYen": 18327406057351,
+      "amountLowYen": 17924343355775,
       "amountHighYen": 25313061827376,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -54411,7 +54411,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-05-08",
       "amountMedianYen": 21575828304231,
-      "amountLowYen": 18327406057351,
+      "amountLowYen": 17924343355775,
       "amountHighYen": 25313061827376,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -59208,7 +59208,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2021-04-01",
       "amountMedianYen": 18469451943097,
-      "amountLowYen": 11255590120138,
+      "amountLowYen": 11802712740947,
       "amountHighYen": 24910301044346,
       "lowerBound": false,
       "window": "2021〜2024年",
@@ -59248,7 +59248,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2021-05-01",
       "amountMedianYen": 18469451943097,
-      "amountLowYen": 11255590120138,
+      "amountLowYen": 11802712740947,
       "amountHighYen": 24910301044346,
       "lowerBound": false,
       "window": "2021〜2024年",
@@ -59290,7 +59290,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2021-12-24",
       "amountMedianYen": 18469451943097,
-      "amountLowYen": 11255590120138,
+      "amountLowYen": 11802712740947,
       "amountHighYen": 24910301044346,
       "lowerBound": false,
       "window": "2021〜2024年",
@@ -61877,45 +61877,6 @@
       ]
     },
     {
-      "id": "閣法-200-8",
-      "title": "情報処理の促進に関する法律の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる"
-      ],
-      "field": "半導体・電子",
-      "indicator": "製造業の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2020-05-15",
-      "amountMedianYen": 17731639145196,
-      "amountLowYen": 8076557983443,
-      "amountHighYen": 35197805461646,
-      "lowerBound": false,
-      "window": "2020〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-C",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE08A.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20020191206067.htm",
-        "https://laws.e-gov.go.jp/law/345AC0000000090"
-      ]
-    },
-    {
       "id": "衆法-154-46",
       "title": "自然再生推進法案",
       "side": "benefit",
@@ -62912,6 +62873,45 @@
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1449A.htm",
         "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15420020712086.htm"
+      ]
+    },
+    {
+      "id": "閣法-200-8",
+      "title": "情報処理の促進に関する法律の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる"
+      ],
+      "field": "半導体・電子",
+      "indicator": "製造業の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2020-05-15",
+      "amountMedianYen": 17013027542743,
+      "amountLowYen": 8076557983443,
+      "amountHighYen": 35197805461646,
+      "lowerBound": false,
+      "window": "2020〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-C",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE08A.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20020191206067.htm",
+        "https://laws.e-gov.go.jp/law/345AC0000000090"
       ]
     },
     {
@@ -65935,8 +65935,8 @@
       "indicator": "宿泊・飲食の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2021-07-19",
-      "amountMedianYen": 13602290738522,
-      "amountLowYen": 10249953115906,
+      "amountMedianYen": 13751884826620,
+      "amountLowYen": 10255913535703,
       "amountHighYen": 16731379493380,
       "lowerBound": false,
       "window": "2021〜2024年",
@@ -67631,123 +67631,6 @@
       ]
     },
     {
-      "id": "閣法-201-39",
-      "title": "割賦販売法の一部を改正する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "金融",
-      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2021-04-01",
-      "amountMedianYen": 12273378304350,
-      "amountLowYen": 9082850987063,
-      "amountHighYen": 15358741090927,
-      "lowerBound": false,
-      "window": "2021〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-K",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF122.htm",
-        "https://laws.e-gov.go.jp/law/336AC0000000159"
-      ]
-    },
-    {
-      "id": "閣法-201-40",
-      "title": "金融サービスの利用者の利便の向上及び保護を図るための金融商品の販売等に関する法律等の一部を改正する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "金融",
-      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2021-11-01",
-      "amountMedianYen": 12273378304350,
-      "amountLowYen": 9082850987063,
-      "amountHighYen": 15358741090927,
-      "lowerBound": false,
-      "window": "2021〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-K",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF15A.htm",
-        "https://laws.e-gov.go.jp/law/412AC0000000101"
-      ]
-    },
-    {
-      "id": "閣法-204-29",
-      "title": "公的給付の支給等の迅速かつ確実な実施のための預貯金口座の登録等に関する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "金融",
-      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2021-05-19",
-      "amountMedianYen": 12273378304350,
-      "amountLowYen": 9082850987063,
-      "amountHighYen": 15358741090927,
-      "lowerBound": false,
-      "window": "2021〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-K",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1CA6.htm",
-        "https://laws.e-gov.go.jp/law/503AC0000000038"
-      ]
-    },
-    {
       "id": "参法-165-8",
       "title": "有機農業の推進に関する法律案",
       "side": "benefit",
@@ -67971,6 +67854,123 @@
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/164E.htm",
         "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070330005.htm"
+      ]
+    },
+    {
+      "id": "閣法-201-39",
+      "title": "割賦販売法の一部を改正する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "金融",
+      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2021-04-01",
+      "amountMedianYen": 12148092154683,
+      "amountLowYen": 9082850987063,
+      "amountHighYen": 15358741090927,
+      "lowerBound": false,
+      "window": "2021〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-K",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF122.htm",
+        "https://laws.e-gov.go.jp/law/336AC0000000159"
+      ]
+    },
+    {
+      "id": "閣法-201-40",
+      "title": "金融サービスの利用者の利便の向上及び保護を図るための金融商品の販売等に関する法律等の一部を改正する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "金融",
+      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2021-11-01",
+      "amountMedianYen": 12148092154683,
+      "amountLowYen": 9082850987063,
+      "amountHighYen": 15358741090927,
+      "lowerBound": false,
+      "window": "2021〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-K",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF15A.htm",
+        "https://laws.e-gov.go.jp/law/412AC0000000101"
+      ]
+    },
+    {
+      "id": "閣法-204-29",
+      "title": "公的給付の支給等の迅速かつ確実な実施のための預貯金口座の登録等に関する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "金融",
+      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2021-05-19",
+      "amountMedianYen": 12148092154683,
+      "amountLowYen": 9082850987063,
+      "amountHighYen": 15358741090927,
+      "lowerBound": false,
+      "window": "2021〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-K",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1CA6.htm",
+        "https://laws.e-gov.go.jp/law/503AC0000000038"
       ]
     },
     {
@@ -72358,7 +72358,7 @@
       "indicator": "専門・科学技術サービス業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2021-06-04",
-      "amountMedianYen": 10123137650558,
+      "amountMedianYen": 10260639068824,
       "amountLowYen": 3162321720869,
       "amountHighYen": 15157977329977,
       "lowerBound": false,
@@ -72396,7 +72396,7 @@
       "indicator": "専門・科学技術サービス業の実質付加価値（AI 2系統の分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2021-12-23",
-      "amountMedianYen": 10123137650558,
+      "amountMedianYen": 10260639068824,
       "amountLowYen": 3162321720869,
       "amountHighYen": 15157977329977,
       "lowerBound": false,
@@ -72434,7 +72434,7 @@
       "indicator": "専門・科学技術サービス業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2021-04-01",
-      "amountMedianYen": 10123137650558,
+      "amountMedianYen": 10260639068824,
       "amountLowYen": 3162321720869,
       "amountHighYen": 15157977329977,
       "lowerBound": false,
@@ -72472,7 +72472,7 @@
       "indicator": "専門・科学技術サービス業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2021-01-01",
-      "amountMedianYen": 10123137650558,
+      "amountMedianYen": 10260639068824,
       "amountLowYen": 3162321720869,
       "amountHighYen": 15157977329977,
       "lowerBound": false,
@@ -72510,7 +72510,7 @@
       "indicator": "専門・科学技術サービス業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2021-02-11",
-      "amountMedianYen": 10123137650558,
+      "amountMedianYen": 10260639068824,
       "amountLowYen": 3162321720869,
       "amountHighYen": 15157977329977,
       "lowerBound": false,
@@ -72549,7 +72549,7 @@
       "indicator": "専門・科学技術サービス業の実質付加価値（同じ法律の改正の分野にそろえた）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2021-05-21",
-      "amountMedianYen": 10123137650558,
+      "amountMedianYen": 10260639068824,
       "amountLowYen": 3162321720869,
       "amountHighYen": 15157977329977,
       "lowerBound": false,
@@ -72588,7 +72588,7 @@
       "indicator": "専門・科学技術サービス業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2021-02-23",
-      "amountMedianYen": 10123137650558,
+      "amountMedianYen": 10260639068824,
       "amountLowYen": 3162321720869,
       "amountHighYen": 15157977329977,
       "lowerBound": false,
@@ -72729,7 +72729,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2022-11-09",
       "amountMedianYen": 9671571045114,
-      "amountLowYen": 4278876137680,
+      "amountLowYen": 4211178885353,
       "amountHighYen": 12421424464893,
       "lowerBound": false,
       "window": "2022〜2024年",
@@ -74646,7 +74646,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -74685,7 +74685,7 @@
       "enforcedOn": "2023-06-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -74725,7 +74725,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -74764,7 +74764,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -74803,7 +74803,7 @@
       "enforcedOn": "2023-03-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -74843,7 +74843,7 @@
       "enforcedOn": "2023-06-23",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -74882,7 +74882,7 @@
       "enforcedOn": "2023-06-16",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -74922,7 +74922,7 @@
       "enforcedOn": "2023-06-30",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -74962,7 +74962,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75001,7 +75001,7 @@
       "enforcedOn": "2023-11-29",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75040,7 +75040,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75079,7 +75079,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75119,7 +75119,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75158,7 +75158,7 @@
       "enforcedOn": "2023-03-27",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75198,7 +75198,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75237,7 +75237,7 @@
       "enforcedOn": "2023-06-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75276,7 +75276,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75315,7 +75315,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75355,7 +75355,7 @@
       "enforcedOn": "2023-06-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75395,7 +75395,7 @@
       "enforcedOn": "2023-02-17",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75435,7 +75435,7 @@
       "enforcedOn": "2023-01-16",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75476,7 +75476,7 @@
       "enforcedOn": "2023-01-05",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75515,7 +75515,7 @@
       "enforcedOn": "2023-01-05",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75554,7 +75554,7 @@
       "enforcedOn": "2023-06-23",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75594,7 +75594,7 @@
       "enforcedOn": "2023-04-14",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75634,7 +75634,7 @@
       "enforcedOn": "2023-06-30",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75673,7 +75673,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75712,7 +75712,7 @@
       "enforcedOn": "2023-04-14",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75752,7 +75752,7 @@
       "enforcedOn": "2023-04-21",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75792,7 +75792,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75832,7 +75832,7 @@
       "enforcedOn": "2023-05-31",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75874,7 +75874,7 @@
       "enforcedOn": "2023-04-28",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75915,7 +75915,7 @@
       "enforcedOn": "2023-05-12",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75956,7 +75956,7 @@
       "enforcedOn": "2023-08-13",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -75996,7 +75996,7 @@
       "enforcedOn": "2023-10-15",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76036,7 +76036,7 @@
       "enforcedOn": "2023-09-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76075,7 +76075,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76115,7 +76115,7 @@
       "enforcedOn": "2023-05-17",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76155,7 +76155,7 @@
       "enforcedOn": "2023-06-16",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76194,7 +76194,7 @@
       "enforcedOn": "2023-06-16",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76234,7 +76234,7 @@
       "enforcedOn": "2023-06-16",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76275,7 +76275,7 @@
       "enforcedOn": "2023-06-14",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76315,7 +76315,7 @@
       "enforcedOn": "2023-07-13",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76354,7 +76354,7 @@
       "enforcedOn": "2023-07-13",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76394,7 +76394,7 @@
       "enforcedOn": "2023-06-14",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76433,7 +76433,7 @@
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -76473,7 +76473,7 @@
       "enforcedOn": "2023-12-13",
       "amountMedianYen": 8701215242543,
       "amountLowYen": -1749270730819,
-      "amountHighYen": 23104932343643,
+      "amountHighYen": 20947754470692,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -79993,7 +79993,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 7568082154512,
-      "amountLowYen": 1332654608509,
+      "amountLowYen": 812213723067,
       "amountHighYen": 14801104943434,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -80033,7 +80033,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-06-24",
       "amountMedianYen": 7568082154512,
-      "amountLowYen": 1332654608509,
+      "amountLowYen": 812213723067,
       "amountHighYen": 14801104943434,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -80074,7 +80074,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-06-19",
       "amountMedianYen": 7568082154512,
-      "amountLowYen": 1332654608509,
+      "amountLowYen": 812213723067,
       "amountHighYen": 14801104943434,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -80097,6 +80097,1191 @@
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF19A.htm",
         "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200619060.htm",
         "https://laws.e-gov.go.jp/law/502AC0000000060"
+      ]
+    },
+    {
+      "id": "衆法-211-20",
+      "title": "活動火山対策特別措置法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD85CE.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230616060.htm"
+      ]
+    },
+    {
+      "id": "衆法-213-19",
+      "title": "ハンセン病元患者家族に対する補償金の支給等に関する法律の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-06-19",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC222.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240619057.htm"
+      ]
+    },
+    {
+      "id": "衆法-213-4",
+      "title": "旧優生保護法に基づく優生手術等を受けた者に対する一時金の支給等に関する法律の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-05",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBEBE.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240405012.htm"
+      ]
+    },
+    {
+      "id": "衆法-216-16",
+      "title": "国会職員の育児休業等に関する法律の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "施行日は推定（公布日）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-12-25",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDCD2.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21620241225080.htm",
+        "https://laws.e-gov.go.jp/law/403AC1000000108"
+      ]
+    },
+    {
+      "id": "閣法-204-59",
+      "title": "障害を理由とする差別の解消の推進に関する法律の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD20F6.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210604056.htm",
+        "https://laws.e-gov.go.jp/law/425AC0000000065"
+      ]
+    },
+    {
+      "id": "閣法-210-12",
+      "title": "民法等の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD73CE.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21020221216102.htm",
+        "https://laws.e-gov.go.jp/law/129AC0000000089"
+      ]
+    },
+    {
+      "id": "閣法-211-23",
+      "title": "特定受託事業者に係る取引の適正化等に関する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（対応表なしのため全産業）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-11-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7F86.htm",
+        "https://laws.e-gov.go.jp/law/505AC0000000025"
+      ]
+    },
+    {
+      "id": "閣法-211-24",
+      "title": "配偶者からの暴力の防止及び被害者の保護等に関する法律の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7F9A.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230519030.htm"
+      ]
+    },
+    {
+      "id": "閣法-211-26",
+      "title": "脱炭素社会の実現に向けた電気供給体制の確立を図るための電気事業法等の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（対応表なしのため全産業）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7FC2.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230607044.htm"
+      ]
+    },
+    {
+      "id": "閣法-211-28",
+      "title": "仲裁法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7FEA.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230428015.htm",
+        "https://laws.e-gov.go.jp/law/415AC0000000138"
+      ]
+    },
+    {
+      "id": "閣法-211-29",
+      "title": "調停による国際的な和解合意に関する国際連合条約の実施に関する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7FFE.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230428016.htm",
+        "https://laws.e-gov.go.jp/law/505AC0000000016"
+      ]
+    },
+    {
+      "id": "閣法-211-36",
+      "title": "孤独・孤立対策推進法案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8102.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230607045.htm"
+      ]
+    },
+    {
+      "id": "閣法-211-39",
+      "title": "地方自治法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD813E.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230508019.htm"
+      ]
+    },
+    {
+      "id": "閣法-211-46",
+      "title": "行政手続における特定の個人を識別するための番号の利用等に関する法律等の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（対応表なしのため全産業）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-05-27",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD81EE.htm",
+        "https://laws.e-gov.go.jp/law/425AC0000000027"
+      ]
+    },
+    {
+      "id": "閣法-211-57",
+      "title": "情報通信技術の進展等の環境変化に対応するための社債、株式等の振替に関する法律等の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（対応表なしのため全産業）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-11-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD96F2.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21220231129080.htm",
+        "https://laws.e-gov.go.jp/law/413AC0000000075"
+      ]
+    },
+    {
+      "id": "閣法-212-7",
+      "title": "大麻取締法及び麻薬及び向精神薬取締法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-12-12",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDA7E6.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21220231213084.htm"
+      ]
+    },
+    {
+      "id": "閣法-213-1",
+      "title": "所得税法等の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB58A.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240330008.htm"
+      ]
+    },
+    {
+      "id": "閣法-213-11",
+      "title": "奄美群島振興開発特別措置法及び小笠原諸島振興開発特別措置法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB6A2.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240330006.htm"
+      ]
+    },
+    {
+      "id": "閣法-213-14",
+      "title": "防衛省設置法等の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "施行日は推定（公布日）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-05-17",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB6DE.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240517024.htm",
+        "https://laws.e-gov.go.jp/law/329AC0000000164"
+      ]
+    },
+    {
+      "id": "閣法-213-15",
+      "title": "裁判所職員定員法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "施行日は推定（公布日）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-12",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB706.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240412014.htm",
+        "https://laws.e-gov.go.jp/law/326AC0000000053"
+      ]
+    },
+    {
+      "id": "閣法-213-16",
+      "title": "脱炭素成長型経済構造への円滑な移行のための低炭素水素等の供給及び利用の促進に関する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（対応表なしのため全産業）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-10-23",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB72E.htm",
+        "https://laws.e-gov.go.jp/law/506AC0000000037"
+      ]
+    },
+    {
+      "id": "閣法-213-2",
+      "title": "地方税法等の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB5AE.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240330004.htm"
+      ]
+    },
+    {
+      "id": "閣法-213-20",
+      "title": "令和六年能登半島地震災害の被災者に係る所得税法及び災害被害者に対する租税の減免、徴収猶予等に関する法律の臨時特例に関する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-02-21",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB85E.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240221001.htm"
+      ]
+    },
+    {
+      "id": "閣法-213-21",
+      "title": "地方税法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-02-21",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB862.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240221002.htm"
+      ]
+    },
+    {
+      "id": "閣法-213-23",
+      "title": "新たな事業の創出及び産業への投資を促進するための産業競争力強化法等の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-09-07",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB88A.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240607045.htm"
+      ]
+    },
+    {
+      "id": "閣法-213-30",
+      "title": "銃砲刀剣類所持等取締法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "施行日は推定（公布日）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-06-14",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBA4A.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240614048.htm",
+        "https://laws.e-gov.go.jp/law/333AC0000000006"
+      ]
+    },
+    {
+      "id": "閣法-213-31",
+      "title": "地方自治法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-09-26",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBA5E.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240626065.htm"
+      ]
+    },
+    {
+      "id": "閣法-213-4",
+      "title": "関税定率法等の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB5D6.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240330009.htm"
+      ]
+    },
+    {
+      "id": "閣法-213-5",
+      "title": "国際通貨基金及び国際復興開発銀行への加盟に伴う措置に関する法律の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-04-17",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB5EA.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240417016.htm"
+      ]
+    },
+    {
+      "id": "閣法-216-3",
+      "title": "国家公務員の育児休業等に関する法律の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "施行日は推定（公布日）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "経済全体",
+      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-12-25",
+      "amountMedianYen": 7490584617439,
+      "amountLowYen": 3341656626916,
+      "amountHighYen": 9938722363200,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-_T",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDA5A.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21620241225079.htm",
+        "https://laws.e-gov.go.jp/law/403AC0000000109"
       ]
     },
     {
@@ -80228,7 +81413,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-06-01",
       "amountMedianYen": 7086437597973,
-      "amountLowYen": 644322806542,
+      "amountLowYen": 710935696073,
       "amountHighYen": 13270484356568,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -80267,7 +81452,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-05-01",
       "amountMedianYen": 7086437597973,
-      "amountLowYen": 644322806542,
+      "amountLowYen": 710935696073,
       "amountHighYen": 13270484356568,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -82384,7 +83569,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2022-03-31",
       "amountMedianYen": 6413468587036,
-      "amountLowYen": 3957884799661,
+      "amountLowYen": 3882068433278,
       "amountHighYen": 7614784061482,
       "lowerBound": false,
       "window": "2022〜2024年",
@@ -82423,7 +83608,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2022-08-27",
       "amountMedianYen": 6413468587036,
-      "amountLowYen": 3957884799661,
+      "amountLowYen": 3882068433278,
       "amountHighYen": 7614784061482,
       "lowerBound": false,
       "window": "2022〜2024年",
@@ -82462,7 +83647,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2022-07-15",
       "amountMedianYen": 6413468587036,
-      "amountLowYen": 3957884799661,
+      "amountLowYen": 3882068433278,
       "amountHighYen": 7614784061482,
       "lowerBound": false,
       "window": "2022〜2024年",
@@ -82501,7 +83686,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2022-05-10",
       "amountMedianYen": 6413468587036,
-      "amountLowYen": 3957884799661,
+      "amountLowYen": 3882068433278,
       "amountHighYen": 7614784061482,
       "lowerBound": false,
       "window": "2022〜2024年",
@@ -82541,7 +83726,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2022-12-09",
       "amountMedianYen": 6413468587036,
-      "amountLowYen": 3957884799661,
+      "amountLowYen": 3882068433278,
       "amountHighYen": 7614784061482,
       "lowerBound": false,
       "window": "2022〜2024年",
@@ -83047,7 +84232,7 @@
       "enforcedOn": "2022-12-19",
       "amountMedianYen": 5755568298411,
       "amountLowYen": 2129856048390,
-      "amountHighYen": 10863246288328,
+      "amountHighYen": 10620468746292,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -83068,1191 +84253,6 @@
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD767A.htm",
         "https://laws.e-gov.go.jp/law/411AC0000000162",
         "https://laws.e-gov.go.jp/law/325AC0000000131"
-      ]
-    },
-    {
-      "id": "衆法-211-20",
-      "title": "活動火山対策特別措置法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD85CE.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230616060.htm"
-      ]
-    },
-    {
-      "id": "衆法-213-19",
-      "title": "ハンセン病元患者家族に対する補償金の支給等に関する法律の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-06-19",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC222.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240619057.htm"
-      ]
-    },
-    {
-      "id": "衆法-213-4",
-      "title": "旧優生保護法に基づく優生手術等を受けた者に対する一時金の支給等に関する法律の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-05",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBEBE.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240405012.htm"
-      ]
-    },
-    {
-      "id": "衆法-216-16",
-      "title": "国会職員の育児休業等に関する法律の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "施行日は推定（公布日）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-12-25",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDCD2.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21620241225080.htm",
-        "https://laws.e-gov.go.jp/law/403AC1000000108"
-      ]
-    },
-    {
-      "id": "閣法-204-59",
-      "title": "障害を理由とする差別の解消の推進に関する法律の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD20F6.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210604056.htm",
-        "https://laws.e-gov.go.jp/law/425AC0000000065"
-      ]
-    },
-    {
-      "id": "閣法-210-12",
-      "title": "民法等の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD73CE.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21020221216102.htm",
-        "https://laws.e-gov.go.jp/law/129AC0000000089"
-      ]
-    },
-    {
-      "id": "閣法-211-23",
-      "title": "特定受託事業者に係る取引の適正化等に関する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（対応表なしのため全産業）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-11-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7F86.htm",
-        "https://laws.e-gov.go.jp/law/505AC0000000025"
-      ]
-    },
-    {
-      "id": "閣法-211-24",
-      "title": "配偶者からの暴力の防止及び被害者の保護等に関する法律の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7F9A.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230519030.htm"
-      ]
-    },
-    {
-      "id": "閣法-211-26",
-      "title": "脱炭素社会の実現に向けた電気供給体制の確立を図るための電気事業法等の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（対応表なしのため全産業）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7FC2.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230607044.htm"
-      ]
-    },
-    {
-      "id": "閣法-211-28",
-      "title": "仲裁法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7FEA.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230428015.htm",
-        "https://laws.e-gov.go.jp/law/415AC0000000138"
-      ]
-    },
-    {
-      "id": "閣法-211-29",
-      "title": "調停による国際的な和解合意に関する国際連合条約の実施に関する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7FFE.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230428016.htm",
-        "https://laws.e-gov.go.jp/law/505AC0000000016"
-      ]
-    },
-    {
-      "id": "閣法-211-36",
-      "title": "孤独・孤立対策推進法案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8102.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230607045.htm"
-      ]
-    },
-    {
-      "id": "閣法-211-39",
-      "title": "地方自治法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD813E.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230508019.htm"
-      ]
-    },
-    {
-      "id": "閣法-211-46",
-      "title": "行政手続における特定の個人を識別するための番号の利用等に関する法律等の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（対応表なしのため全産業）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-05-27",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD81EE.htm",
-        "https://laws.e-gov.go.jp/law/425AC0000000027"
-      ]
-    },
-    {
-      "id": "閣法-211-57",
-      "title": "情報通信技術の進展等の環境変化に対応するための社債、株式等の振替に関する法律等の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（対応表なしのため全産業）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-11-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD96F2.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21220231129080.htm",
-        "https://laws.e-gov.go.jp/law/413AC0000000075"
-      ]
-    },
-    {
-      "id": "閣法-212-7",
-      "title": "大麻取締法及び麻薬及び向精神薬取締法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-12-12",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDA7E6.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21220231213084.htm"
-      ]
-    },
-    {
-      "id": "閣法-213-1",
-      "title": "所得税法等の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB58A.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240330008.htm"
-      ]
-    },
-    {
-      "id": "閣法-213-11",
-      "title": "奄美群島振興開発特別措置法及び小笠原諸島振興開発特別措置法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB6A2.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240330006.htm"
-      ]
-    },
-    {
-      "id": "閣法-213-14",
-      "title": "防衛省設置法等の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "施行日は推定（公布日）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-05-17",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB6DE.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240517024.htm",
-        "https://laws.e-gov.go.jp/law/329AC0000000164"
-      ]
-    },
-    {
-      "id": "閣法-213-15",
-      "title": "裁判所職員定員法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "施行日は推定（公布日）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-12",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB706.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240412014.htm",
-        "https://laws.e-gov.go.jp/law/326AC0000000053"
-      ]
-    },
-    {
-      "id": "閣法-213-16",
-      "title": "脱炭素成長型経済構造への円滑な移行のための低炭素水素等の供給及び利用の促進に関する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（対応表なしのため全産業）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-10-23",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB72E.htm",
-        "https://laws.e-gov.go.jp/law/506AC0000000037"
-      ]
-    },
-    {
-      "id": "閣法-213-2",
-      "title": "地方税法等の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB5AE.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240330004.htm"
-      ]
-    },
-    {
-      "id": "閣法-213-20",
-      "title": "令和六年能登半島地震災害の被災者に係る所得税法及び災害被害者に対する租税の減免、徴収猶予等に関する法律の臨時特例に関する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-02-21",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB85E.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240221001.htm"
-      ]
-    },
-    {
-      "id": "閣法-213-21",
-      "title": "地方税法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-02-21",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB862.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240221002.htm"
-      ]
-    },
-    {
-      "id": "閣法-213-23",
-      "title": "新たな事業の創出及び産業への投資を促進するための産業競争力強化法等の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-09-07",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB88A.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240607045.htm"
-      ]
-    },
-    {
-      "id": "閣法-213-30",
-      "title": "銃砲刀剣類所持等取締法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "施行日は推定（公布日）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-06-14",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBA4A.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240614048.htm",
-        "https://laws.e-gov.go.jp/law/333AC0000000006"
-      ]
-    },
-    {
-      "id": "閣法-213-31",
-      "title": "地方自治法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-09-26",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBA5E.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240626065.htm"
-      ]
-    },
-    {
-      "id": "閣法-213-4",
-      "title": "関税定率法等の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB5D6.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240330009.htm"
-      ]
-    },
-    {
-      "id": "閣法-213-5",
-      "title": "国際通貨基金及び国際復興開発銀行への加盟に伴う措置に関する法律の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-17",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDB5EA.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240417016.htm"
-      ]
-    },
-    {
-      "id": "閣法-216-3",
-      "title": "国家公務員の育児休業等に関する法律の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "施行日は推定（公布日）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の30本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "経済全体",
-      "indicator": "全産業の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-12-25",
-      "amountMedianYen": 5751816135366,
-      "amountLowYen": 2181379627167,
-      "amountHighYen": 9016318201744,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-_T",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDDA5A.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21620241225079.htm",
-        "https://laws.e-gov.go.jp/law/403AC0000000109"
       ]
     },
     {
@@ -87907,8 +87907,8 @@
       "indicator": "専門・科学技術サービス業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-03-01",
-      "amountMedianYen": 4693813947991,
-      "amountLowYen": -3423949611611,
+      "amountMedianYen": 4796740430706,
+      "amountLowYen": -3404592279642,
       "amountHighYen": 14307171489882,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -87946,8 +87946,8 @@
       "indicator": "専門・科学技術サービス業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
-      "amountMedianYen": 4693813947991,
-      "amountLowYen": -3423949611611,
+      "amountMedianYen": 4796740430706,
+      "amountLowYen": -3404592279642,
       "amountHighYen": 14307171489882,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -87985,8 +87985,8 @@
       "indicator": "専門・科学技術サービス業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-08-01",
-      "amountMedianYen": 4693813947991,
-      "amountLowYen": -3423949611611,
+      "amountMedianYen": 4796740430706,
+      "amountLowYen": -3404592279642,
       "amountHighYen": 14307171489882,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -88026,8 +88026,8 @@
       "indicator": "専門・科学技術サービス業の実質付加価値（同じ法律の改正の分野にそろえた）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-05-29",
-      "amountMedianYen": 4693813947991,
-      "amountLowYen": -3423949611611,
+      "amountMedianYen": 4796740430706,
+      "amountLowYen": -3404592279642,
       "amountHighYen": 14307171489882,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -88951,7 +88951,7 @@
       "enforcedOn": "2022-01-19",
       "amountMedianYen": 3998336652100,
       "amountLowYen": 583816090972,
-      "amountHighYen": 6243588450526,
+      "amountHighYen": 6247060982936,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -88991,7 +88991,7 @@
       "enforcedOn": "2022-04-01",
       "amountMedianYen": 3998336652100,
       "amountLowYen": 583816090972,
-      "amountHighYen": 6243588450526,
+      "amountHighYen": 6247060982936,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -89032,7 +89032,7 @@
       "enforcedOn": "2022-05-27",
       "amountMedianYen": 3998336652100,
       "amountLowYen": 583816090972,
-      "amountHighYen": 6243588450526,
+      "amountHighYen": 6247060982936,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -89072,7 +89072,7 @@
       "enforcedOn": "2022-12-16",
       "amountMedianYen": 3998336652100,
       "amountLowYen": 583816090972,
-      "amountHighYen": 6243588450526,
+      "amountHighYen": 6247060982936,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -90166,7 +90166,7 @@
       "enforcedOn": "2023-06-02",
       "amountMedianYen": 3442485149886,
       "amountLowYen": 2606067061347,
-      "amountHighYen": 5315934911520,
+      "amountHighYen": 5315163700789,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -90205,7 +90205,7 @@
       "enforcedOn": "2023-06-16",
       "amountMedianYen": 3442485149886,
       "amountLowYen": 2606067061347,
-      "amountHighYen": 5315934911520,
+      "amountHighYen": 5315163700789,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -90245,7 +90245,7 @@
       "enforcedOn": "2023-05-26",
       "amountMedianYen": 3442485149886,
       "amountLowYen": 2606067061347,
-      "amountHighYen": 5315934911520,
+      "amountHighYen": 5315163700789,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -90284,7 +90284,7 @@
       "enforcedOn": "2023-06-07",
       "amountMedianYen": 3442485149886,
       "amountLowYen": 2606067061347,
-      "amountHighYen": 5315934911520,
+      "amountHighYen": 5315163700789,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -90433,7 +90433,7 @@
       "enforcedOn": "2023-06-16",
       "amountMedianYen": 3251637373923,
       "amountLowYen": 1201007631280,
-      "amountHighYen": 4095924634917,
+      "amountHighYen": 4307805036586,
       "lowerBound": false,
       "window": "2023〜2024年",
       "comparisonCountries": [
@@ -91549,6 +91549,124 @@
       ]
     },
     {
+      "id": "閣法-198-36",
+      "title": "放送法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "通信・ネット",
+      "indicator": "情報通信の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2020-01-01",
+      "amountMedianYen": 2821681929964,
+      "amountLowYen": -2694780047923,
+      "amountHighYen": 10900504883068,
+      "lowerBound": false,
+      "window": "2020〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-J",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCBAD6.htm",
+        "https://laws.e-gov.go.jp/law/325AC0000000132"
+      ]
+    },
+    {
+      "id": "閣法-201-16",
+      "title": "電波法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "通信・ネット",
+      "indicator": "情報通信の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2020-12-15",
+      "amountMedianYen": 2821681929964,
+      "amountLowYen": -2694780047923,
+      "amountHighYen": 10900504883068,
+      "lowerBound": false,
+      "window": "2020〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-J",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCEE02.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200424023.htm",
+        "https://laws.e-gov.go.jp/law/325AC0000000131"
+      ]
+    },
+    {
+      "id": "閣法-201-27",
+      "title": "聴覚障害者等による電話の利用の円滑化に関する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "通信・ネット",
+      "indicator": "情報通信の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2020-12-01",
+      "amountMedianYen": 2821681929964,
+      "amountLowYen": -2694780047923,
+      "amountHighYen": 10900504883068,
+      "lowerBound": false,
+      "window": "2020〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-J",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCEFDE.htm",
+        "https://laws.e-gov.go.jp/law/502AC0000000053"
+      ]
+    },
+    {
       "id": "閣法-142-17",
       "title": "国立学校設置法の一部を改正する法律案",
       "side": "loss",
@@ -91818,124 +91936,6 @@
       ]
     },
     {
-      "id": "閣法-198-36",
-      "title": "放送法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "通信・ネット",
-      "indicator": "情報通信の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2020-01-01",
-      "amountMedianYen": 2566714089260,
-      "amountLowYen": -3310939749354,
-      "amountHighYen": 10900504883068,
-      "lowerBound": false,
-      "window": "2020〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-J",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCBAD6.htm",
-        "https://laws.e-gov.go.jp/law/325AC0000000132"
-      ]
-    },
-    {
-      "id": "閣法-201-16",
-      "title": "電波法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "通信・ネット",
-      "indicator": "情報通信の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2020-12-15",
-      "amountMedianYen": 2566714089260,
-      "amountLowYen": -3310939749354,
-      "amountHighYen": 10900504883068,
-      "lowerBound": false,
-      "window": "2020〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-J",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCEE02.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200424023.htm",
-        "https://laws.e-gov.go.jp/law/325AC0000000131"
-      ]
-    },
-    {
-      "id": "閣法-201-27",
-      "title": "聴覚障害者等による電話の利用の円滑化に関する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の3本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "通信・ネット",
-      "indicator": "情報通信の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2020-12-01",
-      "amountMedianYen": 2566714089260,
-      "amountLowYen": -3310939749354,
-      "amountHighYen": 10900504883068,
-      "lowerBound": false,
-      "window": "2020〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-J",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCEFDE.htm",
-        "https://laws.e-gov.go.jp/law/502AC0000000053"
-      ]
-    },
-    {
       "id": "閣法-198-22",
       "title": "学校教育法等の一部を改正する法律案",
       "side": "loss",
@@ -91950,7 +91950,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2560521040618,
-      "amountLowYen": -363319935635,
+      "amountLowYen": -280717689692,
       "amountHighYen": 3731673259641,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -91989,7 +91989,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2560521040618,
-      "amountLowYen": -363319935635,
+      "amountLowYen": -280717689692,
       "amountHighYen": 3731673259641,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92028,7 +92028,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-01-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92067,7 +92067,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-06-04",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92106,7 +92106,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-12-12",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92145,7 +92145,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-12-11",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92184,7 +92184,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92223,7 +92223,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92262,7 +92262,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92301,7 +92301,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92340,7 +92340,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-07-10",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92380,7 +92380,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-01-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92419,7 +92419,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-03-26",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92459,7 +92459,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92500,7 +92500,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92540,7 +92540,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-06-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92579,7 +92579,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-05-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92618,7 +92618,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92658,7 +92658,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92697,7 +92697,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92737,7 +92737,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-01-27",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92777,7 +92777,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-03-31",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92816,7 +92816,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92855,7 +92855,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92895,7 +92895,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-24",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92935,7 +92935,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-08-31",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -92974,7 +92974,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -93013,7 +93013,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-09-10",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -93053,7 +93053,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-24",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -93093,7 +93093,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-09-03",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -93132,7 +93132,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-12-19",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -93171,7 +93171,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-30",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -93210,7 +93210,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -93249,7 +93249,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-03-31",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -93288,7 +93288,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-04-01",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -93327,7 +93327,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2020-12-04",
       "amountMedianYen": 2529749727830,
-      "amountLowYen": -66603149496080,
+      "amountLowYen": -62963605490219,
       "amountHighYen": 47328690795050,
       "lowerBound": false,
       "window": "2020〜2024年",
@@ -93714,7 +93714,7 @@
       "enforcedOn": "2021-09-16",
       "amountMedianYen": 2354540855677,
       "amountLowYen": 1428326056416,
-      "amountHighYen": 3115460513609,
+      "amountHighYen": 3176544748391,
       "lowerBound": false,
       "window": "2021〜2024年",
       "comparisonCountries": [
@@ -93753,7 +93753,7 @@
       "enforcedOn": "2021-04-01",
       "amountMedianYen": 2354540855677,
       "amountLowYen": 1428326056416,
-      "amountHighYen": 3115460513609,
+      "amountHighYen": 3176544748391,
       "lowerBound": false,
       "window": "2021〜2024年",
       "comparisonCountries": [
@@ -93792,7 +93792,7 @@
       "enforcedOn": "2021-04-01",
       "amountMedianYen": 2354540855677,
       "amountLowYen": 1428326056416,
-      "amountHighYen": 3115460513609,
+      "amountHighYen": 3176544748391,
       "lowerBound": false,
       "window": "2021〜2024年",
       "comparisonCountries": [
@@ -93831,7 +93831,7 @@
       "enforcedOn": "2021-04-01",
       "amountMedianYen": 2354540855677,
       "amountLowYen": 1428326056416,
-      "amountHighYen": 3115460513609,
+      "amountHighYen": 3176544748391,
       "lowerBound": false,
       "window": "2021〜2024年",
       "comparisonCountries": [
@@ -93870,7 +93870,7 @@
       "enforcedOn": "2021-10-28",
       "amountMedianYen": 2354540855677,
       "amountLowYen": 1428326056416,
-      "amountHighYen": 3115460513609,
+      "amountHighYen": 3176544748391,
       "lowerBound": false,
       "window": "2021〜2024年",
       "comparisonCountries": [
@@ -95107,6 +95107,45 @@
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC87EA.htm",
         "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180613046.htm",
         "https://laws.e-gov.go.jp/law/322AC0000000233"
+      ]
+    },
+    {
+      "id": "閣法-208-48",
+      "title": "電気通信事業法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる"
+      ],
+      "field": "通信・ネット",
+      "indicator": "情報通信の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2023-06-16",
+      "amountMedianYen": 1662633110470,
+      "amountLowYen": 540349369762,
+      "amountHighYen": 3572658549538,
+      "lowerBound": false,
+      "window": "2023〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-J",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD55FE.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220617070.htm",
+        "https://laws.e-gov.go.jp/law/359AC0000000086"
       ]
     },
     {
@@ -98196,7 +98235,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2022-10-01",
       "amountMedianYen": 1545834487675,
-      "amountLowYen": -3951694986367,
+      "amountLowYen": -3885384664412,
       "amountHighYen": 5491241952249,
       "lowerBound": false,
       "window": "2022〜2024年",
@@ -98235,7 +98274,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2022-10-01",
       "amountMedianYen": 1545834487675,
-      "amountLowYen": -3951694986367,
+      "amountLowYen": -3885384664412,
       "amountHighYen": 5491241952249,
       "lowerBound": false,
       "window": "2022〜2024年",
@@ -98621,7 +98660,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-06-19",
       "amountMedianYen": 1341461222157,
-      "amountLowYen": 591198900304,
+      "amountLowYen": 439624362521,
       "amountHighYen": 1650384407441,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -98660,7 +98699,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-11-22",
       "amountMedianYen": 1341461222157,
-      "amountLowYen": 591198900304,
+      "amountLowYen": 439624362521,
       "amountHighYen": 1650384407441,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -98699,7 +98738,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-11-29",
       "amountMedianYen": 1341461222157,
-      "amountLowYen": 591198900304,
+      "amountLowYen": 439624362521,
       "amountHighYen": 1650384407441,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -98739,7 +98778,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-06-14",
       "amountMedianYen": 1341461222157,
-      "amountLowYen": 591198900304,
+      "amountLowYen": 439624362521,
       "amountHighYen": 1650384407441,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -98765,23 +98804,24 @@
       ]
     },
     {
-      "id": "閣法-208-48",
-      "title": "電気通信事業法の一部を改正する法律案",
+      "id": "閣法-204-30",
+      "title": "預貯金者の意思に基づく個人番号の利用による預貯金口座の管理等に関する法律案",
       "side": "loss",
       "certainty": "参考",
       "notes": [
         "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる"
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
       ],
-      "field": "通信・ネット",
-      "indicator": "情報通信の実質付加価値（振り分けの分野）",
+      "field": "金融",
+      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
-      "enforcedOn": "2023-06-16",
-      "amountMedianYen": 1285275686782,
-      "amountLowYen": 392590683683,
-      "amountHighYen": 2816873706896,
+      "enforcedOn": "2024-04-01",
+      "amountMedianYen": 1329190114137,
+      "amountLowYen": 859496458100,
+      "amountHighYen": 1653186247368,
       "lowerBound": false,
-      "window": "2023〜2024年",
+      "window": "2024〜2024年",
       "comparisonCountries": [
         "AUS",
         "CAN",
@@ -98796,11 +98836,131 @@
         "USA"
       ],
       "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-J",
+      "group": "全体指標-K",
       "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD55FE.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220617070.htm",
-        "https://laws.e-gov.go.jp/law/359AC0000000086"
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1CBA.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210519039.htm",
+        "https://laws.e-gov.go.jp/law/503AC0000000039"
+      ]
+    },
+    {
+      "id": "閣法-211-55",
+      "title": "中小企業信用保険法及び株式会社商工組合中央金庫法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "金融",
+      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-03-15",
+      "amountMedianYen": 1329190114137,
+      "amountLowYen": 859496458100,
+      "amountHighYen": 1653186247368,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-K",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD82BA.htm",
+        "https://laws.e-gov.go.jp/law/325AC0000000264",
+        "https://laws.e-gov.go.jp/law/419AC0000000074"
+      ]
+    },
+    {
+      "id": "閣法-213-29",
+      "title": "地域再生法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "金融",
+      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-10-19",
+      "amountMedianYen": 1329190114137,
+      "amountLowYen": 859496458100,
+      "amountHighYen": 1653186247368,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-K",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBA36.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240419017.htm"
+      ]
+    },
+    {
+      "id": "閣法-213-56",
+      "title": "金融商品取引法及び投資信託及び投資法人に関する法律の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "施行日は推定（公布日）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "金融",
+      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2024-05-22",
+      "amountMedianYen": 1329190114137,
+      "amountLowYen": 859496458100,
+      "amountHighYen": 1653186247368,
+      "lowerBound": false,
+      "window": "2024〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-K",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBF3E.htm",
+        "https://laws.e-gov.go.jp/law/326AC0100000198",
+        "https://laws.e-gov.go.jp/law/323AC0000000025"
       ]
     },
     {
@@ -99390,166 +99550,6 @@
       ]
     },
     {
-      "id": "閣法-204-30",
-      "title": "預貯金者の意思に基づく個人番号の利用による預貯金口座の管理等に関する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "金融",
-      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-04-01",
-      "amountMedianYen": 1213171330132,
-      "amountLowYen": 409043369512,
-      "amountHighYen": 1653186247368,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-K",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1CBA.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210519039.htm",
-        "https://laws.e-gov.go.jp/law/503AC0000000039"
-      ]
-    },
-    {
-      "id": "閣法-211-55",
-      "title": "中小企業信用保険法及び株式会社商工組合中央金庫法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "金融",
-      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-03-15",
-      "amountMedianYen": 1213171330132,
-      "amountLowYen": 409043369512,
-      "amountHighYen": 1653186247368,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-K",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD82BA.htm",
-        "https://laws.e-gov.go.jp/law/325AC0000000264",
-        "https://laws.e-gov.go.jp/law/419AC0000000074"
-      ]
-    },
-    {
-      "id": "閣法-213-29",
-      "title": "地域再生法の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "金融",
-      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-10-19",
-      "amountMedianYen": 1213171330132,
-      "amountLowYen": 409043369512,
-      "amountHighYen": 1653186247368,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-K",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBA36.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240419017.htm"
-      ]
-    },
-    {
-      "id": "閣法-213-56",
-      "title": "金融商品取引法及び投資信託及び投資法人に関する法律の一部を改正する法律案",
-      "side": "loss",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "施行日は推定（公布日）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "金融",
-      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2024-05-22",
-      "amountMedianYen": 1213171330132,
-      "amountLowYen": 409043369512,
-      "amountHighYen": 1653186247368,
-      "lowerBound": false,
-      "window": "2024〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-K",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDBF3E.htm",
-        "https://laws.e-gov.go.jp/law/326AC0100000198",
-        "https://laws.e-gov.go.jp/law/323AC0000000025"
-      ]
-    },
-    {
       "id": "閣法-196-40",
       "title": "卸売市場法及び食品流通構造改善促進法の一部を改正する法律案",
       "side": "loss",
@@ -99643,7 +99643,7 @@
       "enforcedOn": "2024-04-01",
       "amountMedianYen": 1192196194917,
       "amountLowYen": 819638168065,
-      "amountHighYen": 1800670034973,
+      "amountHighYen": 2339221007357,
       "lowerBound": false,
       "window": "2024〜2024年",
       "comparisonCountries": [
@@ -99684,7 +99684,7 @@
       "enforcedOn": "2024-05-24",
       "amountMedianYen": 1192196194917,
       "amountLowYen": 819638168065,
-      "amountHighYen": 1800670034973,
+      "amountHighYen": 2339221007357,
       "lowerBound": false,
       "window": "2024〜2024年",
       "comparisonCountries": [
@@ -99723,7 +99723,7 @@
       "enforcedOn": "2024-04-25",
       "amountMedianYen": 1192196194917,
       "amountLowYen": 819638168065,
-      "amountHighYen": 1800670034973,
+      "amountHighYen": 2339221007357,
       "lowerBound": false,
       "window": "2024〜2024年",
       "comparisonCountries": [
@@ -100422,7 +100422,7 @@
       "enforcedOn": "2022-11-09",
       "amountMedianYen": 1035753336291,
       "amountLowYen": 566959725322,
-      "amountHighYen": 1634947459638,
+      "amountHighYen": 1781899359319,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -100461,7 +100461,7 @@
       "enforcedOn": "2022-12-01",
       "amountMedianYen": 1035753336291,
       "amountLowYen": 566959725322,
-      "amountHighYen": 1634947459638,
+      "amountHighYen": 1781899359319,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -100501,7 +100501,7 @@
       "enforcedOn": "2022-04-01",
       "amountMedianYen": 1035753336291,
       "amountLowYen": 566959725322,
-      "amountHighYen": 1634947459638,
+      "amountHighYen": 1781899359319,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -100541,7 +100541,7 @@
       "enforcedOn": "2022-04-01",
       "amountMedianYen": 1035753336291,
       "amountLowYen": 566959725322,
-      "amountHighYen": 1634947459638,
+      "amountHighYen": 1781899359319,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -100580,7 +100580,7 @@
       "enforcedOn": "2022-11-02",
       "amountMedianYen": 1035753336291,
       "amountLowYen": 566959725322,
-      "amountHighYen": 1634947459638,
+      "amountHighYen": 1781899359319,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -100619,7 +100619,7 @@
       "enforcedOn": "2022-11-25",
       "amountMedianYen": 1035753336291,
       "amountLowYen": 566959725322,
-      "amountHighYen": 1634947459638,
+      "amountHighYen": 1781899359319,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -100658,7 +100658,7 @@
       "enforcedOn": "2022-11-27",
       "amountMedianYen": 1035753336291,
       "amountLowYen": 566959725322,
-      "amountHighYen": 1634947459638,
+      "amountHighYen": 1781899359319,
       "lowerBound": false,
       "window": "2022〜2024年",
       "comparisonCountries": [
@@ -101721,7 +101721,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-04-05",
       "amountMedianYen": 746164409375,
-      "amountLowYen": 441131508418,
+      "amountLowYen": 85706070310,
       "amountHighYen": 1367094565420,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -101743,44 +101743,6 @@
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDC09A.htm",
         "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21320240405013.htm"
-      ]
-    },
-    {
-      "id": "閣法-204-48",
-      "title": "自然公園法の一部を改正する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる"
-      ],
-      "field": "宿泊・観光",
-      "indicator": "宿泊・飲食の実質付加価値（AI 2系統の分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2022-04-01",
-      "amountMedianYen": 741226058444,
-      "amountLowYen": -2291812804581,
-      "amountHighYen": 2916539451954,
-      "lowerBound": false,
-      "window": "2022〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-I",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1F1E.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210506029.htm",
-        "https://laws.e-gov.go.jp/law/332AC0000000161"
       ]
     },
     {
@@ -102009,6 +101971,158 @@
       "sources": [
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD817A.htm",
         "https://laws.e-gov.go.jp/law/324AC0000000187"
+      ]
+    },
+    {
+      "id": "衆法-196-28",
+      "title": "スポーツ基本法の一部を改正する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "文化・娯楽・生活サービス",
+      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2023-01-01",
+      "amountMedianYen": 727463889235,
+      "amountLowYen": -936536166921,
+      "amountHighYen": 1243452831426,
+      "lowerBound": false,
+      "window": "2023〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-R",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8B62.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180620056.htm"
+      ]
+    },
+    {
+      "id": "衆法-212-10",
+      "title": "特定不法行為等に係る被害者の迅速かつ円滑な救済に資するための日本司法支援センターの業務の特例並びに宗教法人による財産の処分及び管理の特例に関する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "文化・娯楽・生活サービス",
+      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2023-12-30",
+      "amountMedianYen": 727463889235,
+      "amountLowYen": -936536166921,
+      "amountHighYen": 1243452831426,
+      "lowerBound": false,
+      "window": "2023〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-R",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDAA0E.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21220231220089.htm"
+      ]
+    },
+    {
+      "id": "閣法-208-31",
+      "title": "博物館法の一部を改正する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "文化・娯楽・生活サービス",
+      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2023-04-01",
+      "amountMedianYen": 727463889235,
+      "amountLowYen": -936536166921,
+      "amountHighYen": 1243452831426,
+      "lowerBound": false,
+      "window": "2023〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-R",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD548A.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220415024.htm"
+      ]
+    },
+    {
+      "id": "閣法-210-7",
+      "title": "競馬法の一部を改正する法律案",
+      "side": "benefit",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "文化・娯楽・生活サービス",
+      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2023-04-01",
+      "amountMedianYen": 727463889235,
+      "amountLowYen": -936536166921,
+      "amountHighYen": 1243452831426,
+      "lowerBound": false,
+      "window": "2023〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-R",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD736A.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21020221118085.htm"
       ]
     },
     {
@@ -102250,24 +102364,23 @@
       ]
     },
     {
-      "id": "衆法-196-28",
-      "title": "スポーツ基本法の一部を改正する法律案",
+      "id": "閣法-204-48",
+      "title": "自然公園法の一部を改正する法律案",
       "side": "benefit",
       "certainty": "参考",
       "notes": [
         "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+        "コロナ期と重なる"
       ],
-      "field": "文化・娯楽・生活サービス",
-      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
+      "field": "宿泊・観光",
+      "indicator": "宿泊・飲食の実質付加価値（AI 2系統の分野）",
       "stage": "なし（全体指標）",
-      "enforcedOn": "2023-01-01",
-      "amountMedianYen": 639107621267,
-      "amountLowYen": -936536166921,
-      "amountHighYen": 1231554041649,
+      "enforcedOn": "2022-04-01",
+      "amountMedianYen": 639112602840,
+      "amountLowYen": -2291812804581,
+      "amountHighYen": 2916539451954,
       "lowerBound": false,
-      "window": "2023〜2024年",
+      "window": "2022〜2024年",
       "comparisonCountries": [
         "AUS",
         "CAN",
@@ -102281,124 +102394,11 @@
         "USA"
       ],
       "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-R",
+      "group": "全体指標-I",
       "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8B62.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180620056.htm"
-      ]
-    },
-    {
-      "id": "衆法-212-10",
-      "title": "特定不法行為等に係る被害者の迅速かつ円滑な救済に資するための日本司法支援センターの業務の特例並びに宗教法人による財産の処分及び管理の特例に関する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "文化・娯楽・生活サービス",
-      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2023-12-30",
-      "amountMedianYen": 639107621267,
-      "amountLowYen": -936536166921,
-      "amountHighYen": 1231554041649,
-      "lowerBound": false,
-      "window": "2023〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-R",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDAA0E.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21220231220089.htm"
-      ]
-    },
-    {
-      "id": "閣法-208-31",
-      "title": "博物館法の一部を改正する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "文化・娯楽・生活サービス",
-      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2023-04-01",
-      "amountMedianYen": 639107621267,
-      "amountLowYen": -936536166921,
-      "amountHighYen": 1231554041649,
-      "lowerBound": false,
-      "window": "2023〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-R",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD548A.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220415024.htm"
-      ]
-    },
-    {
-      "id": "閣法-210-7",
-      "title": "競馬法の一部を改正する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "文化・娯楽・生活サービス",
-      "indicator": "芸術・娯楽の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2023-04-01",
-      "amountMedianYen": 639107621267,
-      "amountLowYen": -936536166921,
-      "amountHighYen": 1231554041649,
-      "lowerBound": false,
-      "window": "2023〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-R",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD736A.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21020221118085.htm"
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1F1E.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210506029.htm",
+        "https://laws.e-gov.go.jp/law/332AC0000000161"
       ]
     },
     {
@@ -103310,166 +103310,6 @@
       ]
     },
     {
-      "id": "衆法-211-25",
-      "title": "民間公益活動を促進するための休眠預金等に係る資金の活用に関する法律の一部を改正する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "金融",
-      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2023-12-31",
-      "amountMedianYen": 458873418991,
-      "amountLowYen": -1238748861825,
-      "amountHighYen": 1432858236317,
-      "lowerBound": false,
-      "window": "2023〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-K",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD860E.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230630072.htm",
-        "https://laws.e-gov.go.jp/law/428AC1000000101"
-      ]
-    },
-    {
-      "id": "閣法-211-14",
-      "title": "株式会社国際協力銀行法の一部を改正する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "施行日は推定（公布日）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "金融",
-      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2023-04-14",
-      "amountMedianYen": 458873418991,
-      "amountLowYen": -1238748861825,
-      "amountHighYen": 1432858236317,
-      "lowerBound": false,
-      "window": "2023〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-K",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7E7A.htm",
-        "https://laws.e-gov.go.jp/law/423AC0000000039"
-      ]
-    },
-    {
-      "id": "閣法-211-56",
-      "title": "金融商品取引法等の一部を改正する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "施行日は推定（公布日）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "金融",
-      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2023-11-29",
-      "amountMedianYen": 458873418991,
-      "amountLowYen": -1238748861825,
-      "amountHighYen": 1432858236317,
-      "lowerBound": false,
-      "window": "2023〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-K",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD96EA.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21220231129079.htm",
-        "https://laws.e-gov.go.jp/law/323AC0000000025"
-      ]
-    },
-    {
-      "id": "閣法-211-7",
-      "title": "福島復興再生特別措置法の一部を改正する法律案",
-      "side": "benefit",
-      "certainty": "参考",
-      "notes": [
-        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
-        "コロナ期と重なる",
-        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
-      ],
-      "field": "金融",
-      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
-      "stage": "なし（全体指標）",
-      "enforcedOn": "2023-06-09",
-      "amountMedianYen": 458873418991,
-      "amountLowYen": -1238748861825,
-      "amountHighYen": 1432858236317,
-      "lowerBound": false,
-      "window": "2023〜2024年",
-      "comparisonCountries": [
-        "AUS",
-        "CAN",
-        "DEU",
-        "ESP",
-        "FRA",
-        "ITA",
-        "KOR",
-        "NLD",
-        "NOR",
-        "SWE",
-        "USA"
-      ],
-      "benefitStatus": "未測定（全体指標の差だけ）",
-      "group": "全体指標-K",
-      "sources": [
-        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7DDA.htm",
-        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230609049.htm"
-      ]
-    },
-    {
       "id": "参法-192-53",
       "title": "民間あっせん機関による養子縁組のあっせんに係る児童の保護等に関する法律案",
       "side": "loss",
@@ -103878,7 +103718,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2023-02-20",
       "amountMedianYen": 361929840755,
-      "amountLowYen": -522058163379,
+      "amountLowYen": -439356218978,
       "amountHighYen": 796795006155,
       "lowerBound": false,
       "window": "2023〜2024年",
@@ -104332,6 +104172,166 @@
         "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5172.htm",
         "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220413019.htm",
         "https://laws.e-gov.go.jp/law/403AC0000000109"
+      ]
+    },
+    {
+      "id": "衆法-211-25",
+      "title": "民間公益活動を促進するための休眠預金等に係る資金の活用に関する法律の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "金融",
+      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2023-12-31",
+      "amountMedianYen": 289197252273,
+      "amountLowYen": -1432858236317,
+      "amountHighYen": 1238748861825,
+      "lowerBound": false,
+      "window": "2023〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-K",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD860E.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230630072.htm",
+        "https://laws.e-gov.go.jp/law/428AC1000000101"
+      ]
+    },
+    {
+      "id": "閣法-211-14",
+      "title": "株式会社国際協力銀行法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "施行日は推定（公布日）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "金融",
+      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2023-04-14",
+      "amountMedianYen": 289197252273,
+      "amountLowYen": -1432858236317,
+      "amountHighYen": 1238748861825,
+      "lowerBound": false,
+      "window": "2023〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-K",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7E7A.htm",
+        "https://laws.e-gov.go.jp/law/423AC0000000039"
+      ]
+    },
+    {
+      "id": "閣法-211-56",
+      "title": "金融商品取引法等の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "施行日は推定（公布日）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "金融",
+      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2023-11-29",
+      "amountMedianYen": 289197252273,
+      "amountLowYen": -1432858236317,
+      "amountHighYen": 1238748861825,
+      "lowerBound": false,
+      "window": "2023〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-K",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD96EA.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21220231129079.htm",
+        "https://laws.e-gov.go.jp/law/323AC0000000025"
+      ]
+    },
+    {
+      "id": "閣法-211-7",
+      "title": "福島復興再生特別措置法の一部を改正する法律案",
+      "side": "loss",
+      "certainty": "参考",
+      "notes": [
+        "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）",
+        "コロナ期と重なる",
+        "同じ額の系列・同じ期間の4本が同じ額（1つの観測を共有。足し合わせない）"
+      ],
+      "field": "金融",
+      "indicator": "金融・保険の実質付加価値（振り分けの分野）",
+      "stage": "なし（全体指標）",
+      "enforcedOn": "2023-06-09",
+      "amountMedianYen": 289197252273,
+      "amountLowYen": -1432858236317,
+      "amountHighYen": 1238748861825,
+      "lowerBound": false,
+      "window": "2023〜2024年",
+      "comparisonCountries": [
+        "AUS",
+        "CAN",
+        "DEU",
+        "ESP",
+        "FRA",
+        "ITA",
+        "KOR",
+        "NLD",
+        "NOR",
+        "SWE",
+        "USA"
+      ],
+      "benefitStatus": "未測定（全体指標の差だけ）",
+      "group": "全体指標-K",
+      "sources": [
+        "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD7DDA.htm",
+        "https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230609049.htm"
       ]
     },
     {
@@ -105550,7 +105550,7 @@
       "indicator": "保健衛生・社会事業の実質付加価値（AI 2系統の分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-04-01",
-      "amountMedianYen": 149378245059,
+      "amountMedianYen": 151022011828,
       "amountLowYen": -278205823115,
       "amountHighYen": 477107015854,
       "lowerBound": false,
@@ -105589,7 +105589,7 @@
       "indicator": "保健衛生・社会事業の実質付加価値（AI 2系統の分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-06-01",
-      "amountMedianYen": 149378245059,
+      "amountMedianYen": 151022011828,
       "amountLowYen": -278205823115,
       "amountHighYen": 477107015854,
       "lowerBound": false,
@@ -105629,7 +105629,7 @@
       "indicator": "保健衛生・社会事業の実質付加価値（AI 2系統の分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-01-01",
-      "amountMedianYen": 149378245059,
+      "amountMedianYen": 151022011828,
       "amountLowYen": -278205823115,
       "amountHighYen": 477107015854,
       "lowerBound": false,
@@ -105669,7 +105669,7 @@
       "indicator": "保健衛生・社会事業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-09-26",
-      "amountMedianYen": 149378245059,
+      "amountMedianYen": 151022011828,
       "amountLowYen": -278205823115,
       "amountHighYen": 477107015854,
       "lowerBound": false,
@@ -105708,7 +105708,7 @@
       "indicator": "保健衛生・社会事業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-03-30",
-      "amountMedianYen": 149378245059,
+      "amountMedianYen": 151022011828,
       "amountLowYen": -278205823115,
       "amountHighYen": 477107015854,
       "lowerBound": false,
@@ -105747,7 +105747,7 @@
       "indicator": "保健衛生・社会事業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-04-01",
-      "amountMedianYen": 149378245059,
+      "amountMedianYen": 151022011828,
       "amountLowYen": -278205823115,
       "amountHighYen": 477107015854,
       "lowerBound": false,
@@ -105786,7 +105786,7 @@
       "indicator": "保健衛生・社会事業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-04-01",
-      "amountMedianYen": 149378245059,
+      "amountMedianYen": 151022011828,
       "amountLowYen": -278205823115,
       "amountHighYen": 477107015854,
       "lowerBound": false,
@@ -105825,7 +105825,7 @@
       "indicator": "保健衛生・社会事業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-04-01",
-      "amountMedianYen": 149378245059,
+      "amountMedianYen": 151022011828,
       "amountLowYen": -278205823115,
       "amountHighYen": 477107015854,
       "lowerBound": false,
@@ -105864,7 +105864,7 @@
       "indicator": "保健衛生・社会事業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-04-01",
-      "amountMedianYen": 149378245059,
+      "amountMedianYen": 151022011828,
       "amountLowYen": -278205823115,
       "amountHighYen": 477107015854,
       "lowerBound": false,
@@ -105903,7 +105903,7 @@
       "indicator": "保健衛生・社会事業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-04-01",
-      "amountMedianYen": 149378245059,
+      "amountMedianYen": 151022011828,
       "amountLowYen": -278205823115,
       "amountHighYen": 477107015854,
       "lowerBound": false,
@@ -105942,7 +105942,7 @@
       "indicator": "保健衛生・社会事業の実質付加価値（振り分けの分野）",
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-10-01",
-      "amountMedianYen": 149378245059,
+      "amountMedianYen": 151022011828,
       "amountLowYen": -278205823115,
       "amountHighYen": 477107015854,
       "lowerBound": false,
@@ -106673,7 +106673,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-07-19",
       "amountMedianYen": 67351439576,
-      "amountLowYen": -272824260764,
+      "amountLowYen": -186205658348,
       "amountHighYen": 222323724684,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -106712,7 +106712,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-04-01",
       "amountMedianYen": 67351439576,
-      "amountLowYen": -272824260764,
+      "amountLowYen": -186205658348,
       "amountHighYen": 222323724684,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -106751,7 +106751,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-10-01",
       "amountMedianYen": 67351439576,
-      "amountLowYen": -272824260764,
+      "amountLowYen": -186205658348,
       "amountHighYen": 222323724684,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -106790,7 +106790,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 66694645639,
-      "amountLowYen": -461041032128,
+      "amountLowYen": -595853962174,
       "amountHighYen": 415818760134,
       "lowerBound": false,
       "window": "2023〜2024年",
@@ -106830,7 +106830,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2023-04-01",
       "amountMedianYen": 66694645639,
-      "amountLowYen": -461041032128,
+      "amountLowYen": -595853962174,
       "amountHighYen": 415818760134,
       "lowerBound": false,
       "window": "2023〜2024年",
@@ -106941,7 +106941,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-04-01",
       "amountMedianYen": 28004305803,
-      "amountLowYen": -177132357596,
+      "amountLowYen": -181126639083,
       "amountHighYen": 151852452862,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -106981,7 +106981,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-04-01",
       "amountMedianYen": 28004305803,
-      "amountLowYen": -177132357596,
+      "amountLowYen": -181126639083,
       "amountHighYen": 151852452862,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -107021,7 +107021,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-06-05",
       "amountMedianYen": 28004305803,
-      "amountLowYen": -177132357596,
+      "amountLowYen": -181126639083,
       "amountHighYen": 151852452862,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -107060,7 +107060,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-12-21",
       "amountMedianYen": 28004305803,
-      "amountLowYen": -177132357596,
+      "amountLowYen": -181126639083,
       "amountHighYen": 151852452862,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -107100,7 +107100,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-06-26",
       "amountMedianYen": 28004305803,
-      "amountLowYen": -177132357596,
+      "amountLowYen": -181126639083,
       "amountHighYen": 151852452862,
       "lowerBound": false,
       "window": "2024〜2024年",
@@ -107141,7 +107141,7 @@
       "stage": "なし（全体指標）",
       "enforcedOn": "2024-07-12",
       "amountMedianYen": 28004305803,
-      "amountLowYen": -177132357596,
+      "amountLowYen": -181126639083,
       "amountHighYen": 151852452862,
       "lowerBound": false,
       "window": "2024〜2024年",
