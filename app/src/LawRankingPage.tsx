@@ -40,6 +40,8 @@ export function LawRankingPage() {
   const provisional = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'provisional';
   const amounted = (data?.laws ?? []).filter(law => law.amount);
   const confirmed = amounted.filter(law => law.step === 'published');
+  // 一覧の「額なし」は法律と政策を合わせて数えるので、カードも同じ数え方にそろえる。
+  const noAmount = (data?.laws ?? []).concat(data?.policies ?? []).filter(item => !item.amount).length;
   const loss = confirmed.filter(law => law.side === 'loss').length;
   // 国賊を選んでいれば損失の大きい順、国士なら便益の大きい順。その側が0本なら両方を並べる。
   const toneSide = tone === 'harm' ? 'loss' : 'benefit';
@@ -48,8 +50,8 @@ export function LawRankingPage() {
   const topList = collapseObservations((sideTop.length ? sideTop : confirmed).slice().sort((a, b) => b.amount!.median - a.amount!.median)).slice(0, TOP);
   return <SiteShell active="/ranking" label="法律・政策ランキング（実データ）" className="law-ranking">
     
-    <main>
-      <h2>法律と政策ごとの損失と便益</h2>
+    <main id="main">
+      <h1>法律と政策ごとの損失と便益</h1>
       <p className="laws-lead">成立した全部の法律を、一次資料（国会の議案情報・e-Gov 法令）と公的統計（OECD 国民経済計算など）で同じルールに通しました。額は比べた国との差から出した推計で、必ず幅と確かさの印を付けています。額が出ない法律も、止まった理由を付けて全部載せています。結果への責任を測るもので、提出者や賛成者の意図や予見を評価するものではありません。</p>
       <nav className="prov-mode" aria-label="ランキングの種類">
         <a href="/ranking" aria-current={!provisional}>国賊ランキング（確定）</a>
@@ -62,7 +64,7 @@ export function LawRankingPage() {
           <a href="#list" className="laws-stat"><span>載せている件数</span><strong>{(data.laws.length + data.policies.length).toLocaleString('ja-JP')}件</strong><small>法律{data.laws.length.toLocaleString('ja-JP')}本＋政策{data.policies.length}件</small></a>
           <a href="?side=confirmed#list" className="laws-stat hit"><span>確かな額</span><strong>{confirmed.length}本</strong><small>国賊側{loss}本・国士側{confirmed.length - loss}本（影響の段階まで確認）</small></a>
           <a href="?side=amount#list" className="laws-stat"><span>参考の額</span><strong>{(amounted.length - confirmed.length).toLocaleString('ja-JP')}本</strong><small>産業・経済全体の差など。確かな額と足さない</small></a>
-          <a href="?side=none#list" className="laws-stat"><span>額なし（理由つき）</span><strong>{(data.laws.length - amounted.length).toLocaleString('ja-JP')}本</strong><small>測れていないだけで「影響なし」ではない</small></a>
+          <a href="?side=none#list" className="laws-stat"><span>額なし（理由つき）</span><strong>{noAmount.toLocaleString('ja-JP')}件</strong><small>法律{(data.laws.length - amounted.length).toLocaleString('ja-JP')}本＋政策{data.policies.filter(policy => !policy.amount).length}件。測れていないだけで「影響なし」ではない</small></a>
         </section>
         {confirmed.length > 0 && <section aria-label="額の大きい順" id="top-amounts">
           <h3>{sideTop.length ? (toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順') : '額の大きい順'}（確かな額の上位{topList.length}本）</h3>
@@ -80,7 +82,7 @@ export function LawRankingPage() {
           </section>
         </details>
         <section className="lower-panel" aria-label="この画面の読み方">
-          <p><Info size={16} /> 議員ごとの「この人が失わせた額・生んだ額」は<a href="/members">議員ランキング</a>にあります。計算のしかたは<a href="/methodology">計算方法</a>にあります。</p>
+          <p><Info size={16} /> 議員ごとの「この人が失わせた額・生んだ額」は<a href="/members">議員ランキング</a>にあります。計算のしかたは<a href="/methodology">計算方法</a>にあります。法案ごとの賛否や、直近の政党の動きは<a href="/votes">法案の賛否</a>で見られます。</p>
           <p className="fine-note">一覧の元データ：<a href="/distribution/laws.json">laws.json</a>・laws-detail/（開いた時に読む詳細）（入力データの照合値 SHA-256 つき）。</p>
         </section>
       </>}

@@ -89,6 +89,41 @@ describe('議員ページのデータ', () => {
     for (const m of adjusted) for (const e of m.laws) expect(e.share.median).toBeLessThanOrEqual(500);
   });
 
+  it('公開対象が空なら人物・政党・省庁への配分も空になる', () => {
+    const source = input([row('衆法-1-1', '甲', 'decide', 'other')]);
+    const data = buildMembers({ ...source, listed: [], ministries: '法律ID,所管_今\n衆法-1-1,試験省' });
+    expect(data.laws).toEqual([]);
+    expect(data.members).toEqual([]);
+    expect(data.parties).toEqual([]);
+    expect(data.ministries).toEqual([]);
+    expect(data.counts).toMatchObject({ members: 0, involvements: 0, context: 0, excluded: 0 });
+  });
+
+  it('公開対象の共有観測だけを人物・政党・省庁へ配り直す', () => {
+    const source = {
+      involvements: [header, row('閣法-1-1', '甲', 'decide', 'other'), row('閣法-1-1', '乙', 'vote', 'other'),
+        row('閣法-1-2', '丙', 'decide', 'other'), row('閣法-1-2', '丁', 'vote', 'other')].join('\n'),
+      publish: [publish.split('\n')[0], ...['1', '2'].map(n => `閣法-1-${n},法律${n},国賊側（悪影響）,中央値=1000;第1四分位=800;第3四分位=1200,,R4,公開可,`)].join('\n'),
+      loss: 'id,損失または便益の額,参考フラグ,観測グループ\n閣法-1-1,1000,,G1\n閣法-1-2,1000,,G1',
+      enacted: ['種別,提出回次,番号,経過URL,賛成会派_衆', ...['1', '2'].map(n => `閣法,1,${n},https://www.shugiin.go.jp/x/${n}.htm,試験党`)].join('\n'),
+      votes: votes.replaceAll('衆法', '閣法'),
+      ministries: '法律ID,所管_今\n閣法-1-1,試験省\n閣法-1-2,除外省',
+    };
+    const original = buildMembers(source);
+    expect(buildMembers({ ...source, listed: ['閣法-1-1', '閣法-1-2'] })).toEqual(original);
+    const selected = buildMembers({ ...source, listed: ['閣法-1-1'] });
+    expect(selected.laws.map(l => [l.id, l.observationLaws, allocatedAmount(l).median])).toEqual([['閣法-1-1', 1, 1000]]);
+    expect(selected.members.map(m => m.name).sort()).toEqual(['乙', '甲']);
+    for (const ledger of [...selected.members, ...(selected.parties ?? []), ...(selected.ministries ?? [])]) {
+      expect(ledger.laws.map(l => l.lawId)).toEqual(['閣法-1-1']);
+    }
+    expect(selected.ministries?.map(m => m.name)).toEqual(['試験省']);
+    expect(selected.parties?.map(p => [p.name, p.bad.median])).toEqual([['試験党', original.parties![0].bad.median]]);
+    expect(selected.members.find(m => m.name === '乙')!.loss.median).toBe(original.members.find(m => m.name === '乙')!.loss.median * 2);
+    expect(selected.ministries![0].bad.median).toBe(original.ministries!.find(m => m.name === '試験省')!.bad.median * 2);
+    expect(selected.counts.involvements).toBe(2);
+  });
+
   it('コロナ期と分離できない法律（R3）は配らない', () => {
     const data = buildMembers({ ...input([row('衆法-1-1', '甲', 'decide', 'other'), row('衆法-1-2', '甲', 'decide', 'other')]),
       publish: publish.replace(',,R4,公開不可,未測定', ',,R3,公開不可,コロナ') });

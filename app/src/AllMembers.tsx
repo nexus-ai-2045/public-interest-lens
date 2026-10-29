@@ -1,10 +1,11 @@
+import { memberLocation } from './member-navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { formatYen } from './LawRankingPage';
 import { pageCount, pageSlice } from './law-ranking-view';
 import type { PublicMember } from './members-build';
 import type { PublicMembersReference } from './members-reference';
 import { LawName, namingOf, useLawNames } from './law-name';
-import { filterRows, joinConfirmed, partiesOf, SORT_LABEL, sortRows, type HouseFilter, type Row, type SortKey } from './all-members-view';
+import { breakdownOf, filterRows, joinConfirmed, partiesOf, SORT_LABEL, sortRows, type HouseFilter, type Row, type SortKey } from './all-members-view';
 
 const signed = (v: number) => v === 0 ? '0円' : `${v < 0 ? '−' : '＋'}${formatYen(Math.abs(v))}`;
 const tone = (v: number | null) => v === null || v === 0 ? 'zero' : v < 0 ? 'loss' : 'benefit';
@@ -20,7 +21,7 @@ function RowDetail({ row }: { row: Row }) {
         <span>{t.role === 'proposer' ? '提出' : '参議院で賛成'}・{t.side === 'loss' ? '国賊側' : '国士側'} {formatYen(t.share)}</span>
       </li>)}</ul>
     </>}
-    {row.confirmedRank !== null && <p><a href={`?name=${encodeURIComponent(row.id)}#member-${encodeURIComponent(row.id)}`}>確かな額の順位（{row.confirmedRank}位）と一次資料のつながりを上の一覧で開く</a></p>}
+    {row.confirmedRank !== null && <p><a href={memberLocation(row.id, window.location.search, true)}>確かな額の順位（{row.confirmedRank}位）と一次資料のつながりを上の一覧で開く</a></p>}
   </div>;
 }
 
@@ -32,6 +33,7 @@ export function AllMembers({ confirmed, data, error }: { confirmed: PublicMember
   const [withAmount, setWithAmount] = useState(false);
   const [page, setPage] = useState(1);
   const rows = useMemo(() => data ? joinConfirmed(data.members, confirmed) : [], [data, confirmed]);
+  const breakdown = useMemo(() => breakdownOf(rows), [rows]);
   const parties = useMemo(() => partiesOf(rows), [rows]);
   const shown = useMemo(() => sortRows(filterRows(rows, { house, party, query, withAmount }), sort), [rows, house, party, query, withAmount, sort]);
   useEffect(() => setPage(1), [house, party, query, withAmount, sort]);
@@ -40,7 +42,8 @@ export function AllMembers({ confirmed, data, error }: { confirmed: PublicMember
     <h3>全議員（現職の衆参全員と、過去に関わった人）</h3>
     {error && <p className="state-banner" role="alert">{error}</p>}
     {data && <>
-      <p className="all-members-lead">{rows.length.toLocaleString('ja-JP')}人（うち現職{rows.filter(r => r.current).length}人）。参考の額は{data.counts.laws.toLocaleString('ja-JP')}本の法律から、{data.counts.withAmount.toLocaleString('ja-JP')}人に配りました。</p>
+      <p className="all-members-lead">公開しているのは{breakdown.total.toLocaleString('ja-JP')}人。うち現職{breakdown.current.toLocaleString('ja-JP')}人（衆{breakdown.shu}・参{breakdown.san}）で、額のある現職は{breakdown.currentWithAmount.toLocaleString('ja-JP')}人（衆{breakdown.shuWithAmount}・参{breakdown.sanWithAmount}）です。額のない衆議院の現職{(breakdown.shu - breakdown.shuWithAmount).toLocaleString('ja-JP')}人は、個人の賛否が記録に残らず（会派ごとの賛否だけ）、0円になっています。額のある人は全体で{breakdown.withAmount.toLocaleString('ja-JP')}人（参考の額は{data.counts.laws.toLocaleString('ja-JP')}本の法律から配りました）。</p>
+      <p className="fine-note">一次資料につながる「確かな額」があるのは{breakdown.confirmed.toLocaleString('ja-JP')}人だけです。参考の額の人は、一次資料の鎖ではなく、提出者の記録と参議院の個人別の賛成記録から配った額です（会派の賛否から個人へは配っていません）。</p>
       <div className="all-members-legend">
         <span className="badge confirmed">確かな額</span><span>影響の段階まで確かめた法律の額。上の順位と同じ。</span>
         <span className="badge reference">参考</span><span>産業や経済全体の差を法律に当てた額。確かさは低く、確かな額と足しません。</span>

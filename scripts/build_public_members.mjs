@@ -32,6 +32,8 @@ const inputs = {
   // 省庁の抵抗の件数と団体の立場（scripts/build_org_ledger.py）。原本照合済みの記録の件数だけで、額は付けない。
   resistance: join(root, 'data/derived/org-ledger-v1/ministry-resistance.csv'),
   orgStances: join(root, 'data/derived/org-ledger-v1/org-stances.csv'),
+  // 背後の力を議員の因果の鎖の結び目（法律）に結んだ表（scripts/build_backing_forces.py、設計決定0017）。点数には影響しない。
+  backing: join(root, 'data/derived/backing-forces-v1/law-links.csv'),
 };
 const { createServer } = await import(join(app, 'node_modules/vite/dist/node/index.js'));
 const server = await createServer({ root: app, logLevel: 'silent', server: { middlewareMode: true }, appType: 'custom' });

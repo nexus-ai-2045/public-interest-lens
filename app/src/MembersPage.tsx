@@ -1,3 +1,4 @@
+import { memberLocation } from './member-navigation';
 import { parsePublicMembers as readMembers, parsePublicMembersReference } from './public-distribution';
 export { parsePublicMembers as readMembers } from './public-distribution';
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
@@ -7,9 +8,10 @@ import { toneTitle, useTone } from './site-tone';
 import { formatYen } from './LawRankingPage';
 import { Burst, CountUp, RankBars, Reveal, ToneFlair, type RankBarItem } from './motion';
 import { distributionActivityUrl, readActivity, type MemberActivity, type MemberActivityEntry } from './member-activity';
-import { ROLE_LABEL as CAUSAL_ROLE_LABEL, type MemberEvidence, type MemberLaw, type PublicMember, type PublicMemberLaw, type PublicMembers, type PartyRanking, allocatedAmount } from './members-build';
+import { ROLE_LABEL as CAUSAL_ROLE_LABEL, type MemberEvidence, type LawBacking, type MemberLaw, type PublicMember, type PublicMemberLaw, type PublicMembers, type PartyRanking, allocatedAmount } from './members-build';
 import { DEFAULT_KNOBS, isDefaultKnobs, readKnobs, writeKnobs, type CausalRole, type Knobs } from './causal-allocation';
 import { adjustMembers } from './members-knobs';
+import { BLOCS as VOTE_BLOCS } from './votes';
 import { AllMembers } from './AllMembers';
 import { distributionReferenceUrl } from './all-members-view';
 import type { PublicMembersReference } from './members-reference';
@@ -75,8 +77,24 @@ function EvidenceLink({ ev }: { ev: MemberEvidence }) {
   </li>;
 }
 
+/** 背後の力の記録。実測できるのは記録の件数まで。額は付けず、点数にも足さない（設計決定0017）。 */
+function BackingForces({ backing }: { backing?: LawBacking }) {
+  if (!backing || (!backing.ministry && backing.named.length === 0)) return null;
+  const total = backing.named.reduce((s, i) => s + i.count, 0);
+  return <details className="member-backing"><summary>この法律の背後の力の記録（実測の件数・点数外）</summary>
+    <p className="fine-note">ここに出るのは、規制改革の場などで一次資料に残った省庁・団体の立場の件数です（実測）。この人の行動との因果や、いくら動かしたかは示していません（額は付けず、点数にも足していません）。法令名が一致した記録を、順序だけで結んでいます。</p>
+    {backing.ministry && <p className="fine-note">所管の省庁：{backing.ministry.name}は、規制改革の場で全体として抵抗が{backing.ministry.total}件記録された省庁です（対応不可{backing.ministry.refusals}・ヒアリング{backing.ministry.hearings}・フォローアップ{backing.ministry.followups}）。この法律に限った記録ではありません。</p>}
+    {backing.named.length > 0 && <>
+      <p className="fine-note">この法律と同じ法令名を名指しした記録 {total}件</p>
+      <ul className="member-evidence">{backing.named.map(i => <li key={i.ledger + i.who + i.period}>
+        <span>{i.ledger}・{i.who}・{i.period}・{i.detail}{i.technologies.length ? `（${i.technologies.join('、')}）` : ''}</span>
+        {i.sources[0] && <a href={i.sources[0]} target="_blank" rel="noopener noreferrer">{hostLabel(i.sources[0])}{i.sources.length > 1 ? ` ほか${i.sources.length - 1}件` : ''} <ArrowUpRight size={13} /></a>}
+      </li>)}</ul></>}
+  </details>;
+}
+
 /** 1本の法律について、行動 → 成立 → 損失（便益）の鎖と、この人の分の式。 */
-function CausalChain({ entry, law, adjusted }: { entry: MemberLaw; law: PublicMemberLaw; adjusted: boolean }) {
+function CausalChain({ entry, law, adjusted, backing }: { entry: MemberLaw; law: PublicMemberLaw; adjusted: boolean; backing?: LawBacking }) {
   const g = law.game;
   const verb = entry.effect === 'bad' ? '失わせた' : '生んだ';
   const amountLabel = law.observationLaws > 1 ? `法律の分（観測の額の${law.observationLaws}分の1）` : '法律の額';
@@ -115,6 +133,7 @@ function CausalChain({ entry, law, adjusted }: { entry: MemberLaw; law: PublicMe
     {entry.office.median !== 0 && <p className="fine-note">このうち {formatYen(entry.office.median)} は、閣法を閣議決定した担当の大臣としての分です。担当として出しただけで、本人が推したかどうかは分からないため、点数には入れていません（役職の帳簿。つまみ「担当の大臣の分も点数に入れる」で入れられます）。</p>}
     {entry.context.length > 0 && <details className="member-context"><summary>額に入れていない行動（{entry.context.length}件）</summary>
       <ul className="member-evidence">{entry.context.map(ev => <EvidenceLink key={ev.url + ev.action} ev={ev} />)}</ul></details>}
+    <BackingForces backing={backing} />
   </>;
 }
 
@@ -131,7 +150,7 @@ export function memberCorrectionTarget(member: PublicMember, laws: Map<string, P
   return { title: member.id, page: `/members?name=${encodeURIComponent(member.id)}`, sources };
 }
 
-function MemberDetail({ member, laws, activity, adjusted }: { member: PublicMember; laws: Map<string, PublicMemberLaw>; activity: MemberActivity | null; adjusted: boolean }) {
+function MemberDetail({ member, laws, activity, adjusted, backing }: { member: PublicMember; laws: Map<string, PublicMemberLaw>; activity: MemberActivity | null; adjusted: boolean; backing?: Map<string, LawBacking> }) {
   const names = useLawNames();
   return <div className="member-detail">
     {member.laws.map(entry => {
@@ -142,7 +161,7 @@ function MemberDetail({ member, laws, activity, adjusted }: { member: PublicMemb
         <h5><LawName title={law.title} {...naming} /></h5>
         <p className="member-law-link"><a href={`/ranking#${encodeURIComponent(law.id)}`}>この法律の行を法律ランキングで開く（額の計算・一次資料・ほかの議員）</a></p>
         <p className="member-law-share"><span>{entry.effect === 'bad' ? 'この法律で失わせた額' : 'この法律で生んだ額'}{entry.direction === 'against' ? '（反対票）' : ''}</span><strong>{formatYen(entry.share.median)}</strong><span>幅 {formatYen(entry.share.low)}〜{formatYen(entry.share.high)}・{law.observationLaws > 1 ? `この法律の分（観測の額の${law.observationLaws}分の1）の` : '法律の額の'}{pct(entry.fraction)}</span></p>
-        <CausalChain entry={entry} law={law} adjusted={adjusted} />
+        <CausalChain entry={entry} law={law} adjusted={adjusted} backing={backing?.get(entry.lawId)} />
       </section>;
     })}
     <dl className="policy-metrics member-sensitivity">
@@ -179,12 +198,12 @@ export function KnobsPanel({ knobs, onChange }: { knobs: Knobs; onChange: (k: Kn
 }
 
 /** 上位の横棒。値は純額の大きさ、幅は小さい方から並べ直す。 */
-export function topBars(members: PublicMember[], side: 'loss' | 'benefit', count = 10): RankBarItem[] {
+export function topBars(members: PublicMember[], side: 'loss' | 'benefit', count = 10, search = ''): RankBarItem[] {
   const picked = side === 'loss' ? members.filter(m => m.net.median < 0).slice(0, count) : members.filter(m => m.net.median > 0).reverse().slice(0, count);
   return picked.map(m => {
     const ends = [Math.abs(m.net.low), Math.abs(m.net.high)].sort((a, b) => a - b);
     const crosses = m.net.low < 0 && m.net.high > 0;
-    return { id: m.id, label: m.name, value: Math.abs(m.net.median), low: crosses ? 0 : ends[0], high: ends[1], side, note: `${m.rank}位・${m.laws.length}本の法律から`, href: `/members?name=${encodeURIComponent(m.id)}` };
+    return { id: m.id, label: m.name, value: Math.abs(m.net.median), low: crosses ? 0 : ends[0], high: ends[1], side, note: `${m.rank}位・${m.laws.length}本の法律から`, href: memberLocation(m.id, search) };
   });
 }
 
@@ -195,7 +214,7 @@ function ToneHero({ members }: { members: PublicMember[] }) {
   const top = side === 'loss' ? members.find(m => m.net.median < 0) : [...members].reverse().find(m => m.net.median > 0);
   if (!top) return null;
   return <Reveal tone={side} className={`tone-hero ${side}`} key={`${side}-${top.id}`}>
-    <a href={`/members?name=${encodeURIComponent(top.id)}`}>
+    <a href={memberLocation(top.id, window.location.search)}>
       <ToneFlair side={side} />
       <span className="tone-hero-badge">{side === 'loss' ? '国賊 1位' : '国士 1位'}<Burst tone={side} count={22} /></span>
       <strong className="tone-hero-name">{top.name}</strong>
@@ -210,6 +229,15 @@ export const MEMBERS_PAGE_SIZE = 30;
 /** 上から limit 人まで。それより下でも、URL や検索で指された人（focus）は並べる。 */
 export function visibleMembers(shown: PublicMember[], limit: number, focus: string): PublicMember[] {
   return shown.length <= limit ? shown : shown.filter((m, i) => i < limit || m.id === focus);
+}
+
+export function filterMembers(members: PublicMember[], side: 'all' | 'loss' | 'benefit', query: string, partyFilter: string, partyMap: ReadonlyMap<string, string>): PublicMember[] {
+  const q = query.trim();
+  const selected = q ? members.find(m => m.id === q) : undefined;
+  if (selected) return [selected];
+  const bySide = side === 'loss' ? members.filter(m => m.net.median < 0) : side === 'benefit' ? members.filter(m => m.net.median > 0).reverse() : members;
+  const byParty = partyFilter ? bySide.filter(m => partyMap.get(m.id) === partyFilter) : bySide;
+  return q ? byParty.filter(m => m.name.includes(q) || m.id.includes(q)) : byParty;
 }
 
 export type PartySort = 'perPerson' | 'perLaw' | 'perVote' | 'total';
@@ -234,7 +262,7 @@ export function PartyRankingPanel({ ranking }: { ranking: PartyRanking }) {
       <thead><tr><th scope="col">順位</th><th scope="col">会派の系統</th><th scope="col">1人あたり</th><th scope="col">1本あたり</th><th scope="col">1票あたり</th><th scope="col">純額（参考）</th><th scope="col">人数</th><th scope="col">本数（賛成／反対）</th><th scope="col">賛成した法律のうち損失</th><th scope="col">確かさ</th></tr></thead>
       <tbody>{rows.map((b, i) => <tr key={b.bloc} className={b.net.median < 0 ? 'loss' : 'benefit'}>
         <td>{i + 1}</td>
-        <th scope="row"><span className="party-side">{b.net.median < 0 ? '国賊側' : '国士側'}</span> {b.bloc}<details><summary>会派名</summary><small>{b.parties.join('、')}</small></details></th>
+        <th scope="row"><span className="party-side">{b.net.median < 0 ? '国賊側' : '国士側'}</span> {b.bloc}{(VOTE_BLOCS as readonly string[]).includes(b.bloc) && <> <a className="party-votes-link" href={`/votes?party=${encodeURIComponent(b.bloc)}`}>賛否を見る</a></>}<details><summary>会派名</summary><small>{b.parties.join('、')}</small></details></th>
         <td>{signedYen(b.perPerson)}</td><td>{signedYen(b.perLaw)}</td><td>{signedYen(b.perVote)}</td><td>{signedYen(b.net.median)}</td>
         <td>{b.people}人</td><td>{b.laws}本（{b.yesLaws}／{b.noLaws}）</td><td>{Math.round(b.lossShareOfYes * 100)}%</td><td>{cert(b.certainty)}</td>
       </tr>)}</tbody>
@@ -286,11 +314,12 @@ export function MembersPage() {
   // 名前を選んだら、その人の欄を開いて画面に出す（ページの下の方に開くだけだと、押しても何も起きないように見える）。
   const [focus, setFocus] = useState(() => new URLSearchParams(window.location.search).get('name') ?? '');
   const openMember = (name: string) => {
-    setPartyFilter('');
+    setTab('members');
     setQuery(name);
     setFocus(name);
     const params = new URLSearchParams(window.location.search);
     params.set('name', name);
+    params.delete('tab');
     window.history.pushState(null, '', `${window.location.pathname}?${params}`);
   };
   useEffect(() => {
@@ -298,7 +327,7 @@ export function MembersPage() {
     requestAnimationFrame(() => document.getElementById(`member-${focus}`)?.scrollIntoView({ block: 'start' }));
   }, [focus, data]);
   useEffect(() => {
-    const restore = () => { const q = new URLSearchParams(window.location.search); const name = q.get('name') ?? ''; setQuery(name); setFocus(name); setTab(q.get('tab') === 'party' && !name ? 'party' : 'members'); };
+    const restore = () => { const q = new URLSearchParams(window.location.search); const name = q.get('name') ?? ''; setQuery(name); setFocus(name); setKnobsState(readKnobs(q)); setTab(q.get('tab') === 'party' && !name ? 'party' : 'members'); };
     window.addEventListener('popstate', restore);
     return () => window.removeEventListener('popstate', restore);
   }, []);
@@ -360,13 +389,10 @@ export function MembersPage() {
   const adjusted = !isDefaultKnobs(knobs);
   const members = useMemo(() => data ? adjustMembers(data, knobs) : [], [data, knobs]);
   const laws = useMemo(() => new Map((data?.laws ?? []).map(l => [l.id, l])), [data]);
+  const backingByLaw = useMemo(() => new Map((data?.backing ?? []).map(b => [b.lawId, b])), [data]);
   const names = useLawNames();
   const shown = useMemo(() => {
-    const all = members;
-    const bySide = side === 'loss' ? all.filter(m => m.net.median < 0) : side === 'benefit' ? [...all].filter(m => m.net.median > 0).reverse() : all;
-    const q = query.trim();
-    const byParty = partyFilter ? bySide.filter(m => partyMap.get(m.id) === partyFilter) : bySide;
-    return q ? byParty.filter(m => m.name.includes(q) || m.id.includes(q)) : byParty;
+    return filterMembers(members, side, query, partyFilter, partyMap);
   }, [members, side, query, partyFilter, partyMap]);
   // 537人ぶんのカードを一度に描くと重いので、上から一定数だけ並べ、「さらに表示」で足す。名前で探した結果・URL で指した人は必ず並べる。
   const [limit, setLimit] = useState(MEMBERS_PAGE_SIZE);
@@ -375,8 +401,8 @@ export function MembersPage() {
   const [opened, setOpened] = useState<ReadonlySet<string>>(new Set());
   const toggleOpened = (id: string, open: boolean) => setOpened(prev => prev.has(id) === open ? prev : (() => { const next = new Set(prev); if (open) next.add(id); else next.delete(id); return next; })());
   return <SiteShell active="/members" label="議員・実名・実データ" className="law-ranking members-page">
-    <main>
-      <h2>この人が失わせた額・生んだ額</h2>
+    <main id="main">
+      <h1>この人が失わせた額・生んだ額</h1>
       <p>議員ごとに、その人の行動で日本が<strong>失った額（国賊側）・生んだ額（国士側）</strong>を並べています。理由（行動→成立→損失の鎖）は、行を開くと出ます。</p>
       <details className="members-intro"><summary>この数字の意味と訂正窓口</summary>
       <p>法律が日本に与えた損失（国賊側）と便益（国士側）を、<strong>「この人の行動が無かったら、その法律は成立したか」</strong>で人に配りました。提出者が出さなければ、また参議院で賛成票が足りなければ、法律は成立せず、損失も便益も生まれません。成立のしくみ（拒否権者と過半数の投票）の中で、その人の行動が成立を決める場面の割合（Shapley 値）を出し、法律の分（ふつうは法律の額。同じ観測を共有する法律では観測の額を本数で割った分）に掛けたものが<strong>この人が失わせた額</strong>・<strong>生んだ額</strong>です。各人の欄に、行動 → 成立 → 損失のつながりを一次資料（国会会議録・参議院の投票結果・衆議院の議案情報）のリンクつきで示し、式も載せています。計算のしかたは<a href="/methodology">計算方法</a>にあります。</p>
@@ -393,7 +419,7 @@ export function MembersPage() {
         <section aria-label="上位の議員" className="members-top" onClick={onTopClick}>
           {(tone === 'harm' ? ['loss', 'benefit'] as const : ['benefit', 'loss'] as const).map(key => <div key={key} className={`members-top-block ${key}`}>
             <h3>{key === 'loss' ? '失わせた額の上位10人（国賊側）' : '生んだ額の上位10人（国士側）'}</h3>
-            <RankBars caption={key === 'loss' ? '国賊側の純額の大きい順' : '国士側の純額の大きい順'} format={formatYen} items={topBars(members, key)} />
+            <RankBars caption={key === 'loss' ? '国賊側の純額の大きい順' : '国士側の純額の大きい順'} format={formatYen} items={topBars(members, key, 10, window.location.search)} />
           </div>)}
         </section>
         <section aria-label="議員の一覧">
@@ -416,7 +442,7 @@ export function MembersPage() {
                 <span className="member-party">{partyLabel(member.id, partyMap, reference !== null, formerMap)}</span>
                 <span className="member-net"><strong>{signedYen(member.net.median)}</strong><small>幅 {signedYen(member.net.low)}〜{signedYen(member.net.high)}</small></span>
               </summary>
-              {(shown.length === 1 || member.id === focus || opened.has(member.id)) && <MemberDetail member={member} laws={laws} activity={activity} adjusted={adjusted} />}
+              {(shown.length === 1 || member.id === focus || opened.has(member.id)) && <MemberDetail member={member} laws={laws} activity={activity} adjusted={adjusted} backing={backingByLaw} />}
             </details>
           </li>)}</ol>
           {visible.length < shown.length && <p className="members-more"><button type="button" onClick={() => setLimit(n => n + MEMBERS_PAGE_SIZE)}>さらに表示（残り{shown.length - visible.length}人）</button> <button type="button" onClick={() => setLimit(shown.length)}>全員を表示</button></p>}
@@ -518,8 +544,8 @@ export function MembersPage() {
 export function MethodologyPage() {
   useEffect(() => { document.title = '計算方法｜国賊／国士ランキング'; }, []);
   return <SiteShell active="/methodology" label="計算方法" className="law-ranking">
-    <main className="methodology">
-      <h2>どう計算しているか</h2>
+    <main id="main" className="methodology">
+      <h1>どう計算しているか</h1>
       <p>判断に使うのは一次資料（国会会議録、衆議院・参議院の議案情報と投票結果、e-Gov 法令）と公的統計（OECD 国民経済計算など）だけです。人の印象や報道の評価は点数に入れません。手順はすべてこのリポジトリのコードとして公開しています。</p>
       <h3>1. 法律ごとの額</h3>
       <ol>
