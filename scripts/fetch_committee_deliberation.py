@@ -378,6 +378,7 @@ def mine(frag: str, short: str) -> bool:
 def names_other_bill(t: str, short: str) -> bool:
     """発言が法案名を挙げていて、その中にこの法案がない（別の法案の修正案）とき真。"""
     ns = re.findall(r'([^\s、。「」『』（）()○]{2,40}?(?:法律案|法案))', _flat(t))
+    ns = [n for n in ns if not re.fullmatch(r'(?:これより|次に|ただいま|なお)?(?:この|両|本|同|各|右の)(?:法律案|法案)', n)]  # 「この法律案」などの代名詞は別の法案ではない
     return bool(ns) and not any(mine(n, short) for n in ns)
 
 
@@ -536,6 +537,10 @@ def analyze_meeting(m: dict, bill: dict) -> dict | None:
         t = r['speech']
         if speaker_kind(r) == 'chair' or '附帯決議' not in t:
             continue
+        if re.match(r'○[^\s　]{0,15}(?:国務大臣|大臣|副大臣|政務官|長官)', t):
+            continue  # 政府の対応表明（政府の所信）は決議の趣旨説明ではない
+        if names_other_bill(t[:800], short):
+            continue  # 本文が別の法案への決議だと明示しているときは、一括審議でもその法案の決議にしない
         if re.search(r'附帯決議(案)?(\s|　)*(\（案\）)?(につきまして|について|案を|案の|を付|の趣旨)|附帯決議(\（案\）|案)', t) and \
                 re.search(r'提出者|提案者|案文|趣旨', t[:400]):
             reso.append(r)

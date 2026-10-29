@@ -342,6 +342,17 @@ class CommitteeFlowTest(unittest.TestCase):
         header = '出席委員\n   委員長 村井  仁君\n      中村 哲治君    村井  仁君\n      中村 哲治君\n本日の会議に付した案件'
         self.assertEqual(F.parse_attendance(header, '衆議院'), [('村井仁', '委員長'), ('中村哲治', '委員')])
 
+    def test_government_reply_is_not_a_resolution_and_other_bills_resolution_is_not_shared(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案及び乙法の一部を改正する法律案を一括して議題といたします。'),
+                _ch(2, 'ただいま議決いたしました両案に対し、附帯決議を付すべしとの動議が提出されております。'),
+                _rec(3, '佐々木', '○佐々木委員 ただいま議題となりました乙法の一部を改正する法律案に対する附帯決議案につきまして、提出者を代表して、その趣旨を御説明申し上げます。案文を朗読して説明にかえさせていただきます。'),
+                _rec(4, '尾身', '○尾身国務大臣 ただいま御決議のありました附帯決議につきましては、その趣旨を十分尊重いたしてまいります。')]
+        meeting = _meeting(recs, '本日の会議に付した案件\n甲法の一部を改正する法律案\n乙法の一部を改正する法律案')
+        self.assertEqual(F.analyze_meeting(meeting, KOU)['resolutions'], [])
+        otsu = F.analyze_meeting(meeting, OTSU)
+        self.assertEqual([r['speaker'] for r in otsu['resolutions']], ['佐々木'])
+        self.assertEqual([r['speaker'] for r in otsu['reso_reply']], ['尾身'])
+
     def test_long_hiragana_proposer_name(self) -> None:
         recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。この際、本案に対し、とかしきなおみ君外五名から、修正案が提出されております。')]
         r = F.analyze_meeting(_meeting(recs), KOU)
