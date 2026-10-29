@@ -190,7 +190,7 @@ def norm_name(s: str) -> str:
     return re.sub(r'(君|さん|議員)$', '', s)
 
 
-NONMEMBER_RE = re.compile(r'事務総長|議長|外の出席者|参考人|専門|事務局|事務次長|調査員|説明員|国務大臣|政府|[()（）]|委員|会長|理事長|教授|社長|取締|基金|協会|連合|会社|銀行|分科|代行|執行|学部|局|代表|常任|大臣|議院|議員|運営|[—―]')
+NONMEMBER_RE = re.compile(r'事務総長|議長|外の出席者|参考人|専門|事務局|事務次長|調査員|説明員|国務大臣|政府|[()（）]|委員|会長|理事長|教授|社長|取締|基金|協会|連合|会社|銀行|分科|代行|執行|学部|局|代表|常任|大臣|議院|議員|運営|[—―]|発議|修正案|提出|内閣|官房|長官|副大臣|政務官')
 
 
 def parse_attendance(header: str, house: str) -> list[tuple[str, str]]:
@@ -242,7 +242,12 @@ def parse_attendance(header: str, house: str) -> list[tuple[str, str]]:
             if named and 3 <= len(''.join(buf)) <= 7:
                 add(''.join(buf))
             buf = []
-    return out
+    # 同じ会議で名前が複数回載る（役職つきと委員の欄など）ときは1人にして、高い役職を残す
+    best: dict[str, str] = {}
+    for name, r in out:
+        if name not in best or ROLE_RANK.get(r, 9) < ROLE_RANK.get(best[name], 9):
+            best[name] = r
+    return list(best.items())
 
 
 def agenda_text(header: str) -> str:
