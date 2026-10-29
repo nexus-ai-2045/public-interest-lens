@@ -190,6 +190,9 @@ def norm_name(s: str) -> str:
     return re.sub(r'(君|さん|議員)$', '', s)
 
 
+NONMEMBER_RE = re.compile(r'事務総長|議長|外の出席者|参考人|専門|事務局|事務次長|調査員|説明員|国務大臣|政府|[()（）]|委員|会長|理事長|教授|社長|取締|基金|協会|連合|会社|銀行|分科|代行|執行|学部|局|代表|常任|大臣|議院|議員|運営|[—―]')
+
+
 def parse_attendance(header: str, house: str) -> list[tuple[str, str]]:
     """会議録冒頭の「出席委員」（参議院は「出席者は左のとおり」）から (氏名, 役職) を返す。"""
     i = header.find('出席委員')
@@ -205,30 +208,40 @@ def parse_attendance(header: str, house: str) -> list[tuple[str, str]]:
     block = re.sub(r'(理|委|会|幹)[\s\u3000]+(事|員|長)', r'\1\2', block)
     out, role, buf = [], '委員', []
     single = ('委員長', '会長', '副委員長', '副会長', '会長代理', '委員長代理')
-    for tok in re.split(r'[\s\u3000]+', block):
-        if not tok:
-            continue
-        while True:  # 「理事白坂亜紀君」のように役職語が頭に付くものを切る
-            for r in sorted(ROLES, key=len, reverse=True):
-                if tok.startswith(r) and (tok == r or len(tok) > len(r) + 1):
-                    role, buf, tok = r, [], tok[len(r):]
-                    break
-            else:
-                break
+    def add(raw: str) -> None:
+        name = norm_name(raw)
+        if name and not NONMEMBER_RE.search(raw):  # 参考人・事務総長・専門員など委員でない出席者は名簿に入れない
+            out.append((name, role))
+
+    # 原本で「肥田 美代子」のように君が抜けた名前があるので、行の終わりで区切る（名前は行をまたがない）
+    for line in re.split(r'[\r\n]+', block):
+        named = False  # この行に君つきの名前があるか（行末の君なしは、名簿の行のときだけ名前とみなす。見出しを名前にしない）
+        for tok in re.split(r'[\s\u3000]+', line):
             if not tok:
-                break
-        if not tok:
-            continue
-        if tok.endswith('君'):
-            buf.append(tok[:-1])
-            name = norm_name(''.join(buf))
-            if name:
-                out.append((name, role))
+                continue
+            while True:  # 「理事白坂亜紀君」のように役職語が頭に付くものを切る
+                for r in sorted(ROLES, key=len, reverse=True):
+                    if tok.startswith(r) and (tok == r or len(tok) > len(r) + 1):
+                        role, buf, tok = r, [], tok[len(r):]
+                        break
+                else:
+                    break
+                if not tok:
+                    break
+            if not tok:
+                continue
+            if tok.endswith('君'):
+                buf.append(tok[:-1])
+                add(''.join(buf))
+                buf, named = [], True
+                if house == '衆議院' or role in single:
+                    role = '委員'
+            else:
+                buf.append(tok)
+        if buf:
+            if named and 3 <= len(''.join(buf)) <= 7:
+                add(''.join(buf))
             buf = []
-            if house == '衆議院' or role in single:
-                role = '委員'
-        else:
-            buf.append(tok)
     return out
 
 
@@ -394,12 +407,14 @@ def analyze_meeting(m: dict, bill: dict) -> dict | None:
     segs = bill_segments(body, short, res['n_items'])
     in_seg = lambda i: any(a <= i < b for a, b in segs)  # noqa: E731
     votes = []
+    carry = None  # 直前の発言までに最後に挙げた案件がこの法案か（採決の呼びかけと結果が別の発言になる）
     for i, r in enumerate(body):
         if speaker_kind(r) != 'chair':
             continue
         t = r['speech']
-        if RESULT_RE.search(t) and ('採決' in t or '決しました' in t or '決定' in t) and (in_seg(i) or short in _flat(t)):
-            votes.append(r)
+        result, text, carry = own_result(t, short, bill.get('種別', '閣法'), carry)
+        if result and ('採決' in t or '決しました' in t or '決定' in t) and (in_seg(i) or short in _flat(t)):
+            votes.append({**r, '_own': (result, text)})
     res['votes'] = votes
     # 修正案：委員長が「○○君外N名から（提出）」「○○君外N名提出の修正案」「委員長提出の修正案」と宣告する発言を探す。
     # 法案ごとの議事の区間に限り、宣告ごとに提出者を1件ずつ取り、趣旨説明と採決結果は対応が確かなものだけ付ける（確かでなければ空のまま）。
@@ -549,6 +564,35 @@ def cmd_register(a) -> int:
     return 0
 
 
+def own_result(t: str, short: str, kind: str = '閣法', carry: bool | None = None) -> tuple[str | None, str | None, bool | None]:
+    """委員長の1つの発言のうち、この法案本体の採決の結果 (結果の語, そこまでの抜粋元の文, 次の発言へ渡す「直前に挙げた案件はこの法案か」) を返す。
+    直前に挙げた案件名（前の発言から続く場合は carry）がこの法案ならその結果。案件名がないときは、この法案の名が後ろに出ておらず、
+    別の提出者の案を挙げていない結果だけ（前の案件の結果や、野党提出案の否決を混ぜない）。結果がなければ (None, None, carry)。"""
+    sents = [x for x in re.split(r'(?<=。)|\n', _flat(t)) if x.strip()]
+    last_named = (-1, carry) if carry is not None else None
+    found = None
+    for i, sent in enumerate(sents):
+        ns = re.findall(r'([^\s、。「」『』（）()○]{2,40}?(?:法律案|法案|承認を求めるの件|条約|議定書))', sent)
+        ns = [n for n in ns if not re.fullmatch(r'(?:これより|次に|ただいま|なお)?(?:この|両|本|同|各|右の)(?:法律案|法案)', n)]  # 「両法律案」などの代名詞は別の案件ではない
+        if ns or short in sent:  # 題名に「条約」を含む法案は名前が途中で切れるので、法案名全体も照らす
+            # 同じ題名でも提出者が違う案（内閣提出の電波法改正案と、野党提出の同名の案）は別の案件
+            # （法案に対する修正案の提出者を述べる文は、本体の提出者ではない）
+            alien = (re.search(r'君外[一二三四五六七八九十百〇\d]+名提出', sent) and '修正案' not in sent) if kind == '閣法' else '内閣提出' in sent
+            last_named = (i, (short in sent or any(mine(n, short) for n in ns)) and not alien)
+        m = RESULT_RE.search(sent)
+        if not m or found:
+            continue
+        other = re.search(r'君外[一二三四五六七八九十百〇\d]+名提出', sent) if kind == '閣法' else '内閣提出' in sent
+        if other or (last_named is None and any(short in x and re.search('採決|議題', x) and '附帯決議' not in x for x in sents[i + 1:])):
+            continue
+        if last_named is not None and not last_named[1]:
+            continue
+        start = last_named[0] if last_named and last_named[1] and last_named[0] >= 0 else 0
+        found = ('修正議決すべきもの' if '修正議決すべきもの' in sent else m.group(1), ''.join(sents[start:i + 1]))
+    carry_out = last_named[1] if last_named else carry
+    return (*found, carry_out) if found else (None, None, carry_out)
+
+
 def vote_fields(t: str, result: str) -> tuple[str, str]:
     """採決の宣告 t から、法案本体の結果 result の直前の採決の方法と、その採決の抜粋を取る。
     同じ発言の前にある修正案の採決の方法を拾わない。"""
@@ -604,7 +648,7 @@ def cmd_build(a) -> int:
             pool = mine or decisions
             pick = None
             for m, v in pool:
-                if '修正議決すべきもの' in v['speech']:
+                if v['_own'][0] == '修正議決すべきもの':
                     pick = (m, v)
             if pick is None and pool:
                 pick = pool[-1]
@@ -612,9 +656,7 @@ def cmd_build(a) -> int:
             vote_date = vote_url = ''
             if pick:
                 m, v = pick
-                t = v['speech']
-                rm = RESULT_RE.search(t)
-                result = '修正議決すべきもの' if '修正議決すべきもの' in t else (rm.group(1) if rm else '')
+                result, t = v['_own']
                 method, vote_text = vote_fields(t, result)
                 vote_date, vote_url = m['date'], v.get('speechURL', '')
             chair = next((n for n, r in sorted(((n, x['role']) for n, x in att.items()), key=lambda z: ROLE_RANK.get(z[1], 9)) if r in ('委員長', '会長')), '')
