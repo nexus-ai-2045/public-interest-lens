@@ -1,0 +1,2105 @@
+{
+ "schema": "backtest-cases/v1",
+ "version": "backtest-cases-v1",
+ "source_file": "答えの分かっている事例集_2026-10-29（照合が「一致」の49件）",
+ "cases": [
+  {
+   "id": "bt-001",
+   "key": "00|2003",
+   "policy": "通信の自由化（1985年電電公社民営化・NTT）",
+   "group": "ntt",
+   "link": "event",
+   "source": {
+    "authors": "Madden, G. G.; Savage, S. J.; Ng, J.",
+    "year": 2003,
+    "title": "Asia-Pacific telecommunications liberalisation and productivity performance",
+    "doi": "10.1111/1467-8454.00188",
+    "url": "https://mpra.ub.uni-muenchen.de/10884/1/MPRA_paper_10884.pdf",
+    "grade": "B",
+    "verified": "一致"
+   },
+   "method": "アジア太平洋12事業者の1987-90年パネル（固定効果GLS）。NTTは標本の1社で、NTT単独の因果推定ではない",
+   "outcome": "事業者のTFP成長率",
+   "effect": "NTTの平均TFP成長率 1.14%（1987-90）。全標本の民営化係数 0.0356、競争係数 0.0767",
+   "interval": "民営化係数 t=4.449、競争係数 t=2.059（全標本）",
+   "unit": "% / 回帰係数",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": null
+    },
+    "held": [
+     "country"
+    ]
+   }
+  },
+  {
+   "id": "bt-002",
+   "key": "01|2015",
+   "policy": "通信の自由化（1985年電電公社民営化・NTT）",
+   "group": "ntt",
+   "link": "event",
+   "source": {
+    "authors": "Nakamura, A.（中村彰宏）",
+    "year": 2015,
+    "title": "電気通信分野の自由化30年と実証研究",
+    "doi": "",
+    "url": "https://www.soumu.go.jp/iicp/chousakenkyu/data/research/icp_review/11/11-2nakamura2015.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "先行実証研究のサーベイ（独自推定なし）。東京-大阪間の通話料金の前後比較と、中島・八田(1992)、伊藤・今川(1992)のTFP分析を紹介",
+   "outcome": "長距離通話料金、TFP成長率",
+   "effect": "東京-大阪間3分料金 400円（1985年、NTT）から180円（NTT）、170円（NCC）へ（1993年）。TFP成長率は民営化後に上昇（数値は示されていない）",
+   "interval": "",
+   "unit": "円/3分",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": null,
+     "country": "日本"
+    },
+    "held": [
+     "benefit_sign"
+    ]
+   }
+  },
+  {
+   "id": "bt-003",
+   "key": "02|2019",
+   "policy": "電力小売全面自由化（2016年）と卸・発送電の自由化",
+   "group": "electricity-retail",
+   "link": "event",
+   "source": {
+    "authors": "Ishihara, T.; Ida, T.",
+    "year": 2019,
+    "title": "The Effect of Information Provision on Stated and Revealed Preferences: A Field Experiment on the Choice of Power Tariffs Before and After Japanese Retail Electricity Liberalization",
+    "doi": "",
+    "url": "https://www.econ.kyoto-u.ac.jp/dp/papers/e-19-006.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "RCT（SP実験とRP実験）。自由化の前後の家庭を対象に、請求書で過去の使用量に基づく料金プラン情報を提示した。自由化そのものの効果ではなく、自由化後の料金選択行動の評価",
+   "outcome": "時間帯別（TOU）料金プランの実際の選択確率",
+   "effect": "情報提供の効果は −2.6%（有意でない）。対照群のTOU選択確率は14.6%。切替率の背景値は、2017年3月に8.8%（新電力への切替え4.7%）、2018年2月に15.5%（新電力9.5%）",
+   "interval": "",
+   "unit": "選択確率の変化（パーセントポイント）",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-004",
+   "key": "03|2017",
+   "policy": "民泊（住宅宿泊事業法2018年・Airbnb）",
+   "group": "minpaku",
+   "link": null,
+   "source": {
+    "authors": "Zervas, G.; Proserpio, D.; Byers, J. W.",
+    "year": 2017,
+    "title": "The Rise of the Sharing Economy: Estimating the Impact of Airbnb on the Hotel Industry",
+    "doi": "10.1509/jmr.15.0204",
+    "url": "https://people.bu.edu/zg/publications/airbnb.pdf",
+    "grade": "B",
+    "verified": "一致"
+   },
+   "method": "差の差（テキサス州の都市別・月次パネル、Airbnb参入の時期と規模の差を利用、ホテル・都市・月の固定効果）。読んだのは著者掲載の受理原稿",
+   "outcome": "月次ホテル客室収入（対数）",
+   "effect": "β = -0.039。Airbnb上場数が10%増えると月次ホテル客室収入が0.39%減少。オースティンでは最も影響を受けるホテルで8-10%の収入減",
+   "interval": "t値 -4.40、p<0.01（信頼区間は原文に明記なし）",
+   "unit": "log-log弾性値（ホテル収入の対数 on Airbnb累積供給の対数）",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": -1,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": -1,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": -1,
+     "country": "米国"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-005",
+   "key": "04|2021",
+   "policy": "民泊（住宅宿泊事業法2018年・Airbnb）",
+   "group": "minpaku",
+   "link": null,
+   "source": {
+    "authors": "Barron, K.; Kung, E.; Proserpio, D.",
+    "year": 2021,
+    "title": "The Effect of Home-Sharing on House Prices and Rents: Evidence from Airbnb",
+    "doi": "10.1287/mksc.2020.1227",
+    "url": "https://marketing.wharton.upenn.edu/wp-content/uploads/2019/08/09.05.2019-Proserpio-Davide-Paper.pdf",
+    "grade": "B",
+    "verified": "一致"
+   },
+   "method": "操作変数法（2SLS、米国の全郵便番号区、Zillow賃料・住宅価格指数と月次Airbnb上場数。所有者居住率との交互作用）",
+   "outcome": "Zillow賃料指数(ZRI)と住宅価格指数(ZHVI)（対数）",
+   "effect": "所有者居住率が中央値(72%)の郵便番号区で、Airbnb上場数1%増により賃料0.018%上昇、住宅価格0.026%上昇。居住率25パーセンタイルでは賃料0.024%・価格0.037%、75パーセンタイルでは0.014%・0.019%",
+   "interval": "",
+   "unit": "弾性値（Airbnb上場数1%増あたりの%変化）",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "米国"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-006",
+   "key": "05|2020",
+   "policy": "民泊（住宅宿泊事業法2018年・Airbnb）",
+   "group": "minpaku",
+   "link": null,
+   "source": {
+    "authors": "García-López, M.-À.; Jofre-Monseny, J.; Martínez-Mazza, R.; Segú, M.",
+    "year": 2020,
+    "title": "Do short-term rental platforms affect housing markets? Evidence from Airbnb in Barcelona",
+    "doi": "10.1016/j.jue.2020.103278",
+    "url": "https://ddd.uab.cat/pub/worpap/2020/237144/wpdea2006.pdf",
+    "grade": "B",
+    "verified": "一致"
+   },
+   "method": "近隣別パネル固定効果、シフト・シェア型操作変数（観光アメニティと Google検索）、イベントスタディ、サグラダ・ファミリア周辺の自然実験的比較",
+   "outcome": "賃料、取引価格、掲載価格（近隣別）",
+   "effect": "平均的な近隣で賃料+1.9%、取引価格+4.6%、掲載価格+3.7%。Airbnb活動上位10分位の近隣では賃料+7%、取引価格+17%、掲載価格+14%",
+   "interval": "",
+   "unit": "％（Airbnb活動が約54件増えた小規模近隣での変化）",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "その他"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-007",
+   "key": "06|2018",
+   "policy": "民泊（住宅宿泊事業法2018年・Airbnb）",
+   "group": "minpaku",
+   "link": null,
+   "source": {
+    "authors": "Farronato, C.; Fradkin, A.",
+    "year": 2018,
+    "title": "The Welfare Effects of Peer Entry in the Accommodation Market: The Case of Airbnb",
+    "doi": "10.3386/w24361",
+    "url": "https://www.nber.org/system/files/working_papers/w24361/w24361.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "構造推定（需要モデルによる反事実シミュレーション。米国上位10都市、2014年。Airbnb不在の場合との比較で、差の差ではない）。著者の一人は元Airbnb社員",
+   "outcome": "消費者余剰、ホスト余剰、ホテル可変利潤、総厚生",
+   "effect": "消費者余剰は宿泊1室夜あたり41ドル、ホスト余剰26ドル、ホテルの可変利潤は最大3.7%減。2014年に総厚生が1億3,700万ドル増、消費者余剰が2億7,600万ドル増",
+   "interval": "",
+   "unit": "ドル／室夜、百万ドル／年、％",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "米国"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-008",
+   "key": "07|2011",
+   "policy": "労働者派遣法（1999年原則自由化・2004年製造業解禁・2012/2015年改正）",
+   "group": "haken",
+   "link": "event",
+   "source": {
+    "authors": "Machikita, Tomohiro; Sato, Hitoshi",
+    "year": 2011,
+    "title": "Temporary Jobs and Globalization: Evidence from Japan",
+    "doi": "",
+    "url": "https://www.rieti.go.jp/jp/publications/dp/11e029.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "産業レベルのパネル回帰(1999・2001・2004・2006年、製造業180観測)。2004年の派遣法改正は年ダミーで捉える(統制群なし、識別は弱い)",
+   "outcome": "総労働投入に占める臨時労働者(臨時雇用+派遣)比率の変化",
+   "effect": "1999年を基準とした年ダミー: 2004年 0.044、2006年 0.050、2001年 0.015(いずれも1%水準で有意、Table 4列1)",
+   "interval": "標準誤差 [0.005](2004年)、[0.006](2006年)、[0.004](2001年)",
+   "unit": "比率の差(総労働投入に占める割合、0.044は約4.4ポイント相当)",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "employment",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": null,
+     "outcome_class": null,
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "held": [
+     "design",
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-009",
+   "key": "08|2011",
+   "policy": "労働者派遣法（1999年原則自由化・2004年製造業解禁・2012/2015年改正）",
+   "group": "haken",
+   "link": "broad",
+   "source": {
+    "authors": "Okudaira, Hiroko; Ohtake, Fumio; Kume, Koichi; Tsuru, Kotaro",
+    "year": 2011,
+    "title": "What Does a Temporary Help Service Job Offer? Empirical suggestions from a Japanese survey",
+    "doi": "10.1016/j.jjie.2013.01.004",
+    "url": "https://www.rieti.go.jp/jp/publications/dp/11e077.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "傾向スコアマッチングによるATT推定(Abadie-Imbens標準誤差)と、擬似的な未観測交絡変数を用いた感度分析。2008-2010年の個票サーベイ",
+   "outcome": "派遣就業(長期THS)の後続波での正規雇用確率と時間当たり賃金(対 直接雇用パート/失業者)",
+   "effect": "長期THS就業者は、失業者より時間当たり賃金が有意に高く、調査開始2年後でも645円高い。直接雇用パートと比べると、波4・5で正規雇用になる確率が有意に低い(波5の感度分析では効果は0%から-19%の範囲)",
+   "interval": "感度分析の保守的推定で波5の影響は「ゼロから-19%」",
+   "unit": "円/時間(賃金); 確率(正規雇用)",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "employment",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "wage",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": null,
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-010",
+   "key": "09|2011",
+   "policy": "郵政民営化（2007年）",
+   "group": "yusei",
+   "link": "event",
+   "source": {
+    "authors": "Ken-Ichiro Oohama; Yoshihiro Asai",
+    "year": 2011,
+    "title": "Does Privatization of a Postal Savings Bank in Japan Have Economic Value?",
+    "doi": "10.4236/ib.2011.33032",
+    "url": "https://www.scirp.org/html/2-8601185_7472.htm",
+    "grade": "B",
+    "verified": "一致"
+   },
+   "method": "事象研究（市場モデル、TOPIX基準、推定期間230営業日）。事象日は2005年9月の総選挙翌日。競合民間銀行の株価反応から民営化の効果を推定する。民営化の実施後ではなく、決定時点の市場評価である。",
+   "outcome": "競合する民間銀行の事象日の超過収益（株価反応）",
+   "effect": "全標本で事象日の反応は有意に負（t = -2.5550）。地方銀行は有意に負、都市銀行は有意な効果なし。CARの大きさはテキスト抽出で確認できず。",
+   "interval": "",
+   "unit": "t値（事象日）",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-011",
+   "key": "10|2010",
+   "policy": "郵政民営化（2007年）",
+   "group": "yusei",
+   "link": "broad",
+   "source": {
+    "authors": "Kazumine Kondo",
+    "year": 2010,
+    "title": "Does the Presence of the Japan Post Bank in a Regional Financial Market Affect the Deposit Interest Rates of Credit Associations?",
+    "doi": "",
+    "url": "https://mpra.ub.uni-muenchen.de/24332/1/MPRA_paper_24332.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "信用金庫・信用組合の預金金利を、地域の郵貯支店比率（Yuchosharei）に回帰する横断面OLS（1995、2000、2005、2008年）。因果識別は弱い。民営化完全実施が凍結された時期の研究。",
+   "outcome": "信用組合・信用金庫の預金金利（Ri）と郵貯支店比率の係数",
+   "effect": "2008年の Yuchosharei 係数は 0.001（t = 0.515、非有意）。1995年は -0.005（t = -3.294、1%有意）、2000年は -0.002（t = -2.364、5%有意）、2005年は 0.000（t = 0.343）。",
+   "interval": "",
+   "unit": "回帰係数（t値）",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-012",
+   "key": "11|2019",
+   "policy": "郵政民営化（2007年）",
+   "group": "yusei",
+   "link": "broad",
+   "source": {
+    "authors": "Chul-Ju Kim; Michael C. Huang",
+    "year": 2019,
+    "title": "The Privatization of Japan Railways and Japan Post: Why, How, and Now",
+    "doi": "",
+    "url": "https://www.adb.org/sites/default/files/publication/539746/adbi-wp1039.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "記述的な事例レビュー（回帰・準実験なし）。日本郵政の民営化後の動向を総務省・日本郵政の資料から整理。",
+   "outcome": "国内郵便需要（郵便物数）の年間変化率",
+   "effect": "国内郵便需要は年 -2.5%（政策効果ではなく趨勢の記述。因果推定ではない）",
+   "interval": "",
+   "unit": "年率 %",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-013",
+   "key": "12|2013",
+   "policy": "航空規制緩和（日本の2000年運賃自由化・参入規制緩和・LCC参入）",
+   "group": "koku",
+   "link": "event",
+   "source": {
+    "authors": "Murakami, Hideki; Amano, Yoshihisa",
+    "year": 2013,
+    "title": "Dynamic effect of inter-airline rivalry on airfares and consumers' welfare: Japan's full-service vs. new air carriers (Kobe University Discussion Paper 2013-31)",
+    "doi": "",
+    "url": "https://www.b.kobe-u.ac.jp/papers_files/2013_31.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "構造モデル（需要関数と準供給式の同時推定、反復3SLS）。14路線・222の路線×航空会社観測の不均衡パネル、参入後1〜4年目のダミーで動学効果を推定。差の差や自然実験ではない。",
+   "outcome": "実質運賃（対数、小売物価指数で調整）と消費者余剰",
+   "effect": "運賃式の参入年ダミー係数（対数運賃への効果、1年目→4年目）: エア・ドゥ −0.658→−0.169、スカイマーク −0.532→−0.249、スカイネット・アジア −0.215（1年目）→−0.311（4年目）。消費者余剰の変化（合計、1,000USD）: 1年目2,329、2年目1,900、3年目1,542、4年目1,659、累計7,430。",
+   "interval": "エア・ドゥ1年目 t=−3.644（1%有意）、スカイマーク1年目 t=−7.419（1%有意）。区間推定は掲載なし。",
+   "unit": "対数運賃の係数（参入前との差）、消費者余剰は1,000USD（1USD=100円）",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-014",
+   "key": "13|2009",
+   "policy": "大規模小売店舗法の廃止（2000年）と大店立地法",
+   "group": "daiten",
+   "link": "broad",
+   "source": {
+    "authors": "Matsuura, Toshiyuki; Sugano, Saki",
+    "year": 2009,
+    "title": "The Effect of Relaxation of Entry Restrictions for Large-Scale Retailers on SME Performance: Evidence from Japanese Retail Census",
+    "doi": "",
+    "url": "https://www.rieti.go.jp/jp/publications/dp/09e054.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "Propensity score matching on a regional (district) database from the Retail Census, comparing areas with and without large-scale retailer (LSR) entry in the late 1990s",
+   "outcome": "SME sales change, employment change, wage payment, entry/exit rate, productivity change (regional level)",
+   "effect": "Provincial areas/suburban districts, LSR >5,000 m2: SME sales change treated 0.248 vs control -0.004 (t=3.48); employment change 0.106 vs 0.004 (t=4.38); wage payment 0.047 vs -0.010 (t=3.94). For LSR >1,000 m2, no significant difference in sales or employment in any region category.",
+   "interval": "t-statistics reported (no confidence intervals)",
+   "unit": "growth rate (fraction) of regional SME aggregates",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-015",
+   "key": "14|2009",
+   "policy": "大規模小売店舗法の廃止（2000年）と大店立地法",
+   "group": "daiten",
+   "link": "broad",
+   "source": {
+    "authors": "Matsuura, Toshiyuki; Sunada, Mitsuru",
+    "year": 2009,
+    "title": "Measurement of the Consumer Benefit of Competition in Retail Outlets",
+    "doi": "",
+    "url": "https://www.rieti.go.jp/jp/publications/dp/09e015.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "Structural demand estimation with service quality as output, food retail by format 1991-2002; descriptive/decomposition, not a causal identification of the law's repeal",
+   "outcome": "Average annual consumer welfare change (compensating variation) and its decomposition into quality, outlet-share and price components",
+   "effect": "Average annual welfare change 3.7% (1991-1997) and 1.9% (1997-2002); quality component CVq 2.1% and 1.2%; outlet-share CVN 1.4% and 0.1%; price CVp 0.2% and 0.5%.",
+   "interval": "",
+   "unit": "percent per year",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-016",
+   "key": "15|2005",
+   "policy": "国鉄民営化（1987年）",
+   "group": "kokutetsu",
+   "link": "event",
+   "source": {
+    "authors": "Fumitoshi Mizutani; Shuji Uranishi",
+    "year": 2005,
+    "title": "The Effects of Privatization on Productivity and Capital Adjustment",
+    "doi": "",
+    "url": "https://b.kobe-u.ac.jp/papers/2005_05/",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "計量経済分析（民営化前後のJR各社データによるTFP成長の要因分解、過剰資本の検定）。識別は前後比較型で、自然実験・差の差ではない",
+   "outcome": "全要素生産性（TFP）成長率、資本の過剰度",
+   "effect": "民営化後のTFP成長は年2.97%、うち民営化の効果は年+1.62%",
+   "interval": "",
+   "unit": "% per year",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "weak",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-017",
+   "key": "16|2020",
+   "policy": "タクシー規制緩和（2002年）と再規制（2009年）",
+   "group": "taxi",
+   "link": "broad",
+   "source": {
+    "authors": "Miyoshi, Y., Tsuzuki, H., Itakura, H.",
+    "year": 2020,
+    "title": "Empirical Study on the Effects of Deregulation in the Japanese Taxi Market",
+    "doi": "10.14790/ijams.12.37",
+    "url": "https://www.jstage.jst.go.jp/article/ijams/12/1/12_37/_pdf",
+    "grade": "B",
+    "verified": "一致"
+   },
+   "method": "都道府県パネル（2015-2018年、235観測）による不均衡市場モデルの構造推定。内生変数（運転者時給）を操作変数としたGMM。政策導入前後の比較ではなく、需給調整規制下で超過需要があるかの検証。Hansen J検定は棄却（p=0.0000）で操作変数の妥当性に懸念あり",
+   "outcome": "タクシー実車キロ（Taxi actual vehicle kilometers）",
+   "effect": "対数タクシー台数の係数 4.569（頑健標準誤差 1.010、p=0.000）。タクシー運転者時給の係数は 2.960（標準誤差 5.840、p=0.612）で有意でない",
+   "interval": "95%区間は約 2.59〜6.55（標準誤差から1.96倍で算出）",
+   "unit": "実車キロ（被説明変数の単位は表1が『1台1日あたり』と読めるが、表4では明記なし）／対数台数1単位あたり",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": null,
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-018",
+   "key": "17|2019",
+   "policy": "タクシー規制緩和（2002年）と再規制（2009年）",
+   "group": "taxi",
+   "link": "broad",
+   "source": {
+    "authors": "橋本由紀、小前和智",
+    "year": 2019,
+    "title": "福祉の拡充とタクシー需要の減退：タクシー運転者の賃金停滞の背景（RIETI Discussion Paper 19-J-053）",
+    "doi": "",
+    "url": "https://www.rieti.go.jp/jp/publications/dp/19j053.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "都道府県パネル回帰。2002年緩和の効果を直接推定したものではなく、自家用福祉車両の増加がタクシー需要と賃金に与える影響を推計し、あわせて需要減退の要因として規制緩和・再規制を整理して退ける。2008年措置法・2014年推進法の適用有無で県を分けた異質性分析を含む",
+   "outcome": "タクシー輸送人員、営業収入、運転者賃金（規制緩和自体の効果ではなく、需要減退の要因として扱う）",
+   "effect": "自家用福祉車両10%増でタクシー輸送人員 -0.9%、営業収入 -1.3%。営業収入1%減で運転者賃金 -1.3%。規制緩和についての数値推計はなく、輸送人員・運送収入の低下は緩和以前の1990年代半ばから観察されると記述",
+   "interval": "",
+   "unit": "%（弾力性）",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": null,
+     "outcome_class": null,
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "held": [
+     "design",
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-019",
+   "key": "18|2009",
+   "policy": "金融ビッグバン（1996-2001年）",
+   "group": "bigbang",
+   "link": "broad",
+   "source": {
+    "authors": "Jose A. Lopez, Mark M. Spiegel",
+    "year": 2009,
+    "title": "Foreign Entry into Underwriting Services: Evidence from Japan's Big Bang Deregulation (FRBSF Working Paper 2009-14; 公刊版 JMCB 46(2-3), 2014, DOI 10.1111/jmcb.12112)",
+    "doi": "10.1111/jmcb.12112",
+    "url": "https://www.frbsf.org/wp-content/uploads/wp09-14bk.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "差の差＋マッチング（1995年の外国引受業者へのサムライ債市場開放を処置、ユーロ円債を対照群）",
+   "outcome": "債券引受手数料（発行額比、bp）",
+   "effect": "WP版: サムライ債の引受手数料が平均23bp低下（4つのマッチング法の平均23.4bp）。公刊版の要旨・RePEcは16bp低下と記載（公刊版本文は未読）",
+   "interval": "統計的に有意（傾向スコア法のみ10%水準）。信頼区間は未抽出",
+   "unit": "basis points",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-020",
+   "key": "19|2011",
+   "policy": "金融ビッグバン（1996-2001年）",
+   "group": "bigbang",
+   "link": "broad",
+   "source": {
+    "authors": "Heather Montgomery, Yuki Takahashi",
+    "year": 2011,
+    "title": "The Japanese Big Bang: the effects of \"free, fair and global\" (MPRA Paper 35040)",
+    "doi": "",
+    "url": "https://ideas.repec.org/p/pra/mprapa/35040.html",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "1996-2009年の銀行パネル（1,761行）の記述比較とROA/ROE、確率的フロンティアによるコスト・利益効率推定（因果識別なし）",
+   "outcome": "銀行のROA・ROE、コスト効率、利益効率",
+   "effect": "全標本の平均ROA -0.01、ROE -1.05（Table 2）。コスト効率は改善、利益効率はビッグバン期1996-2001は横ばい（95%区間おおむね0.73-0.76）で2001年以降低下。大手行は利益効率が有意に低い",
+   "interval": "利益効率の95%区間 約0.73-0.76（1996-2001）",
+   "unit": "ROA/ROE=%、効率スコア=0-1",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "output",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "weak",
+     "outcome_class": null,
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-021",
+   "key": "20|1999",
+   "policy": "金融ビッグバン（1996-2001年）",
+   "group": "bigbang",
+   "link": "broad",
+   "source": {
+    "authors": "Takatoshi Ito, Michael Melvin",
+    "year": 1999,
+    "title": "Japan's Big Bang and the Transformation of Financial Markets (NBER Working Paper 7247)",
+    "doi": "",
+    "url": "https://www.nber.org/papers/w7247",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "1998年4月1日の為替自由化の事象研究（日次データ回帰＋GARCH型条件付き分散モデル、1998年1-6月）",
+   "outcome": "円ドル建て気配のビッド・アスク・スプレッド、為替の条件付きボラティリティ",
+   "effect": "自由化ダミーの係数は日本の気配スプレッドで-0.008、日本と全体の差で-0.009（いずれもp=0.00）。ボラティリティ式でも自由化ダミーは負（4%水準で有意）",
+   "interval": "",
+   "unit": "スプレッド（Table 1のとおり。単位は原文に明記が見当たらない）",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-022",
+   "key": "21|2009",
+   "policy": "最低賃金の引き上げの雇用効果（日本）",
+   "group": "minwage",
+   "link": "broad",
+   "source": {
+    "authors": "Kawaguchi, Daiji; Mori, Yuko",
+    "year": 2009,
+    "title": "Is Minimum Wage an Effective Anti-Poverty Policy in Japan?",
+    "doi": "",
+    "url": "https://www.rieti.go.jp/jp/publications/dp/09e032.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "都道府県×年齢・性別の階差回帰（影響を受ける労働者割合 Fraction Affected、就業構造基本調査、1997-2002）",
+   "outcome": "年齢・性別グループ別の就業率の変化",
+   "effect": "男性15-19歳: FA係数 -0.23（FA_min）/ -0.20（FA_max）。本文: FAが1%上昇すると就業率が約0.2ポイント低下。既婚女性25-59歳: FA1%上昇で就業率0.4-0.8ポイント低下",
+   "interval": "男性15-19歳 SE 0.11 / 0.12（区間は未報告）",
+   "unit": "就業率の変化（比率）／本文は1%あたりのポイント",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-023",
+   "key": "22|2023",
+   "policy": "最低賃金の引き上げの雇用効果（日本）",
+   "group": "minwage",
+   "link": "broad",
+   "source": {
+    "authors": "Motohashi, Naoki",
+    "year": 2023,
+    "title": "Minimum Wages and Labour Market Dynamics: Evidence from Japan",
+    "doi": "",
+    "url": "https://www.esri.cao.go.jp/en/esri/content/e_dis380.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "個人パネルの固定効果OLS（都道府県固定効果／個人固定効果）、2015-2019年の非正規労働者",
+   "outcome": "非正規労働者の新規採用確率（離職確率、時給も推定）",
+   "effect": "最低賃金変化（前期）の係数 -0.00282（全体、都道府県FE）、女性 -0.00328、男性 -0.00112（有意でない）。離職の増加は見られず",
+   "interval": "SE 0.00119（全体）、0.00129（女性）、0.00212（男性）",
+   "unit": "新規採用ダミーに対するOLS係数",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-024",
+   "key": "23|2019",
+   "policy": "最低賃金の引き上げの雇用効果（日本）",
+   "group": "minwage",
+   "link": "broad",
+   "source": {
+    "authors": "Morikawa, Masayuki",
+    "year": 2019,
+    "title": "Minimum Wages and Productivity: Evidence from Japan",
+    "doi": "",
+    "url": "https://www.rieti.go.jp/jp/publications/pdp/19p015.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "都道府県パネル（固定効果・システムGMM）と企業パネル（固定効果）、カイツ指数",
+   "outcome": "労働生産性（LP）、TFP",
+   "effect": "都道府県パネルのLP: -0.1574（固定効果）、-0.3294（GMM）で有意でない。企業パネルのLP: -0.3754（5%で有意）、TFP: -0.1244（有意でない）",
+   "interval": "SE 0.1340 / 0.3662 / 0.1553 / 0.1618",
+   "unit": "カイツ指数に対する係数",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 0,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-025",
+   "key": "24|2026",
+   "policy": "最低賃金の引き上げの雇用効果（日本）",
+   "group": "minwage",
+   "link": "broad",
+   "source": {
+    "authors": "Kanayama, Hayato; Miyaji, Sho; Otani, Suguru",
+    "year": 2026,
+    "title": "Just After Minimum Wage Hikes: Short-Run Labor-Demand Response and Reallocation",
+    "doi": "10.48550/arXiv.2505.04555",
+    "url": "https://arxiv.org/pdf/2505.04555",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "賃金帯の差の差（イベントスタディ）、スポットワーク（Timee）データ、2023年の47都道府県の最低賃金改定（約4%）、Cengiz et al.方式の欠損雇用・超過雇用分解",
+   "outcome": "影響を受ける賃金帯の雇用（求人・契約数）",
+   "effect": "影響帯の雇用が約2%減少。新最低賃金未満の雇用 -3.0%、直上の雇用 +1.2%。最低賃金に対する雇用弾力性 -0.388、影響賃金に対する弾力性 -0.732",
+   "interval": "弾力性 -0.388 の SE 0.132、-0.732 の SE 0.091（賃金帯でクラスター）",
+   "unit": "雇用の変化率／弾力性",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-026",
+   "key": "25|2026",
+   "policy": "最低賃金の引き上げの雇用効果（日本）",
+   "group": "minwage",
+   "link": "broad",
+   "source": {
+    "authors": "Morikawa, Masayuki",
+    "year": 2026,
+    "title": "The Impact of Minimum Wage Increases in Japan: An analysis after the introduction of numerical targets",
+    "doi": "",
+    "url": "https://www.rieti.go.jp/jp/publications/pdp/26p019.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "企業パネルの2SLS。隣接県との前年の最低賃金格差を操作変数に使用（2017年以降の引き上げ、BSJBSA 2018年度以降）",
+   "outcome": "企業の従業員数の変化（賃金・ROA・LP・TFPも推定）",
+   "effect": "ΔMWの係数: 従業員数 -1.287（1年間隔）、-2.011（2年間隔）。最低賃金上昇率が1標準偏差大きいと従業員数が1.8%減。賃金は +1.260。LP・TFPは有意でない",
+   "interval": "SE 0.402（1年）、0.590（2年）（県でクラスター）",
+   "unit": "対数差の弾力性（雇用弾力性は約-1）",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "日本"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-027",
+   "key": "26|2014",
+   "policy": "米国の航空規制緩和（1978年）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Severin Borenstein, Nancy L. Rose",
+    "year": 2014,
+    "title": "How Airline Markets Work...or Do They? Regulatory Reform in the Airline Industry",
+    "doi": "",
+    "url": "https://www.nber.org/system/files/chapters/c12570/c12570.pdf",
+    "grade": "D",
+    "verified": "一致"
+   },
+   "method": "規制時代のSIFL運賃式による反実仮想との比較（DOT Databank 1A 10%標本の実績運賃 vs SIFL）。反実仮想の弱点（生産性外生、搭乗率55%固定、規制下の割引）も議論",
+   "outcome": "実質平均運賃（旅客マイル加重yield）と消費者余剰",
+   "effect": "2011年の実績運賃はSIFL運賃より約26%低く、消費者余剰の増加は約310億ドル（2011年）",
+   "interval": "",
+   "unit": "percent / USD billion (2011)",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": null,
+     "outcome_class": "price_surplus",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "held": [
+     "design"
+    ]
+   }
+  },
+  {
+   "id": "bt-028",
+   "key": "27|1996",
+   "policy": "米国の航空規制緩和（1978年）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "David Card",
+    "year": 1996,
+    "title": "Deregulation and Labor Earnings in the Airline Industry",
+    "doi": "",
+    "url": "https://www.nber.org/system/files/working_papers/w5687/w5687.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "1980年・1990年国勢調査マイクロデータ等を用いた産業賃金プレミアムの前後比較（非航空産業労働者を対照、人的資本変数で調整）",
+   "outcome": "航空産業労働者の相対賃金（産業賃金プレミアム）",
+   "effect": "規制緩和後、航空労働者の相対所得は約10%低下。調整後の産業プレミアムは1979〜1989年に10〜15%低下、1989〜1993/94年はほぼ変化なし",
+   "interval": "10〜15%（1979〜1989年の調整後プレミアム低下幅）",
+   "unit": "percent",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "wage",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "wage",
+     "benefit_sign": -1,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": "wage",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-029",
+   "key": "28|2011",
+   "policy": "米国の航空規制緩和（1978年）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Severin Borenstein",
+    "year": 2011,
+    "title": "On the Persistent Financial Losses of U.S. Airlines: A Preliminary Exploration",
+    "doi": "",
+    "url": "https://www.nber.org/system/files/working_papers/w16744/w16744.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "規制緩和後の国内旅客事業の長期収益の記述的集計（1979〜2009年、2009年ドル換算）",
+   "outcome": "米国航空会社の国内営業の累積利益",
+   "effect": "1979〜2009年に国内営業で約590億ドルの累積損失（2009年ドル）。1979〜89年は約100億ドルの損失、1990年代は約50億ドルの利益、2000〜09年は約540億ドルの損失",
+   "interval": "",
+   "unit": "USD billion (2009 dollars)",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "output",
+     "benefit_sign": 0,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": "weak",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-030",
+   "key": "29|2014",
+   "policy": "米国の通信自由化（1996年電気通信法）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Przemyslaw Jeziorski",
+    "year": 2014,
+    "title": "Effects of Mergers in Two-Sided Markets: The US Radio Industry（読了版はワーキングペーパー版 Oct 2012）",
+    "doi": "10.1257/mic.6.4.35",
+    "url": "https://benny.aeaweb.org/conference/2013/retrieve.php?pdfid=262",
+    "grade": "B",
+    "verified": "一致"
+   },
+   "method": "構造推計（需給モデル）。1996年法による所有上限緩和後の1996-2006年ラジオ合併ブームの前後均衡を比較。自然実験ではなく、法の効果への帰属は著者の記述による",
+   "outcome": "聴取者余剰・広告主余剰（合併による変化）",
+   "effect": "聴取者余剰+0.2%（品種増+0.3%、広告量調整-0.1%）、広告主余剰-21%（品種変化-17%、広告量調整-5%）。WP本文では広告主余剰の減少は年$223百万。同期間に広告価格/聴取者は約40%上昇",
+   "interval": "",
+   "unit": "余剰の%変化（年）",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 0,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-031",
+   "key": "30|2004",
+   "policy": "米国の通信自由化（1996年電気通信法）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Robert W. Crandall, Allan T. Ingraham, Hal J. Singer",
+    "year": 2004,
+    "title": "Do Unbundling Policies Discourage CLEC Facilities-Based Investment?",
+    "doi": "10.2202/1538-0653.1136",
+    "url": "https://www.brookings.edu/wp-content/uploads/2016/06/20040429-2.pdf",
+    "grade": "B",
+    "verified": "一致"
+   },
+   "method": "州間・時点間パネル的回帰（2000-2001年のCLEC回線データ、E911およびFCCデータ）。操作変数等の因果識別はなく相関的。著者はコンサル会社所属で産業寄りの可能性あり",
+   "outcome": "CLEC自前設備回線とUNE回線の比（対数）の変化",
+   "effect": "log(UNE料金)-log(設備コスト)の係数 0.662（z=22.81、埋込コスト、人口なし）、0.64（z=5.91、人口・都市人口を含む）。HCPMコストでは0.96（z=100.54）。ただしE911データ+HCPMでは係数が有意でない場合あり",
+   "interval": "z統計量のみ（信頼区間なし）。1%水準で有意（FCCデータ全回帰）",
+   "unit": "対数比の変化に対する係数",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": 0,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-032",
+   "key": "31|2001",
+   "policy": "英国の民営化と電力・通信・Big Bang",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Megginson, W. L.; Netter, J. M.",
+    "year": 2001,
+    "title": "From State to Market: A Survey of Empirical Studies on Privatization",
+    "doi": "10.1257/jel.39.2.321",
+    "url": "https://feem-media.s3.eu-central-1.amazonaws.com/wp-content/uploads/NDL1999-001.pdf",
+    "grade": "B",
+    "verified": "一致"
+   },
+   "method": "文献サーベイ(英国の個別研究を要約。系統的レビュー/メタ分析ではない)",
+   "outcome": "英国民営化企業の収益性・効率、BA民営化後の運賃",
+   "effect": "Eckel-Eckel-Singal引用: BA民営化後、BA競合路線の運賃は14.3%低下(有意)、米国競合社株価は平均7%下落。Martin-Parker引用: 11社中、景気調整後に民営化後の業績が改善したのは半数未満。",
+   "interval": "",
+   "unit": "",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 0,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "weak",
+     "outcome_class": null,
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-033",
+   "key": "32|1989",
+   "policy": "英国の民営化と電力・通信・Big Bang",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Foreman-Peck, J.",
+    "year": 1989,
+    "title": "Competition, Ownership and Productivity Growth: The Impact of Privatisation and Liberalisation upon British Telecom",
+    "doi": "",
+    "url": "https://warwick.ac.uk/fac/soc/economics/research/workingpapers/1989-1994/twerp338.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "価格双対の全要素生産性指数と小規模計量モデルによる反事実シミュレーション(1981年法・1984年法の体制変更)",
+   "outcome": "BTの効率(全要素生産性)成長",
+   "effect": "数値は未抽出(本文は画像PDFで、抽出できたのは要旨と序論のみ)。定性的結論: 体制変更は効率成長にほとんど差を生まなかった。",
+   "interval": "",
+   "unit": "",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": 0,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-034",
+   "key": "33|2021",
+   "policy": "EUローミング規制（2017年）と携帯市場",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Grzybowski, L.; Muñoz-Acevedo, A.",
+    "year": 2021,
+    "title": "Impact of Roaming Regulation on Revenues and Prices of Mobile Operators in the EU",
+    "doi": "",
+    "url": "https://ideas.repec.org/p/ces/ceswps/_9235.html",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "Difference-in-differences vs non-EU control countries (operator-level ARPU panel, 2007-2018); hedonic quality-adjusted price regressions plus DiD on tariff plans",
+   "outcome": "Operator ARPU and quality-adjusted retail tariffs (waterbed test)",
+   "effect": "ARPU effect -12.6% (Euros) and -9.3% (Euros PPP) on average; range -9.3% to -20% across specifications; no impact on tariffs in the latest phase of the regulation",
+   "interval": "",
+   "unit": "percent",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "price_surplus",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": -1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": null,
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-035",
+   "key": "34|2021",
+   "policy": "EUローミング規制（2017年）と携帯市場",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Canzian, G.; Mazzarella, G.; Verboven, F.; Verzillo, S.; Ronchail, L.",
+    "year": 2021,
+    "title": "Evaluating the Impact of Price Caps - Evidence from the European Roam-Like-at-Home Regulation",
+    "doi": "",
+    "url": "https://ideas.repec.org/p/ces/ceswps/_9303.html",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "Difference-in-differences with Rest of World roaming traffic as control; operator-level retail and wholesale data (119 operators); welfare framework",
+   "outcome": "Roaming retail volumes and revenues; consumer surplus; operator profits; total welfare",
+   "effect": "Average retail volume increase +193% (voice) and +485% (data) across operators; consumer surplus +EUR 377.5m (voice) and +EUR 1.608bn (data), almost EUR 2bn per year; retail profit loss almost EUR 1.4bn; total welfare gain EUR 933.4m per year (about 80% of pre-regulation roaming revenues)",
+   "interval": "",
+   "unit": "percent; EUR per year",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": null,
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-036",
+   "key": "35|2022",
+   "policy": "EUローミング規制（2017年）と携帯市場",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Quinn, M.; Godinho de Matos, M.; Peukert, C.",
+    "year": 2022,
+    "title": "The Welfare Effects of Mobile Internet Access - Evidence from Roam-Like-at-Home",
+    "doi": "",
+    "url": "https://ideas.repec.org/p/ces/ceswps/_9612.html",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "Difference-in-differences on individual-level operator usage data, comparing home, intra-EEA and non-EEA usage, Sept 2016 to Dec 2017",
+   "outcome": "Daily mobile data usage when travelling in the EEA; consumer surplus",
+   "effect": "Daily mobile data use +54.205 MB, about +170% from a 30 MB baseline; consumer surplus increase of at least EUR 2.77 per user per travel day; about half of gains from new users",
+   "interval": "CI95% [52.319, 56.091] for the MB/day effect",
+   "unit": "MB/day; percent; EUR/user/travel day",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": null,
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-037",
+   "key": "36|2021",
+   "policy": "EUローミング規制（2017年）と携帯市場",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Quinn, M.; Godinho de Matos, M.; Peukert, C.",
+    "year": 2021,
+    "title": "The Economic Effects of Mobile Internet Access - Evidence from Roam-Like-at-Home (earlier version, NBER conference draft, 13 April 2021)",
+    "doi": "",
+    "url": "https://conference.nber.org/conf_papers/f154072/f154072.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "Difference-in-differences on individual-level operator usage data",
+   "outcome": "Daily mobile data usage when travelling in the EEA; consumer surplus",
+   "effect": "Daily mobile data use +54.17 MB (at least), about +177%; consumer surplus at least EUR 2.73 per user per day; about 45% of gains from new users",
+   "interval": "CI95% [52.33, 56.02] for the MB/day effect",
+   "unit": "MB/day; percent; EUR/user/day",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": null,
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-038",
+   "key": "37|2004",
+   "policy": "各国の電力自由化の事後評価（欧米・豪州・NZ）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Markiewicz, K.; Rose, N. L.; Wolfram, C.",
+    "year": 2004,
+    "title": "Do Markets Reduce Costs? Assessing the Impact of Regulatory Restructuring on U.S. Electric Generation Efficiency",
+    "doi": "10.3386/w11001",
+    "url": "https://www.nber.org/system/files/working_papers/w11001/w11001.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "プラット単位パネルの差の差（再編州のIOU発電所 vs 非再編州のIOU、および公営・協同組合所有の発電所）、発電所固定効果",
+   "outcome": "発電所の労働投入（従業員数）と非燃料運転費（出力一定）",
+   "effect": "従業員数 約-3%、非燃料費 約-9%（非再編州のIOU発電所比）。公営・協同組合所有の発電所との比較では労働 約-6%、非燃料費 約-12%",
+   "interval": "標準誤差 従業員数1%、非燃料費2%",
+   "unit": "%",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "employment",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "employment",
+     "benefit_sign": -1,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "employment",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-039",
+   "key": "38|2011",
+   "policy": "各国の電力自由化の事後評価（欧米・豪州・NZ）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Davis, L. W.; Wolfram, C.",
+    "year": 2011,
+    "title": "Deregulation, Consolidation, and Efficiency: Evidence from U.S. Nuclear Power",
+    "doi": "10.3386/w17341",
+    "url": "https://www.nber.org/system/files/working_papers/w17341/w17341.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "原子炉単位・月次パネルの差の差（売却された原子炉 vs 規制下に残った原子炉）、原子炉固定効果",
+   "outcome": "純発電量/設計容量（稼働率、パーセントポイント）",
+   "effect": "売却により稼働率 +6.5pp（月固定効果のみ）、原子炉固定効果を加えると +10.4pp。本文では 10.2pp の上昇を年間約420億kWh（約25億ドル）に換算。基準となる非売却プラントの2000年平均は87%",
+   "interval": "区間は未抽出（p値<0.001と記載）",
+   "unit": "パーセントポイント",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-040",
+   "key": "39|2017",
+   "policy": "各国の電力自由化の事後評価（欧米・豪州・NZ）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Cicala, S.",
+    "year": 2017,
+    "title": "Imperfect Markets versus Imperfect Regulation in U.S. Electricity Generation",
+    "doi": "10.3386/w23053",
+    "url": "https://www.nber.org/system/files/working_papers/w23053/w23053.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "段階的な卸市場移行（1999-2012）を利用した差の差。機械学習で反事実の給電配分を予測し燃料価格の交絡を除去",
+   "outcome": "発電の生産費用（メリットオーダー外の費用、地域間取引の利得）",
+   "effect": "生産費用 約30億ドル/年の削減。地域間取引の利得 +20%（取引電力10%増に対し）、メリットオーダー外費用 -20%（その運転10%減に対し）。節約の内訳は両者でおよそ2:1",
+   "interval": "区間は未抽出",
+   "unit": "ドル/年、%",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-041",
+   "key": "40|2015",
+   "policy": "各国の電力自由化の事後評価（欧米・豪州・NZ）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Borenstein, S.; Bushnell, J.",
+    "year": 2015,
+    "title": "The U.S. Electricity Industry After 20 Years of Restructuring",
+    "doi": "10.3386/w21113",
+    "url": "https://www.nber.org/system/files/working_papers/w21113/w21113.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "州パネル回帰（1997-2012の平均料金上昇率を、非公益事業発電比率と天然ガス価格に回帰）。識別は差の差ほど強くない",
+   "outcome": "州別の平均小売電気料金の変化",
+   "effect": "非公益事業発電比率100%の州で年平均上昇率 +0.6%ポイントだが有意でない。再編州の料金は1997-2007年に非再編州より約50%速く上昇し、2007年以降はわずかに低下",
+   "interval": "統計的に有意でない（区間は未抽出）",
+   "unit": "%/年",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "price_surplus",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "price_surplus",
+     "benefit_sign": 0,
+     "country": "米国"
+    },
+    "agreed": {
+     "design": null,
+     "outcome_class": "price_surplus",
+     "benefit_sign": null,
+     "country": "米国"
+    },
+    "held": [
+     "design"
+    ]
+   }
+  },
+  {
+   "id": "bt-042",
+   "key": "41|2013",
+   "policy": "ドイツ・Hartz改革（労働市場改革）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Krebs, T.; Scheffel, M.",
+    "year": 2013,
+    "title": "Macroeconomic Evaluation of Labor Market Reform in Germany (IMF Working Paper 13/42; 刊行版: IMF Economic Review 2013, doi:10.1057/imfer.2013.19)",
+    "doi": "10.5089/9781589062702.001",
+    "url": "https://www.imf.org/external/pubs/ft/wp/2013/wp1342.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "不完備市場+サーチ失業の構造モデル。Hartz前のドイツデータで較正し、Hartz IVをシミュレーション（事後の反実仮想）",
+   "outcome": "長期（非循環）失業率、世帯の厚生",
+   "effect": "-1.4 percentage points（長期失業率 9% → 7.6%）。就業世帯の厚生は上昇、失業世帯は低下",
+   "interval": "",
+   "unit": "percentage points",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "other",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "employment",
+     "benefit_sign": 1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": null,
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-043",
+   "key": "42|2021",
+   "policy": "ドイツ・Hartz改革（労働市場改革）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Hochmuth, B.; Kohlbrecher, B.; Merkl, C.; Gartner, H.",
+    "year": 2021,
+    "title": "Hartz IV and the Decline of German Unemployment: A Macroeconomic Evaluation (IHS Working Paper 31; IAB DP 03/2019, CESifo WP 8933と同一論文)",
+    "doi": "",
+    "url": "https://irihs.ihs.ac.at/id/eprint/5705/1/ihs-working-paper-2021-hochmuth-et-al-hartz-unemployment-macroeconomic-evaluation.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "労働者選別付きサーチ・マッチングモデル。IAB求人調査で部分効果と均衡効果を推定（失業期間別の部分効果+均衡効果の分解）",
+   "outcome": "定常状態の失業率",
+   "effect": "失業率が22.6%低下＝定常失業率 -2.1 percentage points。部分効果と均衡効果はほぼ同程度。部分効果のみは約 -1pp（Price 2019と同水準）",
+   "interval": "",
+   "unit": "percentage points / %",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "other",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "medium",
+     "outcome_class": "employment",
+     "benefit_sign": 1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "medium",
+     "outcome_class": null,
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-044",
+   "key": "43|2013",
+   "policy": "ドイツ・Hartz改革（労働市場改革）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Hertweck, M. S.; Sigrist, O.",
+    "year": 2013,
+    "title": "The Aggregate Effects of the Hartz Reforms in Germany (SOEPpaper 532)",
+    "doi": "10.2139/ssrn.2205031",
+    "url": "https://www.diw.de/documents/publikationen/73/diw_01.c.414559.de/diw_sp0532.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "SOEPの月次フローデータ（1983-2009）による失業率の流入・流出分解と、2003年前後に構造変化を許したマッチング関数の推定（前後比較）",
+   "outcome": "マッチング効率（失業からの流出率）",
+   "effect": "マッチング効率の改善 > 20%（2000年代半ば以降、失業率変動に占める流出率の寄与が上昇）",
+   "interval": "",
+   "unit": "%",
+   "labels": {
+    "line1": {
+     "design": "weak",
+     "outcome_class": "other",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "employment",
+     "benefit_sign": 1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "weak",
+     "outcome_class": null,
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-045",
+   "key": "44|2014",
+   "policy": "ドイツ・Hartz改革（労働市場改革）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Amable, B.; Françon, B.",
+    "year": 2014,
+    "title": "The Effect of the Hartz Reform on Unemployment Duration and Post-Unemployment Outcomes. A Difference-in-Differences Approach (Documents de Travail du CES 2014.20)",
+    "doi": "",
+    "url": "https://halshs.archives-ouvertes.fr/halshs-00973884v1/file/14020.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "差の差（DiD）+Coxハザードモデル。45歳以上の給付期間短縮（処置群）対 45歳未満（対照群）、SOEP",
+   "outcome": "失業から就業への移行ハザード（職探し期間）",
+   "effect": "Hartz×55-59歳の交互作用係数 = 0.292（Cox対数ハザード、SE 0.143）。他の年齢層（45-49: 0.081, 50-54: 0.059）は有意でない",
+   "interval": "SEから算出した近似95%区間 約 [0.01, 0.57]（原文は有意水準*のみ表示）",
+   "unit": "Cox対数ハザード係数",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "other",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "employment",
+     "benefit_sign": 1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": null,
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": [
+     "outcome_class"
+    ]
+   }
+  },
+  {
+   "id": "bt-046",
+   "key": "45|2025",
+   "policy": "韓国・台湾の産業政策の事後評価（半導体・造船・自動車）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Nathan Lane",
+    "year": 2025,
+    "title": "Manufacturing Revolutions: Industrial Policy and Industrialization in South Korea",
+    "doi": "10.48550/arXiv.2505.20566",
+    "url": "https://arxiv.org/abs/2505.20566",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "Dynamic two-way-fixed-effects difference-in-differences (targeted vs non-targeted industries, 1967-1986, relative to 1972), with Callaway-Sant'Anna doubly robust DiD and a cross-country triple-differences check",
+   "outcome": "Industry output, labor productivity, export revealed comparative advantage (RCA)",
+   "effect": "Output of targeted industries more than 100% higher than non-targeted; labor productivity more than 15% higher; RCA of HCI products up 13.2% more than other manufacturing exports; 10.6 percentage point higher probability of attaining comparative advantage",
+   "interval": "95% CIs are shown in the event-study figures, but exact bounds were not read from the text",
+   "unit": "percent / percentage points relative to 1972 baseline",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-047",
+   "key": "46|2021",
+   "policy": "韓国・台湾の産業政策の事後評価（半導体・造船・自動車）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Jaedo Choi; Andrei A. Levchenko",
+    "year": 2021,
+    "title": "The Long-Term Effects of Industrial Policy",
+    "doi": "10.3386/w29263",
+    "url": "https://www.nber.org/papers/w29263",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "Instrumental variables using regional targeting of HCI (sector x location exposure) on firm-level subsidy data, with a quantitative heterogeneous-firm model for welfare",
+   "outcome": "Firm sales growth after HCI credit subsidies (long run 1981/82 to 2009/10); welfare",
+   "effect": "Long-run IV coefficient on asinh(credit) = 0.14 (SE 0.05, Table 3 col. 3); short-run (1972-1982) = 0.10 (SE 0.05, Table 2 col. 3); model-implied welfare 3-4% lower without HCI (May 2024 revision; earlier drafts gave larger numbers)",
+   "interval": "Weak-instrument-robust (Anderson-Rubin) 90% CI [0.06, 0.29] for the long-run col. 3 estimate",
+   "unit": "change in log sales per unit of asinh(credit)",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": []
+   }
+  },
+  {
+   "id": "bt-048",
+   "key": "47|1995",
+   "policy": "韓国・台湾の産業政策の事後評価（半導体・造船・自動車）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Jong-Wha Lee",
+    "year": 1995,
+    "title": "Government Interventions and Productivity Growth in Korean Manufacturing Industries",
+    "doi": "10.3386/w5060",
+    "url": "https://www.nber.org/papers/w5060",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "Four-period (5-year) panel regressions for 38 Korean industries, 1963-83, WLS/3SLS with lagged policy instruments; not a quasi-experimental design",
+   "outcome": "Growth rate of value added per work-hour (labor productivity) and TFP growth",
+   "effect": "3SLS Table 4 col. (4.3): tariff -0.111 (SE 0.061), non-tariff barrier -0.251 (SE 0.040), tax incentive 0.312 (SE 0.140), bank loans -0.110 (SE 0.232). TFP growth not correlated with tax incentives or subsidized credit.",
+   "interval": "none reported; standard errors only",
+   "unit": "regression coefficients, dependent variable = annual growth rate of labor productivity",
+   "labels": {
+    "line1": {
+     "design": "medium",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "weak",
+     "outcome_class": "output",
+     "benefit_sign": 0,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": null,
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": [
+     "design"
+    ]
+   }
+  },
+  {
+   "id": "bt-049",
+   "key": "48|2025",
+   "policy": "韓国・台湾の産業政策の事後評価（半導体・造船・自動車）",
+   "group": null,
+   "link": null,
+   "source": {
+    "authors": "Nobuya Fukugawa; Kuo-I Chang",
+    "year": 2025,
+    "title": "Science Parks in Taiwan and Their Value-adding Contributions",
+    "doi": "",
+    "url": "https://www.rieti.go.jp/jp/publications/dp/25e005.pdf",
+    "grade": "C",
+    "verified": "一致"
+   },
+   "method": "Difference-in-differences for staggered treatment with augmented inverse probability weighting (Callaway-Sant'Anna); tenants of Hsinchu, Central and Southern science parks vs never-treated firms; always-treated firms (entered before 2002) excluded",
+   "outcome": "R&D expenditure, PhD employment, TFP, labor productivity, patent quality (log-transformed)",
+   "effect": "Full-sample ATT: ln(R&D) 3.339 (***), ln(PhD holders) 4.871 (*), TFP 1.215 (**), labor productivity 1.136 (*); the paper reads the TFP ATT as a 1.215% increase",
+   "interval": "none in text; significance stars only (confidence bands in Figures 4-13)",
+   "unit": "ATT on log-transformed outcomes, as reported (paper interprets as percent)",
+   "labels": {
+    "line1": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "line2": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": 1,
+     "country": "その他"
+    },
+    "agreed": {
+     "design": "strong",
+     "outcome_class": "output",
+     "benefit_sign": null,
+     "country": "その他"
+    },
+    "held": []
+   }
+  }
+ ]
+}

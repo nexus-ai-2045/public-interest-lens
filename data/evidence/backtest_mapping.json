@@ -1,0 +1,18 @@
+{
+  "schema": "backtest-mapping/v1",
+  "version": "backtest-mapping-v1",
+  "note": "政策グループごとに、現行の計算（app/public/distribution/laws.json）のどの法律を、その政策の「予測」として読むかを、結果（向き）を見る前に年表と題名の語だけで固定した。law_years は政策の法律が成立した年。額・向きが付いた法律（side が loss か benefit）だけを使う。",
+  "groups": {
+    "ntt": {"title_any": ["日本電信電話"], "law_years": [1984, 1985], "note": "1985年の民営化。法律の一覧は1998年以降なので、対象期間外"},
+    "electricity-retail": {"title_any": ["電気事業法"], "law_years": [2014, 2015], "note": "2016年の小売全面自由化の改正"},
+    "minpaku": {"title_any": ["住宅宿泊事業"], "law_years": [2017], "note": "住宅宿泊事業法（2018年施行）"},
+    "haken": {"title_any": ["労働者派遣"], "law_years": [1999, 2003, 2012, 2015], "note": "1999年原則自由化、2003年（2004年施行）製造業解禁、2012年・2015年改正"},
+    "yusei": {"title_any": ["郵政民営化"], "law_years": [2005], "note": "2005年成立、2007年施行"},
+    "koku": {"title_any": ["航空法"], "law_years": [1999], "note": "運賃自由化・参入規制緩和の改正（2000年施行）"},
+    "daiten": {"title_any": ["大規模小売店舗"], "law_years": [1998], "note": "大規模小売店舗立地法（2000年施行）"},
+    "kokutetsu": {"title_any": ["日本国有鉄道改革", "旅客鉄道"], "law_years": [1986], "note": "1987年の民営化。法律の一覧は1998年以降なので、対象期間外"},
+    "taxi": {"title_any": ["道路運送法", "タクシー"], "law_years": [2000, 2009], "note": "2002年緩和の改正（2000年成立）と2009年の再規制"},
+    "bigbang": {"title_any": ["金融システム改革"], "law_years": [1998], "note": "金融システム改革法（1998年）"},
+    "minwage": {"title_any": ["最低賃金法"], "law_years": [2007], "note": "2007年改正（引き上げの枠組み）。研究は年々の引き上げの効果で、法律1本の効果ではない"}
+  }
+}
