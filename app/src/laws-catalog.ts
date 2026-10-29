@@ -87,21 +87,13 @@ export type CatalogDetail = {
   overview?: CatalogOverview;
 };
 
-/** 確かな額は高・中だけ。低（段階1：経済全体で未確認）は額が出ていても「確かな額」に入れない（設計決定0008の印つき公開、method-spec の確かさの節）。 */
-export const isSolid = (item: Pick<CatalogItem, 'certainty'>) => item.certainty === '高' || item.certainty === '中';
-export const isLow = (item: Pick<CatalogItem, 'certainty'>) => item.certainty === '低';
-/** 幅が0をまたぐ＝向きが定まらない。データの印に頼らず、幅そのものから決める。 */
-export const straddlesZero = (amount: CatalogAmount | null | undefined) => !!amount && amount.low < 0 && amount.high > 0;
-/** 一覧・上位バーの確かさの組：0＝高・中、1＝低、2＝参考などその他の額、3＝額なし。 */
-export const certaintyTier = (item: CatalogItem) => isSolid(item) ? 0 : isLow(item) ? 1 : item.amount ? 2 : 3;
-
 export const STEP_LABEL: Record<CatalogStep, string> = {
   enacted: '振り分けで止まった',
   evaluated: '施行日の確認で止まった',
   dated: '影響の判定で止まった',
   staged: '額の計算で止まった',
   amounted: '参考の額',
-  published: '額（高・中・低）',
+  published: '確かな額',
 };
 const STEP_ORDER: CatalogStep[] = ['enacted', 'evaluated', 'dated', 'staged', 'amounted', 'published'];
 
@@ -117,7 +109,7 @@ export function parseLawsCatalog(text: string): LawsCatalog {
   return data;
 }
 
-export type SideFilter = 'all' | 'confirmed' | 'low' | 'loss' | 'benefit' | 'amount' | 'none';
+export type SideFilter = 'all' | 'confirmed' | 'loss' | 'benefit' | 'amount' | 'none';
 export type SortKey = 'amount' | 'loss' | 'benefit' | 'newest' | 'oldest' | 'progress';
 export type CatalogQuery = { text: string; side: SideFilter; field: string; kind: string; sort: SortKey };
 export const DEFAULT_QUERY: CatalogQuery = { text: '', side: 'all', field: '', kind: '', sort: 'amount' };
@@ -133,8 +125,7 @@ export function filterCatalog(items: CatalogItem[], query: CatalogQuery): Catalo
     if (query.side === 'loss' && item.side !== 'loss') return false;
     if (query.side === 'benefit' && item.side !== 'benefit') return false;
     if (query.side === 'amount' && !item.amount) return false;
-    if (query.side === 'confirmed' && !isSolid(item)) return false;
-    if (query.side === 'low' && !isLow(item)) return false;
+    if (query.side === 'confirmed' && item.step !== 'published') return false;
     if (query.side === 'none' && item.amount) return false;
     return true;
   });
@@ -145,8 +136,8 @@ export function filterCatalog(items: CatalogItem[], query: CatalogQuery): Catalo
   // 損失順・便益順は、その向きの行を先に置き、あとは既定の並び（確かな額 → 額の大きい順）。向きの無い行は最後。
   const bySide = (side: 'loss' | 'benefit') => (a: CatalogItem, b: CatalogItem) => Number(b.side === side) - Number(a.side === side) || sorters.amount(a, b);
   const sorters: Record<SortKey, (a: CatalogItem, b: CatalogItem) => number> = {
-    // 確かな額（高・中）→ 確かさ低 → 参考の額 → 額なしの順。同じ組の中は額の大きい順、額のない行は計算が進んだ順、同じなら新しい順。
-    amount: (a, b) => certaintyTier(a) - certaintyTier(b) || (b.amount?.median ?? -1) - (a.amount?.median ?? -1) || progress(b) - progress(a) || byYear(a, b),
+    // 確かな額 → 参考の額 → 額なしの順。同じ組の中は額の大きい順、額のない行は計算が進んだ順、同じなら新しい順。
+    amount: (a, b) => Number(b.step === 'published') - Number(a.step === 'published') || (b.amount?.median ?? -1) - (a.amount?.median ?? -1) || progress(b) - progress(a) || byYear(a, b),
     loss: (a, b) => bySide('loss')(a, b),
     benefit: (a, b) => bySide('benefit')(a, b),
     newest: (a, b) => byYear(a, b) || progress(b) - progress(a),
@@ -189,7 +180,7 @@ export function readQuery(search: string): CatalogQuery {
   const sort = params.get('sort') as SortKey | null;
   return {
     text: params.get('q') ?? '',
-    side: side && ['all', 'confirmed', 'low', 'loss', 'benefit', 'amount', 'none'].includes(side) ? side : 'all',
+    side: side && ['all', 'confirmed', 'loss', 'benefit', 'amount', 'none'].includes(side) ? side : 'all',
     field: params.get('field') ?? '',
     kind: params.get('kind') ?? '',
     sort: sort && ['amount', 'loss', 'benefit', 'newest', 'oldest', 'progress'].includes(sort) ? sort : 'amount',

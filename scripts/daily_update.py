@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import shutil
 import socket
 import subprocess
@@ -203,7 +204,9 @@ class Run:
         self.steps.append({"step": step, "status": status, "detail": detail})
         print(f"[{status}] {step} {detail}", flush=True)
 
-    def command(self, step: str, args: list[str], cwd: Path = ROOT, timeout: int = 3600) -> bool:
+    def command(self, step: str, args: list[str], cwd: Path = ROOT, timeout: int | None = None) -> bool:
+        # 段ごとの上限。Actions の定期実行は DAILY_UPDATE_STAGE_TIMEOUT（秒）で短くして、1段の停滞が全体を止めないようにする。
+        timeout = timeout or int(os.environ.get("DAILY_UPDATE_STAGE_TIMEOUT") or 3600)
         started = time.monotonic()
         try:
             done = subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=timeout)

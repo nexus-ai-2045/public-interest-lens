@@ -12,9 +12,8 @@ describe('法律ランキングの表示の決まり', () => {
     });
   });
   it('参考の額は確かな額と別の組に分け、それぞれ額の大きい順に並べる', () => {
-    const { confirmed, low, reference } = splitLaws([law('a', '参考', 9), law('b', '高', 1), law('c', '低', 5), law('d', '参考', 20), law('e', '中', 3)]);
-    expect(confirmed.map(item => item.id)).toEqual(['e', 'b']);
-    expect(low.map(item => item.id)).toEqual(['c']);
+    const { confirmed, reference } = splitLaws([law('a', '参考', 9), law('b', '高', 1), law('c', '低', 5), law('d', '参考', 20), law('e', '中', 3)]);
+    expect(confirmed.map(item => item.id)).toEqual(['c', 'e', 'b']);
     expect(reference.map(item => item.id)).toEqual(['d', 'a']);
   });
   it('全体指標の額は参考とも別の組にし、側と検索語で絞れる', () => {

@@ -14,12 +14,11 @@ export const certaintyLabels: Record<Certainty, string> = {
 export const MACRO_GROUP = '全体指標';
 export const isMacro = (law: PublicRankingLaw) => law.group.startsWith(MACRO_GROUP);
 
-/** 確かな額（高・中）、確かさ低（段階1。確かな額に入れない）、参考の額、全体指標の参考の額を分ける。どれも額の大きい順。 */
-export function splitLaws(laws: PublicRankingLaw[]): { confirmed: PublicRankingLaw[]; low: PublicRankingLaw[]; reference: PublicRankingLaw[]; macro: PublicRankingLaw[] } {
+/** 確かな額（高・中・低）、参考の額、全体指標の参考の額を分ける。どれも額の大きい順。 */
+export function splitLaws(laws: PublicRankingLaw[]): { confirmed: PublicRankingLaw[]; reference: PublicRankingLaw[]; macro: PublicRankingLaw[] } {
   const bySize = (a: PublicRankingLaw, b: PublicRankingLaw) => b.amountMedianYen - a.amountMedianYen || a.id.localeCompare(b.id);
   return {
-    confirmed: laws.filter(law => law.certainty === '高' || law.certainty === '中').sort(bySize),
-    low: laws.filter(law => law.certainty === '低').sort(bySize),
+    confirmed: laws.filter(law => law.certainty !== '参考').sort(bySize),
     reference: laws.filter(law => law.certainty === '参考' && !isMacro(law)).sort(bySize),
     macro: laws.filter(isMacro).sort(bySize),
   };

@@ -22,7 +22,8 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # 政治資金の取得枠だけで最大40分あり、全段で90分を超える（手動実行で確認）。
+    timeout-minutes: 240
     env:
       PYTHONUTF8: '1'
       GH_TOKEN: ${{ github.token }}
