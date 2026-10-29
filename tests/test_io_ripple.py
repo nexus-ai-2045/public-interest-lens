@@ -32,6 +32,8 @@ class TestFormula(unittest.TestCase):
         self.assertEqual(m.half_width(3), 0.40)
         self.assertEqual(m.half_width(8), 0.50)
         self.assertIsNone(m.half_width(11))
+        self.assertEqual(m.half_width(4, 'mid'), 0.80)
+        self.assertIsNone(m.half_width(6, 'mid'))
 
 
 @unittest.skipUnless(HAVE_RAW, '産業連関表の原本が無い（python3 scripts/io_ripple.py fetch）')
