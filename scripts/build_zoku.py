@@ -140,6 +140,7 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
         org = r['団体名キー'] or org_key(r['相手方'])
         for field in org_fields.get(org, ()):
             t = ties[(key, field)]
+            t['pid'] = t['pid'] or r['人物ID']
             t['money'][org] += int(float(r.get('金額') or 0))
             t['money_urls'].add(r['PDF_URL'])
             names.setdefault(key, key)

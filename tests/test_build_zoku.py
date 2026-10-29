@@ -54,6 +54,7 @@ class ZokuTest(unittest.TestCase):
         rows, _, _ = run(relations=[{**rel, '金額': '1000000'}], org_fields={'X協会': {'農林水産省'}})
         self.assertIn('X協会', rows[0]['同じ分野の団体との金銭の関係'])
         self.assertEqual(rows[0]['金銭の関係の根拠URL'], U)
+        self.assertEqual(rows[0]['人物ID'], 'p')
         self.assertEqual(run(relations=[{**rel, '金額': '999999'}], org_fields={'X協会': {'農林水産省'}})[0], [])
         self.assertEqual(run(relations=[{**rel, '金額': '5000000'}], org_fields={})[0], [])
 
