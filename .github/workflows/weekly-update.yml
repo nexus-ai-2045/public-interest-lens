@@ -1,0 +1,100 @@
+name: weekly-update
+
+# 週2回（月曜・木曜の 3:00 JST）、一次資料の取得と再計算を回し、変化があれば PR を作る。
+# 毎日更新はしない（2026-10-25 の決定）。cron は UTC：日曜・水曜 18:00 UTC = 月曜・木曜 3:00 JST。
+# PR は自動で取り込まない。検査（verify・preflight）が通ってから人かレビューが取り込む。
+# 注意：GITHUB_TOKEN で作った PR には他のワークフローが走らない。検査は PR を開き直す（Close→Reopen）か、
+#       「Update branch」で起こす。リポジトリ設定「Allow GitHub Actions to create and approve pull requests」が要る。
+
+on:
+  schedule:
+    - cron: '0 18 * * 0,3'
+  workflow_dispatch:
+
+concurrency:
+  group: weekly-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PYTHONUTF8: '1'
+      GH_TOKEN: ${{ github.token }}
+      # preflight.yml と同じ固定先（repo-preflight v0.10.0）
+      PREFLIGHT_REF: 5b7c774deb8e9abcf0fce0c5f39ec1c1f3a894f3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      # daily_update.py の事前チェック（個人名義）が使う repo-preflight を、固定 SHA で置く
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: nexus-ai-2045/repo-preflight
+          ref: ${{ env.PREFLIGHT_REF }}
+          path: tool
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: npm ci
+        working-directory: app
+      # 公開用の名義を設定し、書き込みの前に identity guard の config を通す。不合格ならここで止まり、何も書かない。
+      - name: 公開用の名義を設定して identity guard の config を通す
+        run: |
+          git config user.name "nexus_ai"
+          git config user.email "273569186+nexus-ai-2045@users.noreply.github.com"
+          python3 tool/scripts/local_identity_guard.py --public-name nexus-ai-2045 --public-name nexus_ai config
+      # 事前チェックのフック検査を通すため、更新の前に git フックを入れる（commit・push でも共通検査が動く）。
+      - name: git フックを入れる
+        env:
+          REPO_PREFLIGHT_HOME: ${{ github.workspace }}/tool
+        run: python3 scripts/install_hooks.py
+      # 取得と再計算。落ちた段階は報告に残して次へ進む（daily_update.py の作り）。検査は PR 側の verify に任せる。
+      - name: 取得と再計算
+        env:
+          REPO_PREFLIGHT_ROOT: ${{ github.workspace }}/tool
+          REPO_PREFLIGHT_HOME: ${{ github.workspace }}/tool
+        run: |
+          mkdir -p .local/daily-update
+          python3 scripts/daily_update.py --fetch --rebuild --report .local/daily-update/report.md 2>&1 | tee .local/daily-update/log.txt || true
+      - name: 変化があれば個人名義検査を通して PR を作る
+        env:
+          REPO_PREFLIGHT_HOME: ${{ github.workspace }}/tool
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain -- data app/public)" ]; then
+            echo "変化なし。PR は作らない。"
+            exit 0
+          fi
+          branch="report/weekly-update-$(date -u +%Y%m%d-%H%M)"
+          git checkout -b "$branch"
+          python3 scripts/roadmap_check.py --update
+          git add -- data app/public docs/ロードマップ.md
+          git commit -m "週2回の自動更新（$(TZ=Asia/Tokyo date +%Y-%m-%d)）：取得の記録と再計算"
+          # 生成した変更を含むコミットに、push 前と同じ個人名義検査を回す。不合格なら送らない。
+          python3 tool/scripts/local_identity_guard.py --public-name nexus-ai-2045 --public-name nexus_ai check --range "origin/main..HEAD"
+          git push origin "$branch"
+          {
+            echo "週2回の自動更新（月・木 3:00 JST）。取得と再計算の結果です。"
+            echo
+            echo "- 再計算が落ちた場合は公開ランキングを作り直していません（段階の記録を見てください）。"
+            echo "- 検査（verify・preflight）が通ってから取り込みます。"
+            echo
+            echo '```'
+            tail -n 60 .local/daily-update/log.txt
+            echo '```'
+          } > .local/daily-update/pr-body.md
+          gh pr create --draft --base main --head "$branch" \
+            --title "週2回の自動更新（$(TZ=Asia/Tokyo date +%Y-%m-%d)）" \
+            --body-file .local/daily-update/pr-body.md
