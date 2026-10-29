@@ -75,6 +75,8 @@ ROW_NOTES = {
 COVID_HELD = "コロナ期と分離できない（元の窓の額。議員への配分に使わない）"
 # コロナ対応の法律（covid-response-v1）は、施行が2020年以降で窓がコロナ期そのもの。判定表の行に関わらず同じ扱いにする。
 COVID_LABELS = INPUTS["covidLabels"]
+# コロナ対応の法律で額が付かないものには、元の理由の前にこの一文を出す（設計決定0014 決定4）。
+COVID_NO_AMOUNT = "コロナ対応のため額を付けない"
 OUTCOMES = {
     "pending": "公開承認待ち",
     "source": "出典チェックで食い違い（確認中）",
@@ -114,7 +116,7 @@ def _digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _counts(publish: list[dict[str, str]], loss: list[dict[str, str]], captured: dict[str, bytes]) -> dict[str, int]:
+def _counts(captured: dict[str, bytes]) -> dict[str, int]:
     impact = _rows("impact", captured)
     return {
         "enacted": len(_rows("enacted", captured)),
@@ -122,8 +124,6 @@ def _counts(publish: list[dict[str, str]], loss: list[dict[str, str]], captured:
         "evaluated": len(impact),
         "dated": len(_rows("dated", captured)),
         "staged": sum(1 for row in impact if re.fullmatch(r"段階[123]", row["判定"])),
-        "amounted": sum(1 for row in loss if row["損失または便益の額"] and row["参考フラグ"] != "参考"),
-        "publishable": sum(1 for row in publish if row["公開可否"] == "公開可"),
     }
 
 
@@ -381,7 +381,10 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
             elif law_id in covid_scale:
                 others.append(_other(law_id, title, "covid_scale", covid_scale[law_id]))
             else:
-                others.append(_no_amount(law_id, title, publish, loss, impact, dated, triage))
+                other = _no_amount(law_id, title, publish, loss, impact, dated, triage)
+                if law_id in covid_ids:
+                    other["reason"] = _short(f"{COVID_NO_AMOUNT}／{other['reason']}")
+                others.append(other)
         elif not approve_all:
             others.append(_other(law_id, row["題名"], "pending", "額は計算できているが、公開の承認を受けるまで表示しない"))
         elif law_id in held_by_check:
@@ -414,7 +417,7 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
         "laws": laws,
         "others": others,
         "counts": {
-            **_counts(publish_rows, list(loss.values()), captured),
+            **_counts(captured),
             "published": len(laws),
             "confirmed": len(laws) - reference,
             "reference": reference,

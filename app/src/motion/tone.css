@@ -178,3 +178,7 @@ header.site-header nav.site-nav button{padding:6px 12px;font-size:13px}
 /* 本文へ移動（キーボードで最初に Tab を押したときだけ現れる） */
 .skip-link{position:absolute;left:12px;top:-64px;z-index:100;padding:10px 16px;border-radius:7px;background:var(--ink);color:var(--bg);font-weight:700;text-decoration:none}
 .skip-link:focus{top:12px}
+
+/* 全ページ最上部の「ジョークサイトです」帯 */
+.joke-banner { position: relative; z-index: 60; padding: 10px 16px; text-align: center; font-size: 1.05rem; font-weight: 800; letter-spacing: .12em; color: #111; background: repeating-linear-gradient(-45deg, #ffd400 0 14px, #f2c200 14px 28px); border-bottom: 3px solid #111; }
+.site-tone[data-tone="harm"] .joke-banner { color: #ffd400; background: repeating-linear-gradient(-45deg, #1a1a1a 0 14px, #262626 14px 28px); border-bottom-color: #ffd400; }

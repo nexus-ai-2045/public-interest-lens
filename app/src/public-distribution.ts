@@ -87,7 +87,7 @@ export type PublicRanking = {
   approval: { approvedAt: string | null; scope: 'all-laws' | null; note: string | null };
   laws: PublicRankingLaw[];
   others: PublicRankingOther[];
-  counts: Record<'enacted' | 'evaluated' | 'dated' | 'staged' | 'amounted' | 'publishable' | 'published' | 'confirmed' | 'reference' | 'others', number>;
+  counts: Record<'enacted' | 'evaluated' | 'dated' | 'staged' | 'published' | 'confirmed' | 'reference' | 'others', number>;
 };
 
 export const distributionRankingUrl = '/distribution/ranking.json';
@@ -97,7 +97,7 @@ export const RANKING_TEXT_LIMIT = 4_000_000;
 // 国民投票法の法律案（衆法-166-）は議案情報の番号が空欄のまま台帳にある。id は台帳どおり。
 const LAW_ID = /^(閣法|衆法|参法)-\d+-\d*$/;
 const SOURCE_HOSTS = new Set(['www.shugiin.go.jp', 'www.sangiin.go.jp', 'laws.e-gov.go.jp']);
-const COUNT_KEYS = ['enacted', 'evaluated', 'dated', 'staged', 'amounted', 'publishable', 'published', 'confirmed', 'reference', 'others'];
+const COUNT_KEYS = ['enacted', 'evaluated', 'dated', 'staged', 'published', 'confirmed', 'reference', 'others'];
 export const CERTAINTIES = ['高', '中', '低', '参考'];
 const onlyKeys = (value: unknown, keys: string[]) => !!value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(key => keys.includes(key)) && keys.every(key => key in value);
 const yen = (value: unknown) => Number.isSafeInteger(value) && (value as number) > 0;
