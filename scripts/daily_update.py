@@ -51,6 +51,12 @@ HOSTS = {
     # 内閣府・デジタル庁は事前チェック（preflight の通信の確かめ）で見る。段ごとに落ちても残りを回し、落ちた段は1週間後に取り直す。
     "fiscal-policies": "www5.cao.go.jp",
     "fiscal-digital": "www.digital.go.jp",
+    # fetch_monetary.py（日銀の時系列と金融政策決定会合・BIS・IMF・FRED）。毎朝の段は日銀の時系列に届くかで回し、残りは事前チェックで見る。
+    "monetary": "www.stat-search.boj.or.jp",
+    "monetary-mpm": "www.boj.or.jp",
+    "monetary-bis": "stats.bis.org",
+    "monetary-imf": "www.imf.org",
+    "monetary-fred": "fred.stlouisfed.org",
     # fetch_target_series.py（数値目標の達成状況を測る系列）。毎朝の段は内閣府 経済社会総合研究所に届くかで回すかを決め、
     # ほかの取得先（厚労省・JNTO・観光庁・財務省・農水省・総務省・国環研）は段ごとに落ちても残りを回す。
     "target-series": "www.esri.cao.go.jp",
@@ -240,6 +246,8 @@ def fetch(run: Run, today: str) -> None:
         # 数値目標の読み手（AI の2系統）は新しい本文が入ったときに回し、結果を .local/fiscal-more/targets/ に置く。
         ("取得：特別会計・国債・地方財政の過去分・国策の数値目標（財務省・総務省・内閣府・デジタル庁、月1回）", HOSTS["fiscal"],
          [sys.executable, "scripts/fetch_fiscal_more.py", "all", "--monthly"]),
+        # 政策金利・マネタリーベース・日銀の資産、決定会合の決定と賛否、各国の政策金利・実効為替・長期金利。月1回（前回から28日未満なら中で飛ばす）。
+        ("取得：金融政策と海外比較（日本銀行・BIS・IMF・FRED、月1回）", HOSTS["monetary"], [sys.executable, "scripts/fetch_monetary.py", "all", "--monthly"]),
         # 数値目標の達成状況：PB・GDP・最低賃金・訪日客・消費額・宿泊・対日直接投資・農林水産物の輸出・研究費・GHG を段ごとに月1回取り、
         # 目標と結び付け直す（数値目標は上の段が作るので、その後に回す）
         ("取得：数値目標の達成状況を測る系列（内閣府・厚労省・JNTO・観光庁・財務省・農水省・総務省・国環研、月1回）", HOSTS["target-series"],
