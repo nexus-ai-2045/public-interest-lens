@@ -3,6 +3,10 @@ on:
   pull_request:
   push:
     branches: [main]
+concurrency:
+  # 同じPRで新しいpushが来たら古い実行を止める（古いheadの赤が残らないように）。mainのpushは止めない
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 permissions:
   contents: read
 jobs:
