@@ -35,12 +35,31 @@ export function partiesOf(rows: Row[]): string[] {
   return [...count].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([p]) => p);
 }
 
+/** 額のある人（「額のある人だけ」の絞り込みと同じ決まり）。 */
+const hasAmount = (r: Row): boolean => r.laws > 0 || r.confirmed !== null;
+
+export type Breakdown = { total: number; current: number; currentWithAmount: number; shu: number; shuWithAmount: number; san: number; sanWithAmount: number; confirmed: number; withAmount: number };
+/** 表の先頭に出す内訳。公開人数・現職・額のある現職（院別）・確かな額のある人。 */
+export function breakdownOf(rows: Row[]): Breakdown {
+  const out: Breakdown = { total: rows.length, current: 0, currentWithAmount: 0, shu: 0, shuWithAmount: 0, san: 0, sanWithAmount: 0, confirmed: 0, withAmount: 0 };
+  for (const r of rows) {
+    if (r.confirmed !== null) out.confirmed += 1;
+    if (hasAmount(r)) out.withAmount += 1;
+    if (!r.current) continue;
+    out.current += 1;
+    const amount = hasAmount(r) ? 1 : 0;
+    out.currentWithAmount += amount;
+    if (r.current.house === '衆議院') { out.shu += 1; out.shuWithAmount += amount; } else { out.san += 1; out.sanWithAmount += amount; }
+  }
+  return out;
+}
+
 export function filterRows(rows: Row[], o: { house: HouseFilter; party: string; query: string; withAmount: boolean }): Row[] {
   const words = o.query.trim().split(/[\s　]+/).filter(Boolean);
   return rows.filter(r => {
     if (o.house === 'former' ? r.current !== null : o.house !== 'all' && r.current?.house !== o.house) return false;
     if (o.party && r.current?.party !== o.party) return false;
-    if (o.withAmount && r.laws === 0 && r.confirmed === null) return false;
+    if (o.withAmount && !hasAmount(r)) return false;
     const hay = `${r.name} ${r.current?.party ?? ''} ${r.current?.district ?? ''} ${r.lastSangiinParty}`;
     return words.every(w => hay.includes(w));
   });

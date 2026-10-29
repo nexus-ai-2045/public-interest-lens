@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { partyLabel, signedYen, sortBlocs, topBars, visibleMembers } from './MembersPage';
+import { filterMembers, partyLabel, signedYen, sortBlocs, topBars, visibleMembers } from './MembersPage';
 import { blocOf, type PublicMember } from './members-build';
 
 const member = (name: string, rank: number, low: number, median: number, high: number, id = name) => ({ id, name, rank, net: { low, median, high }, laws: [{}] }) as unknown as PublicMember;
@@ -39,6 +39,9 @@ describe('政党ランキング', () => {
     expect(blocOf('社会民主党・護憲連合')).toBe('社民');
     expect(blocOf('民主党・新緑風会')).toBe('民主系');
     expect(blocOf('みんなの党')).toBe('その他');
+    expect(blocOf('中道改革連合・無所属')).toBe('中道改革連合');
+    expect(blocOf('チームみらい・無所属の会')).toBe('チームみらい');
+    expect(blocOf('日本保守党')).toBe('日本保守党');
   });
   it('並べ方を変えると順位が変わり、総額は参考として選べる', () => {
     const b = (bloc: string, net: number, people: number, laws: number) => ({ bloc, parties: [bloc], people, laws, yesLaws: laws, noLaws: 0, lossShareOfYes: 1, certainty: { 低: laws },
@@ -57,4 +60,23 @@ it('一覧の所属政党：現職は政党名、元職は参議院の最後の�
   expect(partyLabel('乙', now, true, last)).toBe('元職・立憲');
   expect(partyLabel('丙', now, true, last)).toBe('元職');
   expect(partyLabel('甲', new Map(), false)).toBe('');
+});
+
+
+it('人物IDの指定は側・政党の絞り込みより優先し、解除後は元の順位一覧へ戻る', () => {
+  const members = [member('甲', 1, -30, -20, -10, 'person-a'), member('乙', 2, 10, 20, 30, 'person-b')];
+  const parties = new Map([['person-a', 'A'], ['person-b', 'B']]);
+  expect(filterMembers(members, 'benefit', 'person-a', 'B', parties).map(m => m.id)).toEqual(['person-a']);
+  expect(filterMembers(members, 'loss', 'person-b', 'A', parties).map(m => m.id)).toEqual(['person-b']);
+  expect(filterMembers(members, 'benefit', '', 'B', parties).map(m => m.id)).toEqual(['person-b']);
+  expect(filterMembers(members, 'benefit', '甲', '', parties)).toEqual([]);
+});
+
+
+it('人物リンクは算定条件と表示側を保ち、無関係なクエリを引き継がない', () => {
+  const search = '?r=50&p=30&chair=1&office=1&house=voters&tone=benefit&tab=party&utm_source=share';
+  const link = topBars([member('甲', 1, -30, -20, -10, 'person-a')], 'loss', 10, search)[0].href;
+  const url = new URL(link!, 'https://example.test');
+  expect(url.pathname).toBe('/members');
+  expect(Object.fromEntries(url.searchParams)).toEqual({ name: 'person-a', p: '30', house: 'voters', chair: '1', r: '50', office: '1', tone: 'benefit' });
 });

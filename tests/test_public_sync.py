@@ -31,6 +31,7 @@ MEMBER_INPUTS = {
     "taxRevenueForecasts": ROOT / "data/acquired/tax-revenue-estimates/estimates.csv",
     "resistance": ROOT / "data/derived/org-ledger-v1/ministry-resistance.csv",
     "orgStances": ROOT / "data/derived/org-ledger-v1/org-stances.csv",
+    "backing": ROOT / "data/derived/backing-forces-v1/law-links.csv",
 }
 FIX = "python3 scripts/rebuild_public.py を回して、出たファイルを全部コミットしてください"
 from _data_gate import requires_data  # noqa: E402
