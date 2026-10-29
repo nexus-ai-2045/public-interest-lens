@@ -31,6 +31,7 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+from scripts.fetch_oecd_industry import load_sources, source_url  # noqa: E402
 DERIVED = ROOT / "data" / "derived"
 ACQUIRED = ROOT / "data" / "acquired"
 # e-Gov の記録（改正履歴・施行期日政令）から施行日を取った行。附則の原文は取っていないので、原文の有無では判定しない。
@@ -289,7 +290,7 @@ def check_law(law: dict, ctx: dict) -> list[dict[str, str]]:
 
     # 原本（手元にあるときだけ）
     urls = {url for url in recorded if url}
-    urls |= {row.get("出典URL", "") for row in ctx["oecd_rows"] if row["産業"] == industry}
+    urls |= {source_url(ctx["oecd_sources"], row["国"], industry) for row in ctx["oecd_rows"] if row["産業"] == industry}
     for url in sorted(urls):
         for path, digest in ctx["manifest"].get(url, []):
             if path.exists():
@@ -325,6 +326,7 @@ def context(acquired: Path = ACQUIRED, derived: Path = DERIVED, local_root: Path
     return {
         "census": census, "enforcement": enforcement, "loss": loss, "covidSources": covid_sources, "covidAmounts": covid_amounts,
         "oecd": Oecd(oecd_path), "oecd_rows": _read(oecd_path) if oecd_path.exists() else [],
+        "oecd_sources": load_sources(acquired / "oecd-industry" / "sources.csv"),
         "manifest": manifest, "raw_present": present,
     }
 

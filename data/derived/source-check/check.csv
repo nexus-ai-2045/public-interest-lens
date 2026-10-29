@@ -27790,6 +27790,20 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-186-59,額の下端,-6395263481155,-6395263481155,一致,OECD 表6 H LR、比較国12か国
 閣法-186-59,額の中央値,1101539931136,1101539931136,一致,OECD 表6 H LR、比較国12か国
 閣法-186-59,額の上端,6870206724152,6870206724152,一致,OECD 表6 H LR、比較国12か国
+閣法-201-59,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF3DA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF3DA.htm,一致,
+閣法-201-59,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200612054.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200612054.htm,一致,
+閣法-201-59,出典URL,https://www.mhlw.go.jp/content/11601000/000995223.pdf,https://www.mhlw.go.jp/content/11601000/000995223.pdf,一致,
+閣法-201-59,出典URL,https://www.mhlw.go.jp/content/11601000/001156732.pdf,https://www.mhlw.go.jp/content/11601000/001156732.pdf,一致,
+閣法-201-59,出典URL,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,一致,
+閣法-201-59,出典URL,https://www.mhlw.go.jp/content/11600000/000966746.pdf,https://www.mhlw.go.jp/content/11600000/000966746.pdf,一致,
+閣法-201-59,題名,新型コロナウイルス感染症等の影響に対応するための雇用保険法の臨時特例等に関する法律案,新型コロナウイルス感染症等の影響に対応するための雇用保険法の臨時特例等に関する法律案,一致,
+閣法-201-59,施行日,2020-06-12,2020-06-12,一致,
+閣法-201-59,施行期日の種別（衆議院の附則）,2020-06-12,2020-06-12,一致,
+閣法-201-59,公布日との順序,2020-06-12,2020-06-12,一致,施行日は公布日より前にならない
+閣法-201-59,公布日,2020-06-12,2020-06-12,一致,施行日台帳と議案台帳
+閣法-201-59,額の下端,146196000000,146204100963,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+閣法-201-59,額の中央値,1059575000000,1059551765350,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+閣法-201-59,額の上端,7489416075680,7489416075680,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
 参法-197-74,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCAB3E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCAB3E.htm,一致,
 参法-197-74,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214098.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214098.htm,一致,
 参法-197-74,題名,移植に用いる造血幹細胞の適切な提供の推進に関する法律の一部を改正する法律案,移植に用いる造血幹細胞の適切な提供の推進に関する法律の一部を改正する法律案,一致,
@@ -29246,6 +29260,18 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-200-6,額の下端,118102866868,118102866868,一致,OECD 表6 A LR、比較国12か国
 閣法-200-6,額の中央値,265601909752,265601909752,一致,OECD 表6 A LR、比較国12か国
 閣法-200-6,額の上端,465652489313,465652489313,一致,OECD 表6 A LR、比較国12か国
+閣法-201-54,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF31E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF31E.htm,一致,
+閣法-201-54,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200430025.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200430025.htm,一致,
+閣法-201-54,出典URL,https://www.nta.go.jp/information/release/pdf/0022007-132.pdf,https://www.nta.go.jp/information/release/pdf/0022007-132.pdf,一致,
+閣法-201-54,出典URL,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,一致,
+閣法-201-54,題名,新型コロナウイルス感染症等の影響に対応するための国税関係法律の臨時特例に関する法律案,新型コロナウイルス感染症等の影響に対応するための国税関係法律の臨時特例に関する法律案,一致,
+閣法-201-54,施行日,2020-04-30,2020-04-30,一致,
+閣法-201-54,施行期日の種別（衆議院の附則）,2020-04-30,2020-04-30,一致,
+閣法-201-54,公布日との順序,2020-04-30,2020-04-30,一致,施行日は公布日より前にならない
+閣法-201-54,公布日,2020-04-30,2020-04-30,一致,施行日台帳と議案台帳
+閣法-201-54,額の下端,182117640000,182117640000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+閣法-201-54,額の中央値,257999990000,257999990000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+閣法-201-54,額の上端,333882340000,333882340000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
 閣法-196-45,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8E7E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8E7E.htm,一致,
 閣法-196-45,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181212091.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181212091.htm,一致,
 閣法-196-45,出典URL,https://laws.e-gov.go.jp/law/426AC1000000104,https://laws.e-gov.go.jp/law/426AC1000000104,一致,
@@ -29487,6 +29513,20 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-197-6,額の下端,-888626933601,-888626933601,一致,OECD 表6 M LR、比較国11か国
 衆法-197-6,額の中央値,137143432951,137143432951,一致,OECD 表6 M LR、比較国11か国
 衆法-197-6,額の上端,1935238292198,1935238292198,一致,OECD 表6 M LR、比較国11か国
+閣法-208-14,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD51D6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD51D6.htm,一致,
+閣法-208-14,出典URL,https://laws.e-gov.go.jp/law/349AC0000000116,https://laws.e-gov.go.jp/law/349AC0000000116,一致,
+閣法-208-14,出典URL,https://www.mhlw.go.jp/content/11601000/000873665.pdf,https://www.mhlw.go.jp/content/11601000/000873665.pdf,一致,
+閣法-208-14,出典URL,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,一致,
+閣法-208-14,出典URL,https://www.mhlw.go.jp/content/11600000/000966746.pdf,https://www.mhlw.go.jp/content/11600000/000966746.pdf,一致,
+閣法-208-14,出典URL,https://www.mhlw.go.jp/content/11601000/000995223.pdf,https://www.mhlw.go.jp/content/11601000/000995223.pdf,一致,
+閣法-208-14,題名,雇用保険法等の一部を改正する法律案,雇用保険法等の一部を改正する法律案,一致,
+閣法-208-14,施行日,2022-04-01,2022-04-01,一致,
+閣法-208-14,施行期日の原文,あり,あり,一致,
+閣法-208-14,公布日との順序,2022-04-01,2022-03-31,一致,施行日は公布日より前にならない
+閣法-208-14,公布日,2022-03-31,2022-03-31,一致,施行日台帳と議案台帳
+閣法-208-14,額の下端,96000000000,96000000000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+閣法-208-14,額の中央値,136000000000,136000000000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+閣法-208-14,額の上端,176000000000,176000000000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
 参法-192-52,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC1DEE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC1DEE.htm,一致,
 参法-192-52,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19220161202097.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19220161202097.htm,一致,
 参法-192-52,題名,鳥獣による農林水産業等に係る被害の防止のための特別措置に関する法律の一部を改正する法律案,鳥獣による農林水産業等に係る被害の防止のための特別措置に関する法律の一部を改正する法律案,一致,
@@ -29673,6 +29713,22 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-204-54,額の下端,-12050937630393,-12050937630393,一致,OECD 表6 G LR、比較国10か国
 閣法-204-54,額の中央値,44463865634,44463865634,一致,OECD 表6 G LR、比較国10か国
 閣法-204-54,額の上端,8959882225868,8959882225868,一致,OECD 表6 G LR、比較国10か国
+衆法-201-10,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF32A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF32A.htm,一致,
+衆法-201-10,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200430027.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200430027.htm,一致,
+衆法-201-10,出典URL,https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup07/sankou.pdf,https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup07/sankou.pdf,一致,
+衆法-201-10,出典URL,https://www.mhlw.go.jp/content/12400000/001546569.pdf,https://www.mhlw.go.jp/content/12400000/001546569.pdf,一致,
+衆法-201-10,出典URL,https://www.mhlw.go.jp/content/12400000/001121231.pdf,https://www.mhlw.go.jp/content/12400000/001121231.pdf,一致,
+衆法-201-10,出典URL,https://www.mhlw.go.jp/content/12400000/001283515.pdf,https://www.mhlw.go.jp/content/12400000/001283515.pdf,一致,
+衆法-201-10,出典URL,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,一致,
+衆法-201-10,出典URL,https://www.courts.go.jp/assets/db2026_212.pdf,https://www.courts.go.jp/assets/db2026_212.pdf,一致,
+衆法-201-10,題名,令和二年度特別定額給付金等に係る差押禁止等に関する法律案,令和二年度特別定額給付金等に係る差押禁止等に関する法律案,一致,
+衆法-201-10,施行日,2020-04-30,2020-04-30,一致,
+衆法-201-10,施行期日の種別（衆議院の附則）,2020-04-30,2020-04-30,一致,
+衆法-201-10,公布日との順序,2020-04-30,2020-04-30,一致,施行日は公布日より前にならない
+衆法-201-10,公布日,2020-04-30,2020-04-30,一致,施行日台帳と議案台帳
+衆法-201-10,額の下端,25865160000,25865160000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-201-10,額の中央値,43108600000,43108600000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-201-10,額の上端,317989320000,317989320000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
 閣法-211-52,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD827E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD827E.htm,一致,
 閣法-211-52,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230526034.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230526034.htm,一致,
 閣法-211-52,出典URL,https://laws.e-gov.go.jp/law/323AC0000000242,https://laws.e-gov.go.jp/law/323AC0000000242,一致,
@@ -29740,6 +29796,71 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-213-50,額の下端,-177132357596,-177132357596,一致,OECD 表6 A LR、比較国11か国
 閣法-213-50,額の中央値,28004305803,28004305803,一致,OECD 表6 A LR、比較国11か国
 閣法-213-50,額の上端,151852452862,151852452862,一致,OECD 表6 A LR、比較国11か国
+衆法-207-7,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD4D3A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD4D3A.htm,一致,
+衆法-207-7,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20720211220085.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20720211220085.htm,一致,
+衆法-207-7,出典URL,https://www.cao.go.jp/yosan/pdf/r4/03016800_naikakufu.pdf,https://www.cao.go.jp/yosan/pdf/r4/03016800_naikakufu.pdf,一致,
+衆法-207-7,出典URL,https://www.mhlw.go.jp/content/12400000/001546569.pdf,https://www.mhlw.go.jp/content/12400000/001546569.pdf,一致,
+衆法-207-7,出典URL,https://www.mhlw.go.jp/content/12400000/001121231.pdf,https://www.mhlw.go.jp/content/12400000/001121231.pdf,一致,
+衆法-207-7,出典URL,https://www.mhlw.go.jp/content/12400000/001283515.pdf,https://www.mhlw.go.jp/content/12400000/001283515.pdf,一致,
+衆法-207-7,出典URL,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,一致,
+衆法-207-7,出典URL,https://www.courts.go.jp/assets/db2026_212.pdf,https://www.courts.go.jp/assets/db2026_212.pdf,一致,
+衆法-207-7,題名,令和三年度子育て世帯等臨時特別給付金に係る差押禁止等に関する法律案,令和三年度子育て世帯等臨時特別給付金に係る差押禁止等に関する法律案,一致,
+衆法-207-7,施行日,2021-12-20,2021-12-20,一致,
+衆法-207-7,施行期日の種別（衆議院の附則）,2021-12-20,2021-12-20,一致,
+衆法-207-7,公布日との順序,2021-12-20,2021-12-20,一致,施行日は公布日より前にならない
+衆法-207-7,公布日,2021-12-20,2021-12-20,一致,施行日台帳と議案台帳
+衆法-207-7,額の下端,1706409000,1706409000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-207-7,額の中央値,2844015000,2844015000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-207-7,額の上端,69451536000,69451536000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-204-12,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD229E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD229E.htm,一致,
+衆法-204-12,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210421021.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210421021.htm,一致,
+衆法-204-12,出典URL,https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup07/sankou.pdf,https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup07/sankou.pdf,一致,
+衆法-204-12,出典URL,https://www.mhlw.go.jp/content/12400000/001546569.pdf,https://www.mhlw.go.jp/content/12400000/001546569.pdf,一致,
+衆法-204-12,出典URL,https://www.mhlw.go.jp/content/12400000/001121231.pdf,https://www.mhlw.go.jp/content/12400000/001121231.pdf,一致,
+衆法-204-12,出典URL,https://www.mhlw.go.jp/content/12400000/001283515.pdf,https://www.mhlw.go.jp/content/12400000/001283515.pdf,一致,
+衆法-204-12,出典URL,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,一致,
+衆法-204-12,出典URL,https://www.courts.go.jp/assets/db2026_212.pdf,https://www.courts.go.jp/assets/db2026_212.pdf,一致,
+衆法-204-12,題名,令和二年度子育て世帯生活支援特別給付金に係る差押禁止等に関する法律案,令和二年度子育て世帯生活支援特別給付金に係る差押禁止等に関する法律案,一致,
+衆法-204-12,施行日,2021-04-21,2021-04-21,一致,
+衆法-204-12,施行期日の種別（衆議院の附則）,2021-04-21,2021-04-21,一致,
+衆法-204-12,公布日との順序,2021-04-21,2021-04-21,一致,施行日は公布日より前にならない
+衆法-204-12,公布日,2021-04-21,2021-04-21,一致,施行日台帳と議案台帳
+衆法-204-12,額の下端,443700000,443700000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-204-12,額の中央値,739500000,739500000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-204-12,額の上端,5454900000,5454900000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-201-24,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF42A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCF42A.htm,一致,
+衆法-201-24,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200612055.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20120200612055.htm,一致,
+衆法-201-24,出典URL,https://www.mhlw.go.jp/content/000634465.pdf,https://www.mhlw.go.jp/content/000634465.pdf,一致,
+衆法-201-24,出典URL,https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup07/sankou.pdf,https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup07/sankou.pdf,一致,
+衆法-201-24,出典URL,https://www.mhlw.go.jp/content/12400000/001546569.pdf,https://www.mhlw.go.jp/content/12400000/001546569.pdf,一致,
+衆法-201-24,出典URL,https://www.mhlw.go.jp/content/12400000/001121231.pdf,https://www.mhlw.go.jp/content/12400000/001121231.pdf,一致,
+衆法-201-24,出典URL,https://www.mhlw.go.jp/content/12400000/001283515.pdf,https://www.mhlw.go.jp/content/12400000/001283515.pdf,一致,
+衆法-201-24,出典URL,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,一致,
+衆法-201-24,出典URL,https://www.courts.go.jp/assets/db2026_212.pdf,https://www.courts.go.jp/assets/db2026_212.pdf,一致,
+衆法-201-24,題名,令和二年度ひとり親世帯臨時特別給付金等に係る差押禁止等に関する法律案,令和二年度ひとり親世帯臨時特別給付金等に係る差押禁止等に関する法律案,一致,
+衆法-201-24,施行日,2020-06-12,2020-06-12,一致,
+衆法-201-24,施行期日の種別（衆議院の附則）,2020-06-12,2020-06-12,一致,
+衆法-201-24,公布日との順序,2020-06-12,2020-06-12,一致,施行日は公布日より前にならない
+衆法-201-24,公布日,2020-06-12,2020-06-12,一致,施行日台帳と議案台帳
+衆法-201-24,額の下端,428808000,428808000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-201-24,額の中央値,714680000,714680000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-201-24,額の上端,5271816000,5271816000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-208-42,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5A2E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5A2E.htm,一致,
+衆法-208-42,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220613064.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220613064.htm,一致,
+衆法-208-42,出典URL,https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup10/omonasesaku.pdf,https://www5.cao.go.jp/keizai1/keizaitaisaku/followup/followup10/omonasesaku.pdf,一致,
+衆法-208-42,出典URL,https://www.mhlw.go.jp/content/12400000/001546569.pdf,https://www.mhlw.go.jp/content/12400000/001546569.pdf,一致,
+衆法-208-42,出典URL,https://www.mhlw.go.jp/content/12400000/001121231.pdf,https://www.mhlw.go.jp/content/12400000/001121231.pdf,一致,
+衆法-208-42,出典URL,https://www.mhlw.go.jp/content/12400000/001283515.pdf,https://www.mhlw.go.jp/content/12400000/001283515.pdf,一致,
+衆法-208-42,出典URL,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,https://www5.cao.go.jp/keizai3/2023/08seisakukadai22-3.pdf,一致,
+衆法-208-42,出典URL,https://www.courts.go.jp/assets/db2026_212.pdf,https://www.courts.go.jp/assets/db2026_212.pdf,一致,
+衆法-208-42,題名,令和四年度子育て世帯生活支援特別給付金に係る差押禁止等に関する法律案,令和四年度子育て世帯生活支援特別給付金に係る差押禁止等に関する法律案,一致,
+衆法-208-42,施行日,2022-06-13,2022-06-13,一致,
+衆法-208-42,施行期日の種別（衆議院の附則）,2022-06-13,2022-06-13,一致,
+衆法-208-42,公布日との順序,2022-06-13,2022-06-13,一致,施行日は公布日より前にならない
+衆法-208-42,公布日,2022-06-13,2022-06-13,一致,施行日台帳と議案台帳
+衆法-208-42,額の下端,416772000,416772000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-208-42,額の中央値,694620000,694620000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+衆法-208-42,額の上端,5123844000,5123844000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
 閣法-147-68,議員ページの額,"(3769644139476, 7077117140945, 11601683776507)","(3769644139476, 7077117140945, 11601683776507)",一致,公開ランキングの額
 閣法-155-63,議員ページの額,"(8398730605142, 14172343363344, 19037899440575)","(8398730605142, 14172343363344, 19037899440575)",一致,公開ランキングの額
 衆法-162-11,議員ページの額,"(-18335492312416, 2981987643596, 17160044725206)","(-18335492312416, 2981987643596, 17160044725206)",一致,公開ランキングの額
