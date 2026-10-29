@@ -72,6 +72,14 @@ class LawsOnePerLineTest(unittest.TestCase):
         self.assertEqual(json.loads(text), bundle)
         self.assertEqual(len(text.strip().split("\n")), 5)
 
+    def test_members_reference_is_one_member_per_line(self):
+        path = LAWS.parent / "members-reference.json"
+        text = path.read_text(encoding="utf-8")
+        data = json.loads(text)
+        lines = text.split("\n")
+        self.assertGreaterEqual(len(lines), len(data["members"]))
+        self.assertLess(max(len(line) for line in lines), 20_000)
+
 
 if __name__ == "__main__":
     unittest.main()
