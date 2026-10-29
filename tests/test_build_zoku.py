@@ -85,6 +85,17 @@ class ZokuTest(unittest.TestCase):
         self.assertEqual(len(rows), 1)  # 名簿で同名が分かれていなければ、氏名で結ぶ
         self.assertEqual(run(chairs=[chair('鬼木 誠', 1), chair('鬼木 誠', 2)], ambiguous={'鬼木誠'})[0], [])
 
+    def test_committee_roster_is_reference_only(self):
+        roster = [{'法律ID': 閣, '出席委員(出席数/会議数)': '甲(2/3);乙(0/3)', '理事': '甲;丙'} for 閣 in ('閣法-1-1', '閣法-1-2', '衆法-1-9')]
+        # 出席・理事だけでは行も印も付かない（出席は賛否ではない）
+        self.assertEqual(z.build([], [], [], BILLS, [], [], {}, [], committee=roster)[0], [])
+        rows, _, s = z.build([chair('甲', 1), chair('甲', 2)], [], [], BILLS, [], [], {}, [], committee=roster)
+        self.assertEqual(rows[0]['分野の閣法の審議に出席した本数（参考。賛否ではない）'], 2)
+        self.assertEqual(rows[0]['分野の閣法の審議で理事を務めた本数（参考）'], 2)
+        self.assertEqual(rows[0]['印'], '分野との継続的な関わり（族議員の機械判定）')
+        self.assertNotIn('委員会の審議の名簿', s['入力が空の表'])
+        self.assertIn('委員会の審議の名簿', z.build([chair('甲', 1), chair('甲', 2)], [], [], BILLS, [], [], {}, [])[2]['入力が空の表'])
+
     def test_marks_never_say_wrongdoing(self):
         rows, _, _ = run(chairs=[chair('甲', 1), chair('甲', 2)])
         for bad in ('不正', '癒着', '利権'):
