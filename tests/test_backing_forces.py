@@ -50,6 +50,13 @@ class MatchTest(unittest.TestCase):
         self.assertEqual(bf.mentioned_names("旅館業法施行規則第4条", {"旅館業法"}, {})[0], [])
         self.assertEqual(bf.mentioned_names("旅館業法第4条、旅館業法施行令", {"旅館業法"}, {})[0], [["旅館業法"]])
 
+    def test_unsure_mentions_are_not_definite_matches(self) -> None:
+        names, why = bf.mentioned_names("医師法（議事録上の明示なし）", {"医師法"}, {})
+        self.assertEqual(names, [])
+        self.assertIn("明示なし", why)
+        names, _ = bf.mentioned_names("医師法（想定）、旅館業法", {"医師法", "旅館業法"}, {})
+        self.assertEqual(names, [["旅館業法"]])
+
     def test_renamed_family_picks_one_previous_amendment(self) -> None:
         old = law("閣法-1-1", "薬事法の一部を改正する法律案", "2013-11-01")
         new = law("閣法-2-1", "医薬品、医療機器等の品質、有効性及び安全性の確保等に関する法律の一部を改正する法律案", "2022-11-01")

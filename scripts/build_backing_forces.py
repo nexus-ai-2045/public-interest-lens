@@ -51,6 +51,8 @@ WAREKI = re.compile(r'(昭和|平成|令和)\s*(元|\d+)年\s*(\d+)月\s*(\d+)�
 ISO = re.compile(r'(\d{4})-(\d{2})-(\d{2})')
 ERA_BASE = {'昭和': 1925, '平成': 1988, '令和': 2018}
 ZEN_PAREN = re.compile(r'[（(][^）)]*[）)]')
+# 直前の名前ごと、原資料が確定でないと留保している言及（例：医師法（議事録上の明示なし）、住宅宿泊事業法（想定））
+UNSURE = re.compile(r'[^、,・;；\s（(）)]*[（(][^）)]*(?:明示なし|想定|推定|未確認|不明|記載なし)[^）)]*[）)]')
 NAME_END = ('法', '法律')
 CHILD_RULE = re.compile(r'(施行|規則|細則|省令|政令|令)')
 
@@ -123,9 +125,11 @@ def mentioned_names(text: str, known: set[str], aliases: dict[str, list[str]]) -
 
     直前が漢字・かなのときは別の名前の一部とみなして取らない（例：歯科医師法の中の医師法）。取れなければ理由を返す。
     """
-    t = ZEN_PAREN.sub('', unicodedata.normalize('NFKC', text or '')).strip()
+    t = unicodedata.normalize('NFKC', text or '')
+    t, unsure = UNSURE.subn('', t)  # 留保つきの言及は確定した一致に数えない
+    t = ZEN_PAREN.sub('', t).strip()
     if not t or t in ('記載なし', '議事録上の記載なし'):
-        return [], '法令名の記載なし'
+        return [], '原資料に法令名の明示なし・想定（確定した法令名ではない）' if unsure else '法令名の記載なし'
     candidates = sorted(known | set(aliases), key=len, reverse=True)
     taken = [False] * len(t)
     names: list[list[str]] = []
