@@ -1,0 +1,5 @@
+file,url,title,sha256,bytes,fetched_at
+link20.xlsx,https://www.soumu.go.jp/main_content/001019115.xlsx,平成23-27-令和2年接続産業連関表（参考）マトリックス形式の取引基本表,ec07ef0abd03d4a59378fc6b9732ab7cb0485382c7ba53c111c2eccf3589544a,3311190,2026-10-29T14:22Z
+rensetsu_H12-17-23_105.xlsx,https://www.e-stat.go.jp/stat-search/file-download?statInfId=000031413705&fileKind=0,平成12-17-23年接続産業連関表 生産者価格評価表（統合中分類、105部門）,82ae6ebff5180dd207962726041a745cec805852b952ad852580092160c98fd7,496160,2026-10-29T14:22Z
+rensetsu_H17-23-27_105.xlsx,https://www.e-stat.go.jp/stat-search/file-download?statInfId=000031974825&fileKind=0,平成17-23-27年接続産業連関表 生産者価格評価表（統合中分類、105部門）,6386c903d6129a0e2e2f3752aeb6c0975f68cd34061a49d1ef7e9d6ef2137ccb,465259,2026-10-29T14:22Z
+official2020_large.xlsx,https://www.soumu.go.jp/main_content/000954326.xlsx,令和2年産業連関表 計算シートその１（統合大分類）,da34c29186d6228ec2803c062b8ed57b6381f3820f2e1789a013f6a84b49fd06,343831,2026-10-29T14:22Z
