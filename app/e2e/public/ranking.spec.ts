@@ -6,7 +6,7 @@ test.describe('/ranking（法律ランキング）', () => {
     const watch = watchPage(page);
     await page.goto('/ranking');
     await expect(page).toHaveTitle(/法律・政策ランキング/);
-    await expect(page.getByRole('heading', { level: 2, name: '法律と政策ごとの損失と便益' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: '法律と政策ごとの損失と便益' })).toBeVisible();
     await expect(page.getByRole('region', { name: '法律と政策の一覧' })).toBeVisible();
     const rows = page.locator('.laws-list > li');
     await expect(rows.first()).toBeVisible();

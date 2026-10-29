@@ -9,7 +9,7 @@ test.describe('/members（議員ランキング）', () => {
     const watch = watchPage(page);
     await page.goto('/members');
     await expect(page).toHaveTitle(/議員・実名/);
-    await expect(page.getByRole('heading', { level: 2, name: 'この人が失わせた額・生んだ額' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'この人が失わせた額・生んだ額' })).toBeVisible();
     const cards = page.locator('ol.members-list > li');
     await expect(cards.first()).toBeVisible();
     expect(leadingNumber(await page.getByRole('status').filter({ hasText: '人を表示' }).textContent())).toBeGreaterThan(0);
@@ -91,6 +91,6 @@ test.describe('/members 政党ごとの比較', () => {
     await page.goto('/members');
     await expect(page.locator('a[href^="/demo"]')).toHaveCount(0);
     await page.goto('/demo');
-    await expect(page.getByRole('heading', { level: 2, name: 'この機能は公開版に含まれていません' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'この機能は公開版に含まれていません' })).toBeVisible();
   });
 });
