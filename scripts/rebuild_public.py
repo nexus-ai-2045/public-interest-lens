@@ -82,7 +82,9 @@ def rebuild(record: Record = _print) -> bool:
 
     from scripts import build_public_ranking, source_check
 
-    current = json.loads(build_public_ranking.OUTPUT.read_text(encoding="utf-8"))
+    # ranking.json は Git に置かない派生物（設計決定0022）。まだ無ければ既定の承認日で作る
+    output = build_public_ranking.OUTPUT
+    current = json.loads(output.read_text(encoding="utf-8")) if output.exists() else {"approval": {"approvedAt": ""}}
     approved_at = current["approval"]["approvedAt"] or DEFAULT_APPROVED_AT
     summary = source_check.rebuild(True, approved_at)
     detail = f"照合{summary['items']}項目・一致{summary['match']}・不一致{summary['mismatch']}・対象外{summary['notApplicable']}"

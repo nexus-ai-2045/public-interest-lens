@@ -421,6 +421,19 @@ def write_report(rows: list[dict[str, str]], summary: dict, report_dir: Path = R
     (report_dir / "summary.json").write_text(json.dumps(stable, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+# 公開ランキングを Git に置かず入力から作るときの承認日（記録済みの承認日と同じ。設計決定0022）
+GENERATED_APPROVED_AT = "2026-10-17"
+
+
+def generate_ranking() -> dict:
+    """公開ランキング ranking.json の中身を、リポジトリ内の入力だけから作る（全法律の承認・出典チェック込み）。報告の CSV は書かない。"""
+    from scripts import build_public_ranking as ranking_builder
+
+    candidate = ranking_builder.build(True, GENERATED_APPROVED_AT, held_by_check=set())
+    _rows, summary = check(candidate, context())
+    return ranking_builder.build(True, GENERATED_APPROVED_AT, held_by_check=set(summary["heldOut"]))
+
+
 def rebuild(approve_all: bool, approved_at: str, ranking_path: Path = RANKING, write: bool = True) -> dict:
     """出典チェックを外した状態で作り、全件を照合し、不一致を外して作り直す。"""
     from scripts import build_public_ranking as ranking_builder
@@ -444,8 +457,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--ranking", type=Path, default=RANKING)
     parser.add_argument("--dry-run", action="store_true", help="ranking.json と報告を書き換えない")
+    parser.add_argument("--generate-ranking", action="store_true", help="入力だけから ranking.json を作る（Git に置かない派生物。報告は書かない）")
     parser.add_argument("--members-only", action="store_true", help="生成済み議員ページと公開ランキングだけを照合し、ファイルを書き換えない")
     args = parser.parse_args()
+    if args.generate_ranking:
+        args.ranking.write_text(json.dumps(generate_ranking(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"書きました: {args.ranking}")
+        return 0
     current = json.loads(args.ranking.read_text(encoding="utf-8"))
     if args.members_only:
         members = json.loads(MEMBERS.read_text(encoding="utf-8"))
