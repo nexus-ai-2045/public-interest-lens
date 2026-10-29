@@ -55,8 +55,11 @@ const currentTiebreak = id => {
   if (storedTitle && storedTitle !== title) return undefined;
   return tb;
 };
+// 点検 R2：D1 が第3の判定者の「対応表なし」を上書きした法律のうち、業種の割り当てを一次情報で確かめて保留に落としたもの（理由つき）。
+const R2_HOLDS = 'data/derived/bill-triage-v2/r2-holds.csv';
+const r2Holds = new Map(existsSync(new URL(R2_HOLDS, root)) ? batch.parseCsv(read(R2_HOLDS)).map(r => [r.id, r]) : []);
 const compare = id => version === 'v2'
-  ? agreement.compareTriage(id, line1ById.get(id), line2ById.get(id), enforcement.get(id)['題名'], currentTiebreak(id))
+  ? agreement.compareTriage(id, line1ById.get(id), line2ById.get(id), enforcement.get(id)['題名'], currentTiebreak(id), r2Holds.get(id))
   : agreement.compareTriage(id, line1ById.get(id), line2ById.get(id));
 if (version === 'v1') {
   const triageAll = batch.parseCsv(read('data/derived/bill-triage-v1/triage.csv'));

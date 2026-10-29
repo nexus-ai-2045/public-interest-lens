@@ -38,7 +38,7 @@ class EvaluationLoopTests(unittest.TestCase):
         self.assertFalse(labeled & {item["id"] for item in queue["分野ラベル"]})
         # 系統の決着：保留のうち、第3の判定者の記録が無いか、記録の入力が今と違うものだけ
         with (daily_update.DERIVED / "bill-triage-v2" / "agreement.csv").open(encoding="utf-8") as f:
-            held = {r["id"]: r["題名"] for r in csv.DictReader(f) if r["結果"] == "保留"}
+            held = {r["id"]: r["題名"] for r in csv.DictReader(f) if r["結果"] == "保留" and r["解消規則"] != "R2"}
         with (daily_update.DERIVED / "bill-triage-v2" / "tiebreak-lines.csv").open(encoding="utf-8") as f:
             judged = {r["id"]: r for r in csv.DictReader(f)}
         now = daily_update._line_inputs(daily_update.DERIVED)
