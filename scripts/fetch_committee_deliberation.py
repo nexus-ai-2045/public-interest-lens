@@ -549,6 +549,16 @@ def analyze_meeting(m: dict, bill: dict) -> dict | None:
     res['reso_decided'] = [r for r in seg_chairs if '附帯決議' in r['speech'] and re.search(r'付する|付すること|附すること|付すべし|異議なし|決しました|可決', r['speech'])]
     res['reso_reply'] = [r for r in seg if speaker_kind(r) != 'chair' and '附帯決議' in r['speech'][:300] and re.search(r'尊重|所信|努力', r['speech']) and r not in reso
                          and re.match(r'○[^\s　]{0,15}(?:国務大臣|大臣|副大臣|政務官|政務次官|長官)', r['speech'])]  # 政府側の発言だけ
+    # 決議ごとの対応づけ：次の決議の案文より前にある宣告と、その後の政府の所信だけ。確定できなければ空欄
+    pos = {id(r): i for i, r in enumerate(seg)}
+    pairs = []
+    for k, r in enumerate(reso):
+        lo = pos[id(r)]
+        hi = min([pos[id(x)] for x in reso if pos[id(x)] > lo] or [len(seg)])
+        decs = [d for d in res['reso_decided'] if lo < pos[id(d)] < hi]
+        reps = [x for x in res['reso_reply'] if decs and pos[id(decs[0])] < pos[id(x)] < hi]
+        pairs.append((r, decs, reps))
+    res['reso_pairs'] = pairs
     return res
 
 
@@ -697,9 +707,9 @@ def cmd_build(a) -> int:
                         '趣旨説明の抜粋': squeeze(ex['speech'], 700) if ex else '',
                         '宣告のURL': rc.get('speechURL', ''), '趣旨説明のURL': ex.get('speechURL', '') if ex else '',
                     })
-                dec = ' / '.join(squeeze(x['speech'], 120) for x in r['reso_decided'][:2])
-                rep = ' / '.join(squeeze(x['speech'], 160) for x in r['reso_reply'][:1])
-                for rs in r['resolutions']:
+                for rs, decs, reps in r['reso_pairs']:
+                    dec = ' / '.join(squeeze(x['speech'], 120) for x in decs[:2])
+                    rep = ' / '.join(squeeze(x['speech'], 160) for x in reps[:1])
                     pm = PROPOSER_RE.findall(rs['speech'][:600]) or []
                     rows_r.append({
                         '法律ID': bid, '題名': b['題名'], '院': house, '委員会': m['nameOfMeeting'], '日付': m['date'],

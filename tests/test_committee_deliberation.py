@@ -375,6 +375,16 @@ class CommitteeFlowTest(unittest.TestCase):
         r = F.analyze_meeting(_meeting(recs), KOU)
         self.assertEqual([x['speaker'] for x in r['resolutions']], ['鉢呂'])
 
+    def test_decision_and_reply_are_paired_with_their_own_resolution(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _rec(2, '小沢', '○小沢委員 附帯決議案について提案者として趣旨を説明いたします。案文を朗読いたします。 一 進めること。'),
+                _ch(3, 'お諮りいたします。本動議のとおり附帯決議を付することに異議ありませんか。異議なしと認め、付することに決しました。'),
+                _rec(4, '大臣', '○郵政大臣 ただいまの附帯決議の趣旨を尊重いたします。'),
+                _rec(5, '鉢呂', '○鉢呂委員 附帯決議案について提案者として趣旨を説明いたします。案文を朗読いたします。 一 努めること。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        got = [(x['speaker'], len(d), len(p)) for x, d, p in r['reso_pairs']]
+        self.assertEqual(got, [('小沢', 1, 1), ('鉢呂', 0, 0)])
+
     def test_long_hiragana_proposer_name(self) -> None:
         recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。この際、本案に対し、とかしきなおみ君外五名から、修正案が提出されております。')]
         r = F.analyze_meeting(_meeting(recs), KOU)
