@@ -1,0 +1,35 @@
+{
+ "schema": "backtest-jp-minwage-period/v1",
+ "frozen": "2026-10-29",
+ "note": "R55（v4）。日本の最低賃金の4事例の観察期間。開始時期の条件(d)に使う。研究の結果は読んでいない。",
+ "entries": [
+  {
+   "id": "bt-022",
+   "start_year": 1982,
+   "end_year": 2002,
+   "quote": "based on micro data from the Employment Status Survey (ESS) between 1982 and 2002.",
+   "where": "Kawaguchi & Mori (2009) 本文 Introduction の末尾付近 (原稿 p.5)。抄録にはデータ期間の記述なし。WebFetch は PDF を文字として取得できなかったため、保存された PDF を Read で閲覧して確認。"
+  },
+  {
+   "id": "bt-023",
+   "start_year": 2015,
+   "end_year": 2019,
+   "quote": "I use individual-level panel data for the period 2015-2019",
+   "where": "Motohashi (2023) 本文 1. Introduction 第2段落 (原稿 p.2)。抄録・データ節には期間の記述なし。WebFetch は PDF をテキスト化できなかったため、保存された PDF を Read で閲覧して確認。"
+  },
+  {
+   "id": "bt-025",
+   "start_year": 2023,
+   "end_year": 2024,
+   "quote": "We focus on April 2023 through March 2024 in order to study the October 2023 minimum-wage revision, the most recent reform for which a full post-treatment window is available in our data.",
+   "where": "Kanayama, Miyaji, Otani (2026) 3 Data, 3.1 Data Source and Construction (原稿 p.15)。抄録・はじめに (p.2) には観察期間の記述なし (2023年の最低賃金改定への言及のみ)。WebFetch は PDF をテキスト化できなかったため、保存された PDF を Read で閲覧して確認。"
+  },
+  {
+   "id": "bt-026",
+   "start_year": 2018,
+   "end_year": 2023,
+   "quote": "This study uses firm-level panel data from the BSJBSA for FY 2018–2023.",
+   "where": "Morikawa (2026) 3. Data and analysis method (原稿 p.8)。はじめに (p.2) では 'through FY 2023' とのみ記載。WebFetch は PDF をテキスト化できなかったため、保存された PDF を Read で閲覧して確認。"
+  }
+ ]
+}
