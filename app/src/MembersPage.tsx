@@ -11,6 +11,8 @@ import { ROLE_LABEL as CAUSAL_ROLE_LABEL, type MemberEvidence, type MemberLaw, t
 import { DEFAULT_KNOBS, isDefaultKnobs, readKnobs, writeKnobs, type CausalRole, type Knobs } from './causal-allocation';
 import { adjustMembers } from './members-knobs';
 import { AllMembers } from './AllMembers';
+import { PoliticalFundsPanel } from './PoliticalFundsPanel';
+import { distributionPoliticalFundsUrl, readPoliticalFunds, type PoliticalFundsGroups } from './political-funds';
 import { distributionReferenceUrl } from './all-members-view';
 import type { PublicMembersReference } from './members-reference';
 import { partyById, partyComparison, sortPartyRows, type PartySortKey } from './party-compare';
@@ -131,7 +133,7 @@ export function memberCorrectionTarget(member: PublicMember, laws: Map<string, P
   return { title: member.id, page: `/members?name=${encodeURIComponent(member.id)}`, sources };
 }
 
-function MemberDetail({ member, laws, activity, adjusted }: { member: PublicMember; laws: Map<string, PublicMemberLaw>; activity: MemberActivity | null; adjusted: boolean }) {
+function MemberDetail({ member, laws, activity, funds, adjusted }: { member: PublicMember; laws: Map<string, PublicMemberLaw>; activity: MemberActivity | null; funds: PoliticalFundsGroups | null; adjusted: boolean }) {
   const names = useLawNames();
   return <div className="member-detail">
     {member.laws.map(entry => {
@@ -151,6 +153,7 @@ function MemberDetail({ member, laws, activity, adjusted }: { member: PublicMemb
     {member.sensitivity.flagged && <p className="fine-note">委員長を拒否権者に数えるかどうかで、順位が{member.sensitivity.maxMove}位動きます。</p>}
     {member.overlappingGroups.length > 0 && <p className="fine-note">同じ観測グループ（{member.overlappingGroups.join('・')}）の法律を複数足しています。期間と額の幅まで同じ観測を共有する法律は、観測の額を本数で割ってから配っています。期間が重なる別の観測（窓の長さが違うものなど）は全額ずつ足しているため、その分の合計は重なりを含み、大きめに出ます。</p>}
     {activity && <ActivityPanel entry={activity.members[member.id]} fetchedAt={activity.fetchedAt} />}
+    <PoliticalFundsPanel groups={funds} data={member.id} />
     <p className="correction-row"><a className="correction-link" href={correctionIssueUrl(memberCorrectionTarget(member, laws))} target="_blank" rel="noopener noreferrer">反論・訂正</a><span>この人の記録への反論・訂正を GitHub の Issue で送る（対象と出典は入った状態で開きます）</span><a href={correctionListUrl(member.id)} target="_blank" rel="noopener noreferrer">寄せられた反論・訂正を見る</a>{CORRECTION_EMAIL && <a href={correctionMailUrl(memberCorrectionTarget(member, laws), CORRECTION_EMAIL)}>GitHub を使わずメールで送る</a>}</p>
   </div>;
 }
@@ -277,6 +280,7 @@ export function MembersPage() {
   const [data, setData] = useState<PublicMembers | null>(null);
   const [error, setError] = useState('');
   const [activity, setActivity] = useState<MemberActivity | null>(null);
+  const [funds, setFunds] = useState<PoliticalFundsGroups | null>(null);
   const [tone] = useTone();
   const [side, setSide] = useState<'all' | 'loss' | 'benefit'>(() => tone === 'harm' ? 'all' : 'benefit');
   useEffect(() => { setSide(tone === 'harm' ? 'all' : 'benefit'); }, [tone]);
@@ -325,6 +329,12 @@ export function MembersPage() {
     const controller = new AbortController();
     void fetch(distributionActivityUrl, { signal: controller.signal, cache: 'no-store' })
       .then(r => r.ok ? r.text() : Promise.reject(new Error('missing'))).then(text => setActivity(readActivity(text))).catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch(distributionPoliticalFundsUrl, { signal: controller.signal, cache: 'no-store' })
+      .then(r => r.ok ? r.text() : Promise.reject(new Error('missing'))).then(text => setFunds(readPoliticalFunds(text))).catch(() => undefined);
     return () => controller.abort();
   }, []);
   // 現職の所属政党と院は参考の表（members-reference.json）から人物IDで結ぶ。全議員の表も同じものを使う。
@@ -416,12 +426,12 @@ export function MembersPage() {
                 <span className="member-party">{partyLabel(member.id, partyMap, reference !== null, formerMap)}</span>
                 <span className="member-net"><strong>{signedYen(member.net.median)}</strong><small>幅 {signedYen(member.net.low)}〜{signedYen(member.net.high)}</small></span>
               </summary>
-              {(shown.length === 1 || member.id === focus || opened.has(member.id)) && <MemberDetail member={member} laws={laws} activity={activity} adjusted={adjusted} />}
+              {(shown.length === 1 || member.id === focus || opened.has(member.id)) && <MemberDetail member={member} laws={laws} activity={activity} funds={funds} adjusted={adjusted} />}
             </details>
           </li>)}</ol>
           {visible.length < shown.length && <p className="members-more"><button type="button" onClick={() => setLimit(n => n + MEMBERS_PAGE_SIZE)}>さらに表示（残り{shown.length - visible.length}人）</button> <button type="button" onClick={() => setLimit(shown.length)}>全員を表示</button></p>}
         </section>
-        <AllMembers confirmed={data.members} data={reference} error={referenceError} />
+        <AllMembers confirmed={data.members} data={reference} error={referenceError} funds={funds} />
         </>}
         {tab === 'party' && <>
           <PartyAffiliationPanel members={members} parties={partyMap} loaded={!!reference} error={referenceError} adjusted={adjusted} />

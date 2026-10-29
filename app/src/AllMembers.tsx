@@ -4,12 +4,14 @@ import { pageCount, pageSlice } from './law-ranking-view';
 import type { PublicMember } from './members-build';
 import type { PublicMembersReference } from './members-reference';
 import { LawName, namingOf, useLawNames } from './law-name';
+import { PoliticalFundsPanel } from './PoliticalFundsPanel';
+import type { PoliticalFundsGroups } from './political-funds';
 import { filterRows, joinConfirmed, partiesOf, SORT_LABEL, sortRows, type HouseFilter, type Row, type SortKey } from './all-members-view';
 
 const signed = (v: number) => v === 0 ? '0円' : `${v < 0 ? '−' : '＋'}${formatYen(Math.abs(v))}`;
 const tone = (v: number | null) => v === null || v === 0 ? 'zero' : v < 0 ? 'loss' : 'benefit';
 
-function RowDetail({ row }: { row: Row }) {
+function RowDetail({ row, funds }: { row: Row; funds: PoliticalFundsGroups | null }) {
   const names = useLawNames();
   return <div className="all-member-detail">
     {row.reason && <p className="fine-note">{row.reason}</p>}
@@ -20,11 +22,12 @@ function RowDetail({ row }: { row: Row }) {
         <span>{t.role === 'proposer' ? '提出' : '参議院で賛成'}・{t.side === 'loss' ? '国賊側' : '国士側'} {formatYen(t.share)}</span>
       </li>)}</ul>
     </>}
+    {row.current && <PoliticalFundsPanel groups={funds} data={row.id} />}
     {row.confirmedRank !== null && <p><a href={`?name=${encodeURIComponent(row.id)}#member-${encodeURIComponent(row.id)}`}>確かな額の順位（{row.confirmedRank}位）と一次資料のつながりを上の一覧で開く</a></p>}
   </div>;
 }
 
-export function AllMembers({ confirmed, data, error }: { confirmed: PublicMember[]; data: PublicMembersReference | null; error: string }) {
+export function AllMembers({ confirmed, data, error, funds }: { confirmed: PublicMember[]; data: PublicMembersReference | null; error: string; funds: PoliticalFundsGroups | null }) {
   const [house, setHouse] = useState<HouseFilter>('all');
   const [party, setParty] = useState('');
   const [query, setQuery] = useState('');
@@ -61,7 +64,7 @@ export function AllMembers({ confirmed, data, error }: { confirmed: PublicMember
             <span className={`all-member-amount ${tone(row.net.median)}`}><span className="badge reference">参考</span>{signed(row.net.median)}</span>
             <span className="all-member-laws-count">{row.laws}本</span>
           </summary>
-          <RowDetail row={row} />
+          <RowDetail row={row} funds={funds} />
         </details>
       </li>)}</ol>
       {pages > 1 && <nav className="pager" aria-label="ページ">
