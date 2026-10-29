@@ -4,12 +4,17 @@
 - 各行に担当と状態があり、状態は決まった4つのどれか。
 - 「済」の行には根拠がある。
 - ADR は 0001 から欠番なしで並び、本文に日付と状態がある。
+- ゴール指標 G1〜G8 の表の「いま」は、データから数えた値の印（<!--m:キー-->値<!--/m-->）で書く。
+  印の値がデータの実測とずれたら落とす。手書きの数字が古くなる問題をここで断つ。
 
-使い方：python3 scripts/roadmap_check.py   （問題があれば終了コード1）
+使い方：python3 scripts/roadmap_check.py            （問題があれば終了コード1）
+        python3 scripts/roadmap_check.py --update   （印の値を実測に書き換える。ずれの直し方はこれだけ）
 """
 
 from __future__ import annotations
 
+import csv
+import json
 import re
 import sys
 from collections import Counter
@@ -19,6 +24,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ROADMAP = ROOT / "docs" / "ロードマップ.md"
 ADR_DIR = ROOT / "docs" / "adr"
 STATES = ("済", "進行中", "未着手", "ねくさん待ち")
+GOALS = tuple(f"G{n}" for n in range(1, 9))
+MARK = re.compile(r"<!--m:([a-z0-9_]+)-->(.*?)<!--/m-->")
 
 
 def _table_lines(text: str) -> list[str]:
@@ -108,11 +115,100 @@ def check_adrs(adr_dir: Path) -> list[str]:
     return problems
 
 
+def _csv(root: Path, rel: str) -> list[dict[str, str]]:
+    with (root / rel).open(encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def _head(path: Path) -> str:
+    return "\n".join(path.read_text(encoding="utf-8").splitlines()[:6])
+
+
+def goal_metrics(root: Path = ROOT) -> dict[str, int]:
+    """ゴール指標の「いま」を、リポジトリ内のデータから数える（手書きにしない）。
+
+    入力はすべて追跡されたファイル。議員ページの members.json はビルド生成物なので使わず、
+    その入力の関与の一覧から数える。
+    """
+    laws = _csv(root, "data/derived/all-laws-v1/outcomes.csv")
+    old_listed = _csv(root, "data/derived/bill-triage-old/triage.csv")
+    old_done = _csv(root, "data/derived/all-laws-old/outcomes.csv")
+    involvements = _csv(root, "data/derived/allocation-v1/involvements.csv")
+    ranking = json.loads((root / "app/public/distribution/ranking.json").read_text(encoding="utf-8"))["counts"]
+    workflows = list((root / ".github" / "workflows").glob("*.yml"))
+    scheduled = [w for w in workflows if re.search(r"^\s*-?\s*cron\s*:", w.read_text(encoding="utf-8"), re.M)]
+    exists = lambda rel: int((root / rel).exists())  # noqa: E731
+    return {
+        # G1 母数
+        "laws_enacted": len(laws),
+        "old_laws_listed": len(old_listed),
+        "old_laws_judged": len(old_done),
+        # G2 全件に額か理由（結果が空の行が残っていれば未達）
+        "laws_unresolved": sum(1 for r in laws if not r["結果"].strip()),
+        "laws_with_amount": sum(1 for r in laws if r["結果"] == "額あり"),
+        # G3 議員（算入された関与のある人物ID）
+        "members_with_involvement": len({r["人物ID"] for r in involvements if r["算入"] == "はい" and r["人物ID"]}),
+        # G4 公開
+        "laws_published": ranking["published"],
+        "laws_confirmed": ranking["confirmed"],
+        # G5 公開前検査（ファイルが在る本数）
+        "pre_publish_guards": exists("tests/test_public_members_safety.py") + exists("scripts/source_check.py")
+        + exists(".repo-preflight/hooks") + exists("scripts/preflight.py"),
+        # G6 定期更新・訂正窓口・改善ループ
+        "scheduled_workflows": len(scheduled),
+        "correction_channel": exists("docs/corrections.md") + exists(".github/ISSUE_TEMPLATE/correction.yml"),
+        # G7・G8 実装の有無（未実装は0。実装が入ったら数が動き、ロードマップの更新を促す）
+        "provisional_cards": len(json.loads((root / "data/foreign-policy-v1/cards.json").read_text(encoding="utf-8"))["cards"]),
+        "provisional_matches": len(_csv(root, "data/derived/provisional-v1/matches.csv")),
+        "pledge_rate_parties": len(list((root / "data/derived").glob("pledge-rate*"))),
+        "loop_levels": len(re.findall(r"^\| L\d ", (root / "docs/フィードバックループ.md").read_text(encoding="utf-8"), re.M)),
+    }
+
+
+def _fmt(n: int) -> str:
+    return f"{n:,}"
+
+
+def goal_rows(text: str) -> list[tuple[str, str]]:
+    """ゴール条件の表の (番号, 「いま」の列)。"""
+    out = []
+    for line in text.splitlines():
+        m = re.match(r"\|\s*(G\d+)\s*\|(.*)\|\s*(.*?)\s*\|\s*$", line)
+        if m:
+            out.append((m.group(1), m.group(3)))
+    return out
+
+
+def check_goal_metrics(text: str, metrics: dict[str, int]) -> list[str]:
+    problems = []
+    rows = dict(goal_rows(text))
+    for g in GOALS:
+        if g not in rows:
+            problems.append(f"{g}：ゴール条件の表に行が無い")
+        elif not MARK.search(rows[g]):
+            problems.append(f"{g}：「いま」にデータから数えた値の印（<!--m:キー-->値<!--/m-->）が1つも無い（手書きだけにしない）")
+    for key, shown in MARK.findall(text):
+        if key not in metrics:
+            problems.append(f"指標「{key}」は定義に無い（goal_metrics のキー：{'・'.join(metrics)}）")
+        elif shown != _fmt(metrics[key]):
+            problems.append(f"指標「{key}」が実測とずれている：書いてある {shown}、データから数えた値 {_fmt(metrics[key])}（--update で直す）")
+    return problems
+
+
+def update_goal_metrics(text: str, metrics: dict[str, int]) -> str:
+    return MARK.sub(lambda m: f"<!--m:{m.group(1)}-->{_fmt(metrics[m.group(1)]) if m.group(1) in metrics else m.group(2)}<!--/m-->", text)
+
+
 def main() -> int:
     text = ROADMAP.read_text(encoding="utf-8")
-    problems = check_roadmap(text) + check_adrs(ADR_DIR)
+    metrics = goal_metrics()
+    if "--update" in sys.argv[1:]:
+        ROADMAP.write_text(update_goal_metrics(text, metrics), encoding="utf-8")
+        text = ROADMAP.read_text(encoding="utf-8")
+    problems = check_roadmap(text) + check_adrs(ADR_DIR) + check_goal_metrics(text, metrics)
     counts = Counter(r["state"] for r in roadmap_rows(text))
     print("ロードマップ：" + "、".join(f"{s} {counts.get(s, 0)}" for s in STATES))
+    print("ゴール指標（実測）：" + "、".join(f"{k} {_fmt(v)}" for k, v in metrics.items()))
     for p in problems:
         print(f"問題：{p}")
     return 1 if problems else 0

@@ -4,6 +4,7 @@ import { SiteShell } from './SiteHeader';
 import { toneTitle, useTone } from './site-tone';
 import { FunnelSteps, RankBars } from './motion';
 import { LawCatalog } from './LawCatalog';
+import { ProvisionalPanel } from './ProvisionalPanel';
 import { collapseObservations, formatYen, lawsCatalogUrl, parseLawsCatalog, type CatalogStep, type LawsCatalog } from './laws-catalog';
 import { plainLawName } from './law-name';
 import './laws.css';
@@ -36,6 +37,7 @@ export function LawRankingPage() {
     })();
     return () => controller.abort();
   }, []);
+  const provisional = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'provisional';
   const amounted = (data?.laws ?? []).filter(law => law.amount);
   const confirmed = amounted.filter(law => law.step === 'published');
   const loss = confirmed.filter(law => law.side === 'loss').length;
@@ -49,8 +51,13 @@ export function LawRankingPage() {
     <main id="main">
       <h1>法律と政策ごとの損失と便益</h1>
       <p className="laws-lead">成立した全部の法律を、一次資料（国会の議案情報・e-Gov 法令）と公的統計（OECD 国民経済計算など）で同じルールに通しました。額は比べた国との差から出した推計で、必ず幅と確かさの印を付けています。額が出ない法律も、止まった理由を付けて全部載せています。結果への責任を測るもので、提出者や賛成者の意図や予見を評価するものではありません。</p>
+      <nav className="prov-mode" aria-label="ランキングの種類">
+        <a href="/ranking" aria-current={!provisional}>国賊ランキング（確定）</a>
+        <a href="/ranking?mode=provisional#provisional" aria-current={provisional}>暫定国賊ランキング（他国の実績）</a>
+      </nav>
+      {provisional && <ProvisionalPanel />}
       {error && <p className="state-banner" role="alert">{error}</p>}
-      {data && <>
+      {!provisional && data && <>
         <section className="laws-stats" aria-label="ひと目で">
           <a href="#list" className="laws-stat"><span>載せている件数</span><strong>{(data.laws.length + data.policies.length).toLocaleString('ja-JP')}件</strong><small>法律{data.laws.length.toLocaleString('ja-JP')}本＋政策{data.policies.length}件</small></a>
           <a href="?side=confirmed#list" className="laws-stat hit"><span>確かな額</span><strong>{confirmed.length}本</strong><small>国賊側{loss}本・国士側{confirmed.length - loss}本（影響の段階まで確認）</small></a>
