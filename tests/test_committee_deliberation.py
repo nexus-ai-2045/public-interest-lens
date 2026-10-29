@@ -342,6 +342,59 @@ class CommitteeFlowTest(unittest.TestCase):
         header = '出席委員\n   委員長 村井  仁君\n      中村 哲治君    村井  仁君\n      中村 哲治君\n本日の会議に付した案件'
         self.assertEqual(F.parse_attendance(header, '衆議院'), [('村井仁', '委員長'), ('中村哲治', '委員')])
 
+    def test_government_reply_is_not_a_resolution_and_other_bills_resolution_is_not_shared(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案及び乙法の一部を改正する法律案を一括して議題といたします。'),
+                _ch(2, 'ただいま議決いたしました両案に対し、附帯決議を付すべしとの動議が提出されております。'),
+                _rec(3, '佐々木', '○佐々木委員 ただいま議題となりました乙法の一部を改正する法律案に対する附帯決議案につきまして、提出者を代表して、その趣旨を御説明申し上げます。案文を朗読して説明にかえさせていただきます。'),
+                _rec(4, '尾身', '○尾身国務大臣 ただいま御決議のありました附帯決議につきましては、その趣旨を十分尊重いたしてまいります。')]
+        meeting = _meeting(recs, '本日の会議に付した案件\n甲法の一部を改正する法律案\n乙法の一部を改正する法律案')
+        self.assertEqual(F.analyze_meeting(meeting, KOU)['resolutions'], [])
+        otsu = F.analyze_meeting(meeting, OTSU)
+        self.assertEqual([r['speaker'] for r in otsu['resolutions']], ['佐々木'])
+        self.assertEqual([r['speaker'] for r in otsu['reso_reply']], ['尾身'])
+
+    def test_question_about_past_resolution_and_member_reply_are_not_taken(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _rec(2, '北沢', '○北沢委員 以前の附帯決議の趣旨を尊重していただきたい。長官の御意見を伺います。'),
+                _ch(3, '本案に対し附帯決議を付すべしとの動議が提出されております。'),
+                _rec(4, '小林', '○小林委員 附帯決議について、その趣旨を尊重するのか、次の質問に移ります。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual((r['resolutions'], r['reso_reply']), ([], []))
+
+    def test_parliamentary_vice_minister_reply_is_taken(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _ch(2, '本案に対し附帯決議を付すべしとの動議が提出されております。'),
+                _rec(3, '大野', '○大野（由）政務次官 ただいまの附帯決議につきましては、その御趣旨を十分尊重して、努力をいたします。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual([x['speaker'] for x in r['reso_reply']], ['大野'])
+
+    def test_resolution_read_aloud_with_space_separated_items_is_taken(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _ch(2, '本案に対し附帯決議を付すべしとの動議が提出されております。'),
+                _rec(3, '鉢呂', '○鉢呂委員 附帯決議案について提案者として趣旨を説明いたします。案文の朗読をもって説明にかえます。 一 都市の整備を進めること。 二 安全に努めること。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        self.assertEqual([x['speaker'] for x in r['resolutions']], ['鉢呂'])
+
+    def test_decision_and_reply_are_paired_with_their_own_resolution(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。'),
+                _rec(2, '小沢', '○小沢委員 附帯決議案について提案者として趣旨を説明いたします。案文を朗読いたします。 一 進めること。'),
+                _ch(3, 'お諮りいたします。本動議のとおり附帯決議を付することに異議ありませんか。異議なしと認め、付することに決しました。'),
+                _rec(4, '大臣', '○郵政大臣 ただいまの附帯決議の趣旨を尊重いたします。'),
+                _rec(5, '鉢呂', '○鉢呂委員 附帯決議案について提案者として趣旨を説明いたします。案文を朗読いたします。 一 努めること。')]
+        r = F.analyze_meeting(_meeting(recs), KOU)
+        got = [(x['speaker'], len(d), len(p)) for x, d, p in r['reso_pairs']]
+        self.assertEqual(got, [('小沢', 1, 1), ('鉢呂', 0, 0)])
+
+    def test_one_speech_reading_several_bills_resolutions_keeps_later_bill(self) -> None:
+        recs = [_ch(1, '甲法の一部を改正する法律案及び乙法の一部を改正する法律案を一括して議題といたします。'),
+                _ch(2, '本案に対し附帯決議を付すべしとの動議が提出されております。'),
+                _rec(3, '細川', '○細川委員 附帯決議案について提案者として趣旨を説明いたします。まず甲法の一部を改正する法律案に対する附帯決議案。 一 進めること。 次に乙法の一部を改正する法律案に対する附帯決議案。 一 努めること。')]
+        meeting = _meeting(recs, '本日の会議に付した案件\n甲法の一部を改正する法律案\n乙法の一部を改正する法律案')
+        self.assertEqual(len(F.analyze_meeting(meeting, OTSU)['resolutions']), 1)
+
+    def test_bill_name_broken_by_a_newline_still_counts_as_this_bill(self) -> None:
+        self.assertFalse(F.names_other_bill('甲法の一部を改正する法律\n案に対する附帯決議案', F.short_title('甲法の一部を改正する法律案')))
+
     def test_long_hiragana_proposer_name(self) -> None:
         recs = [_ch(1, '甲法の一部を改正する法律案を議題といたします。この際、本案に対し、とかしきなおみ君外五名から、修正案が提出されております。')]
         r = F.analyze_meeting(_meeting(recs), KOU)
