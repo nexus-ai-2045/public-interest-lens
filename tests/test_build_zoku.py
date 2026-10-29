@@ -71,6 +71,11 @@ class ZokuTest(unittest.TestCase):
         self.assertEqual(groups[0]['法案の結果'], '成立')
         self.assertEqual(s['行動種別・団体区分が決まりに合わず除いた行'], 2)
 
+    def test_result_uses_enacted_ledger_not_ministry(self):
+        p = {'団体名': 'Y会', '団体区分': '運動団体', '分野': '', '法律ID': '衆法-186-35', '立場': '推進', '行動種別': '陳情', '要旨': '', '出典URL': U, '確度': '原本照合済み'}
+        _, groups, _ = z.build([], [], [], BILLS, [], [p], {}, [], enacted={'衆法-186-35'})
+        self.assertEqual(groups[0]['法案の結果'], '成立')
+
     def test_marks_never_say_wrongdoing(self):
         rows, _, _ = run(chairs=[chair('甲', 1), chair('甲', 2)])
         for bad in ('不正', '癒着', '利権'):

@@ -35,6 +35,7 @@ OUT = ROOT / 'data/derived/zoku-v1'
 CHAIRS = ROOT / 'data/acquired/office-holders/committee-chairs.csv'
 INVOLVEMENTS = [ROOT / 'data/derived/allocation-v1/involvements.csv', ROOT / 'data/derived/allocation-v1/involvements-auto.csv']
 OPPOSING = ROOT / 'data/derived/allocation-v1/opposing.csv'
+ENFORCEMENT = ROOT / 'data/acquired/enforcement-dates/enforcement.csv'
 BILLS = ROOT / 'data/derived/ministry-v1/cabinet-bills.csv'
 LEAGUES = ROOT / 'data/acquired/diet-leagues/memberships.csv'
 POSITIONS = ROOT / 'data/acquired/pressure-groups/positions.csv'
@@ -75,7 +76,13 @@ def has_url(*urls: str) -> bool:
     return any(u.strip().startswith(('http://', 'https://')) for u in urls)
 
 
-def build(chairs, involvements, opposing, bills, leagues, positions, org_fields, relations) -> tuple[list[dict], list[dict], dict]:
+def field_of_ids(bills):
+    return [b['法律ID'] for b in bills]
+
+
+def build(chairs, involvements, opposing, bills, leagues, positions, org_fields, relations, enacted=None) -> tuple[list[dict], list[dict], dict]:
+    # 成立の判定は分野（所管）の有無と分けて、公布された法律の台帳で行う
+    enacted = set(field_of_ids(bills)) if enacted is None else enacted
     field_of = {b['法律ID']: b['所管_今'] for b in bills if b.get('所管_今')}
     ties: dict[tuple[str, str], dict] = defaultdict(lambda: {
         'sessions': set(), 'chair_urls': [], 'bills': set(), 'years': set(), 'yes': set(), 'no': set(),
@@ -174,7 +181,7 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
             continue
         group_rows.append({
             '団体名': r['団体名'], '団体区分': r['団体区分'], '分野': r.get('分野') or field_of.get(r.get('法律ID', ''), ''), '法律ID': r.get('法律ID', ''),
-            '立場': r['立場'], '行動種別': r.get('行動種別', ''), '法案の結果': '成立' if r.get('法律ID') in field_of else '台帳に無い（不成立または所管不明）',
+            '立場': r['立場'], '行動種別': r.get('行動種別', ''), '法案の結果': '成立' if r.get('法律ID') in enacted else '台帳に無い（不成立または所管不明）',
             '要旨': r.get('要旨', ''), '出典URL': r['出典URL'], '確度': r['確度']})
 
     summary = {
@@ -187,6 +194,11 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
                  '議員連盟の名簿・運動団体の声明は、一次資料から足した行だけ（空のときは判定に入らない）'],
     }
     return rows, group_rows, summary
+
+
+def enacted_ids() -> set[str]:
+    """公布日と法令番号が台帳にある法律（衆法・参法・所管不明の閣法を含む）。"""
+    return {r['id'] for r in read_csv(ENFORCEMENT) if r.get('法令番号') and r.get('公布日')}
 
 
 def org_fields_from_shingikai() -> dict[str, set[str]]:
@@ -218,7 +230,7 @@ def main(argv=None) -> int:
     inv = [r for p in INVOLVEMENTS for r in read_csv(p)]
     relations = read_csv(args.relations) if args.relations else []
     rows, groups, summary = build(read_csv(CHAIRS), inv, read_csv(OPPOSING), read_csv(BILLS), read_csv(LEAGUES), read_csv(POSITIONS),
-                                  org_fields_from_shingikai(), relations)
+                                  org_fields_from_shingikai(), relations, enacted_ids())
     write(OUT / 'member-field-ties.csv', HEADER, rows)
     write(OUT / 'pressure-group-positions.csv', ['団体名', '団体区分', '分野', '法律ID', '立場', '行動種別', '法案の結果', '要旨', '出典URL', '確度'], groups)
     (OUT / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
