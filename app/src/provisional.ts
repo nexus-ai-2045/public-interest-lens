@@ -39,6 +39,8 @@ export type ProvisionalItem = {
   marks: string[];
 };
 export type NearMiss = { id: string; title: string; cardId: string; reason: string };
+export type TheoryItem = { id: string; mechanism: string; what: string; inputs: { obligation: string; count: number; hours: number; wage_in_assessment: number }[]; uncomputed: string[]; sources: string[]; low_yen: number; high_yen: number; direction: string; calc_note: string };
+export type Theory = { version: string; status: string; note: string; items: TheoryItem[]; not_computed: { id: string; mechanism: string; reason: string }[]; backtest: { n: number; coverage: number | null; interval_width: number | null; note: string } };
 export type Provisional = {
   schema: 'provisional/v1';
   version: string;
@@ -47,6 +49,7 @@ export type Provisional = {
   cards: ProvisionalCard[];
   items: ProvisionalItem[];
   nearMisses: NearMiss[];
+  theory: Theory | null;
 };
 
 export function parseProvisional(text: string): Provisional {

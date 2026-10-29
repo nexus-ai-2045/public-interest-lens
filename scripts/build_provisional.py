@@ -27,6 +27,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CARDS = ROOT / "data" / "foreign-policy-v1" / "cards.json"
 ACQ = ROOT / "data" / "acquired" / "foreign-policy-v1"
+THEORY = ROOT / "data" / "theory-v1" / "results.json"
 NEAR = ROOT / "data" / "derived" / "provisional-v1" / "near_misses.csv"
 MATCHES = ROOT / "data" / "derived" / "provisional-v1" / "matches.csv"
 LAWS = ROOT / "app" / "public" / "distribution" / "laws.json"
@@ -202,10 +203,10 @@ def main() -> int:
 
     output = {
         "schema": "provisional/v1", "version": VERSION, "window": spec["window"],
-        "inputs": {"cards": sha(CARDS), **{path.name: sha(path) for path in sorted(ACQ.iterdir()) if path.is_file()}, "laws": sha(LAWS)},
+        "inputs": {"cards": sha(CARDS), **({"theory": sha(THEORY)} if THEORY.exists() else {}), **{path.name: sha(path) for path in sorted(ACQ.iterdir()) if path.is_file()}, "laws": sha(LAWS)},
         "recentFromYear": RECENT_FROM_YEAR,
         "counts": {"recent": len(recent), "provisional": len(items), "unmeasured": len(recent) - len(items)},
-        "cards": cards, "sizes": sizes, "items": items, "nearMisses": near,
+        "cards": cards, "sizes": sizes, "items": items, "nearMisses": near, "theory": json.loads(THEORY.read_text(encoding="utf-8")) if THEORY.exists() else None,
     }
     OUTPUT.write_text(json.dumps(output, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"cards={len(cards)} measured={sum(c['status'] == 'measured' for c in cards)} recent={len(recent)} provisional={len(items)}")
