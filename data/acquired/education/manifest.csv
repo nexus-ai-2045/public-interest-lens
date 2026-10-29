@@ -1,0 +1,4 @@
+url,path,sha256,http,fetched_at
+"https://sdmx.oecd.org/public/rest/data/OECD.STI.STP,DSD_MSTI@DF_MSTI,1.3/all?startPeriod=1995&dimensionAtObservation=AllDimensions",.local/education-stats/raw/oecd-msti.csv,36167859de41b61dccf219932ed0b2069f0131be7630a43a436852a9840b4002,200,2026-10-29T13:44:18+00:00
+https://api.worldbank.org/v2/country/all/indicator/SE.XPD.TOTL.GD.ZS?format=json&per_page=20000&date=1990:2025,.local/education-stats/raw/wb-SE.XPD.TOTL.GD.ZS.json,4cbcf8d6c4afba73fc752bba954e248ed3cda552771327f86f8cef8f7c1d7e28,200,2026-10-29T13:44:20+00:00
+https://api.worldbank.org/v2/country/all/indicator/SE.TER.ENRR?format=json&per_page=20000&date=1990:2025,.local/education-stats/raw/wb-SE.TER.ENRR.json,d201a0e5ba2202a0dac9b8ceaaa2fc8eb32482998ff3c865753e994def7b99ab,200,2026-10-29T13:44:21+00:00
