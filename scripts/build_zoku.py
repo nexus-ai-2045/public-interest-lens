@@ -250,7 +250,7 @@ def unique_person_ids() -> dict[str, str]:
     seen: dict[str, set[str]] = defaultdict(set)
     for r in read_csv(PERSONS):
         if r['人物ID']:
-            for n in [r['氏名'], *filter(None, r['別表記'].split(';'))]:
+            for n in [r['氏名'], *filter(None, re.split(r'[;／]', r['別表記']))]:
                 seen[normalize_name(n)].add(r['人物ID'])
     return {n: next(iter(ids)) for n, ids in seen.items() if len(ids) == 1}
 

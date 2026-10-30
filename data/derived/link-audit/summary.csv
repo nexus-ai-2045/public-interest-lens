@@ -5,11 +5,11 @@
 圧力団体の立場→法律,acquired/pressure-groups/positions.csv,法律ID,法律,23,23,0,要望は「法令名」への求めで、特定の法案ではない。改正法IDは経済界の帳簿（chain.csv）が要望→改正で結ぶ。推測で埋めない
 経済界の要望→改正法,derived/business-ledger-v1/chain.csv,改正法ID,法律,113,0,0,
 閣法の所管→法律,derived/ministry-v1/cabinet-bills.csv,法律ID,法律,2720,0,0,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,人物ID,人物ID,108,26,0,残りは元職で台帳に無い（名簿の不足）。同姓同名は結ばない
+族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,人物ID,人物ID,108,0,0,同姓同名は結ばない（台帳でちょうど1人に決まる名前だけ）
 支部の政党交付金→人物ID,derived/party-subsidy/branch-subsidy-2025.csv,人物ID,人物ID,1167,560,0,代表者の記載が無い政党・支部の行（個人ではない）。名前が載る行は結べている
 議連の役職→氏名,acquired/diet-leagues/memberships.csv,氏名,氏名,5,0,0,
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,氏名,氏名,4775,0,755,2025年3月時点の現職のうち、2026-10 の名簿に居ない約130人（元職）。名簿の不足
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,筆頭の人物ID,人物ID,2264,309,0,"台帳に無い＝名簿の不足（過去40年の議員 約2,970人に対し台帳 約2,000人）"
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,氏名,氏名,4775,0,52,残りは会議録（1986-07以降）に議員としての発言が無い、または表記が違う人。diet-roster/historical-unmatched.csv に理由つき
+提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,筆頭の人物ID,人物ID,2264,12,0,委員会の提出（提出者が委員長の役職名）5件、提出者の記載なし4件、台帳に無い3件。院を移った人はもう一方の院の同名1人に結ぶ
 提出者（未成立法案）→未成立法案,derived/unenacted-bills-v1/submitters.csv,id,未成立法案,2264,0,0,
 団体の立場→圧力団体,derived/org-ledger-v1/org-stances.csv,団体,団体,35,0,0,
 経済界の要望の提案主体→団体の帳簿,derived/business-ledger-v1/by-proposer.csv,提案主体,団体,84,0,66,団体の立場の帳簿は審議会・ヒアリングで発言した団体だけ。要望だけの団体は載らない（取り込み未着手）
