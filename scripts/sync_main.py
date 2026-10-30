@@ -19,9 +19,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 # (生成物のパス, 作り直すコマンドを順に)。入力は Git の中のファイルだけ。
-# build_database.py は Git に入れない members.json と ranking.json を読むので、先に作る（CI の verify と同じ順）
+# charts.json など Git に入れない派生物は、入口 generate_artifacts.py が CI の verify と同じ順で作る
 GENERATED = [
-    ("app/public/distribution/charts.json", [[sys.executable, "scripts/source_check.py", "--generate-ranking"], ["node", "scripts/build_public_members.mjs"], [sys.executable, "scripts/build_database.py"]]),
+    ("app/public/distribution/charts.json", [[sys.executable, "scripts/generate_artifacts.py", "--force"]]),
 ]
 
 
