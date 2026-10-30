@@ -343,3 +343,14 @@ class HistoricalRosterTest(unittest.TestCase):
         ledger = build_ledger(roster, historical=hist)
         self.assertEqual(len(ledger.persons), 1)
         self.assertIn("齋藤裕喜", next(iter(ledger.persons.values())).aliases)
+
+    def test_same_person_table_merges_a_separate_id_into_the_kept_one(self) -> None:
+        from scripts.person_ids import build_ledger
+
+        roster = [{"院": "参議院", "氏名": "ながえ 孝子", "本名": "", "読み": "ながえ たかこ", "会派": "無所属", "選挙区": "愛媛"}]
+        hist = [{"氏名": "永江孝子", "読み": "ながえたかこ", "院": "衆議院", "会派（最多）": "民主党", "同姓同名の疑い": ""}]
+        same = [{"人物ID": "ながえ孝子", "同じ人の別表記": "永江孝子", "根拠": "x", "根拠URL": "https://www.sangiin.go.jp/"}]
+        ledger = build_ledger(roster, historical=hist, same=same)
+        self.assertNotIn("永江孝子", ledger.persons)
+        self.assertIn("永江孝子", ledger.persons["ながえ孝子"].aliases)
+        self.assertEqual(ledger.by_canonical["永江孝子"][0].id, "ながえ孝子")
