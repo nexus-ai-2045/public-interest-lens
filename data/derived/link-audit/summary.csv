@@ -8,7 +8,7 @@
 族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,人物ID,人物ID,108,0,0,同姓同名は結ばない（台帳でちょうど1人に決まる名前だけ）
 支部の政党交付金→人物ID,derived/party-subsidy/branch-subsidy-2025.csv,人物ID,人物ID,1167,560,0,代表者の記載が無い政党・支部の行（個人ではない）。名前が載る行は結べている
 議連の役職→氏名,acquired/diet-leagues/memberships.csv,氏名,氏名,5,0,0,
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,氏名,氏名,4775,0,52,残りは会議録（1986-07以降）に議員としての発言が無い、または表記が違う人。diet-roster/historical-unmatched.csv に理由つき
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,氏名,氏名,4775,0,46,残りは会議録（1986-07以降）に議員としての発言が無い、または表記が違う人。diet-roster/historical-unmatched.csv に理由つき
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,筆頭の人物ID,人物ID,2264,12,0,委員会の提出（提出者が委員長の役職名）5件、提出者の記載なし4件、台帳に無い3件。院を移った人はもう一方の院の同名1人に結ぶ
 提出者（未成立法案）→未成立法案,derived/unenacted-bills-v1/submitters.csv,id,未成立法案,2264,0,0,
 団体の立場→圧力団体,derived/org-ledger-v1/org-stances.csv,団体,団体,35,0,0,

@@ -3,6 +3,7 @@
 
 入力（すべてリポジトリ内）
 - 現職の名簿 data/acquired/diet-roster/current.csv（院・氏名・読み・会派・選挙区）
+- 同じ人の表記の対応表 data/acquired/diet-roster/same-person.csv（一次資料で確かめたものだけ）
 - 元職の名簿 data/acquired/diet-roster/historical.csv（会議録の発言者から確かめた人。scripts/fetch_roster_kokkai.py）
 - 歴代の大臣・副大臣・政務官 data/acquired/office-holders/cabinet.csv
 - 関与の一覧 data/derived/allocation-v1/involvements.csv（氏名・院）
@@ -41,6 +42,7 @@ from scripts.allocation_involvements import normalize_name  # noqa: E402
 
 ROSTER = ROOT / "data" / "acquired" / "diet-roster" / "current.csv"
 HISTORICAL = ROOT / "data" / "acquired" / "diet-roster" / "historical.csv"
+SAME_PERSON = ROOT / "data" / "acquired" / "diet-roster" / "same-person.csv"
 CABINET = ROOT / "data" / "acquired" / "office-holders" / "cabinet.csv"
 INVOLVEMENTS = ROOT / "data" / "derived" / "allocation-v1" / "involvements.csv"
 REFERENCE = ROOT / "app" / "public" / "distribution" / "members-reference.json"
@@ -248,7 +250,8 @@ def _new(ledger: Ledger, canon: str, r: dict, pid: str) -> None:
 
 def build_ledger(roster: list[dict], cabinet: list[dict] | None = None, involvements: list[dict] | None = None,
                  previous: list[dict] | None = None, overrides: dict[tuple[str, str], str] | None = None,
-                 reference: list[dict] | None = None, historical: list[dict] | None = None) -> Ledger:
+                 reference: list[dict] | None = None, historical: list[dict] | None = None,
+                 same: list[dict] | None = None) -> Ledger:
     """名簿の人物に、内閣名簿と関与の一覧にしか出ない人物（元職など）を足す。別表記は同じ人物IDに集める。
     previous（前の persons.csv）の人物は、人物IDを変えずに引き継ぐ。"""
     ledger = Ledger()
@@ -298,6 +301,16 @@ def build_ledger(roster: list[dict], cabinet: list[dict] | None = None, involvem
                 continue
             houses = h["院"].split("・")
             _add(ledger, Person(canon, clean_name(h["氏名"]), h["読み"], houses[0] if len(houses) == 1 else "", "", h["会派（最多）"]))
+    # 一次資料（根拠URL）で同じ人と確かめた表記を、先の人物IDの別表記に寄せる（same-person.csv）。別の人物IDとして残っていれば台帳から外す。
+    for r in same or []:
+        keep, other = ledger.persons.get(r["人物ID"]), clean_name(r["同じ人の別表記"])
+        if not keep or not r["根拠URL"].startswith("https://"):
+            continue
+        for q in list(ledger.by_canonical.get(canonical(other), [])):
+            if q is not keep:
+                ledger.persons.pop(q.id, None)
+        ledger.by_canonical[canonical(other)] = [keep]
+        keep.aliases.add(other)
     # 分けた名前が、院の分からない関与の行に出ていないかを一覧に残す。
     for canon, ps in sorted(ledger.by_canonical.items()):
         if len(ps) < 2:
@@ -356,6 +369,7 @@ def main(argv=None) -> int:
     p.add_argument("--previous", type=Path, help="前の persons.csv（既定は出力先の persons.csv）。付けた人物IDはここから引き継いで変えない")
     p.add_argument("--reference", type=Path, default=REFERENCE, help="前に作った全議員の表。歴代の人を台帳に残すために読む")
     p.add_argument("--historical", type=Path, default=HISTORICAL, help="元職の名簿（会議録の発言者から確かめた人）")
+    p.add_argument("--same-person", type=Path, default=SAME_PERSON, help="一次資料で同じ人と確かめた表記の対応表")
     p.add_argument("--annotate-involvements", action="store_true", help="関与の一覧に人物ID列を足し直し、役職を canonical で照合し直す")
     a = p.parse_args(argv)
     inv = read_csv(a.involvements) if a.involvements.exists() else []
@@ -364,7 +378,8 @@ def main(argv=None) -> int:
     ledger = build_ledger(read_csv(a.roster), cabinet, inv, read_csv(previous) if previous.exists() else None,
                           load_overrides(a.overrides),
                           json.loads(a.reference.read_text(encoding="utf-8"))["members"] if a.reference.exists() else None,
-                          read_csv(a.historical) if a.historical.exists() else None)
+                          read_csv(a.historical) if a.historical.exists() else None,
+                          read_csv(a.same_person) if a.same_person.exists() else None)
     rows = [{"人物ID": q.id, "氏名": q.name, "読み": q.reading, "院": q.house, "選挙区": q.district, "別表記": "／".join(sorted(q.aliases))}
             for q in sorted(ledger.persons.values(), key=lambda q: q.id)]
     write_csv(a.out_dir / "persons.csv", PERSON_HEADER, rows)

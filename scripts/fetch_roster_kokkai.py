@@ -22,6 +22,7 @@ import json
 import re
 import sys
 import time
+import unicodedata
 import urllib.parse
 import urllib.request
 from collections import Counter
@@ -121,6 +122,8 @@ def check(name: str, how: str, sleep: float) -> tuple[dict[str, str] | None, dic
         return None, {"氏名": name, "理由": "会派の付く発言が無い（議員ではない可能性）", "候補の出どころ": how, "取得日時": now}
     oldest = call({**base, "startRecord": str(n), "maximumRecords": "1"}).get("speechRecord", [{}])[0]
     time.sleep(sleep)
+    # 読みの濁点ゆれ（てらだ／てらた）だけの違いは同じ人（同姓同名の疑いにしない）
+    strip = lambda y: unicodedata.normalize("NFD", y).replace("\u3099", "")  # noqa: E731
     yomi = Counter(r.get("speakerYomi") or "" for r in recs + [oldest])
     houses = sorted({r["nameOfHouse"] for r in members if r.get("nameOfHouse") in ("衆議院", "参議院")})
     group = Counter(r["speakerGroup"] for r in members).most_common(1)[0][0]
@@ -128,7 +131,7 @@ def check(name: str, how: str, sleep: float) -> tuple[dict[str, str] | None, dic
     return {
         "氏名": name, "読み": yomi.most_common(1)[0][0], "院": "・".join(houses), "会派（最多）": group,
         "最初の発言日": oldest.get("date", ""), "最後の発言日": recs[0].get("date", ""), "発言数": str(n),
-        "同姓同名の疑い": "はい" if len({y for y in yomi if y}) > 1 else "", "出典URL": url, "取得日時": now,
+        "同姓同名の疑い": "はい" if len({strip(y) for y in yomi if y}) > 1 else "", "出典URL": url, "取得日時": now,
     }, None
 
 
