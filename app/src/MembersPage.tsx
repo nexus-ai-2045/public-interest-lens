@@ -13,7 +13,7 @@ import { DEFAULT_KNOBS, isDefaultKnobs, readKnobs, writeKnobs, type CausalRole, 
 import { adjustMembers } from './members-knobs';
 import { BLOCS as VOTE_BLOCS } from './votes';
 import { AllMembers } from './AllMembers';
-import { distributionReferenceUrl } from './all-members-view';
+import { distributionReferenceUrl, formerNote } from './all-members-view';
 import type { PublicMembersReference } from './members-reference';
 import { partyById, partyComparison, sortPartyRows, type PartySortKey } from './party-compare';
 import { LawName, lawNameText, namingOf, useLawNames } from './law-name';
@@ -274,7 +274,7 @@ export function PartyRankingPanel({ ranking }: { ranking: PartyRanking }) {
 /** 一覧の所属の表示。現職は党名（名簿の会派から直したもの）、表がまだ読めていないときは空、それ以外（元職・当時）は「元職」（参議院の記録があれば最終会派つき）。 */
 export function partyLabel(id: string, parties: ReadonlyMap<string, string>, loaded: boolean, former: ReadonlyMap<string, string> = new Map()): string {
   const last = former.get(id);
-  return parties.get(id) ?? (loaded ? (last ? `元職（参議院の最終会派：${last}）` : '元職') : '');
+  return parties.get(id) ?? (loaded ? (last ? `元職（${last}）` : '元職') : '');
 }
 
 const AFFILIATION_SORTS: { key: PartySortKey; label: string }[] = [{ key: 'perPerson', label: '1人あたり' }, { key: 'total', label: '合計' }, { key: 'people', label: '人数' }];
@@ -370,7 +370,7 @@ export function MembersPage() {
   }, []);
   const partyMap = useMemo(() => reference ? partyById(reference.members) : new Map<string, string>(), [reference]);
   // 元職の人は、参議院の投票記録に最後に出てくる会派を添える（あれば）。
-  const formerMap = useMemo(() => new Map((reference?.members ?? []).filter(r => !r.current && r.lastSangiinParty).map(r => [r.id, r.lastSangiinParty] as const)), [reference]);
+  const formerMap = useMemo(() => new Map((reference?.members ?? []).filter(r => !r.current && formerNote(r)).map(r => [r.id, formerNote(r)] as const)), [reference]);
   const [partyFilter, setPartyFilter] = useState('');
   const partyChoices = useMemo(() => { const c = new Map<string, number>(); for (const party of partyMap.values()) c.set(party, (c.get(party) ?? 0) + 1); return [...c].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ja')).map(([party]) => party); }, [partyMap]);
   // 議員ランキング／政党ごとの比較。名前を指した URL は議員ランキングで開く。

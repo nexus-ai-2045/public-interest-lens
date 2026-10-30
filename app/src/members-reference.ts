@@ -32,6 +32,8 @@ export type ReferenceMember = {
   current: { house: string; party: string; caucus: string; district: string } | null;
   /** 参議院の投票記録に出てくる会派（最後に記録されたもの）。 */
   lastSangiinParty: string;
+  /** 国会会議録の発言者所属会派から取った、記録のある最後の日付の会派（scripts/fetch_affiliation_at_time.py）。無ければ空。 */
+  lastKnownCaucus: { name: string; date: string } | null;
   loss: Range;
   credit: Range;
   net: Range;
@@ -54,6 +56,8 @@ export type ReferenceInputs = {
   enacted: string; votesIndex: string; ballots: string[]; sangiinMembers: string; cabinet: string; roster: string;
   /** 人物台帳 data/derived/person-ids/persons.csv。 */
   persons: string;
+  /** 当時の会派の表 data/acquired/member-affiliation/at-time.csv（任意）。 */
+  affiliationAtTime?: string;
 };
 
 const SANKO = '参考';
@@ -215,6 +219,12 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
   const rosterId = (r: Record<string, string>) => ledger.rosterPerson(r)?.id ?? canonical(r['氏名']);
   const current = new Map(roster.map(r => [rosterId(r), { house: r['院'], party: affiliationOf(r['院'], r['会派']), caucus: r['会派'], district: r['選挙区'] }]));
   for (const r of roster) names.set(rosterId(r), ledger.rosterPerson(r)?.name ?? names.get(rosterId(r)) ?? r['氏名'].replace(/[\s\u3000]/g, ''));
+  const lastKnown = new Map<string, { name: string; date: string }>();
+  for (const r of input.affiliationAtTime ? parseCsv(input.affiliationAtTime) : []) {
+    if (!r['当時の会派']) continue;
+    const cur = lastKnown.get(r['人物ID']);
+    if (!cur || r['日付'] > cur.date) lastKnown.set(r['人物ID'], { name: r['当時の会派'], date: r['日付'] });
+  }
   const lastParty = new Map<string, string>();
   for (const v of idName.values()) { const res = ledger.resolve(v.name, '参議院'); if (res) lastParty.set(res.id, v.party); }
   const keys = new Set([...people.keys(), ...roster.map(rosterId)]);
@@ -225,7 +235,7 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     const reason = t.laws.length ? '' : current.get(id)?.house === '衆議院'
       ? '参考の額の法律で、提出者としての記録がない（衆議院は起立採決で個人の賛否が残らず、会派に置いている）'
       : '参考の額の法律で、提出者・参議院の賛成としての記録がない';
-    return { id, name, current: current.get(id) ?? null, lastSangiinParty: lastParty.get(id) ?? '', loss: t.loss, credit: t.credit, net, laws: new Set(t.laws.map(x => x.lawId)).size,
+    return { id, name, current: current.get(id) ?? null, lastSangiinParty: lastParty.get(id) ?? '', lastKnownCaucus: lastKnown.get(id) ?? null, loss: t.loss, credit: t.credit, net, laws: new Set(t.laws.map(x => x.lawId)).size,
       top: [...t.laws].sort((a, b) => b.share - a.share).slice(0, 5), reason };
   }).sort((a, b) => a.net.median - b.net.median || a.id.localeCompare(b.id));
   return {

@@ -23,10 +23,16 @@ export function joinConfirmed(reference: ReferenceMember[], confirmed: PublicMem
   const seen = new Set(reference.map(r => r.id));
   for (const [id, c] of byId) {
     if (seen.has(id)) continue;
-    rows.push({ id, name: c.name, current: null, lastSangiinParty: '', loss: zeroRange, credit: zeroRange, net: zeroRange, laws: 0, top: [],
+    rows.push({ id, name: c.name, current: null, lastSangiinParty: '', lastKnownCaucus: null, loss: zeroRange, credit: zeroRange, net: zeroRange, laws: 0, top: [],
       reason: '参考の額の法律で、提出者・参議院の賛成としての記録がない', confirmed: c.net.median, confirmedRank: c.rank });
   }
   return rows;
+}
+
+/** 元職の所属の説明。記録のある最後の年の会派（国会会議録）を優先し、無ければ参議院の最終会派。どちらも無ければ空。 */
+export function formerNote(r: Pick<ReferenceMember, 'lastKnownCaucus' | 'lastSangiinParty'>): string {
+  if (r.lastKnownCaucus) return `${r.lastKnownCaucus.date.slice(0, 4)}年の会派：${r.lastKnownCaucus.name}`;
+  return r.lastSangiinParty ? `参議院の最終会派：${r.lastSangiinParty}` : '';
 }
 
 export function partiesOf(rows: Row[]): string[] {
@@ -60,7 +66,7 @@ export function filterRows(rows: Row[], o: { house: HouseFilter; party: string; 
     if (o.house === 'former' ? r.current !== null : o.house !== 'all' && r.current?.house !== o.house) return false;
     if (o.party && r.current?.party !== o.party) return false;
     if (o.withAmount && !hasAmount(r)) return false;
-    const hay = `${r.name} ${r.current?.party ?? ''} ${r.current?.district ?? ''} ${r.lastSangiinParty}`;
+    const hay = `${r.name} ${r.current?.party ?? ''} ${r.current?.district ?? ''} ${formerNote(r)}`;
     return words.every(w => hay.includes(w));
   });
 }
