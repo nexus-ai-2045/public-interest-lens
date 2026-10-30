@@ -1,7 +1,6 @@
 """全法律の一覧（scripts/build_laws_catalog.py）の読み替えが、公開ランキングと台帳の値と一致するか。"""
 
 import csv
-from collections import Counter
 import json
 import unittest
 
@@ -91,9 +90,11 @@ class BuildLawsCatalogTest(unittest.TestCase):
             self.assertEqual(view["what"], {"text": "", "withheld": "unchecked"})
             self.assertEqual(view["concern"], {"text": "", "withheld": "unchecked"})
 
-    def test_segments_are_recorded_as_an_input(self):
-        self.assertIn("segments", catalog.INPUTS)
-        self.assertIn("segments", self.payload["inputs"])
+    def test_speech_facts_are_recorded_as_an_input(self):
+        self.assertIn("speechFacts", catalog.INPUTS)
+        self.assertIn("speechFacts", self.payload["inputs"])
+        self.assertNotIn("speeches", catalog.INPUTS)
+        self.assertNotIn("segments", catalog.INPUTS)
 
     def test_withheld_reason_matches_shared_speeches(self):
         # 発言が1本の法案だけのものなら、要約が空でも「まとめた説明」とは言わない（衆法-139-18 など）
@@ -102,20 +103,18 @@ class BuildLawsCatalogTest(unittest.TestCase):
         if what and not what["text"]:
             self.assertEqual(what["withheld"], "unread")
 
-    @requires_data("speeches")
-    def test_shared_speech_counts_as_split_only_with_a_segment_of_the_current_url(self):
-        # 共有の発言を「区別できた（unread）」と言えるのは、いまの発言 URL から切り出した部分があるときだけ
-        speeches = {row["id"]: row for row in csv.DictReader(catalog.INPUTS["speeches"].open(encoding="utf-8"))}
-        uses = Counter(row[source] for row in speeches.values() for source in ("説明のURL", "反対のURL") if row[source])
-        split = {(row["id"], row["区分"], row["URL"]) for row in csv.DictReader(catalog.INPUTS["segments"].open(encoding="utf-8"))}
+    def test_shared_speech_is_withheld_as_shared_only_when_the_facts_say_it_cannot_be_told_apart(self):
+        # 共有の発言を「区別できた（unread）」と言えるのは、speech-facts.csv の「区別できない」に入っていないときだけ
+        facts = {row["id"]: row for row in csv.DictReader(catalog.INPUTS["speechFacts"].open(encoding="utf-8"))}
         for law in self.payload["laws"]:
+            kinds = facts.get(law["id"], {}).get("区別できない", "").split("・")
             for key, kind in (("what", "説明"), ("concern", "反対")):
-                quote = (law.get("overview") or {}).get(key) or {}
-                url = quote.get("url")
-                if quote.get("withheld") == "unread" and url and uses[url] > 1:
-                    self.assertIn((law["id"], kind, url), split, law["id"])
+                withheld = ((law.get("overview") or {}).get(key) or {}).get("withheld")
+                if withheld == "shared":
+                    self.assertIn(kind, kinds, law["id"])
+                if withheld == "unread":
+                    self.assertNotIn(kind, kinds, law["id"])
 
-    @requires_data("speeches")
     def test_debate_about_another_topic_is_marked_as_such(self):
         # 閣法-174-6（子ども手当）の反対討論として拾った発言は予算への討論なので、この法律の反対討論とは示さない
         item = next(law for law in self.payload["laws"] if law["id"] == "閣法-174-6")
@@ -126,7 +125,6 @@ class BuildLawsCatalogTest(unittest.TestCase):
         self.assertNotIn("url", concern)
         self.assertNotIn("国会会議録（反対討論）", [source["label"] for source in item.get("sources", [])])
 
-    @requires_data("speeches")
     def test_supporting_speech_is_not_shown_as_an_opposition_debate(self):
         # 閣法-153-5 の候補の討論は法案に賛成し修正案にだけ反対するもの。要約が空でも「反対討論は見つかった」と示さない
         item = next(law for law in self.payload["laws"] if law["id"] == "閣法-153-5")
