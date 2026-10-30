@@ -11,7 +11,8 @@ import type { GenerationMetadata } from './generation-metadata';
  *    代表者に 1/(N+1) を置き、残りは「名前不明の提出者」とする。委員会提出（○○委員長）は人に配らない。
  *    参議院：本会議の押しボタン投票の個人別の賛否（成立した日の、題名が一致する投票）。
  * 3. 参議院の個人別の賛否が見つからない法律は、提出者の組・衆議院の賛成会派・参議院の賛成会派の3者で 1/3 ずつとし、会派の分は人に配らない。
- * 4. 名簿（現職の衆参全議員）に載る人は、配る額が無くても0円で載せ、理由を付ける。
+ * 4. 人物台帳（persons.csv）の全員と名簿（現職の衆参全議員）は、配る額が無くても0円で載せ、理由を付ける（全員公開の方針）。
+ *    額も確かな額も無い人は画面で「評価なし」の印を付ける（0円と区別する）。
  * 5. 人は人物ID（person-id.ts、scripts/person_ids.py の台帳）で結ぶ。同姓同名の可能性がある名前は、一次資料で所属が決まる場合
  *    （衆法・参法の提出者は議案の種別、参議院の賛成は投票記録）だけ人物IDに結び、それ以外は配らない。
  */
@@ -47,7 +48,7 @@ export type PublicMembersReference = {
   generatedFrom?: GenerationMetadata;
   rules: string[];
   members: ReferenceMember[];
-  counts: { members: number; current: number; withAmount: number; laws: number; lawsWithVotes: number; lawsPartyOnly: number; observations: number; unresolved: number };
+  counts: { members: number; current: number; withAmount: number; ledger: number; laws: number; lawsWithVotes: number; lawsPartyOnly: number; observations: number; unresolved: number };
 };
 /** 1人・1本・1役割ごとの配り先（公開ファイルには入れず、scripts/check_reference_members.py が全件を一次資料と照らす）。member は人物ID、name は出典の表記。 */
 export type ReferenceAttribution = { member: string; name: string; house: string; lawId: string; role: ReferenceRole; side: 'loss' | 'benefit'; median: number };
@@ -227,7 +228,10 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
   }
   const lastParty = new Map<string, string>();
   for (const v of idName.values()) { const res = ledger.resolve(v.name, '参議院'); if (res) lastParty.set(res.id, v.party); }
-  const keys = new Set([...people.keys(), ...roster.map(rosterId)]);
+  // 台帳の全員（元職を含む）・現職の名簿・額のある人。台帳の空行（ヘッダー直後の空 ID）は除く。
+  const ledgerPeople = [...ledger.byId.values()].filter(p => p.id);
+  for (const p of ledgerPeople) if (!names.has(p.id)) names.set(p.id, p.name);
+  const keys = new Set([...people.keys(), ...roster.map(rosterId), ...ledgerPeople.map(p => p.id)]);
   const members: ReferenceMember[] = [...keys].map(id => {
     const name = names.get(id) ?? id;
     const t = people.get(id) ?? { loss: zero(), credit: zero(), laws: [] };
@@ -242,7 +246,7 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     schema: 'public-members-reference/v2',
     rules: ['reference-split-by-observation-v1', 'causal-shapley-v1', 'reference-party-fallback-v1'],
     members,
-    counts: { members: members.length, current: members.filter(m => m.current).length, withAmount: members.filter(m => m.laws > 0).length, laws: laws.length,
+    counts: { members: members.length, current: members.filter(m => m.current).length, withAmount: members.filter(m => m.laws > 0).length, ledger: ledgerPeople.length, laws: laws.length,
       lawsWithVotes: withVotes, lawsPartyOnly: partyOnly, observations: obs.size, unresolved },
     attributions,
   };
