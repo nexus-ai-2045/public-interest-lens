@@ -258,7 +258,7 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
 
     # 0a) 制度・名称整備の型：経済への直接効果は無い（題名の語だけで決める）
     if institutional_title(title) and not st.fiscal.get(t["id"]):
-        out.update(結果="評価対象外", 経路="経済への直接効果なし（制度・名称整備の型）",
+        out.update(結果="評価対象外", 経路="経済への直接効果なし（制度・名称整備の型）", 公開可否="公開不可",
                    理由="題名が制度・名称整備の型（基本法・整備法・設置法・差押禁止など）。民間の売上・費用・給付・税・規制の負担を直接は変えない（独立検証で、2系統が同じ型で評価対象に誤っていた）。経済に絞る方針の外")
         return out
 
