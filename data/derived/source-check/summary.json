@@ -1,9 +1,9 @@
 {
   "checkedLaws": 2850,
-  "items": 30307,
-  "match": 30007,
+  "items": 30304,
+  "match": 30003,
   "mismatch": 0,
-  "notApplicable": 300,
+  "notApplicable": 301,
   "heldOut": [],
   "memberMismatch": 0
 }
