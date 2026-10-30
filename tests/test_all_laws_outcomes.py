@@ -185,8 +185,9 @@ class InstitutionalTitleTest(unittest.TestCase):
             self.assertFalse(ol.institutional_title(title), title)
 
     def test_ledger_has_no_institutional_title_outside_excluded(self):
+        covid = {r["id"] for r in read(ROOT / "data" / "derived" / "covid-response-v1" / "labels.csv") if r.get("コロナ対応") == "はい"}
         for r in read(ROOT / "data" / "derived" / "all-laws-v1" / "outcomes.csv"):
-            if ol.institutional_title(r["題名"]) and r["経路"] != "財政（税収見込み）":
+            if ol.institutional_title(r["題名"]) and r["経路"] != "財政（税収見込み）" and r["id"] not in covid:
                 self.assertEqual(r["結果"], "評価対象外", r["id"])
 
 

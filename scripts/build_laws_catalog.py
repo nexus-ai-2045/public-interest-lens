@@ -254,45 +254,6 @@ def mark_outliers(items: list[dict], value_added: dict[int, float]) -> int:
     return count
 
 
-HIDE_FAILED = "検証で不合格のため非表示"
-HIDE_SHARED = "他の法律と同じ額（産業全体の差）のため非表示"
-HIDE_OVERSIZE = "額が日本の付加価値1年分を超える（桁外れ）ため非表示"
-LEDGER = DERIVED / "evaluation-ledger-v1" / "ledger.csv"
-
-
-def verification_failed() -> set[str]:
-    """独立検証（抜き取り）で不合格と判定された法律。台帳が無いときは空。"""
-    if not LEDGER.exists():
-        return set()
-    with LEDGER.open(encoding="utf-8", newline="") as f:
-        return {row["id"] for row in csv.DictReader(f) if row["検証状態"] == "抜き取り検証で不合格"}
-
-
-def hide_unreliable(items: list[dict], failed: set[str]) -> dict[str, int]:
-    """参考の額のうち、検証で不合格のもの、他の法律と同じ額（産業全体の差を法律ごとに分けていない）のもの、桁外れのものは額を出さない。
-    理由は種類ごとに分けて書く。額・向きは消し、「額の計算」の鎖も外す（隠した額が詳細から読めないように）。"""
-    amounts = Counter((i["amount"]["median"], i["amount"]["low"], i["amount"]["high"]) for i in items if i["step"] == "amounted" and i["amount"])
-    out = Counter()
-    for item in items:
-        if item["step"] != "amounted" or not item["amount"]:
-            continue
-        a = item["amount"]
-        if item["id"] in failed:
-            reason = HIDE_FAILED
-        elif amounts[(a["median"], a["low"], a["high"])] >= 2:
-            reason = HIDE_SHARED
-        elif any(mark.startswith(OUTLIER_PREFIX) for mark in item["marks"]):
-            reason = HIDE_OVERSIZE
-        else:
-            continue
-        out[reason] += 1
-        item.update({"amount": None, "side": None, "step": "staged", "hiddenReason": reason, "summary": reason})
-        item.pop("scale", None)
-        item["marks"] = [mark for mark in item["marks"] if not mark.startswith(OUTLIER_PREFIX)] + [reason]
-        item["chain"] = [c for c in item["chain"] if c["step"] != "額の計算"] + [{"step": "額の表示", "result": reason, "note": "額は計算してあるが、画面には出さない（確かな額にならないため）。"}]
-    return dict(out)
-
-
 def build() -> dict:
     outcomes = {row["id"]: row for row in _rows("outcomes")}
     estimate = {row["id"]: row for row in _rows("fieldEstimate")}
@@ -400,7 +361,6 @@ def build() -> dict:
         items.append(item)
 
     mark_outliers(items, japan_value_added())
-    hidden = hide_unreliable(items, verification_failed())
     observations = mark_observations(items)  # 額を出す法律だけで数える（隠した法律は観測に入れない）
     outliers = sum(1 for item in items if any(mark.startswith(OUTLIER_PREFIX) for mark in item["marks"]))
     policies = [policy_from_case(_json("case"))]
@@ -409,7 +369,6 @@ def build() -> dict:
         "schema": "public-laws/v1",
         "inputs": {name: _digest(path) for name, path in INPUTS.items()},
         "counts": counts,
-        "hidden": hidden,
         # 公開ランキングの段階ごとの本数（全体指標の参考の額は段階を通っていないので含まない）。/ranking の注記に出す。
         "strict": {key: ranking["counts"][key] for key in ("evaluated", "dated", "staged")},
         # 同じ観測（group＋window）の数と、桁外れの印の本数。一覧は観測ごとに代表1本を並べる。

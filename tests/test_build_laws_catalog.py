@@ -28,16 +28,9 @@ class BuildLawsCatalogTest(unittest.TestCase):
 
     def test_amounts_match_public_ranking(self):
         amounted = {law_id for law_id, item in self.laws.items() if item["amount"]}
-        hidden = {law_id for law_id, item in self.laws.items() if item.get("hiddenReason")}
-        # 検証で不合格・他の法律と同じ額・桁外れの参考額は、額を持たせず理由を出す
-        self.assertEqual(amounted | hidden, {law["id"] for law in self.ranking["laws"]})
-        self.assertFalse(amounted & hidden)
+        self.assertEqual(amounted, {law["id"] for law in self.ranking["laws"]})
         for law in self.ranking["laws"]:
             item = self.laws[law["id"]]
-            if law["id"] in hidden:
-                self.assertIsNone(item["amount"])
-                self.assertIn(item["hiddenReason"], item["marks"])
-                continue
             self.assertEqual(item["amount"], {"median": law["amountMedianYen"], "low": law["amountLowYen"], "high": law["amountHighYen"]})
             self.assertEqual(item["side"], law["side"])
             self.assertIn(catalog.CERTAINTY[law["certainty"]], item["marks"])
