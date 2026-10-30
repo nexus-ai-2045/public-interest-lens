@@ -43,14 +43,16 @@ export function partiesOf(rows: Row[]): string[] {
 
 /** 額のある人（「額のある人だけ」の絞り込みと同じ決まり）。 */
 const hasAmount = (r: Row): boolean => r.laws > 0 || r.confirmed !== null;
+/** 評価なし：参考の額も確かな額も無い人（0円ではなく、評価の材料がまだ無い）。画面に「評価なし」の印を付ける。 */
+export const isUnscored = (r: Row): boolean => !hasAmount(r);
 
-export type Breakdown = { total: number; current: number; currentWithAmount: number; shu: number; shuWithAmount: number; san: number; sanWithAmount: number; confirmed: number; withAmount: number };
+export type Breakdown = { total: number; current: number; currentWithAmount: number; shu: number; shuWithAmount: number; san: number; sanWithAmount: number; confirmed: number; withAmount: number; unscored: number };
 /** 表の先頭に出す内訳。公開人数・現職・額のある現職（院別）・確かな額のある人。 */
 export function breakdownOf(rows: Row[]): Breakdown {
-  const out: Breakdown = { total: rows.length, current: 0, currentWithAmount: 0, shu: 0, shuWithAmount: 0, san: 0, sanWithAmount: 0, confirmed: 0, withAmount: 0 };
+  const out: Breakdown = { total: rows.length, current: 0, currentWithAmount: 0, shu: 0, shuWithAmount: 0, san: 0, sanWithAmount: 0, confirmed: 0, withAmount: 0, unscored: 0 };
   for (const r of rows) {
     if (r.confirmed !== null) out.confirmed += 1;
-    if (hasAmount(r)) out.withAmount += 1;
+    if (hasAmount(r)) out.withAmount += 1; else out.unscored += 1;
     if (!r.current) continue;
     out.current += 1;
     const amount = hasAmount(r) ? 1 : 0;

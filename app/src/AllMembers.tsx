@@ -5,7 +5,7 @@ import { pageCount, pageSlice } from './law-ranking-view';
 import type { PublicMember } from './members-build';
 import type { PublicMembersReference } from './members-reference';
 import { LawName, namingOf, useLawNames } from './law-name';
-import { breakdownOf, filterRows, formerNote, joinConfirmed, partiesOf, SORT_LABEL, sortRows, type HouseFilter, type Row, type SortKey } from './all-members-view';
+import { breakdownOf, filterRows, formerNote, isUnscored, joinConfirmed, partiesOf, SORT_LABEL, sortRows, type HouseFilter, type Row, type SortKey } from './all-members-view';
 
 const signed = (v: number) => v === 0 ? '0円' : `${v < 0 ? '−' : '＋'}${formatYen(Math.abs(v))}`;
 const tone = (v: number | null) => v === null || v === 0 ? 'zero' : v < 0 ? 'loss' : 'benefit';
@@ -39,10 +39,10 @@ export function AllMembers({ confirmed, data, error }: { confirmed: PublicMember
   useEffect(() => setPage(1), [house, party, query, withAmount, sort]);
   const pages = pageCount(shown.length);
   return <section id="all-members" className="all-members" aria-label="全議員">
-    <h3>全議員（現職の衆参全員と、過去に関わった人）</h3>
+    <h3>全議員（現職の衆参全員と、人物台帳にいる元職）</h3>
     {error && <p className="state-banner" role="alert">{error}</p>}
     {data && <>
-      <p className="all-members-lead">公開しているのは{breakdown.total.toLocaleString('ja-JP')}人。うち現職{breakdown.current.toLocaleString('ja-JP')}人（衆{breakdown.shu}・参{breakdown.san}）で、額のある現職は{breakdown.currentWithAmount.toLocaleString('ja-JP')}人（衆{breakdown.shuWithAmount}・参{breakdown.sanWithAmount}）です。額のない衆議院の現職{(breakdown.shu - breakdown.shuWithAmount).toLocaleString('ja-JP')}人は、個人の賛否が記録に残らず（会派ごとの賛否だけ）、0円になっています。額のある人は全体で{breakdown.withAmount.toLocaleString('ja-JP')}人（参考の額は{data.counts.laws.toLocaleString('ja-JP')}本の法律から配りました）。</p>
+      <p className="all-members-lead">公開しているのは{breakdown.total.toLocaleString('ja-JP')}人。うち現職{breakdown.current.toLocaleString('ja-JP')}人（衆{breakdown.shu}・参{breakdown.san}）で、額のある現職は{breakdown.currentWithAmount.toLocaleString('ja-JP')}人（衆{breakdown.shuWithAmount}・参{breakdown.sanWithAmount}）です。額のない衆議院の現職{(breakdown.shu - breakdown.shuWithAmount).toLocaleString('ja-JP')}人は、個人の賛否が記録に残らず（会派ごとの賛否だけ）、0円になっています。額のある人は全体で{breakdown.withAmount.toLocaleString('ja-JP')}人（参考の額は{data.counts.laws.toLocaleString('ja-JP')}本の法律から配りました）。残る{breakdown.unscored.toLocaleString('ja-JP')}人は評価の材料がまだ無く、「評価なし」の印で全員載せています。</p>
       <p className="fine-note">一次資料につながる「確かな額」があるのは{breakdown.confirmed.toLocaleString('ja-JP')}人だけです。参考の額の人は、一次資料の鎖ではなく、提出者の記録と参議院の個人別の賛成記録から配った額です（会派の賛否から個人へは配っていません）。</p>
       <div className="all-members-legend">
         <span className="badge confirmed">確かな額</span><span>影響の段階まで確かめた法律の額。上の順位と同じ。</span>
@@ -59,7 +59,7 @@ export function AllMembers({ confirmed, data, error }: { confirmed: PublicMember
       <ol className="all-members-list" start={(page - 1) * 50 + 1}>{pageSlice(shown, page).map(row => <li key={row.id}>
         <details>
           <summary>
-            <span className="all-member-name">{row.name}{row.current ? <small>{row.current.house === '衆議院' ? '衆' : '参'}・{row.current.party}・{row.current.district}</small> : <small>{formerNote(row) ? `元職（${formerNote(row)}）` : '元職・当時'}</small>}</span>
+            <span className="all-member-name">{row.name}{isUnscored(row) && <span className="badge unscored">評価なし</span>}{row.current ? <small>{row.current.house === '衆議院' ? '衆' : '参'}・{row.current.party}・{row.current.district}</small> : <small>{formerNote(row) ? `元職（${formerNote(row)}）` : '元職・当時'}</small>}</span>
             <span className={`all-member-amount ${tone(row.confirmed)}`}><span className="badge confirmed">確かな額</span>{row.confirmed === null ? '—' : signed(row.confirmed)}</span>
             <span className={`all-member-amount ${tone(row.net.median)}`}><span className="badge reference">参考</span>{signed(row.net.median)}</span>
             <span className="all-member-laws-count">{row.laws}本</span>

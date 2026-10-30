@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { describe, expect, it } from 'vitest';
-import { breakdownOf, filterRows, formerNote, joinConfirmed, partiesOf, sortRows } from './all-members-view';
+import { breakdownOf, filterRows, formerNote, isUnscored, joinConfirmed, partiesOf, sortRows } from './all-members-view';
 
 const ref = (name, net, current = null, laws = 1, id = name) => ({ id, name, current, lastSangiinParty: '', loss: {}, credit: {}, net: { low: net, median: net, high: net }, laws, top: [], reason: laws ? '' : '記録なし' });
 const rows = joinConfirmed([
@@ -42,7 +42,7 @@ describe('全議員の表', () => {
     expect(partiesOf(rows)).toEqual(['自民', '立憲']);
   });
   it('内訳：公開人数・現職・額のある現職（院別）・確かな額の人数', () => {
-    expect(breakdownOf(rows)).toEqual({ total: 5, current: 3, currentWithAmount: 2, shu: 2, shuWithAmount: 1, san: 1, sanWithAmount: 1, confirmed: 2, withAmount: 4 });
+    expect(breakdownOf(rows)).toEqual({ total: 5, current: 3, currentWithAmount: 2, shu: 2, shuWithAmount: 1, san: 1, sanWithAmount: 1, confirmed: 2, withAmount: 4, unscored: 1 });
   });
 });
 
@@ -51,5 +51,11 @@ describe('元職の所属の説明', () => {
     expect(formerNote({ lastKnownCaucus: { name: '自由民主党', date: '2018-02-13' }, lastSangiinParty: '民主党・新緑風会' })).toBe('2018年の会派：自由民主党');
     expect(formerNote({ lastKnownCaucus: null, lastSangiinParty: '公明党' })).toBe('参議院の最終会派：公明党');
     expect(formerNote({ lastKnownCaucus: null, lastSangiinParty: '' })).toBe('');
+  });
+});
+
+describe('評価なし', () => {
+  it('参考の額も確かな額も無い人だけ印を付ける', () => {
+    expect(rows.filter(isUnscored).length).toBe(1);
   });
 });
