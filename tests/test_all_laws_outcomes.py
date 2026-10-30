@@ -24,6 +24,7 @@ def triage_row(**kw):
 class EmptyStages(ol.Stages):
     def __init__(self):
         self.agreement, self.impact, self.loss, self.benefit, self.publish = {}, {}, {}, {}, {}
+        self.covid, self.institutional = set(), {}
 
 
 class LedgerTest(unittest.TestCase):
@@ -86,6 +87,16 @@ class LedgerTest(unittest.TestCase):
     def test_committed_ledger_is_what_the_script_produces(self):
         # 後段（影響・損失・便益・公開）や施行日台帳を更新したら、python3 scripts/build_all_laws_outcomes.py を再実行する。
         self.assertEqual(self.rows, ol.build())
+
+
+class InstitutionalTest(unittest.TestCase):
+    def test_institutional_label_gives_out_of_scope_before_macro_proxy(self):
+        stages = EmptyStages()
+        stages.institutional = {"閣法-1-1": "国の内部人事"}
+        law = {"題名": "公職選挙法の一部を改正する法律案"}
+        triage = triage_row(id="閣法-1-1", 結果="評価対象外", A_分野="対応表なし", B_分野="対応表なし")
+        out = ol.decide(law, triage, "2000-01-01", stages)
+        self.assertEqual((out["結果"], out["経路"]), ("評価対象外", "経済への直接効果なし"))
 
 
 class DecideTest(unittest.TestCase):
