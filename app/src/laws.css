@@ -144,3 +144,17 @@
 .prov-span{position:absolute;top:0;bottom:0;background:var(--accent,#b33);border-radius:5px}
 .prov-flag{margin-left:8px;padding:1px 6px;border:1px solid var(--line);border-radius:6px;font-size:12px}
 .prov-apply.no{opacity:.85}
+
+/* 成立しなかった提出法案の暫定規模点 */
+.unenacted{margin:28px 0 8px;padding-top:8px;border-top:1px solid var(--line)}
+.unenacted-controls{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}
+.unenacted-controls label{display:grid;gap:4px;font-size:13px}
+.unenacted-controls select{min-height:40px;padding:6px 10px;max-width:100%}
+.unenacted-list{list-style:none;padding:0;margin:8px 0;display:grid;gap:6px}
+.unenacted-list li{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface);overflow-wrap:anywhere}
+.unenacted-title{margin:0 0 2px;font-weight:600}
+.unenacted-meta{margin:0 0 6px;font-size:12px;color:var(--muted)}
+.unenacted-score{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;margin:0;font-size:13px}
+.unenacted-score .stance-bar{grid-column:1}
+.unenacted-score small,.unenacted-score a{grid-column:1 / -1;color:var(--muted)}
+.unenacted-score .stance-bar .y{background:var(--muted)}

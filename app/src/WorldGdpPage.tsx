@@ -4,25 +4,37 @@ import { SiteShell } from './SiteHeader';
 import { GrowthCauses } from './GrowthCauses';
 import { LineReveal, type LineSeries } from './motion';
 import {
-  WORLD_PERIODS, distributionWorldGdpUrl, formatMetric, formatRate, growthRanking, latestRanking, parseWorldGdp, periodLabel, periodRange, pointsInRange,
+  WORLD_PERIODS, distributionWorldGdpUrl, formatMetric, formatRate, growthRanking, latestRanking, parseWorldGdp, periodLabel, periodRange, periodShort, pointsInRange,
   type GrowthBasis, type WorldGdpSnapshot, type WorldMetric, type WorldPeriod,
 } from './world-gdp';
 
-const METRIC_KEYS: Record<string, WorldMetric> = { nominal: 'nominalUsd', growth: 'realGrowth', ppp: 'perCapitaPpp' };
-const METRIC_PARAM: Record<WorldMetric, string> = { nominalUsd: 'nominal', realGrowth: 'growth', perCapitaPpp: 'ppp' };
-const METRIC_LABEL: Record<WorldMetric, string> = { nominalUsd: '名目GDP（米ドル）', realGrowth: '実質成長率（年ごと）', perCapitaPpp: '一人あたりGDP（購買力平価）' };
+const METRIC_KEYS: Record<string, WorldMetric> = { nominal: 'nominalUsd', growth: 'realGrowth', ppp: 'perCapitaPpp', realgdp: 'realGdp' };
+const METRIC_PARAM: Record<WorldMetric, string> = { nominalUsd: 'nominal', realGrowth: 'growth', perCapitaPpp: 'ppp', realGdp: 'realgdp' };
+/** 画面に並べる順。年ごとの実質成長率は分かりにくいので最後に置く。 */
+const METRIC_ORDER: WorldMetric[] = ['perCapitaPpp', 'realGdp', 'nominalUsd', 'realGrowth'];
+const METRIC_LABEL: Record<WorldMetric, string> = { nominalUsd: '名目GDP（米ドル）', realGrowth: '実質成長率（年ごと）', perCapitaPpp: '一人あたりGDP（購買力平価）', realGdp: '実質GDP（物価を除いた経済の大きさ）' };
+const METRIC_SHORT: Record<WorldMetric, string> = { nominalUsd: '名目GDP', realGrowth: '実質成長率（年ごと）', perCapitaPpp: '一人あたりGDP', realGdp: '実質GDP' };
 const METRIC_UNIT: Record<WorldMetric, string> = {
-  nominalUsd: '各年の米ドル換算。為替の動きを含むので、国どうしの比較には実質成長率か購買力平価を見てください。',
-  realGrowth: '前年からの実質GDPの伸び（％）。物価の変動を除いています。',
-  perCapitaPpp: '2021年基準の国際ドル。物価の差を調整した、暮らしの豊かさに近い指標です。',
+  nominalUsd: '各年の米ドル換算。為替の動きを含むので、国どうしの比較には実質GDPか一人あたりGDPを見てください。',
+  realGrowth: '前年からの実質GDPの伸び（％）。年ごとの上下が大きく、長い期間の比較には向きません。積み上げた「実質GDP」の方が読みやすいです。',
+  perCapitaPpp: '2021年基準の国際ドル。物価の差を調整した、暮らしの豊かさに近い指標です（人口で割っているので、人口が減る国にも公平です）。',
+  realGdp: '年ごとの実質成長率を積み上げた指数です。物価の変動を除いた、国全体の経済の大きさの伸びを表します（人口の増減は含まれるので、暮らしの豊かさは一人あたりで見てください）。',
 };
 const JAPAN = 'JPN';
-const METRIC_AXIS: Record<WorldMetric, string> = { nominalUsd: '米ドル（各年）', realGrowth: '％（前年比）', perCapitaPpp: '国際ドル（2021年基準）' };
+const METRIC_AXIS: Record<WorldMetric, string> = { nominalUsd: '米ドル（各年）', realGrowth: '％（前年比）', perCapitaPpp: '国際ドル（2021年基準）', realGdp: '指数' };
+/** 固定で目立たせる国。日本は赤（LineReveal の highlight）、ほかは色を分ける。 */
+const FIXED_ACCENTS: Record<string, string> = { USA: '#1f5fbf', CHN: '#d97706' };
+/** 「伸びている国」に順に割り当てる色。 */
+const GROWTH_PALETTE = ['#0b7474', '#7c3aed', '#15803d', '#be185d'];
+const FOCUS_COLOR = '#475569';
+/** 指数にできない（水準の絶対値が意味を持たない、または年ごとの率そのもの）指標。 */
+const indexable = (metric: WorldMetric) => metric !== 'realGrowth';
+const indexOnly = (metric: WorldMetric) => metric === 'realGdp';
 
-export type WorldView = { metric: WorldMetric; period: WorldPeriod; indexed: boolean; hidden: string[]; focus: string; basis: GrowthBasis };
+export type WorldView = { metric: WorldMetric; period: WorldPeriod; indexed: boolean; log: boolean; hidden: string[]; focus: string; basis: GrowthBasis };
 
-/** 既定の指標。国どうしは物価と為替を除いた実質で比べるので、名目ではなく実質成長率から始めます。 */
-export const DEFAULT_METRIC: WorldMetric = 'realGrowth';
+/** 既定の指標。国どうしは物価と為替を除いた実質で比べるので、名目ではなく一人あたり（購買力平価）から始めます。 */
+export const DEFAULT_METRIC: WorldMetric = 'perCapitaPpp';
 
 /** アドレスの検索部分（?metric=…）から表示の状態を作ります。読めない値は既定に戻します。 */
 export function parseWorldView(search: string): WorldView {
@@ -31,7 +43,8 @@ export function parseWorldView(search: string): WorldView {
   return {
     metric: METRIC_KEYS[params.get('metric') ?? ''] ?? DEFAULT_METRIC,
     period: (WORLD_PERIODS as readonly string[]).includes(period) ? period as WorldPeriod : '1990',
-    indexed: params.get('scale') === 'index',
+    indexed: params.get('scale') !== 'abs',
+    log: params.get('axis') !== 'linear',
     hidden: (params.get('hide') ?? '').split(',').filter(code => /^[A-Z]{3}$/.test(code) && code !== JAPAN),
     focus: /^[A-Z]{3}$/.test(params.get('focus') ?? '') && params.get('focus') !== JAPAN ? params.get('focus')! : '',
     basis: params.get('basis') === 'percapita' ? 'perCapita' : 'real',
@@ -42,7 +55,8 @@ const readView = () => parseWorldView(window.location.search);
 
 function viewLocation(view: WorldView): string {
   const params = new URLSearchParams({ metric: METRIC_PARAM[view.metric], period: view.period });
-  if (view.indexed && view.metric !== 'realGrowth') params.set('scale', 'index');
+  if (!view.indexed && !indexOnly(view.metric)) params.set('scale', 'abs');
+  if (!view.log) params.set('axis', 'linear');
   if (view.hidden.length) params.set('hide', [...view.hidden].sort().join(','));
   if (view.focus) params.set('focus', view.focus);
   if (view.basis === 'perCapita') params.set('basis', 'percapita');
@@ -58,6 +72,27 @@ export function worldLineSeries(data: WorldGdpSnapshot, view: WorldView): LineSe
     .filter(country => !view.hidden.includes(country.code))
     .map(country => ({ id: country.code, label: country.name, points: pointsInRange(country.series[view.metric], range.from, range.to).map(([year, value]) => ({ year, value })) }))
     .filter(line => line.points.length > 0);
+}
+
+/** 目立たせる国の色。日本は別（赤）。アメリカ・中国は固定色、期間で最も伸びた国は順に色を分け、選んだ国は灰青。 */
+export function worldAccents(data: WorldGdpSnapshot, view: WorldView): { colors: Record<string, string>; leaders: string[] } {
+  const colors: Record<string, string> = {};
+  for (const [code, color] of Object.entries(FIXED_ACCENTS)) if (!view.hidden.includes(code) && data.countries.some(country => country.code === code)) colors[code] = color;
+  const basis: GrowthBasis = view.metric === 'perCapitaPpp' ? 'perCapita' : 'real';
+  const range = periodRange(data, basis === 'real' ? 'realGrowth' : 'perCapitaPpp', view.period);
+  const leaders = (range ? growthRanking(data, range.from, range.to, basis) : [])
+    .filter(row => row.code !== JAPAN && !(row.code in FIXED_ACCENTS) && !view.hidden.includes(row.code))
+    .slice(0, GROWTH_PALETTE.length).map(row => row.code);
+  leaders.forEach((code, index) => { colors[code] = GROWTH_PALETTE[index]; });
+  if (view.focus && !(view.focus in colors) && !view.hidden.includes(view.focus)) colors[view.focus] = FOCUS_COLOR;
+  return { colors, leaders };
+}
+
+/** 初期年の値が無く、指数にできないため線に出せない国。 */
+export function droppedForBase(data: WorldGdpSnapshot, view: WorldView): string[] {
+  const base = worldBaseYear(data, view);
+  if (base === undefined || !view.indexed || !indexable(view.metric)) return [];
+  return worldLineSeries(data, view).filter(line => !line.points.some(point => point.year === base && point.value)).map(line => line.label);
 }
 
 /** 指数表示の基準年。期間の最初の年を 100 にする。 */
@@ -145,32 +180,64 @@ export function WorldGdpPage() {
   const shown = data ? { ...view, hidden: view.hidden.filter(code => codes.has(code)), focus: codes.has(view.focus) ? view.focus : '' } : view;
   const missing = data?.countries.filter(country => !country.series[shown.metric] && !shown.hidden.includes(country.code)) ?? [];
   const toggle = (code: string, visible: boolean) => change({ hidden: visible ? shown.hidden.filter(item => item !== code) : [...shown.hidden, code] }, 'replace');
-  const metricNames: Record<WorldMetric, string> = { nominalUsd: '名目GDP', realGrowth: '実質成長率', perCapitaPpp: '一人あたりGDP（購買力平価）' };
+  const useIndex = indexable(shown.metric) && (shown.indexed || indexOnly(shown.metric));
+  const chartView = { ...shown, indexed: useIndex };
+  const accents = data ? worldAccents(data, shown) : { colors: {}, leaders: [] };
+  const dropped = data ? droppedForBase(data, chartView) : [];
+  const nameOf = (code: string) => data?.countries.find(country => country.code === code)?.name ?? code;
+  const base = data ? worldBaseYear(data, shown) : undefined;
+  const swatches: [string, string][] = [[JAPAN, 'var(--japan)'], ...Object.entries(accents.colors)];
   return <SiteShell active="/world" label="世界のGDP比較" className="world-page"><main id="main">
     <h1>日本の経済は、世界と比べてどうですか？</h1>
-    <p>世界の主要国（名目GDPの上位国と、中国・韓国・台湾・東南アジアなど）を、同じ統計で並べます。日本は色付きの線、ほかの国は灰色です。グラフの差だけで、原因や誰かの責任とは判定しません。</p>
-    <section className="real-intake world-controls" aria-label="表示の切り替え">
-      <div className="world-segment" role="group" aria-label="見る指標">{(Object.keys(METRIC_PARAM) as WorldMetric[]).map(metric => <button key={metric} type="button" aria-pressed={shown.metric === metric} onClick={() => change({ metric })}>{metricNames[metric]}</button>)}</div>
-      <label>見る期間<select value={shown.period} onChange={event => change({ period: event.target.value as WorldPeriod })}>{WORLD_PERIODS.map(period => <option key={period} value={period}>{periodLabel(period)}</option>)}</select></label>
-      {shown.metric !== 'realGrowth' && <label className="world-check"><input type="checkbox" checked={shown.indexed} onChange={event => change({ indexed: event.target.checked }, 'replace')} />期間の最初の年を100として伸びを比べる</label>}
-      <label>表で色を付けて比べる国<select value={shown.focus} onChange={event => change({ focus: event.target.value }, 'replace')}><option value="">選ばない</option>{data?.countries.filter(country => country.code !== JAPAN).map(country => <option key={country.code} value={country.code}>{country.name}</option>)}</select></label>
-      {shown.period !== 'all' && Number(shown.period) >= 2020 && <p className="fine-note">直近の短い期間です。コロナ禍とその反動、為替の動きで年ごとのぶれが大きく、数年の平均は長期の実力を表しません。ここ数年の評価の仕方は、確定した統計が出るまで暫定として見てください。</p>}
-    </section>
-    {error && <p className="state-banner" role="alert">{error}</p>}
+    <p>世界の主要国を、同じ統計で並べます。年ごとの上下ではなく、<strong>選んだ初期年を100</strong>にして、どれだけ伸びたかを比べるのが基本です。グラフの差だけで、原因や誰かの責任とは判定しません。</p>
+    <div className="world-layout">
+      <aside className="world-side" aria-label="表示の切り替え">
+        <div className="world-side-group"><h2>見る指標</h2>
+          <div className="world-stack" role="group" aria-label="見る指標">{METRIC_ORDER.map(metric => <button key={metric} type="button" aria-pressed={shown.metric === metric} onClick={() => change({ metric })}>{METRIC_SHORT[metric]}</button>)}</div>
+        </div>
+        <div className="world-side-group"><h2>初期年（ここから）</h2>
+          <div className="world-stack" role="group" aria-label="見る期間">{WORLD_PERIODS.map(period => <button key={period} type="button" aria-pressed={shown.period === period} onClick={() => change({ period })}>{periodShort(period)}</button>)}</div>
+        </div>
+        <div className="world-side-group"><h2>縦軸</h2>
+          <div className="world-stack" role="group" aria-label="縦軸の目盛り">
+            <button type="button" aria-pressed={shown.log} disabled={shown.metric === 'realGrowth'} onClick={() => change({ log: true }, 'replace')}>対数（同じ割合＝同じ傾き）</button>
+            <button type="button" aria-pressed={!shown.log || shown.metric === 'realGrowth'} onClick={() => change({ log: false }, 'replace')}>ふつうの目盛り</button>
+          </div>
+        </div>
+        <div className="world-side-group"><h2>表し方</h2>
+          <div className="world-stack" role="group" aria-label="表し方">
+            <button type="button" aria-pressed={useIndex} disabled={!indexable(shown.metric)} onClick={() => change({ indexed: true }, 'replace')}>初期年＝100</button>
+            <button type="button" aria-pressed={!useIndex} disabled={indexOnly(shown.metric)} onClick={() => change({ indexed: false }, 'replace')}>実際の値</button>
+          </div>
+          {indexOnly(shown.metric) && <p className="fine-note">実質GDPは伸びの積み上げなので、初期年＝100でだけ表示します。</p>}
+          {shown.metric === 'realGrowth' && <p className="fine-note">年ごとの率は、そのまま表示します。</p>}
+        </div>
+      </aside>
+      <div className="world-main">
+        {shown.period !== 'all' && Number(shown.period) >= 2020 && <p className="fine-note">直近の短い期間です。コロナ禍とその反動、為替の動きで年ごとのぶれが大きく、数年の平均は長期の実力を表しません。ここ数年の評価の仕方は、確定した統計が出るまで暫定として見てください。</p>}
+        {error && <p className="state-banner" role="alert">{error}</p>}
+        {data && <section aria-labelledby="world-chart-heading">
+          <h3 id="world-chart-heading">{METRIC_LABEL[shown.metric]}：{periodLabel(shown.period)}{useIndex && base !== undefined ? `（${base}年＝100）` : ''}</h3>
+          <p className="fine-note">{METRIC_UNIT[shown.metric]}</p>
+          <ul className="world-key" aria-label="色の見方">
+            {swatches.map(([code, color]) => <li key={code}><i style={{ background: color }} aria-hidden="true" />{nameOf(code)}{accents.leaders.includes(code) ? '（伸びた国）' : ''}</li>)}
+            <li><i className="world-key-other" aria-hidden="true" />その他の国（薄い線）</li>
+          </ul>
+          <div className="world-chart-wrap"><LineReveal key={`${shown.metric}-${shown.period}-${useIndex}-${shown.hidden.join(',')}-${shown.focus}-${shown.log}`} series={worldLineSeries(data, shown)} highlightId={JAPAN} accents={accents.colors} log={shown.log && shown.metric !== 'realGrowth'} indexed={useIndex} baseYear={base} format={value => useIndex ? value.toFixed(0) : value === 0 ? '0' : formatMetric(shown.metric, value)} unit={useIndex ? `指数（${base}年＝100）` : METRIC_AXIS[shown.metric]} caption={`${METRIC_LABEL[shown.metric]}、${periodLabel(shown.period)}。日本を赤で強調`} /></div>
+          {dropped.length > 0 && <p className="fine-note">{base}年の値が無く、指数にできないため表示していない国：{dropped.join('、')}。初期年を遅くすると出ます。</p>}
+          {missing.length > 0 && <p className="fine-note">この指標の値が無いため表示していない国・地域：{missing.map(country => country.name).join('、')}。</p>}
+          <details className="world-countries"><summary>表示する国・地域（{(data.countries.length - shown.hidden.length)}／{data.countries.length}）</summary>
+            <div className="world-country-actions"><button type="button" onClick={() => change({ hidden: [] }, 'replace')}>すべて表示</button><button type="button" onClick={() => change({ hidden: data.countries.filter(country => country.code !== JAPAN && country.code !== shown.focus).map(country => country.code) }, 'replace')}>日本{shown.focus ? 'と比べる国' : ''}だけ</button></div>
+            <div className="world-country-list">{data.countries.map(country => <label key={country.code} className={country.code === JAPAN ? 'is-japan' : country.code === shown.focus ? 'is-focus' : undefined}><input type="checkbox" checked={!shown.hidden.includes(country.code)} disabled={country.code === JAPAN} onChange={event => toggle(country.code, event.target.checked)} />{country.name}</label>)}</div>
+            <label className="world-focus-pick">下の表で色を付けて比べる国<select value={shown.focus} onChange={event => change({ focus: event.target.value }, 'replace')}><option value="">選ばない</option>{data.countries.filter(country => country.code !== JAPAN).map(country => <option key={country.code} value={country.code}>{country.name}</option>)}</select></label>
+            <p className="fine-note">日本は比較の基準なので、常に表示します。</p>
+          </details>
+        </section>}
+      </div>
+    </div>
     {data && <>
-      <fieldset className="world-countries"><legend>表示する国・地域</legend>
-        <div className="world-country-actions"><button type="button" onClick={() => change({ hidden: [] }, 'replace')}>すべて表示</button><button type="button" onClick={() => change({ hidden: data.countries.filter(country => country.code !== JAPAN && country.code !== shown.focus).map(country => country.code) }, 'replace')}>日本{shown.focus ? 'と比べる国' : ''}だけ</button></div>
-        <div className="world-country-list">{data.countries.map(country => <label key={country.code} className={country.code === JAPAN ? 'is-japan' : country.code === shown.focus ? 'is-focus' : undefined}><input type="checkbox" checked={!shown.hidden.includes(country.code)} disabled={country.code === JAPAN} onChange={event => toggle(country.code, event.target.checked)} />{country.name}</label>)}</div>
-        <p className="fine-note">日本は比較の基準なので、常に表示します。</p>
-      </fieldset>
-      <section aria-labelledby="world-chart-heading">
-        <h3 id="world-chart-heading">{METRIC_LABEL[shown.metric]}：{periodLabel(shown.period)}</h3>
-        <p className="fine-note">{METRIC_UNIT[shown.metric]}{shown.indexed && shown.metric !== 'realGrowth' ? `${worldBaseYear(data, shown)}年を100とした指数です。` : ''}日本は赤い線です。グラフに触れるか矢印キーで、その年の値が下の一覧に出ます。国名を押すと、その国の線を濃くします。</p>
-        <div className="world-chart-wrap"><LineReveal key={`${shown.metric}-${shown.period}-${shown.indexed}-${shown.hidden.join(',')}`} series={worldLineSeries(data, shown)} highlightId={JAPAN} indexed={shown.indexed && shown.metric !== 'realGrowth'} baseYear={worldBaseYear(data, shown)} format={value => shown.indexed && shown.metric !== 'realGrowth' ? value.toFixed(0) : value === 0 ? '0' : formatMetric(shown.metric, value)} unit={shown.indexed && shown.metric !== 'realGrowth' ? `指数（${worldBaseYear(data, shown)}年＝100）` : METRIC_AXIS[shown.metric]} caption={`${METRIC_LABEL[shown.metric]}、${periodLabel(shown.period)}。日本を色で強調`} /></div>
-        {missing.length > 0 && <p className="fine-note">この指標の値が無いため表示していない国・地域：{missing.map(country => country.name).join('、')}。</p>}
-      </section>
       <div className="world-grid-2">
-        <section className="lower-panel" aria-labelledby="world-latest-heading"><h3 id="world-latest-heading">最新年の順位（{metricNames[shown.metric]}）</h3><LatestTable data={data} view={shown} /></section>
+        <section className="lower-panel" aria-labelledby="world-latest-heading"><h3 id="world-latest-heading">最新年の順位（{METRIC_SHORT[shown.metric]}）</h3>{shown.metric === 'realGdp' ? <p className="fine-note">実質GDPは伸びの積み上げなので、水準の順位はありません。一人あたりGDPか名目GDPの順位を見てください。</p> : <LatestTable data={data} view={shown} />}</section>
         <section className="lower-panel" aria-labelledby="world-growth-heading"><h3 id="world-growth-heading">期間平均成長率の順位：{periodLabel(shown.period)}</h3>
           <div className="world-segment" role="group" aria-label="平均する値"><button type="button" aria-pressed={shown.basis === 'real'} onClick={() => change({ basis: 'real' }, 'replace')}>実質GDP</button><button type="button" aria-pressed={shown.basis === 'perCapita'} onClick={() => change({ basis: 'perCapita' }, 'replace')}>一人あたり（購買力平価）</button></div>
           <GrowthBars data={data} view={shown} />
@@ -178,8 +245,8 @@ export function WorldGdpPage() {
         </section>
       </div>
       <section className="lower-panel" aria-labelledby="world-notes-heading"><h3 id="world-notes-heading">注記と出典</h3>
-        <ul className="world-notes">{data.notes.map(note => <li key={note}>{note}</li>)}<li>取得日時：{new Date(data.fetchedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}（日本時間）</li></ul>
-        <details><summary>各国の出典を確認する</summary><ul className="world-sources">{data.countries.map(country => <li key={country.code}><span>{country.name}（{country.provider}）</span>{(Object.keys(METRIC_PARAM) as WorldMetric[]).filter(metric => country.sourceUrls[metric]).map(metric => <a key={metric} href={country.sourceUrls[metric]} target="_blank" rel="noopener noreferrer">{metricNames[metric]}</a>)}</li>)}</ul></details>
+        <ul className="world-notes">{data.notes.map(note => <li key={note}>{note}</li>)}<li>実質GDPは、年ごとの実質成長率を積み上げた指数です。世界銀行の実質GDP（2015年基準の米ドル）を1990年＝100にした値と、世界銀行出典のすべての国で0.03ポイント以内で一致することを確かめています（台湾はIMFの値のため未照合）。</li><li>取得日時：{new Date(data.fetchedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}（日本時間）</li></ul>
+        <details><summary>各国の出典を確認する</summary><ul className="world-sources">{data.countries.map(country => <li key={country.code}><span>{country.name}（{country.provider}）</span>{(Object.keys(METRIC_PARAM) as WorldMetric[]).filter(metric => metric !== 'realGdp' && country.sourceUrls[metric]).map(metric => <a key={metric} href={country.sourceUrls[metric]} target="_blank" rel="noopener noreferrer">{METRIC_SHORT[metric]}</a>)}</li>)}</ul></details>
         <p><a href="/history">日本の長期推移を詳しく読む</a></p>
       </section>
     </>}
