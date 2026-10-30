@@ -32,6 +32,7 @@ STEPS = [
     ("derived", DIST / "members.json", ["node", "scripts/build_public_members.mjs"]),
     ("derived", DIST / "members-reference.json", ["node", "scripts/build_reference_members.mjs", "--attributions", str(ATTRIBUTIONS)]),
     ("derived", DIST / "laws.json", [PY, "scripts/build_laws_catalog.py"]),
+    ("derived", DIST / "law-outcomes.json", [PY, "scripts/build_law_outcomes_view.py"]),
     ("derived", DIST / "provisional.json", [PY, "scripts/build_provisional.py"]),
     ("derived", DIST / "charts.json", [PY, "scripts/build_database.py"]),
 ]
