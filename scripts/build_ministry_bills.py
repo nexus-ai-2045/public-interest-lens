@@ -149,6 +149,12 @@ OUT_HEADER = ['法律ID', '題名', '説明者', '説明の日付', '肩書', '�
 
 
 def build() -> dict[str, int]:
+    if not SPEECHES.exists():
+        # speeches.csv は Git に入っていない取得物（fetch_bill_speeches.py）。無いときは既存の生成物のまま続ける。
+        if not OUT.exists():
+            raise SystemExit(f'{SPEECHES.relative_to(ROOT)} も {OUT.relative_to(ROOT)} も無い：先に scripts/fetch_bill_speeches.py を回す')
+        print(f'警告：{SPEECHES.relative_to(ROOT)} が無いので作り直さず、既存の {OUT.relative_to(ROOT)} を使う', file=sys.stderr)
+        return {'会議録の肩書': 0, '内閣の名簿': 0, '決まらない': 0}
     pos = {r['説明のURL']: r for r in read(POSITIONS)} if POSITIONS.exists() else {}
     norm = lambda s: re.sub(r'[\s　]', '', s)  # noqa: E731
     cabinet = read(CABINET)
