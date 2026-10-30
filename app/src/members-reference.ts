@@ -18,6 +18,7 @@ import type { GenerationMetadata } from './generation-metadata';
 import { allocateLaw, PARTY_ID, UNIDENTIFIED_ID, type LawGame } from './causal-allocation';
 import { parseCsv } from './impact-batch';
 import { warekiDate } from './members-build';
+import { affiliationOf } from './caucus-label';
 import { canonical, PersonLedger } from './person-id';
 
 export type Range = { low: number; median: number; high: number };
@@ -27,8 +28,8 @@ export type ReferenceMember = {
   /** 人物ID（scripts/person_ids.py）。ふつうは寄せた氏名。同姓同名の別人は「名前（衆・福岡2）」のように院と選挙区が付く。 */
   id: string;
   name: string;
-  /** 現職なら院・会派・選挙区（名簿の表記）。元職・当時だけの人は null。 */
-  current: { house: string; party: string; district: string } | null;
+  /** 現職なら院・所属（党名。名簿の会派の略称から caucus-label.ts で直したもの）・会派（名簿の略称）・選挙区。元職・当時だけの人は null。 */
+  current: { house: string; party: string; caucus: string; district: string } | null;
   /** 参議院の投票記録に出てくる会派（最後に記録されたもの）。 */
   lastSangiinParty: string;
   loss: Range;
@@ -212,7 +213,7 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
 
   // 名簿の1行は台帳の1人（院と選挙区が同じ人）。本名で載る参議院議員も、台帳の別名で同じ人になる。
   const rosterId = (r: Record<string, string>) => ledger.rosterPerson(r)?.id ?? canonical(r['氏名']);
-  const current = new Map(roster.map(r => [rosterId(r), { house: r['院'], party: r['会派'], district: r['選挙区'] }]));
+  const current = new Map(roster.map(r => [rosterId(r), { house: r['院'], party: affiliationOf(r['院'], r['会派']), caucus: r['会派'], district: r['選挙区'] }]));
   for (const r of roster) names.set(rosterId(r), ledger.rosterPerson(r)?.name ?? names.get(rosterId(r)) ?? r['氏名'].replace(/[\s\u3000]/g, ''));
   const lastParty = new Map<string, string>();
   for (const v of idName.values()) { const res = ledger.resolve(v.name, '参議院'); if (res) lastParty.set(res.id, v.party); }
