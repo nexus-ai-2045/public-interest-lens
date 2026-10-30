@@ -295,11 +295,29 @@ export function warekiDate(text: string): string {
 const partyList = (text: string | undefined): string[] => (text ?? '').split(/[;；]/).map(x => x.trim()).filter(Boolean);
 
 export const covidHeld = (p: Record<string, string>): boolean => p['判定表の行'] === 'R3';
+/** 範囲が狭い税の特例の限定的（段階1）の額は付けない（scripts/build_all_laws_outcomes.py の narrow_measure と同じ規則）。 */
+export const narrowHeld = (p: Record<string, string>, l: Record<string, string>, crowded: ReadonlySet<string> = new Set()): boolean => l['段階'] === '段階1' && (crowded.has(p.id) || /臨時特例|所得税及び法人税/.test(p['題名']));
+/** 限定的（段階1）の額で、同じ産業・同じ期間・同じ額に2本以上が重なる、または50兆円以上の法律（scripts/build_all_laws_outcomes.py の crowded_ids と同じ規則）。 */
+export const crowdedLaws = (loss: Iterable<Record<string, string>>): Set<string> => {
+  const groups = new Map<string, string[]>();
+  const held = new Set<string>();
+  for (const l of loss) {
+    const text = (l['損失または便益の額'] ?? '').trim();
+    if (l['段階'] !== '段階1' || !text) continue;
+    const key = `${l['観測グループ'] ?? ''}|${text}`;
+    groups.set(key, [...(groups.get(key) ?? []), l.id]);
+    const median = /中央値=(-?\d+)/.exec(text);
+    if (median && Math.abs(Number(median[1])) >= 50_000_000_000_000) held.add(l.id);
+  }
+  for (const ids of groups.values()) if (ids.length >= 2) ids.forEach(id => held.add(id));
+  return held;
+};
 
 export function buildMembers(input: MemberInputs): PublicMembers {
   const listed = input.listed === undefined ? null : new Set(input.listed);
   const publish = parseCsv(input.publish).filter(p => listed === null || listed.has(p.id));
   const loss = new Map(parseCsv(input.loss).map(r => [r.id, r]));
+  const crowded = crowdedLaws(loss.values());
   const enacted = new Map(parseCsv(input.enacted).map(r => [`${r['種別']}-${r['提出回次']}-${r['番号']}`, r]));
   const votes = new Map([...parseCsv(input.votes), ...(input.autoVotes ? parseCsv(input.autoVotes) : [])].map(r => [r['法律ID'], r]));
   const rows = [...parseCsv(input.involvements), ...(input.autoInvolvements ? parseCsv(input.autoInvolvements) : [])];
@@ -327,14 +345,14 @@ export function buildMembers(input: MemberInputs): PublicMembers {
   for (const p of publish) {
     const l = loss.get(p.id);
     const amount = parseAmount(p['損失または便益']);
-    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || covidHeld(p)) continue;
+    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || covidHeld(p) || narrowHeld(p, l, crowded)) continue;
     const key = observationKey(l, p);
     observationLaws.set(key, (observationLaws.get(key) ?? 0) + 1);
   }
   for (const p of publish) {
     const l = loss.get(p.id);
     const amount = parseAmount(p['損失または便益']);
-    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || !involvedLaws.has(p.id) || covidHeld(p)) continue;
+    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || !involvedLaws.has(p.id) || covidHeld(p) || narrowHeld(p, l, crowded)) continue;
     const vote = votes.get(p.id);
     if (!vote || !vote.URL.startsWith('https://www.sangiin.go.jp/')) throw new Error(`参議院の投票の記録がありません: ${p.id}`);
     const bill = enacted.get(p.id);
