@@ -37,15 +37,14 @@ INPUTS = {
     "ranking": DIST / "ranking.json",
     "members": DIST / "members.json",
     "case": DIST / "case.json",
-    "speeches": ACQUIRED / "bill-speeches" / "speeches.csv",
+    # 会議録の全文（Mac にしか無い）から、概要が使う事実だけを取り出した表（scripts/build_speech_facts.py）。区別できない発言の判定もここに入っている
+    "speechFacts": DERIVED / "law-overviews-v1" / "speech-facts.csv",
     "overviews": DERIVED / "law-overviews-v1" / "overviews.csv",
-    # まとめて説明された法案の、その法案の部分（どの発言を「区別できない」とするかが変わるので、入力として記録する）
-    "segments": ACQUIRED / "bill-speeches" / "segments.csv",
     "industryVa": ACQUIRED / "oecd-industry" / "industry_va.csv",
     "covidBenefit": DERIVED / "covid-benefit-v1" / "benefit.csv",
 }
 # 無くても一覧は作れる入力（概要の原料と、その AI 要約、桁外れの印に使う日本の付加価値）
-OPTIONAL = {"speeches", "overviews", "segments", "industryVa"}
+OPTIONAL = {"speechFacts", "overviews", "industryVa"}
 # 額が日本の全産業の付加価値1年分を超えるときの印（額は変えず、順位からも外さない。印と倍率だけ付ける）
 OUTLIER_MARK = "額が日本の付加価値1年分を超える（桁外れ。参考にとどめる）"
 # OECD 表6の単位 → 円
@@ -262,17 +261,12 @@ def build() -> dict:
     members = _json("members")
     linked = member_links(members)
     member_law = {law["id"]: law for law in members["laws"]}
-    speeches = {row["id"]: row for path in sorted(INPUTS["speeches"].parent.glob("speeches*.csv")) for row in csv.DictReader(path.open(encoding="utf-8"))}
+    speeches = {row["id"]: row for row in _rows("speechFacts")}
     written = {row["id"]: row for row in _rows("overviews")}
-    # 1つの発言を2本以上の法案が材料にしていて、この法案の部分を切り出せなかったもの（どの法案の話か決められない）
-    uses = Counter(row[source] for row in speeches.values() for source in ("説明のURL", "反対のURL") if row[source])
-    segments = INPUTS["segments"]
-    # 切り出しは、いまの発言 URL から切り出したものだけ数える（発言を取り直して URL が変わったら、古い切り出しは使わない）
-    split = {(row["id"], row["区分"], row["URL"]) for row in csv.DictReader(segments.open(encoding="utf-8"))} if segments.exists() else set()
+    # 1つの発言を2本以上の法案が材料にしていて、この法案の部分を切り出せなかったもの（どの法案の話か決められない）。判定は speech-facts.csv の「区別できない」列
     def ambiguous(law_id: str) -> frozenset[str]:
-        row = speeches.get(law_id, {})
-        return frozenset(source for source, kind in (("説明のURL", "説明"), ("反対のURL", "反対"))
-                         if row.get(source) and uses[row[source]] > 1 and (law_id, kind, row[source]) not in split)
+        kinds = (speeches.get(law_id) or {}).get("区別できない", "").split("・")
+        return frozenset(source for source, kind in (("説明のURL", "説明"), ("反対のURL", "反対")) if kind in kinds)
 
     covid_benefit = {row["id"]: row for row in _rows("covidBenefit") if row["結果"] == "額"}
     items = []
