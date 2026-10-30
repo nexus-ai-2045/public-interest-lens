@@ -1,6 +1,7 @@
 """成立した法律ごとの、会派・議員の賛否を公開用の1ファイルにまとめる（/votes ページ用）。
 
 入力：data/acquired/bill-census-full/enacted.csv（衆議院の議案経過。賛成会派・反対会派は第187回国会ごろから）、
+      data/acquired/treaty-census/treaties.csv（条約と承認案件。国会が承認したものを法律と同じ形で足す。kind は「条約」「承認」）、
       data/acquired/sangiin-votes/（参議院本会議の採決の一覧・議員名簿・議員ごとの賛否）
 出力：app/public/distribution/votes.json
 対応づけ：参議院の議決日と同じ日の採決のうち、議案名（日程番号・括弧書き・「」書きを除く）が題名と完全に一致する1件だけ。
@@ -19,6 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CENSUS = ROOT / "data/acquired/bill-census-full/enacted.csv"
+TREATIES = ROOT / "data/acquired/treaty-census/treaties.csv"
 VOTES = ROOT / "data/acquired/sangiin-votes"
 OUT = ROOT / "app/public/distribution/votes.json"
 ERA = {"令和": 2018, "平成": 1988, "昭和": 1925}
@@ -49,8 +51,15 @@ def split_parties(text: str) -> list[str]:
     return [p.strip() for p in (text or "").split(";") if p.strip()]
 
 
+def treaty_rows() -> list[dict[str, str]]:
+    """国会が承認した条約・承認案件を、enacted.csv と同じ列名にそろえる（回次は提出回次、公布日は無い）。"""
+    if not TREATIES.exists():
+        return []
+    return [{**t, "回次": t["提出回次"], "公布日": ""} for t in read(TREATIES) if t["審議状況"] in ("両院承認", "承認")]
+
+
 def build() -> dict:
-    enacted = read(CENSUS)
+    enacted = read(CENSUS) + treaty_rows()
     votes = read(VOTES / "votes_index.csv")
     members = {(r["回次"], r["議員ID"]): r for r in read(VOTES / "members.csv")}
     by_date: dict[str, list[dict]] = defaultdict(list)
@@ -98,7 +107,7 @@ def build() -> dict:
             "shu": {"date": era_date(e["議決日_衆"]), "yes": shu_yes, "no": shu_no} if shu_yes else None,
             "san": san,
         })
-    laws.sort(key=lambda l: ((l["promulgated"] or ""), l["id"]), reverse=True)
+    laws.sort(key=lambda l: ((l["promulgated"] or (l["shu"] or {}).get("date") or (l["san"] or {}).get("date") or ""), l["id"]), reverse=True)
     member_rows = sorted(people.values(), key=lambda p: (-p["no"], p["name"]))
     slot = {p["name"]: i for i, p in enumerate(member_rows)}
     for l in laws:
@@ -110,9 +119,10 @@ def build() -> dict:
             "衆議院は起立採決が多く、個人の賛否は記録に残りません。議案の経過に載る会派ごとの賛成・反対だけを使います（第187回国会＝2014年より前の法律は載っていません）。",
             "参議院は押しボタン式の採決だけ、議員ごとの賛否が残ります。起立採決の法律は会派別の数も出せません。",
             "参議院の採決は、議決日と議案名が完全に一致する1件だけをつないでいます。一致しない法律は個人の賛否を載せません。",
+            "条約の承認と、法律の規定に基づく承認案件も同じ表に入れています（種別は「条約」「承認」。公布日は無いので議決日で並べます）。国会は条約を修正できず、承認か否かの1票です。",
             "議員は氏名で数えています。同姓同名は区別できません。会派名は採決した時の名前のままです（合流・改称が多いため）。",
         ],
-        "counts": {"laws": len(laws), "shugiin": sum(1 for l in laws if l["shu"]), "sangiinBallot": sum(1 for l in laws if l["san"] and l["san"]["method"] == "ballot"), "sangiinStanding": sum(1 for l in laws if l["san"] and l["san"]["method"] == "standing"), "members": len(member_rows), "ambiguous": ambiguous},
+        "counts": {"laws": len(laws), "treaties": sum(1 for l in laws if l["kind"] in ("条約", "承認")), "shugiin": sum(1 for l in laws if l["shu"]), "sangiinBallot": sum(1 for l in laws if l["san"] and l["san"]["method"] == "ballot"), "sangiinStanding": sum(1 for l in laws if l["san"] and l["san"]["method"] == "standing"), "members": len(member_rows), "ambiguous": ambiguous},
         "laws": laws,
         "members": member_rows,
     }
