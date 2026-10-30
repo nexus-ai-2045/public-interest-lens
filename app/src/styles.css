@@ -99,3 +99,18 @@
 .party-table thead th:nth-child(-n+2){text-align:left}
 /* タッチ領域は高さ24px以上（出典リンクと開閉の見出し） */
 .world-sources a{display:inline-flex;align-items:center;min-height:24px}summary{min-height:24px}
+
+/* 議員カードの崩れ直し（狭い幅）：鎖の見出しを行頭に出して本文の幅を取り、長い題名・リンクは折り返す */
+.member-law-points{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin:0 0 8px;font-size:13px}
+.member-law-points strong{padding:2px 8px;border:1px solid var(--line);border-radius:4px}
+.member-law h5,.member-law .law-card-side,.member-law-link{overflow-wrap:anywhere}
+.member-chain>li{overflow-wrap:anywhere}
+.member-chain>li>strong{min-width:0}
+@media(max-width:719px){
+  .member-detail{padding:4px 8px 12px}
+  .member-law{padding:12px 10px}
+  .member-chain>li{padding-left:1rem}
+  .member-chain>li>strong{display:block;margin:0 0 2px;font-size:13px;color:var(--muted)}
+  .member-chain a{white-space:normal;margin-left:0}
+  .member-law-share strong{font-size:20px}
+}

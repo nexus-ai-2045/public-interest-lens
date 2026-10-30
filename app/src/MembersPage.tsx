@@ -160,6 +160,7 @@ function MemberDetail({ member, laws, activity, adjusted, backing }: { member: P
       return <section key={entry.lawId + entry.direction} className={`member-law ${entry.effect === 'bad' ? 'loss' : 'benefit'}`} aria-label={lawNameText(law.title, naming.what)}>
         <p className="law-card-side">{entry.effect === 'bad' ? '国賊側' : '国士側'}（{entry.side === 'loss' ? '損失の法律' : '便益の法律'}に{entry.direction === 'against' ? '反対' : '関わった'}）・{law.id}</p>
         <h5><LawName title={law.title} {...naming} /></h5>
+        {law.points && <p className="member-law-points"><strong>仮点数 {law.points.value > 0 ? '+' : ''}{law.points.value}</strong><span>{law.points.basis}（仮計算・確かな額とは別）</span></p>}
         <p className="member-law-link"><a href={`/ranking#${encodeURIComponent(law.id)}`}>この法律の行を法律ランキングで開く（額の計算・一次資料・ほかの議員）</a></p>
         <p className="member-law-share"><span>{entry.effect === 'bad' ? 'この法律で失わせた額' : 'この法律で生んだ額'}{entry.direction === 'against' ? '（反対票）' : ''}</span><strong>{formatYen(entry.share.median)}</strong><span>幅 {formatYen(entry.share.low)}〜{formatYen(entry.share.high)}・{law.observationLaws > 1 ? `この法律の分（観測の額の${law.observationLaws}分の1）の` : '法律の額の'}{pct(entry.fraction)}</span></p>
         <CausalChain entry={entry} law={law} adjusted={adjusted} backing={backing?.get(entry.lawId)} />

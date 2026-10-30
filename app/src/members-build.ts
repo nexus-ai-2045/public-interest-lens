@@ -69,6 +69,8 @@ export type PublicMemberLaw = {
   /** 同じ観測を共有する法律の本数（自分を含む）。配る額は amount をこの本数で割ったもの。 */
   observationLaws: number;
   publishable: boolean; confidence: string; judgement: string; reason: string;
+  /** 仮の点数（マクロ・ミクロの経済評価から付く予定の欄。データが入るまでは出さない）。 */
+  points?: { value: number; basis: string };
   group: string; persons: number; attributed: Range; source: string; enactedOn: string;
   game: {
     proposers: number; proposerKind: string; vetoShare: number; voteShare: number; yes: number; no: number; quota: number; voters: number;
