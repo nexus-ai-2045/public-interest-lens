@@ -83,7 +83,7 @@ def field_of_ids(bills):
     return [b['法律ID'] for b in bills]
 
 
-def build(chairs, involvements, opposing, bills, leagues, positions, org_fields, relations, enacted=None, ambiguous=frozenset(), committee=()) -> tuple[list[dict], list[dict], dict]:
+def build(chairs, involvements, opposing, bills, leagues, positions, org_fields, relations, enacted=None, ambiguous=frozenset(), committee=(), pids=None) -> tuple[list[dict], list[dict], dict]:
     # 成立の判定は分野（所管）の有無と分けて、公布された法律の台帳で行う
     enacted = set(field_of_ids(bills)) if enacted is None else enacted
     field_of = {b['法律ID']: b['所管_今'] for b in bills if b.get('所管_今')}
@@ -199,7 +199,7 @@ def build(chairs, involvements, opposing, bills, leagues, positions, org_fields,
         if money:
             marks.append('同じ分野の団体と金銭の関係が記録されている')
         rows.append({
-            '氏名': names.get(key, key), '人物ID': t['pid'], '分野': field,
+            '氏名': names.get(key, key), '人物ID': t['pid'] or (pids or {}).get(key, ''), '分野': field,
             '委員長の回次数': len(t['sessions']), '委員長の根拠URL': ' '.join(t['chair_urls'][:3]),
             '推す行動の本数': len(t['bills']), '推す行動の年数': len(t['years']), '推す行動の例（法律ID）': ' '.join(sorted(t['bills'])[:3]),
             '参院本会議で賛成した本数': len(t['yes']), '参院本会議で反対した本数': len(t['no']),
@@ -245,6 +245,16 @@ def ambiguous_names() -> set[str]:
     return {n for n, c in seen.items() if c > 1}
 
 
+def unique_person_ids() -> dict[str, str]:
+    """氏名（別表記を含む）が人物台帳でちょうど1つの人物IDに当たるものだけ。委員長だけで関与の行が無い議員にも人物IDを付けるのに使う。"""
+    seen: dict[str, set[str]] = defaultdict(set)
+    for r in read_csv(PERSONS):
+        if r['人物ID']:
+            for n in [r['氏名'], *filter(None, re.split(r'[;／]', r['別表記']))]:
+                seen[normalize_name(n)].add(r['人物ID'])
+    return {n: next(iter(ids)) for n, ids in seen.items() if len(ids) == 1}
+
+
 def enacted_ids() -> set[str]:
     """公布日と法令番号が台帳にある法律（衆法・参法・所管不明の閣法を含む）。"""
     return {r['id'] for r in read_csv(ENFORCEMENT) if r.get('法令番号') and r.get('公布日')}
@@ -280,7 +290,7 @@ def main(argv=None) -> int:
     relations = read_csv(args.relations) if args.relations else []
     committee = [r for p in COMMITTEE_DELIB if p.exists() for r in read_csv(p)]
     rows, groups, summary = build(read_csv(CHAIRS), inv, read_csv(OPPOSING), read_csv(BILLS), read_csv(LEAGUES), read_csv(POSITIONS),
-                                  org_fields_from_shingikai(), relations, enacted_ids(), ambiguous_names(), committee)
+                                  org_fields_from_shingikai(), relations, enacted_ids(), ambiguous_names(), committee, unique_person_ids())
     write(OUT / 'member-field-ties.csv', HEADER, rows)
     write(OUT / 'pressure-group-positions.csv', ['団体名', '団体区分', '分野', '法律ID', '立場', '行動種別', '法案の結果', '要旨', '出典URL', '確度'], groups)
     (OUT / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
