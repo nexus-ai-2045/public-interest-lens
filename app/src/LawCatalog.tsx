@@ -59,7 +59,13 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
     const merged = { ...query, ...next };
     setQuery(merged);
     setLimit(PAGE);
-    window.history.replaceState(null, '', `${window.location.pathname}${writeQuery(merged)}${window.location.hash}`);
+    {
+      // 最上部の絞り込み（政党・性格）の URL 項目は消さずに残す。
+      const params = new URLSearchParams(writeQuery(merged).slice(1));
+      const keep = new URLSearchParams(window.location.search);
+      for (const key of ['party', 'nature']) { const value = keep.get(key); if (value) params.set(key, value); }
+      window.history.replaceState(null, '', `${window.location.pathname}${params.size ? `?${params}` : ''}${window.location.hash}`);
+    }
   };
 
   // URL の #法律ID で開く。絞り込みで隠れていたら外し、その行まで一覧を伸ばしてから移る。

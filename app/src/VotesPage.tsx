@@ -5,6 +5,10 @@ import {
   BLOCS, START_YEARS, blocStance, blocSummary, distributionMembersIdsUrl, distributionVotesUrl, fromYear, lawYear, memberIdsOf, memberPageHref, noLawsByMember, parseVotes, recentCutoff, shuSpan, startLabel,
   type Bloc, type PublicVotes, type StartYear, type VoteLaw,
 } from './votes';
+import { LensFilterBar, MultiSelect } from './LensFilterBar';
+import { CharacterStanceChart, StanceList, buildRows } from './StanceList';
+import { CHARACTERS, CHARACTER_LABEL, type Character } from './law-character';
+import { lawsCatalogUrl, parseLawsCatalog, type CatalogItem } from './laws-catalog';
 import './votes.css';
 
 const STANCE_LABEL = { yes: '賛成', no: '反対', split: '会派で割れ', none: '記載なし' } as const;
@@ -109,7 +113,18 @@ export function VotesPage() {
   const [data, setData] = useState<PublicVotes | null>(null);
   const [error, setError] = useState('');
   const [start, setStart] = useState<StartYear>(() => { const v = new URLSearchParams(window.location.search).get('from'); return (START_YEARS as readonly string[]).includes(v ?? '') ? v as StartYear : 'recent4'; });
-  const [bloc, setBloc] = useState<Bloc>(() => { const v = new URLSearchParams(window.location.search).get('party'); return (BLOCS as readonly string[]).includes(v ?? '') ? v as Bloc : '自民'; });
+  const [blocs, setBlocs] = useState<Bloc[]>(() => { const v = new URLSearchParams(window.location.search).get('party'); const list = (v ?? '').split(',').filter((b): b is Bloc => (BLOCS as readonly string[]).includes(b)); return list.length ? list : ['自民']; });
+  const bloc = blocs[0] ?? '自民';
+  const [chars, setChars] = useState<Character[]>(() => (new URLSearchParams(window.location.search).get('nature') ?? '').split(',').filter((c): c is Character => (CHARACTERS as readonly string[]).includes(c)));
+  const [fields, setFields] = useState<string[]>(() => (new URLSearchParams(window.location.search).get('field') ?? '').split(',').filter(Boolean));
+  const [catalog, setCatalog] = useState<ReadonlyMap<string, CatalogItem>>(new Map());
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch(lawsCatalogUrl, { signal: controller.signal, cache: 'no-store' })
+      .then(r => r.ok ? r.text() : Promise.reject(new Error('missing')))
+      .then(text => { const c = parseLawsCatalog(text); setCatalog(new Map([...c.laws, ...c.policies].map(item => [item.id, item]))); }).catch(() => undefined);
+    return () => controller.abort();
+  }, []);
   // 議員ページの人物ID（読めなければリンクを出さないだけ）。
   const [memberIds, setMemberIds] = useState<ReadonlySet<string>>(new Set());
   useEffect(() => {
@@ -130,14 +145,28 @@ export function VotesPage() {
     })();
     return () => controller.abort();
   }, []);
-  function pick(next: { start?: StartYear; bloc?: Bloc }) {
-    const s = next.start ?? start, b = next.bloc ?? bloc;
-    setStart(s); setBloc(b);
-    window.history.replaceState(null, '', `/votes?from=${s}&party=${encodeURIComponent(b)}`);
+  function pick(next: { start?: StartYear; blocs?: Bloc[]; chars?: Character[]; fields?: string[] }) {
+    const s = next.start ?? start, b = next.blocs ?? blocs, c = next.chars ?? chars, f = next.fields ?? fields;
+    setStart(s); setBlocs(b); setChars(c); setFields(f);
+    const params = new URLSearchParams({ from: s });
+    if (b.length) params.set('party', b.join(','));
+    if (c.length) params.set('nature', c.join(','));
+    if (f.length) params.set('field', f.join(','));
+    window.history.replaceState(null, '', `/votes?${params}`);
   }
+  const fieldOptions = useMemo(() => [...new Set([...catalog.values()].map(i => i.field).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ja')).map(f => ({ value: f, label: f })), [catalog]);
+  const rows = useMemo(() => {
+    const all = buildRows(data ? fromYear(data.laws, start) : [], catalog);
+    return all.filter(r => (!chars.length || chars.includes(r.character)) && (!fields.length || (r.info && fields.includes(r.info.field)))).sort((a, b) => (dateOf(b.law) > dateOf(a.law) ? 1 : -1));
+  }, [data, start, catalog, chars, fields]);
   const laws = useMemo(() => data ? fromYear(data.laws, start) : [], [data, start]);
   const latest = data?.laws.map(dateOf).reduce((a, b) => b > a ? b : a, '') ?? '';
   return <SiteShell active="/votes" label="政党・議員の賛否" className="votes-page"><main id="main">
+    <LensFilterBar note={<>法律の性格は題名と要約のことばからの暫定の機械分類です（人や AI の確認前）。分野は法律ランキングと同じ分け方です。{!data ? '' : `${rows.length.toLocaleString()}本が条件に合います。`}</>}>
+      <MultiSelect label="政党（複数可）" allLabel="自民" options={BLOCS.map(b => ({ value: b, label: b }))} selected={blocs} onChange={next => pick({ blocs: next })} />
+      <MultiSelect label="どんな法律か" allLabel="すべて" options={CHARACTERS.map(c => ({ value: c, label: CHARACTER_LABEL[c] }))} selected={chars} onChange={next => pick({ chars: next })} />
+      <MultiSelect label="何の分野か" allLabel="すべて" options={fieldOptions} selected={fields} onChange={next => pick({ fields: next })} />
+    </LensFilterBar>
     <h1>どの政党・議員が、どの法律に賛成・反対したか</h1>
     <p>成立した法律について、衆議院は会派ごと、参議院は押しボタン式の採決で議員ごとの賛否を並べます。点数や責任の判定ではなく、記録そのものです。</p>
     {error && <p className="state-banner" role="alert">{error}</p>}
@@ -146,12 +175,15 @@ export function VotesPage() {
         <label>見る期間<select value={start} onChange={e => pick({ start: e.target.value as StartYear })}>{START_YEARS.map(y => <option key={y} value={y}>{startLabel(y)}</option>)}</select></label>
         <p className="fine-note">データ最新日：{latest || '日付なし'}。公布日を使い、なければ衆院、次に参院の採決日を使います。{laws.length.toLocaleString()}本が対象です。{start === 'recent4' && latest && <>期間は{recentCutoff(data.laws)}より後から{latest}まで（開始日を除き、終了日を含む）です。</>}</p>
       </section>
-      <section aria-labelledby="votes-recent-h"><h3 id="votes-recent-h">最近成立した法律の賛否</h3><RecentLaws laws={laws} /></section>
-      <section aria-labelledby="votes-bloc-h"><h3 id="votes-bloc-h">政党（系統）ごとの賛否</h3>
-        <div className="votes-seg" role="group" aria-label="政党の系統">{BLOCS.map(b => <button key={b} type="button" aria-pressed={bloc === b} onClick={() => pick({ bloc: b })}>{b}</button>)}</div>
+      <section aria-labelledby="votes-recent-h"><h3 id="votes-recent-h">法律ごとの性格と、{blocs.join('・')}の態度</h3>
+        <p className="fine-note">赤い枠は、確かな額で損失側と出た法律だけです（ほかは目立たせていません）。「衆」は衆議院の会派の賛否、「参 賛成/反対」は参議院の票数です。</p>
+        <CharacterStanceChart rows={rows} blocs={blocs} />
+        <StanceList rows={rows} blocs={blocs} />
+      </section>
+      {blocs.length === 1 && <section aria-labelledby="votes-bloc-h"><h3 id="votes-bloc-h">{bloc}の賛否のまとめ</h3>
         <MergerNote laws={data.laws} bloc={bloc} />
         <BlocPanel laws={laws} bloc={bloc} />
-      </section>
+      </section>}
       <section aria-labelledby="votes-member-h"><h3 id="votes-member-h">議員ごとの賛否（参議院）</h3><MemberSearch data={data} laws={laws} linkable={memberIds} /></section>
       <section aria-labelledby="votes-notes-h"><h3 id="votes-notes-h">この表の読み方と限界</h3><ul className="world-notes">{data.notes.map(n => <li key={n}>{n}</li>)}
         <li>系統の分け方は、会派名の一部で寄せています（自民・公明・立憲・共産・国民民主・維新・れいわ・社民・参政・中道改革連合・チームみらい・日本保守党・民主系。それ以外は「その他」）。中道改革連合は立憲・公明とは別の会派として数え、合算しません。</li>
