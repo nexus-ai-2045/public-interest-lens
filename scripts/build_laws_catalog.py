@@ -42,6 +42,7 @@ INPUTS = {
     "overviews": DERIVED / "law-overviews-v1" / "overviews.csv",
     "industryVa": ACQUIRED / "oecd-industry" / "industry_va.csv",
     "covidBenefit": DERIVED / "covid-benefit-v1" / "benefit.csv",
+    "taxImpact": DERIVED / "tax-impact-v1" / "fiscal.csv",
 }
 # 無くても一覧は作れる入力（概要の原料と、その AI 要約、桁外れの印に使う日本の付加価値）
 OPTIONAL = {"speechFacts", "overviews", "industryVa"}
@@ -269,6 +270,7 @@ def build() -> dict:
         return frozenset(source for source, kind in (("説明のURL", "説明"), ("反対のURL", "反対")) if kind in kinds)
 
     covid_benefit = {row["id"]: row for row in _rows("covidBenefit") if row["結果"] == "額"}
+    tax_impact = {row["id"]: row for row in _rows("taxImpact") if row["平年度_億円"] != ""}
     items = []
     for census in _rows("enacted"):
         law_id = f"{census['種別']}-{census['提出回次']}-{census['番号']}"
@@ -331,6 +333,13 @@ def build() -> dict:
             item["chain"].append({"step": "公開の結果", "result": other["outcome"], "note": other["reason"]})
         else:
             item["summary"] = "公開ランキングに結果がまだない"
+        tax = tax_impact.get(law_id)
+        if tax and not law:  # 政府（財務省）の国税の増減収見込み。GDP への損失とは別の量なので、額の欄・順位・合計・配分には入れない
+            full = int(tax["平年度_億円"])
+            item["summary"] = f"税収の増減見込み（国税・平年度）{yen(full * 1e8)}{'の減収' if full < 0 else 'の増収'}（政府の見込み・確かさ高）"
+            item["marks"].append("政府の見込み。GDP への損失とは別の量で、順位・合計には入れない")
+            item["chain"].append({"step": "税収の見込み", "result": item["summary"], "note": tax["理由"] + "。出典：" + tax["出典URL"]})
+            item["sources"] += [{"label": "財務省 税制改正の概要", "url": u} for u in tax["出典URL"].split()]
         if out and out["指標"] and "indicator" not in item:
             item["indicator"] = out["指標"]
         if not item["sources"]:
