@@ -119,11 +119,11 @@ def main() -> None:
                 kept += 1
         summary.append([ln.name, ln.src, ln.col, ln.target, len(data), blank, missing, ln.why])
     with open(OUT_DIR / "summary.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["関係", "ファイル", "キー列", "台帳", "行数", "空欄", "台帳に無い", "既知の理由"])
         w.writerows(summary)
     with open(OUT_DIR / "orphans.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["関係", "ファイル", "行番号", "種類", "キー"])
         w.writerows(orphans)
     lines = ["# 未結合データ台帳", "", "`python3 scripts/audit_links.py` が作る。孤立行の一覧は `data/derived/link-audit/orphans.csv`（1関係あたり上限件）。", "",
