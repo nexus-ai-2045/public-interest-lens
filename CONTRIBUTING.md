@@ -38,3 +38,9 @@ npm run test:e2e
 原資料・取得結果・認証情報・私的なタスク参照は`Git`へ追加しないでください。原資料は既存の登録処理で `.local/` に保管します。公開資料であっても、取得と転載許可は別の確認です。
 
 コードのライセンスは [ライセンス](LICENSE)（`MIT`）です。外部資料の転載権は含みません。脆弱性や秘密情報の報告は [セキュリティ方針](SECURITY.md)の手順に従い、公開の問題報告へ詳細を貼らないでください。
+
+## スクリプト化と方針変更時の見直し（ねく 2026-10-30）
+
+- 2回以上くり返す処理は `scripts/` にスクリプトとして置く（手順をチャットや PR 本文にだけ残さない）。
+- 計算やデータの方針を変えたら、同じ PR か直後の PR で、関係するスクリプトをリファクタする。古い前提のコードは消し、`ruff check <変えたファイル>` とテストを通す。
+- 評価の検証は `python3 scripts/build_evaluation_ledger.py build` → `scripts/compare_verification.py` → `scripts/report_verification.py` の順。ロジック検査は `scripts/check_evaluation_logic.py`（`tests/test_evaluation_logic.py` が基準より増えたら落とす）。
