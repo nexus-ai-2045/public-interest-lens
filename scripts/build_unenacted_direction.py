@@ -20,7 +20,7 @@ from pathlib import Path
 
 SRC = Path("data/derived/unenacted-bills-v1/scale.csv")
 DST = Path("data/derived/unenacted-bills-v1/direction.csv")
-HEADER = ["id", "題名", "向き", "提出の点", "規則", "根拠", "確かさ", "採算"]
+HEADER = ["id", "題名", "向き", "提出の点", "規則", "根拠", "確かさ", "採算", "国の収支"]
 
 # (符号, 向き, 正規表現, 根拠)。上から当て、最初の行で決める。向き＝付加価値の変化の符号。
 RULES: list[tuple[str, str, str, str]] = [
@@ -54,6 +54,23 @@ MECH = {"規制緩和・競争促進": ("プラス", "P2"), "民営化": ("プ�
         "参入・価格・数量の規制強化": ("マイナス", "N3"), "国有化・公営化": ("マイナス", "N1"), "増税": ("マイナス", "N2")}
 
 
+# 資格・許可・算定のルールは、参入制限として一律にマイナスとはしない（別枠・向き不明。2026-10-31）
+LICENSE_PAT = re.compile(r"資格|師法|派遣|探偵|風俗|家賃債務保証|健康保険|医療の確保|試験")
+# 税の法案：付加価値の向きは税の乗数の研究値（減税は上げ、増税は下げる。ADR 0014 の表2-3・2-4）、税収の増減は国の収支の欄に分ける（点に使わない）
+TAX_FLOW = {"P3": "減収", "N2": "増収"}
+
+
+ADJ = Path("data/derived/unenacted-bills-v1/adjudication.csv")
+
+
+def load_adjudication() -> dict[str, str]:
+    """マイナスの2系統一致を Opus が裁定した結果（id → 裁定）。マイナスは裁定で「マイナス確定」になったものだけ採る。"""
+    if not ADJ.exists():
+        return {}
+    with ADJ.open(encoding="utf-8", newline="") as f:
+        return {r["id"]: r["裁定"] for r in csv.DictReader(f)}
+
+
 def load_labels() -> dict[str, str]:
     if not LABELS.exists():
         return {}
@@ -69,6 +86,8 @@ def decide(id_: str, title: str, labels: dict[str, str]) -> tuple[str, str, str,
         return d, code, why, "低（題名の語）"
     if mech:
         md, mc = MECH[mech]
+        if mc == "N3" and LICENSE_PAT.search(title):
+            return "不明", "L1", "資格・許可・算定のルール：参入制限の合意があるとは言えないので別枠（向き不明）", "低（本文の2系統一致）"
         if d in ("プラス", "マイナス") and d != md:
             return "不明", "", "題名の規則と本文の2系統が食い違う", "低（題名の語）"
         return md, mc, f"本文を読んだ2系統（A・B）が一致：{mech}。{BY[mc][1]}", "低（本文の2系統一致）"
@@ -77,6 +96,7 @@ def decide(id_: str, title: str, labels: dict[str, str]) -> tuple[str, str, str,
 
 def main() -> None:
     labels = load_labels()
+    adj = load_adjudication()
     with SRC.open(encoding="utf-8", newline="") as f:
         rows = [r for r in csv.DictReader(f) if r["判定"] == "評価対象" and r["id"].rsplit("-", 1)[-1]]
     DST.parent.mkdir(parents=True, exist_ok=True)
@@ -86,9 +106,11 @@ def main() -> None:
         w.writerow(HEADER)
         for r in rows:
             d, code, why, conf = decide(r["id"], r["題名"], labels)
+            if d == "マイナス" and adj.get(r["id"]) != "マイナス確定":
+                d, code, why = "不明", "A1", "マイナスは Opus の裁定で「マイナス確定」になったものだけ採る（裁定なし、または不明）"
             n[d] += 1
             pt = {"プラス": 1, "マイナス": -1}.get(d, 0)
-            w.writerow([r["id"], r["題名"], d, pt, code, why, conf, "未計算" if code == "F1" else ""])
+            w.writerow([r["id"], r["題名"], d, pt, code, why, conf, "未計算" if code == "F1" else "", TAX_FLOW.get(code, "")])
     print(f"評価対象 {len(rows)} 本：{n} → {DST}")
 
 

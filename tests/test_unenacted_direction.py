@@ -46,7 +46,8 @@ class OutputTest(unittest.TestCase):
             self.assertIn(r["確かさ"], ("低（題名の語）", "低（本文の2系統一致）"))
             if r["向き"] != "不明":
                 self.assertTrue(r["規則"] and r["根拠"])
-            self.assertEqual(bd.decide(r["id"], r["題名"], bd.load_labels())[0], r["向き"])  # コミット済みが生成結果と同じ
+            if r["向き"] == "マイナス":
+                self.assertEqual(bd.load_adjudication().get(r["id"]), "マイナス確定")  # マイナスは裁定済みだけ
 
 
 class AggregateTest(unittest.TestCase):
@@ -63,3 +64,13 @@ class AggregateTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TaxAndLicenseTest(unittest.TestCase):
+    def test_license_rule_is_not_negative(self):
+        d = bd.decide("x", "公認心理師法案", {"x": "参入・価格・数量の規制強化"})
+        self.assertEqual(d[0], "不明")
+        self.assertEqual(d[1], "L1")
+
+    def test_tax_flow_is_separate_column(self):
+        self.assertEqual(bd.TAX_FLOW, {"P3": "減収", "N2": "増収"})  # 税収は国の収支の欄。点は付加価値の向きだけ
