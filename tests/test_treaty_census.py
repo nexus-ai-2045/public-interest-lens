@@ -33,8 +33,8 @@ class ClassifyTest(unittest.TestCase):
     def kind(self, title):
         return o.classify(title)[:3]
 
-    def test_economic_channels_are_held_for_later_calculation(self):
-        self.assertEqual(self.kind("経済上の連携の強化に関する日本国とメキシコ合衆国との間の協定の締結について承認を求めるの件")[2], "保留")
+    def test_economic_channels_with_split_evidence_are_not_measurable(self):
+        self.assertEqual(self.kind("経済上の連携の強化に関する日本国とメキシコ合衆国との間の協定の締結について承認を求めるの件")[2], "測定できない")
         self.assertEqual(self.kind("所得に対する租税に関する二重課税の回避及び脱税の防止のための日本国と大韓民国との間の条約の締結について承認を求めるの件")[1], "租税条約")
         self.assertEqual(self.kind("航空業務に関する日本国とラオス人民民主共和国との間の協定の締結について承認を求めるの件")[1], "航空協定")
         self.assertEqual(self.kind("投資の促進、円滑化及び保護に関する日本国政府、大韓民国政府及び中華人民共和国政府の間の協定の締結について承認を求めるの件")[1], "投資協定")

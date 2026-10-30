@@ -1,0 +1,422 @@
+{
+ "作成": "2026-10-30",
+ "方法": "類型ごとに Sonnet 2系統（A=メタ分析と査読、B=反対の結論と日本の事後評価）が Web で一次の出典を開いて集め、Opus が出典の実在を確かめて突き合わせた。workflow r58-treaty-evidence。",
+ "結論": "4類型とも向きは割れている（mixed）。円の額を作れる類型は無い。向きだけ使える類型は経済連携・航空。ADR 0023 の3に従い額は作らない。",
+ "類型": {
+  "経済連携・貿易（TR2）": {
+   "向き": "mixed",
+   "使い方": "direction_only",
+   "理由": "Overview: on average across the world, the trade effect of FTAs is positive and no study finds a negative one. The difficulty is the spread. Point estimates range from about +43% (structural mean 0.36) to about +80% (mean 0.59), and Baier & Bergstrand find an effect five times the conventional one, so the estimates differ by several times. Kohl finds that more than half of individual agreements had no discernible effect.\n\nJapan's agreements are also split: Japan-Singapore had almost none, Japan-Mexico had a positive effect, and RCEP had a limited effect on goods in the short term. So for any single Japanese agreement, the evidence divides between \"positive\" and \"no effect\" (null), and the verdict is mixed.\n\nNo yen figure is produced. Multiplying a treaty's covered trade by a pooled coefficient such as 0.38-0.59 would overstate the effect, because many agreements (including Japan-Singapore) cut few tariffs in practice.\n\nHow the evidence can be used:\n- State the direction only, as \"unlikely to be negative; positive or close to zero\". Judge which applies case by case, from the size of the actual tariff cuts and how much the agreement overlaps with existing EPAs.\n- If a magnitude is needed, show the range from the literature (+0% to about +80%) qualitatively as a reference only, not as an amount.\n\nVerification notes:\n- System A's Cipollina quote (\"easily and robustly\") does not match the abstract and was replaced with the verified wording.\n- The 1827 estimate count was not confirmed. The confirmed figure is 1867, from Head & Mayer.\n- The claim that Baier & Bergstrand find trade doubling after 10 years is unconfirmed.\n- The Head & Mayer figures were checked in the CEPII PDF, extracted at /tmp/claude-0/-home-user/4bfb63f6-0954-59ea-947b-665ff0740240/scratchpad/hm/hm.txt.",
+   "確認できた研究": [
+    {
+     "authors": "Maria Cipollina, Luca Salvatici",
+     "year": 2010,
+     "title": "Reciprocal Trade Agreements in Gravity Models: A Meta-Analysis",
+     "url": "https://ideas.repec.org/a/bla/reviec/v18y2010i1p63-80.html",
+     "venue": "Review of International Economics 18(1), 63-80",
+     "study_type": "meta-analysis",
+     "scope": "Meta-analysis of gravity-model RTA estimates worldwide. The abstract gives no count; Head & Mayer (2014) report 1867 estimates. System A's figure of 1827 was not confirmed.",
+     "estimate": "Mean RTA coefficient 0.59 and median 0.38 in log points, about +80% and +46% (taken from Head & Mayer 2014, p.34, checked in the CEPII PDF). The null of no effect is robustly rejected. Mean coefficient for NAFTA 0.90, for the EU 0.52.",
+     "direction": "positive",
+     "quote": "the hypothesis that there is no effect of RTAs on trade is robustly rejected at standard significance levels (IDEAS abstract). Head & Mayer: \"a mean effect of 0.59 and median effect of 0.38 for their 1867 estimates\""
+    },
+    {
+     "authors": "Keith Head, Thierry Mayer",
+     "year": 2014,
+     "title": "Gravity Equations: Workhorse, Toolkit, and Cookbook",
+     "url": "http://www.cepii.fr/PDF_PUB/wp/2013/wp2013-27.pdf",
+     "venue": "CEPII WP 2013-27 / Handbook of International Economics Vol.4",
+     "study_type": "working-paper",
+     "scope": "Authors' own meta-sample of 257 RTA estimates",
+     "estimate": "All 257 estimates: mean 0.59, median 0.47. Structural gravity only: mean 0.36, about +43%. Standard deviations are large.",
+     "direction": "positive",
+     "quote": "our smaller sample of 257 estimates (mean of 0.59 and median of 0.47). Interestingly, they find that structural gravity yields stronger estimates of RTA effects, whereas we find weaker effects (mean of 0.36)."
+    },
+    {
+     "authors": "Tristan Kohl",
+     "year": 2014,
+     "title": "Do we really know that trade agreements increase trade?",
+     "url": "https://econpapers.repec.org/RePEc:spr:weltar:v:150:y:2014:i:3:p:443-469",
+     "venue": "Review of World Economics 150(3), 443-469",
+     "study_type": "peer-reviewed",
+     "scope": "Gravity estimates for each agreement worldwide, with first-differencing",
+     "estimate": "EIAs raise trade by at most 50% overall. More than half of the agreements show no discernible effect, and only about a quarter promote trade.",
+     "direction": "mixed",
+     "quote": "Overall, EIAs promote trade by at most 50 %. Surprisingly, more than half of the EIAs investigated have had no discernible impact on trade at all"
+    },
+    {
+     "authors": "Scott L. Baier, Jeffrey H. Bergstrand",
+     "year": 2007,
+     "title": "Do free trade agreements actually increase members' international trade?",
+     "url": "https://ideas.repec.org/p/fip/fedawp/2005-03.html",
+     "venue": "Journal of International Economics 71(1), 72-95 (FRB Atlanta WP 2005-03 version)",
+     "study_type": "peer-reviewed",
+     "scope": "Panel gravity model that treats FTAs as endogenous",
+     "estimate": "Once endogeneity is corrected, the FTA effect is about five times the conventional estimate. The claim that an FTA doubles trade after 10 years is not in the abstract and is unconfirmed.",
+     "direction": "positive",
+     "quote": "The effect of FTAs on trade flows is quintupled."
+    },
+    {
+     "authors": "Mitsuyo Ando",
+     "year": 2007,
+     "title": "Impacts of Japanese FTAs/EPAs: Post Evaluation from the Initial Data",
+     "url": "https://www.rieti.go.jp/en/publications/summary/07060004.html",
+     "venue": "RIETI DP 07-E-041",
+     "study_type": "working-paper",
+     "scope": "Early ex post evaluation of the Japan-Singapore and Japan-Mexico EPAs",
+     "estimate": "Singapore: almost no direct trade effect, because actual tariff cuts were small. Mexico: some positive effect, mainly on exports and investment. No numeric estimate.",
+     "direction": "mixed",
+     "quote": "the Japan-Singapore EPA has almost no direct impact on trade since actual reduction of tariffs by the EPA is quite limited"
+    },
+    {
+     "authors": "Ken Itakura, Yutaro Kimata, Shujiro Urata",
+     "year": 2026,
+     "title": "Economic Impact of RCEP",
+     "url": "https://ideas.repec.org/p/eti/dpaper/26029.html",
+     "venue": "RIETI Discussion Paper 26029",
+     "study_type": "working-paper",
+     "scope": "RCEP: ex post structural gravity analysis plus an ex ante CGE simulation",
+     "estimate": "Ex post: limited short-term effects on goods trade and inward FDI, with clear gains in services trade. CGE simulation: GDP +1.5% and welfare +1.3% by 2040; this is a projection, not a measured effect.",
+     "direction": "mixed",
+     "quote": "Our ex post results indicate that RCEP has limited short-term effects on goods trade and inward FDI within the region."
+    }
+   ],
+   "採用しなかった研究": [
+    {
+     "title": "Baier & Bergstrand (2007): 'an FTA doubles bilateral trade after 10 years'",
+     "reason": "Not in the abstract of the version I opened. Only the 'quintupled' sentence was verified, so the doubling figure is left out."
+    },
+    {
+     "title": "Cipollina & Salvatici: the '1827 estimates' count and the System A quote wording",
+     "reason": "The abstract gives no count, and Head & Mayer give 1867. The wording 'easily and robustly' does not match the abstract, which says 'robustly rejected', so the verified wording replaces it."
+    }
+   ]
+  },
+  "租税条約（TR3）": {
+   "向き": "mixed",
+   "使い方": "none",
+   "理由": "This category does not support a yen figure. Findings fall into three groups. Positive: Barthel et al. 2010 (+27 to 31%) and Lejour 2014 (+16%, +21% for new treaties). Null: Blonigen & Davies 2004 and Baker 2014. Negative: Egger et al. 2006, for new treaties. Conditional: Neumayer 2007 (middle-income hosts only), Lee & Kim 2022 (developing countries positive, OECD not significant, newer treaties weaker) and Ohno 2010 (Japan's outward FDI to Asia: new treaties positive in the long run, revised treaties not significant). Applied to Japan, most of its treaty network is with developed countries or consists of revisions of existing treaties, and these are the cases where the studies most often find no effect (Lee & Kim on OECD partners, Ohno on revised treaties, Baker's unilateral-relief explanation). There are also no ex-post studies of treaty effects on inbound FDI into Japan. So multiplying Japan's FDI stock by 16 to 31% would be over-extrapolation, and I do not produce an amount. At most, the evidence supports a qualitative statement, limited to new treaties with middle-income developing countries (for example in Asia), that they are likely to raise Japan's outward FDI (Ohno 2010, Neumayer 2007, Lee & Kim 2022). Even there no amount can be computed, because none of those studies gives a coefficient. If a range is shown for reference, it should be labelled as international averages (Lejour +16 to 21%, Barthel +27 to 31%) and not converted into yen.",
+   "確認できた研究": [
+    {
+     "authors": "Blonigen, B.A.; Davies, R.B.",
+     "year": 2004,
+     "title": "The Effects of Bilateral Tax Treaties on U.S. FDI Activity",
+     "url": "https://pages.uoregon.edu/bruceb/Effects_of_Bilateral_Tax_Treaties_on_US_FDI_Activity.pdf",
+     "venue": "International Tax and Public Finance 11(5), 601-622",
+     "study_type": "peer-reviewed",
+     "scope": "US inbound and outbound FDI, 1980-1999, new vs old treaties",
+     "estimate": "Preferred specification: the average new-treaty effect is not statistically different from zero, for both inbound and outbound FDI. Country-by-country effects vary. System A's dollar figure (about -$9.9bn) comes from a specification the authors do not prefer, and I did not check it against the PDF, so I have not used it.",
+     "direction": "null",
+     "quote": "we find no systematic evidence that bilateral tax treaties affect FDI activity ... the positive and negative aspects of treaty formation largely cancel one another (also in abstract: 'we find little evidence that bilateral tax treaties increase FDI activity, contrary to OECD-stated goals for such treaties')"
+    },
+    {
+     "authors": "Barthel, F.; Busse, M.; Neumayer, E.",
+     "year": 2010,
+     "title": "The impact of double taxation treaties on foreign direct investment: evidence from large dyadic panel data",
+     "url": "https://researchonline.lse.ac.uk/id/eprint/28823",
+     "venue": "Contemporary Economic Policy 28(3), 366-377",
+     "study_type": "peer-reviewed",
+     "scope": "Large dyadic panel of bilateral FDI stocks, 1978-2004",
+     "estimate": "Static model: about +27.3%. Dynamic model: about +9.7% short run and about +31% long run. Confirmed in the full text of the LSE open-access PDF. No confidence interval extracted.",
+     "direction": "positive",
+     "quote": "We find that DTTs increase the bilateral FDI stock between 27 and 31 percent."
+    },
+    {
+     "authors": "Lejour, A.",
+     "year": 2014,
+     "title": "The foreign investment effects of tax treaties",
+     "url": "https://oxfordtax.sbs.ox.ac.uk/files/wp14-03pdf",
+     "venue": "Oxford University Centre for Business Taxation WP 14/03",
+     "study_type": "working-paper",
+     "scope": "OECD bilateral FDI stocks from 1985, geographic instruments for treaty endogeneity",
+     "estimate": "About +16% overall and about +21% for new treaties. The EU parent-subsidiary directive roughly doubles FDI stocks. Twenty extra treaties raise FDI stocks by about 50%, which the author reads as treaty shopping. Confirmed in the PDF.",
+     "direction": "positive",
+     "quote": "The increase is about 16 percent and for new treaties this is even 21 percent."
+    },
+    {
+     "authors": "Egger, P.; Larch, M.; Pfaffermayr, M.; Winner, H.",
+     "year": 2006,
+     "title": "The impact of endogenous tax treaties on foreign direct investment: theory and evidence",
+     "url": "https://econpapers.repec.org/RePEc:cje:issued:v:39:y:2006:i:3:p:901-931",
+     "venue": "Canadian Journal of Economics 39(3), 901-931",
+     "study_type": "peer-reviewed",
+     "scope": "OECD bilateral outward FDI stocks 1985-2000, treaty treated as endogenous",
+     "estimate": "Newly implemented treaties have a significant negative effect on outward FDI stocks. Only the abstract was available, so there is no magnitude.",
+     "direction": "negative",
+     "quote": "we find a significant negative impact of newly implemented tax treaties on outward FDI stocks"
+    },
+    {
+     "authors": "Neumayer, E.",
+     "year": 2007,
+     "title": "Do double taxation treaties increase foreign direct investment to developing countries?",
+     "url": "https://econpapers.repec.org/RePEc:taf:jdevst:v:43:y:2007:i:8:p:1501-1519",
+     "venue": "Journal of Development Studies 43(8), 1501-1519",
+     "study_type": "peer-reviewed",
+     "scope": "FDI from the US and in total into developing countries",
+     "estimate": "Positive effect, but only for middle-income hosts. No effect for low-income hosts. Abstract only, so there is no magnitude.",
+     "direction": "mixed",
+     "quote": "However, DTTs are only effective in the group of middle-, not low-income developing countries."
+    },
+    {
+     "authors": "Lee, S.; Kim, D.",
+     "year": 2022,
+     "title": "The impact of tax treaties on foreign direct investment: The evidence reconsidered",
+     "url": "https://ideas.repec.org/a/zbw/kdijep/265116.html",
+     "venue": "KDI Journal of Economic Policy 44(3), 27-48",
+     "study_type": "peer-reviewed",
+     "scope": "US outbound FDI to 78 countries, 2007-2018, controlling for tax-haven status, transfer pricing, CFC and anti-avoidance rules",
+     "estimate": "Positive for developing countries. Not significant for OECD countries. Newer treaties have a smaller effect than older ones. Abstract only, so there are no coefficients.",
+     "direction": "mixed",
+     "quote": "tax treaties positively contribute to FDI inflows in developing countries"
+    },
+    {
+     "authors": "Baker, P.L.",
+     "year": 2014,
+     "title": "An Analysis of Double Taxation Treaties and Their Effect on Foreign Direct Investment",
+     "url": "https://researchportal.bath.ac.uk/en/publications/an-analysis-of-double-taxation-treaties-and-their-effect-on-forei/",
+     "venue": "International Journal of the Economics of Business 21(3), 341-377",
+     "study_type": "peer-reviewed",
+     "scope": "Developed-to-developing country pairs, matching econometrics",
+     "estimate": "DTTs have no effect on FDI flows. The explanation is that developed countries already relieve double taxation unilaterally. Abstract only, so there is no magnitude.",
+     "direction": "null",
+     "quote": "Double taxation treaties (DTTs) are intended to eliminate double taxation and thereby increase foreign direct investment"
+    },
+    {
+     "authors": "Ohno, T. (MOF Policy Research Institute)",
+     "year": 2010,
+     "title": "Empirical Analysis of International Tax Treaties and Foreign Direct Investment",
+     "url": "https://ideas.repec.org/a/mof/journl/ppr008d.html",
+     "venue": "Public Policy Review 6(2), 287-312",
+     "study_type": "official",
+     "scope": "Japan's outward FDI to 13 Asian countries, 1981-2003",
+     "estimate": "New treaties have a significant positive long-run effect. Revised treaties have no significant effect. Third-country effects are not significant. Abstract only, so there are no coefficients.",
+     "direction": "mixed",
+     "quote": "statistically significant long-term positive effects on the investment scale"
+    }
+   ],
+   "採用しなかった研究": [
+    {
+     "title": "Blonigen & Davies 2004: dollar effect from a non-preferred specification (about -$9.9bn inbound)",
+     "reason": "The number is not from the authors' preferred specification, and the authors themselves say that specification has poor statistical properties. I did not check it against the PDF either, so the paper stays in verified but this figure is dropped."
+    },
+    {
+     "title": "Lee & Kim 2022: System A's paraphrased quote ('no statistically significant effect for OECD countries')",
+     "reason": "It is a paraphrase, not a verbatim sentence. I replaced it with the verbatim fragment from the abstract ('tax treaties positively contribute to FDI inflows in developing countries')."
+    },
+    {
+     "title": "Baker 2014: System B's quote ('Developed countries unilaterally provide for the relief...')",
+     "reason": "The fetch tool returned this only as a paraphrase, and I could not confirm it as verbatim. I replaced it with the verbatim opening sentence of the abstract."
+    }
+   ]
+  },
+  "投資協定（TR4）": {
+   "向き": "mixed",
+   "使い方": "none",
+   "理由": "結論は割れている。\n\n国際的な根拠の中心は、2本のメタ分析と因果識別を重視した研究で、いずれも効果はほぼゼロ（null）。\n- Brada et al. 2021：BIT サブサンプルの偏相関係数（PCC）は WAAP 0.014、FE 0.018、RE 0.039。数値は Table 3 で確認した。\n- Bellak 2015：出版バイアスを補正すると、真の効果は検出されない。\n- Aisbett 2007、Hallward-Driemeier 2003、Berger et al. 2011：いずれも頑健な効果は見られない。\n- 正の結果を示す Neumayer-Spess 2005 は古い研究で、上記のメタ分析では出版バイアスで説明される側に入る。\n\n日本の条約に固有の企業レベル研究は、正の方向を示す。\n- Urata-Baek 2022：IIA は日本企業の進出先選択確率を高める。高水準の協定、中小企業、規制の質が低い国で効果が強い。\n- Inada-Jinji 2024：内国民待遇・最恵国待遇に関する不確実性は新規進出を抑制する。協定の効果を間接的に示す結果である。\n\nこのように、国際平均ではゼロ、日本の文脈では正の方向という割れ方になっている。\n\n円額を作らない理由は3つある。\n1. 類型として mixed であり、ルール上、額は作らない。\n2. メタ分析の推定値は PCC で、弾力性や%効果に換算できない。\n3. 日本研究は立地選択の確率を見たもので、投資額への効果は推定されておらず、係数も abstract に載っていない。\n\n使う場合は、定性的な補足にとどめる。書き方の例：「国際的には BIT 単体の FDI 誘発効果はほぼゼロ。ただし日本企業の立地選択では、包括的・高水準の協定、中小企業、規制の質が低い相手国の場合に正の効果が報告されている」。\n\n確認済みの点と未確認の点：\n- Neumayer-Spess の +43.7〜93.2% は、ジャーナル版で確認していないので使わない。\n- 系統Bの Urata-Baek と Inada-Jinji の quote は要約からの言い換えだったので、abstract の原文に差し替えた。\n- 系統Aの Brada et al. の数値は PDF で一致を確認した。\n- Hallward-Driemeier の quote は PDF 本文で確認した。",
+   "確認できた研究": [
+    {
+     "authors": "Brada, J. C.; Drabek, Z.; Iwasaki, I.",
+     "year": 2021,
+     "title": "Does Investor Protection Increase Foreign Direct Investment? A Meta-Analysis",
+     "url": "https://ideas.repec.org/a/bla/jecsur/v35y2021i1p34-70.html",
+     "venue": "Journal of Economic Surveys 35(1), 34-70 (DOI 10.1111/joes.12392)",
+     "study_type": "meta-analysis",
+     "scope": "2,107 estimates from 74 studies on international investment agreements; BIT subsample 1,290 estimates; mostly non-Japan",
+     "estimate": "BIT subsample partial correlation coefficients (PCC): fixed effect 0.018, random effects 0.039, WAAP 0.014. The WAAP for all IIAs is 0.017. Checked against Table 3 of the Wiley PDF (bilaterals.org copy). The paper puts the 'true value' for IIAs overall at about 0.0184. These are PCCs, not elasticities or percent effects, and are below the 0.07 'very small' threshold.",
+     "direction": "null",
+     "quote": "robust evidence that effect of international investment agreements is so small as to be considered zero"
+    },
+    {
+     "authors": "Bellak, C.",
+     "year": 2015,
+     "title": "Economic Impact of Investment Agreements",
+     "url": "https://econpapers.repec.org/RePEc:wiw:wus005:4625",
+     "venue": "WU Vienna University of Economics and Business, Department of Economics Working Paper No. 200 (August 2015)",
+     "study_type": "working-paper",
+     "scope": "Meta-analysis of empirical studies on BITs and FDI; not Japan-specific",
+     "estimate": "No genuine effect after correcting for publication selection bias. The abstract page gives no numeric estimate.",
+     "direction": "null",
+     "quote": "this meta-analysis does not find a genuine empirical effect of Bilateral Investment Treaties on Foreign Direct Investment after correcting for publication selection bias"
+    },
+    {
+     "authors": "Hallward-Driemeier, M.",
+     "year": 2003,
+     "title": "Do Bilateral Investment Treaties Attract Foreign Direct Investment? Only a Bit ... and They Could Bite",
+     "url": "https://documents1.worldbank.org/curated/en/113541468761706209/pdf/multi0page.pdf",
+     "venue": "World Bank Policy Research Working Paper 3121",
+     "study_type": "working-paper",
+     "scope": "20 years of bilateral FDI flows from OECD countries to developing countries",
+     "estimate": "Little or no additional FDI from BITs. No single usable coefficient was extracted.",
+     "direction": "null",
+     "quote": "Analyzing twenty years of bilateral FDI flows from the OECD to developing countries finds little evidence that BITs have stimulated additional investment."
+    },
+    {
+     "authors": "Aisbett, E.",
+     "year": 2007,
+     "title": "Bilateral Investment Treaties and Foreign Direct Investment: Correlation versus Causation",
+     "url": "https://mpra.ub.uni-muenchen.de/2255",
+     "venue": "MPRA Paper No. 2255",
+     "study_type": "working-paper",
+     "scope": "Bilateral FDI outflows from OECD countries to 28 low- and middle-income countries; treaty adoption modeled as endogenous",
+     "estimate": "No robust BIT effect once endogeneity is controlled for, and no signalling effect. The abstract page gives no coefficients.",
+     "direction": "null",
+     "quote": "the initially strong correlation between BITs and investment flows is not robust"
+    },
+    {
+     "authors": "Berger, A.; Busse, M.; Nunnenkamp, P.; Roy, M.",
+     "year": 2011,
+     "title": "More stringent BITs, less ambiguous effects on FDI? Not a bit!",
+     "url": "https://econpapers.repec.org/RePEc:eee:ecolet:v:112:y:2011:i:3:p:270-272",
+     "venue": "Economics Letters 112(3), 270-272",
+     "study_type": "peer-reviewed",
+     "scope": "Bilateral FDI flows; BITs coded by the strength of their investor-state dispute settlement (ISDS) provisions",
+     "estimate": "The effect stays unclear even after accounting for ISDS strength. The abstract gives no numbers.",
+     "direction": "null",
+     "quote": "We show that the effectiveness of bilateral investment treaties in promoting FDI inflows remains elusive"
+    },
+    {
+     "authors": "Neumayer, E.; Spess, L.",
+     "year": 2005,
+     "title": "Do bilateral investment treaties increase foreign direct investment to developing countries?",
+     "url": "https://researchonline.lse.ac.uk/id/eprint/627",
+     "venue": "World Development 33(10), 1567-1585",
+     "study_type": "peer-reviewed",
+     "scope": "Developing-country hosts; FDI inflows; cumulative number of BITs",
+     "estimate": "Positive and robust in the abstract. The one-standard-deviation effect of +43.7% to +93.2% comes from the May 2005 working paper and was not checked against the journal text, so it should not be used as a number. Later meta-analyses (Bellak 2015; Brada et al. 2021) attribute much of this kind of result to publication bias.",
+     "direction": "positive",
+     "quote": "We provide the first rigorous quantitative evidence that a higher number of BITs raises the FDI that flows to a developing country."
+    },
+    {
+     "authors": "Urata, S.; Baek, Y.",
+     "year": 2022,
+     "title": "Impact of International Investment Agreements on Japanese FDI: A Firm-level Analysis",
+     "url": "https://ideas.repec.org/p/eti/dpaper/22038.html",
+     "venue": "RIETI Discussion Paper 22038 (revised version in The World Economy 46(8), 2023)",
+     "study_type": "working-paper",
+     "scope": "Japan outward FDI: 94 host countries, 16 manufacturing and 12 non-manufacturing sectors, 2000-2019, conditional logit model of location choice",
+     "estimate": "IIAs raise the probability that a country is chosen as a destination for Japanese FDI. The effect is stronger for comprehensive, high-level IIAs, for SMEs, and in hosts with low regulatory quality. Past investor-state disputes have a negative effect. The abstract gives no coefficients. This is the extensive margin (location choice), not the amount of investment.",
+     "direction": "positive",
+     "quote": "We found that the presence of IIAs, particularly comprehensive and high-level ones, has a positive impact on Japan's FDI."
+    },
+    {
+     "authors": "Inada, M.; Jinji, N.",
+     "year": 2024,
+     "title": "The impact of policy uncertainty on foreign direct investment: Micro-evidence from Japan's international investment agreements",
+     "url": "https://econpapers.repec.org/RePEc:bla:reviec:v:32:y:2024:i:3:p:934-957",
+     "venue": "Review of International Economics 32(3), 934-957",
+     "study_type": "peer-reviewed",
+     "scope": "Japan: microdata on Japanese multinationals' foreign affiliates, 22 IIAs, 1995-2016",
+     "estimate": "Policy uncertainty about national treatment and MFN obligations reduces FDI, mainly by discouraging new affiliates. This is an indirect test: it implies that fixing these obligations by treaty would support FDI. The abstract gives no coefficients.",
+     "direction": "mixed",
+     "quote": "We find that PU regarding a combination of national treatment and most favored nation has a negative impact on FDI."
+    }
+   ],
+   "採用しなかった研究": []
+  },
+  "航空協定（TR6）": {
+   "向き": "mixed",
+   "使い方": "direction_only",
+   "理由": "旅客数への効果は、多くの研究で正の方向を示す。ただし規模の幅が大きい(世界のOSA型で+5%、米国発で+60%、アラブ域内で+30%のシナリオ)。自由化度の閾値に左右され、第三国のOSAによる旅客の流出もある(Oum他: 米国のOSAはカナダに負の効果)。運賃は研究で割れる。Cristea他は平均運賃-2〜4%(品質調整後-7〜-15%)、Winston&Yanは大幅な低下(率は未確認)、Whalen(二次引用)は上昇または効果なしとする。日本では、国交省のLCC政策レビューもオープンスカイ単独の因果推定ではない。FSAイールドの約2%低下を『可能性』としか述べていない。このため円の額は作らない。用途は向きに限る。日本の条約に当てはめるときは「旅客数は増える方向(閾値以上の自由化が条件)、運賃は低下方向とされるが研究間で不一致」と定性的に記述する。感度分析として示すなら、旅客数+5%(Piermartini&Rousová)を下限の参考値とし、点推計には使わない。",
+   "確認できた研究": [
+    {
+     "authors": "Anca D. Cristea, David Hummels, Brian Roberson",
+     "year": 2017,
+     "title": "Estimating the Gains from Liberalizing Services Trade: The Case of Passenger Aviation (working paper, April 2017)",
+     "url": "https://pages.uoregon.edu/cristea/Research_files/osa.pdf",
+     "study_type": "working-paper",
+     "venue": "未公刊ワーキングペーパー(著者サイト)",
+     "scope": "米国のOSA。1993-2008年の都市ペア別パネル(旅客数・運賃・路線・容量)を差の差で推計",
+     "estimate": "OSA締結から5年以上で出発旅客 +60%(未自由化市場比、うち新規直行路線が50%を説明)、容量 +57%。平均運賃 -2〜4%。品質調整後価格 -7%(制約の少ない路線)〜-15.3%(制約の強い路線)。信頼区間は未確認",
+     "direction": "positive",
+     "quote": "Five or more years after the signing of an Open Skies Agreement, outbound air traffic is 60 percent higher in liberalized markets compared to still-regulated markets. ... OSAs lead to a 2-4 percent drop in average airfares (controlling for trip characteristics). ... Quality adjusted prices fall by 7 percent on routes that were the least constrained prior to regulation, and by 15.3 percent on the most constrained routes.(PDFをpdftotextにかけて原文確認)"
+    },
+    {
+     "authors": "Roberta Piermartini, Linda Rousová",
+     "year": 2013,
+     "title": "The Sky Is Not Flat: How Discriminatory Is the Access to International Air Services?",
+     "url": "https://www.aeaweb.org/articles?id=10.1257/pol.5.3.287",
+     "study_type": "peer-reviewed",
+     "venue": "American Economic Journal: Economic Policy 5(3), 287-319",
+     "scope": "184か国・約2,300の航空協定。二国間旅客流量への効果を2005年の断面データで推計(IVとPSMを使用)。運賃は扱わない",
+     "estimate": "世界で多国間化した場合の旅客数: 複数指定条項 +0.5%、OSA +5%、EEA型 +10%。一定水準の自由化に達して初めて正の効果。信頼区間は未確認",
+     "direction": "positive",
+     "quote": "a certain level of liberalization is required to have a positive effect on passenger traffic.(AEA要旨ページで確認。0.5/5/10%は同要旨の内容で、Cristea他PDFにも『They estimate that OSAs increase traffic by 5 percent』とあることを原文で確認)"
+    },
+    {
+     "authors": "Clifford Winston, Jia Yan",
+     "year": 2015,
+     "title": "Open Skies: Estimating Travelers' Benefits from Free Trade in Airline Services",
+     "url": "https://www.aeaweb.org/articles?id=10.1257/pol.20130071",
+     "study_type": "peer-reviewed",
+     "venue": "American Economic Journal: Economic Policy 7(2)",
+     "scope": "米国の国際主要路線のOSA。運賃と運航頻度の構造モデル",
+     "estimate": "旅行者の便益 年間少なくとも40億ドル。運賃の低下率は本文未確認(Cristea他は約50%、Brookings解説は約15%と食い違うため使わない)",
+     "direction": "positive",
+     "quote": "We find the agreements have generated at least $4 billion in annual gains to travelers and that travelers would gain an additional $4 billion if the US negotiated agreements with other countries that have a significant amount of international passenger traffic.(AEA要旨ページで確認)"
+    },
+    {
+     "authors": "Tae Hoon Oum, Kun Wang, Jia Yan",
+     "year": 2019,
+     "title": "Measuring the effects of open skies agreements on bilateral passenger flow and service export and import trades",
+     "url": "https://research.polyu.edu.hk/en/publications/measuring-the-effects-of-open-skies-agreements-on-bilateral-passe/",
+     "study_type": "peer-reviewed",
+     "venue": "Transport Policy 74, 1-14",
+     "scope": "カナダのOSAが旅客流量とサービス貿易に与える効果。差の差推計",
+     "estimate": "カナダが結んだOSAは旅客数とサービス輸出入を増やした。米国が結んだOSAはカナダの旅客数に負の効果(流出・転換)。どちらの効果も時間とともに大きくなる。係数は未確認",
+     "direction": "mixed",
+     "quote": "Our estimations strongly suggest that Canada's OSA has positive effect on bilateral passenger flow and service export and import trades ... especially for the commercial service trade, while the US OSA has the negative effect.(PolyU要旨ページで確認)"
+    },
+    {
+     "authors": "Anca Cristea, Russell Hillberry, Aaditya Mattoo",
+     "year": 2015,
+     "title": "Open Skies over the Middle East",
+     "url": "https://ideas.repec.org/p/wbk/wbrwps/6937.html",
+     "study_type": "working-paper",
+     "venue": "World Bank Policy Research Working Paper 6937; The World Economy 38(11), 2015",
+     "scope": "世界の旅客航空データ。アラブ諸国間の協定を深化させた場合のシナリオ推計",
+     "estimate": "アラブ諸国間の協定を深化させると域内旅客 約+30%(シナリオ推計)",
+     "direction": "positive",
+     "quote": "would lead to a 30 percent increase in intraregional passenger traffic(IDEAS要旨ページで確認)"
+    },
+    {
+     "authors": "Alejandro Micco, Tomás Serebrisky",
+     "year": 2006,
+     "title": "Competition regimes and air transport costs: The effects of open skies agreements",
+     "url": "https://ideas.repec.org/a/eee/inecon/v70y2006i1p25-51.html",
+     "study_type": "peer-reviewed",
+     "venue": "Journal of International Economics 70(1), 25-51",
+     "scope": "米国のOSA(1990-2003)。貨物(米国輸入)の航空輸送コストを分析。旅客は対象外",
+     "estimate": "航空輸送コスト -9%、航空で到着する輸入のシェア +7%(先進国・上位中所得国)。下位中所得国・低所得国では効果なし",
+     "direction": "mixed",
+     "quote": "In our sample, Open Skies Agreements reduce air transport costs by 9% and increase by 7% the share of imports arriving by air.(IDEAS要旨ページで確認)"
+    },
+    {
+     "authors": "国土交通省",
+     "year": 2017,
+     "title": "政策レビュー結果(評価書)要旨: LCCの事業展開の促進",
+     "url": "https://www.mlit.go.jp/common/001179269.pdf",
+     "study_type": "official",
+     "venue": "国土交通省 政策レビュー",
+     "scope": "日本。オープンスカイ(H22年10月以降、首都圏空港を含めて合意)と国際運賃規制緩和を含むLCC促進政策全体の記述的評価。オープンスカイ単独の因果推定ではない",
+     "estimate": "FSA加重平均イールド 平成24年度17.0円→平成27年度16.6円(約-2%)。LCC旅客シェア 国内2.1%→10.0%(約760万人増)。運賃・旅客数への効果は『可能性』の表現にとどまる",
+     "direction": "mixed",
+     "quote": "間接的運賃競争によりFSAの運賃引下げを促した可能性がある。 / 航空旅客数増加を牽引し、空港収支改善に寄与した可能性がある。 / FSA加重平均 17.0円 → FSA加重平均 16.6円(PDFをpdftotextにかけて原文確認)"
+    }
+   ],
+   "採用しなかった研究": [
+    {
+     "title": "Whalen 2007, A panel data analysis of code-sharing, antitrust immunity, and open skies treaties (Review of Industrial Organization)",
+     "reason": "原論文は取得できなかった。Cristea他PDFが紹介している『OSAは運賃を上げ、旅客数には効果なし』という内容は原文で確認したが、二次引用にとどまる。verifiedには入れず、反対方向の証拠として判定に反映した"
+    },
+    {
+     "title": "大島・古谷・福井 2009 アジア・オープンスカイの地域経済効果(運輸政策研究)",
+     "reason": "旅客数・運賃ではなく、地域GDPの事前シミュレーション。正式題名・数値・quoteは要約からの推定で、逐語では確認できなかった"
+    },
+    {
+     "title": "Winston & Yan 2015 の運賃低下率(約50% / 約15%)",
+     "reason": "二次情報どうしで食い違い、本文で確認できなかった。便益40億ドルのみ採用"
+    }
+   ]
+  }
+ }
+}
