@@ -162,6 +162,7 @@ class Stages:
         self.loss = by_id("loss", "loss.csv")
         self.benefit = by_id("benefit", "benefit.csv")
         self.publish = by_id("publish", "publish.csv")
+        self.crowded = crowded_ids(self.loss.values())
         covid = derived / "covid-response-v1" / "labels.csv"
         # コロナ対応の法律は、施行後の窓がコロナの落ち込みと重なる。市場の損失の額は付けず、費用便益（covid-benefit-v1）で扱う
         # 経済への直接効果の判定（econ-relevance-v1）：2系統が一致した「国・自治体の制度で民間のお金の流れを直接変えない」法律
@@ -186,6 +187,29 @@ NARROW_MEASURE = re.compile(r"臨時特例|所得税及び法人税")
 
 def narrow_measure(title: str) -> bool:
     return bool(NARROW_MEASURE.search(title))
+
+
+# 限定的（段階1）の額で、次のどちらかに当たるものは、法律ごとの額を付けない。
+#  1) 同じ産業・同じ期間・同じ額に2本以上が重なる観測：産業全体の動きで、どの法律が動かしたか分けられない
+#     （同じ額が何本にも並ぶ。農林水産業の14.2兆円が15本、など）
+#  2) 額の大きさが50兆円以上：日本の名目GDPの1割。1本の法律の10年累積の効果として桁が合わない
+CROWDED_MINIMUM = 2
+OVERSIZED_YEN = 50_000_000_000_000
+MEDIAN = re.compile(r"中央値=(-?\d+)")
+
+
+def crowded_ids(loss_rows) -> set[str]:
+    groups: dict[tuple[str, str], list[str]] = {}
+    oversized: set[str] = set()
+    for row in loss_rows:
+        text = row.get("損失または便益の額", "").strip()
+        if row.get("段階") != "段階1" or not text:
+            continue
+        groups.setdefault((row.get("観測グループ", ""), text), []).append(row["id"])
+        match = MEDIAN.search(text)
+        if match and abs(int(match.group(1))) >= OVERSIZED_YEN:
+            oversized.add(row["id"])
+    return oversized | {i for ids in groups.values() if len(ids) >= CROWDED_MINIMUM for i in ids}
 
 
 def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dict[str, str]:
@@ -224,6 +248,10 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     if has_amount and loss["段階"] == "段階1" and narrow_measure(title):
         out.update(結果="保留", 経路="市場（範囲が狭い特例）", 段階=loss["段階"], 向き=loss["向き"], 公開可否=pub["公開可否"] if pub else "",
                    理由="範囲が狭い税の特例で、産業全体の差を当てると過大になる（この法律が動かした分と言えない）。額は付けない")
+        return out
+    if has_amount and loss["段階"] == "段階1" and t["id"] in st.crowded:
+        out.update(結果="保留", 経路="市場（分けられない・過大）", 段階=loss["段階"], 向き=loss["向き"], 公開可否=pub["公開可否"] if pub else "",
+                   理由="限定的（段階1）の額が、同じ産業・同じ期間・同じ額に2本以上重なって産業全体の動きとして分けられない、または1本の法律として桁が合わない（50兆円以上）。法律ごとの額は付けない")
         return out
 
     # 1) 額あり（後段の出力が優先。題名の規則で打ち消さない）
