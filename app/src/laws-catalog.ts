@@ -34,6 +34,8 @@ export type CatalogItem = {
   certainty?: '高' | '中' | '低' | '参考';
   marks: string[];
   step: CatalogStep;
+  /** 参考の額を画面に出さない理由（検証で不合格／他の法律と同じ額／桁外れ）。ある法律は額を持たない。 */
+  hiddenReason?: string;
   /** 何をする法律か（国会会議録の提案理由の説明を AI が1行に要約）。 */
   what?: string;
   /** what が無いときの理由（画面は題名から作らず、正式名だけを理由つきで出す）。 */
@@ -49,6 +51,8 @@ export type CatalogItem = {
 export type LawsCatalog = {
   schema: 'public-laws/v1';
   counts: Record<CatalogStep, number>;
+  /** 額を出さなかった本数（理由ごと）。 */
+  hidden?: Record<string, number>;
   /** 公開ランキングで段階を通った本数（全体指標の参考の額を含まない）。 */
   strict?: { evaluated: number; dated: number; staged: number };
   /** 観測の数（count）と、桁外れの印の本数（outliers）。 */

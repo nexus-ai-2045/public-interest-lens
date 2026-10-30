@@ -83,7 +83,8 @@ class LedgerTest(unittest.TestCase):
         # コロナ対応の法律は、損失表に額があっても台帳では保留にする（費用便益で扱う）
         fiscal = {r["id"] for r in read(ROOT / "data" / "derived" / "tax-impact-v1" / "fiscal.csv") if r["平年度_億円"] != ""}
         market = {r["id"] for r in self.rows if r["結果"] == "額あり" and r["経路"] != "財政（税収見込み）"}
-        self.assertEqual(market, with_amount - covid - narrow - fiscal)
+        inst = {r["id"] for r in loss if ol.institutional_title(r["題名"])}
+        self.assertEqual(market, with_amount - covid - narrow - fiscal - inst)
         # 税制改正の法律は財務省の増減収見込みを別の経路で付ける。損失表の額とは重ならず、順位・配分の対象にならない
         self.assertFalse(fiscal & with_amount)
         self.assertEqual({r["id"] for r in self.rows if r["経路"] == "財政（税収見込み）"}, fiscal)
@@ -173,6 +174,20 @@ class DecideTest(unittest.TestCase):
                          A_分野=ol.NO_FIELD, B_分野=ol.NO_FIELD)
         r = ol.decide({"題名": "文化財保護法の一部を改正する法律案"}, out, "", EmptyStages())
         self.assertEqual(r["結果"], "評価対象外")
+
+
+class InstitutionalTitleTest(unittest.TestCase):
+    def test_types(self):
+        for title in ("サイバーセキュリティ基本法案", "独立行政法人通則法の施行に伴う関係法律の整備等に関する法律案",
+                      "経済産業省設置法の一部を改正する法律案", "令和三年度子育て世帯等臨時特別給付金に係る差押禁止等に関する法律案"):
+            self.assertTrue(ol.institutional_title(title), title)
+        for title in ("道路法の一部を改正する法律案", "食料・農業・農村基本法の一部を改正する法律案", "電波法の一部を改正する法律案"):
+            self.assertFalse(ol.institutional_title(title), title)
+
+    def test_ledger_has_no_institutional_title_outside_excluded(self):
+        for r in read(ROOT / "data" / "derived" / "all-laws-v1" / "outcomes.csv"):
+            if ol.institutional_title(r["題名"]) and r["経路"] != "財政（税収見込み）":
+                self.assertEqual(r["結果"], "評価対象外", r["id"])
 
 
 if __name__ == "__main__":

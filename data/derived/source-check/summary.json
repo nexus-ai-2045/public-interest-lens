@@ -1,9 +1,9 @@
 {
-  "checkedLaws": 2221,
-  "items": 23724,
-  "match": 23525,
+  "checkedLaws": 2107,
+  "items": 22549,
+  "match": 22360,
   "mismatch": 0,
-  "notApplicable": 199,
+  "notApplicable": 189,
   "heldOut": [],
   "memberMismatch": 0
 }

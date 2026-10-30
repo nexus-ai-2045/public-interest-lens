@@ -201,7 +201,7 @@ function CatalogRow({ item, open, onToggle, ...peers }: RowProps) {
           : <span key={mark} className={`laws-mark${mark.startsWith('確かさ') ? ' is-certain' : mark === '参考の額' ? ' is-reference' : ''}`}>{mark}</span>)}</span>}
       </span>
       <span className="laws-row-amount">
-        {item.amount ? <><strong className={item.step === 'amounted' ? 'ref' : undefined}>{item.step === 'amounted' && <span className="laws-ref-tag">参考値</span>}{formatYen(item.amount.median)}</strong><small>幅 {formatYen(item.amount.low)}〜{formatYen(item.amount.high)}</small></> : <span className="laws-row-noamount">{STEP_LABEL[item.step]}</span>}
+        {item.amount ? <><strong className={item.step === 'amounted' ? 'ref' : undefined}>{item.step === 'amounted' && <span className="laws-ref-tag">参考値</span>}{formatYen(item.amount.median)}</strong><small>幅 {formatYen(item.amount.low)}〜{formatYen(item.amount.high)}</small></> : <span className="laws-row-noamount">{item.hiddenReason ?? STEP_LABEL[item.step]}</span>}
         <ChevronDown size={18} className="laws-chevron" aria-hidden="true" />
       </span>
     </button>
