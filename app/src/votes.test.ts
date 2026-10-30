@@ -12,7 +12,8 @@ const data = parseVotes(readFileSync(new URL('../public/distribution/votes.json'
 describe('法律ごとの賛否データ', () => {
   it('新しい順で、最新は2026年の法律です', () => {
     expect(lawYear(data.laws[0])).toBeGreaterThanOrEqual(2026);
-    const dates = data.laws.map(l => l.promulgated ?? '');
+    // 条約・承認は公布日が無いので、議決日（衆院、なければ参院）で並べる
+    const dates = data.laws.map(l => l.promulgated ?? l.shu?.date ?? l.san?.date ?? '');
     expect([...dates].sort().reverse()).toEqual(dates);
   });
   it('期間で絞ると、その年以降の法律だけが残ります', () => {
