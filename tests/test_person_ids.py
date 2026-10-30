@@ -334,3 +334,12 @@ class HistoricalRosterTest(unittest.TestCase):
         self.assertEqual(len(ledger.by_canonical["山田太郎"]), 1)  # 名簿にいる人と混ぜない
         self.assertNotIn("佐藤次郎", ledger.persons)
         self.assertTrue(any(u["氏名"] == "佐藤次郎" for u in ledger.undecided))
+
+    def test_glyph_variant_with_same_reading_becomes_alias_not_new_person(self) -> None:
+        from scripts.person_ids import build_ledger
+
+        roster = [{"院": "衆議院", "氏名": "斎藤 裕喜", "本名": "", "読み": "さいとう ゆうき", "会派": "自民", "選挙区": "東京1"}]
+        hist = [{"氏名": "齋藤裕喜", "読み": "さいとうゆうき", "院": "衆議院", "会派（最多）": "自民", "同姓同名の疑い": ""}]
+        ledger = build_ledger(roster, historical=hist)
+        self.assertEqual(len(ledger.persons), 1)
+        self.assertIn("齋藤裕喜", next(iter(ledger.persons.values())).aliases)

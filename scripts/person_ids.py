@@ -71,6 +71,16 @@ def clean_name(name: str) -> str:
     return normalize_name(FOOTNOTE_MARKS.sub("", normalize_name(name)))
 
 
+# 字体だけが違う同じ字の組（斎・齋・齊・斉 など）。canonical には入れない（別の姓の登録もあるため）が、
+# 元職の名簿を足すとき「読みが同じで、字体だけが違う」人を同じ人の表記として結ぶ根拠にする。
+GLYPH_GROUPS = ["斎齋齊斉", "辺邊邉", "高髙", "崎﨑嵜", "沢澤", "浜濱濵", "島嶋", "広廣", "桜櫻", "竜龍", "真眞", "国國", "関關", "徳德", "渕淵"]
+GLYPH = {c: g[0] for g in GLYPH_GROUPS for c in g}
+
+
+def glyph_equal(a: str, b: str) -> bool:
+    return len(a) == len(b) and all(GLYPH.get(x, x) == GLYPH.get(y, y) for x, y in zip(a, b))
+
+
 def canonical(name: str) -> str:
     """normalize_name と同じ正規化（NFKC・空白・敬称）に、脚注記号の除去と同一人物の字体ゆれの寄せを足す。"""
     return "".join(VARIANTS.get(c, c) for c in clean_name(name))
@@ -279,6 +289,13 @@ def build_ledger(roster: list[dict], cabinet: list[dict] | None = None, involvem
         if h.get("同姓同名の疑い"):
             ledger.undecided.append({"氏名": canon, "区分": "元職の名簿", "理由": "会議録の発言者の読みが複数ある（同姓同名の疑い）ので台帳に入れない", "件数": 1})
         elif canon not in ledger.by_canonical:
+            reading = re.sub(r"\s+", "", h["読み"])
+            twins = [q for q in ledger.persons.values()
+                     if q.reading and re.sub(r"\s+", "", q.reading) == reading and q.name != clean_name(h["氏名"]) and glyph_equal(canonical(q.name), canon)]
+            if len(twins) == 1:  # 読みが同じで字体だけ違う：同じ人の別表記（斎藤／齋藤 など）
+                twins[0].aliases.add(clean_name(h["氏名"]))
+                ledger.by_canonical[canon].append(twins[0])
+                continue
             houses = h["院"].split("・")
             _add(ledger, Person(canon, clean_name(h["氏名"]), h["読み"], houses[0] if len(houses) == 1 else "", "", h["会派（最多）"]))
     # 分けた名前が、院の分からない関与の行に出ていないかを一覧に残す。
