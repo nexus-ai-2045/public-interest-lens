@@ -48,7 +48,35 @@ def judge(title: str) -> tuple[str, str, str]:
     return "不明", "", "規則に当たらない（題名だけでは向きを決めない）"
 
 
+LABELS = Path("data/derived/unenacted-bills-v1/mechanism-labels.csv")
+# 本文を読んだ2系統が一致した仕組み → 向き（merge_mechanism_labels.py）
+MECH = {"規制緩和・競争促進": ("プラス", "P2"), "民営化": ("プラス", "P1"), "減税": ("プラス", "P3"),
+        "参入・価格・数量の規制強化": ("マイナス", "N3"), "国有化・公営化": ("マイナス", "N1"), "増税": ("マイナス", "N2")}
+
+
+def load_labels() -> dict[str, str]:
+    if not LABELS.exists():
+        return {}
+    with LABELS.open(encoding="utf-8", newline="") as f:
+        return {r["id"]: r["一致した仕組み"] for r in csv.DictReader(f) if r["一致した仕組み"]}
+
+
+def decide(id_: str, title: str, labels: dict[str, str]) -> tuple[str, str, str, str]:
+    """(向き, 規則, 根拠, 確かさ)。題名の規則と本文の2系統が食い違えば不明（片方だけなら採る）。"""
+    d, code, why = judge(title)
+    mech = labels.get(id_)
+    if code == "X1":  # 修正案・停止・凍結は本文があっても向きを決めない
+        return d, code, why, "低（題名の語）"
+    if mech:
+        md, mc = MECH[mech]
+        if d in ("プラス", "マイナス") and d != md:
+            return "不明", "", "題名の規則と本文の2系統が食い違う", "低（題名の語）"
+        return md, mc, f"本文を読んだ2系統（A・B）が一致：{mech}。{BY[mc][1]}", "低（本文の2系統一致）"
+    return d, code, why, "低（題名の語）"
+
+
 def main() -> None:
+    labels = load_labels()
     with SRC.open(encoding="utf-8", newline="") as f:
         rows = [r for r in csv.DictReader(f) if r["判定"] == "評価対象" and r["id"].rsplit("-", 1)[-1]]
     DST.parent.mkdir(parents=True, exist_ok=True)
@@ -57,10 +85,10 @@ def main() -> None:
         w = csv.writer(f, lineterminator="\n")
         w.writerow(HEADER)
         for r in rows:
-            d, code, why = judge(r["題名"])
+            d, code, why, conf = decide(r["id"], r["題名"], labels)
             n[d] += 1
             pt = {"プラス": 1, "マイナス": -1}.get(d, 0)
-            w.writerow([r["id"], r["題名"], d, pt, code, why, "低（題名の語）", "未計算" if code == "F1" else ""])
+            w.writerow([r["id"], r["題名"], d, pt, code, why, conf, "未計算" if code == "F1" else ""])
     print(f"評価対象 {len(rows)} 本：{n} → {DST}")
 
 

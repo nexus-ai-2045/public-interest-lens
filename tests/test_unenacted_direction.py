@@ -43,10 +43,10 @@ class OutputTest(unittest.TestCase):
         rows = list(csv.DictReader(DIR.open(encoding="utf-8")))
         for r in rows:
             self.assertEqual(int(r["提出の点"]), {"プラス": 1, "マイナス": -1, "不明": 0}[r["向き"]])
-            self.assertEqual(r["確かさ"], "低（題名の語）")
+            self.assertIn(r["確かさ"], ("低（題名の語）", "低（本文の2系統一致）"))
             if r["向き"] != "不明":
                 self.assertTrue(r["規則"] and r["根拠"])
-            self.assertEqual(bd.judge(r["題名"])[0], r["向き"])  # コミット済みが生成結果と同じ
+            self.assertEqual(bd.decide(r["id"], r["題名"], bd.load_labels())[0], r["向き"])  # コミット済みが生成結果と同じ
 
 
 class AggregateTest(unittest.TestCase):

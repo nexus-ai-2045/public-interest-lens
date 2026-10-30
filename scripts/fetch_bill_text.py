@@ -44,7 +44,8 @@ def page_lines(raw: bytes) -> list[str]:
 
 def verify(lines: list[str], title: str, kind: str, kai: int, num: int) -> str:
     """一致なら空、不一致なら理由。"""
-    if not lines or lines[0] != title:
+    page_title = re.sub(r"\s", "", lines[0].lstrip("●")) if lines else ""  # 新しいページは題名の頭に「●」が付く
+    if not lines or page_title != re.sub(r"\s", "", title):
         return f"題名不一致（ページ：{lines[0] if lines else '空'}）"
     sh = CODE[kind][1]
     if not any(l in (f"第{kan(kai)}回", f"第{kan_pos(kai)}回") for l in lines[:40]):
@@ -66,14 +67,14 @@ def main() -> None:
     if INDEX.exists():
         done = {r["id"]: r for r in csv.DictReader(INDEX.open(encoding="utf-8"))}
     for r in rows:
-        if r["id"] in done:
+        if r["id"] in done and done[r["id"]]["確認"] == "一致":
             continue
         kind, kai, num = r["種別"], int(r["提出回次"]), int(r["id"].rsplit("-", 1)[-1])
         url = f"{BASE}g{kai:03d}{CODE[kind][0]}{num:03d}.htm"
         try:
             lines = page_lines(urllib.request.urlopen(url, timeout=30).read())
             why = verify(lines, r["題名"], kind, kai, num)
-        except Exception as e:  # 404 など
+        except Exception as e:  # noqa: BLE001 404 など。理由に型名を残す
             lines, why = [], f"取得できず（{type(e).__name__}）"
         n = 0
         if not why:
