@@ -131,7 +131,18 @@ class Oecd:
                     self.series.setdefault((row["国"], row["産業"], row["価格"]), {})[int(row["年"])] = float(row["値"])
 
     def get(self, country: str, industry: str, price: str) -> dict[int, float]:
-        return self.series.get((country, industry, price), {})
+        """industry は「M+N」のように節を足せる（loss-batch の oecdAggregate と同じ。足す節がすべてそろった年だけ）。
+        日本の表6は M に N、R に S を含めて公表するので、日本だけ先頭の節がそのまま合計にあたる。"""
+        parts = industry.split("+")
+        if len(parts) == 1:
+            return self.series.get((country, industry, price), {})
+        series = [self.series.get((country, p, price)) for p in parts]
+        if country == "JPN" and series[0] and not any(series[1:]):
+            return series[0]
+        if not all(series):
+            return {}
+        years = set.intersection(*(set(x) for x in series))
+        return {y: sum(x[y] for x in series) for y in sorted(years)}
 
 
 def recompute(oecd: Oecd, industry: str, start: str, end_year: int, countries: list[str]) -> dict | None:
@@ -272,7 +283,7 @@ def check_law(law: dict, ctx: dict) -> list[dict[str, str]]:
 
     # 統計の原値と再計算（OECD 表6）
     formula = loss.get("計算式の要素", "") if loss else ""
-    m = re.search(r"OECD 表6 JPN [^（]*（([A-Z_]+)）", formula)
+    m = re.search(r"OECD 表6 JPN [^（]*（([A-Z_]+(?:\+[A-Z_]+)*)）", formula)
     if not m:
         add("再計算", law["amountMedianYen"], "", NA, "OECD 表6 以外の指標は再計算が未対応")
         return rows
@@ -306,7 +317,7 @@ def check_law(law: dict, ctx: dict) -> list[dict[str, str]]:
 
     # 原本（手元にあるときだけ）
     urls = {url for url in recorded if url}
-    urls |= {source_url(ctx["oecd_sources"], row["国"], industry) for row in ctx["oecd_rows"] if row["産業"] == industry}
+    urls |= {source_url(ctx["oecd_sources"], row["国"], industry) for row in ctx["oecd_rows"] if row["産業"] in industry.split("+")}
     for url in sorted(urls):
         for path, digest in ctx["manifest"].get(url, []):
             if path.exists():

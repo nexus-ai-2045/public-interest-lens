@@ -61,12 +61,12 @@ WHOLE = "経済全体"
 INDUSTRY = {
     "交通・移動": "H", "宿泊・観光": "I", "通信・ネット": "J", "金融": "K", "半導体・電子": "C",
     "農林水産": "A", "建設": "F", "住宅・不動産": "L", "教育": "P", "医療・福祉": "Q", "製造業": "C",
-    "商業": "G", "専門サービス・研究開発": "M", "文化・娯楽・生活サービス": "R",
+    "商業": "G", "専門サービス・研究開発": "M+N", "文化・娯楽・生活サービス": "R+S",
     "エネルギー": "D", "鉱業・採石": "B",
 }
 INDUSTRY_LABEL = {"_T": "全産業", "H": "運輸・保管", "I": "宿泊・飲食", "J": "情報通信", "K": "金融・保険", "C": "製造業",
                   "A": "農林水産業", "F": "建設業", "L": "不動産業", "P": "教育", "Q": "保健衛生・社会事業", "G": "卸売・小売業",
-                  "M": "専門・科学技術サービス業", "R": "芸術・娯楽",
+                  "M+N": "専門・科学技術、業務支援サービス業", "R+S": "芸術・娯楽・その他のサービス",
                   "D": "電気・ガス・蒸気・空調供給業", "B": "鉱業・採石業"}
 COVID_START = 2020
 ESTIMATED = "推定（公布日）"
@@ -114,7 +114,7 @@ def apply_sector_overrides(picks: dict[str, tuple[str, str, str]], overrides: li
     for row in overrides:
         law_id, section = row["id"], row["節"]
         if law_id in out and section in SECTION_FIELD and out[law_id][1] != "振り分け":
-            out[law_id] = (SECTION_FIELD[section], OVERRIDE_ORIGIN, section)
+            out[law_id] = (SECTION_FIELD[section], OVERRIDE_ORIGIN, INDUSTRY.get(SECTION_FIELD[section], section))
     return out
 
 
@@ -142,7 +142,8 @@ def align_by_title(picks: dict[str, tuple[str, str, str]], titles: dict[str, str
 
 
 def controls_for(oecd: Oecd, industry: str) -> list[str]:
-    return sorted({c for (c, ind, price) in oecd.series if c != "JPN" and ind == industry and price == "LR"})
+    # 「M+N」のように節を足す産業は、足す節がそろう国だけ（日本の表6は M に N、R に S を含めて公表するので、比較国も足して合わせる）
+    return sorted({c for (c, ind, price) in oecd.series if c != "JPN" and ind == industry.split("+")[0] and price == "LR" and oecd.get(c, industry, "LR")})
 
 
 def amount(oecd: Oecd, industry: str, start: str) -> tuple[dict | None, list[str], str]:

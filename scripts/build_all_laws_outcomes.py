@@ -161,6 +161,9 @@ class Stages:
         self.loss = by_id("loss", "loss.csv")
         self.benefit = by_id("benefit", "benefit.csv")
         self.publish = by_id("publish", "publish.csv")
+        covid = derived / "covid-response-v1" / "labels.csv"
+        # コロナ対応の法律は、施行後の窓がコロナの落ち込みと重なる。市場の損失の額は付けず、費用便益（covid-benefit-v1）で扱う
+        self.covid = {r["id"] for r in read_csv(covid) if r.get("コロナ対応") == "はい"} if covid.exists() else set()
 
 
 def no_market(t: dict[str, str]) -> bool:
@@ -197,6 +200,12 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     loss = st.loss.get(t["id"])
     pub = st.publish.get(t["id"])
     has_amount = bool(market and imp and loss and loss["損失または便益の額"].strip())
+
+    # 0) コロナ対応の法律：市場の損失の額は付けない（窓がコロナ期と重なる）。費用便益は全体指標の表（covid-benefit-v1）に出る
+    if has_amount and t["id"] in st.covid:
+        out.update(結果="保留", 経路="市場（コロナ対応）", 段階=loss["段階"], 向き=loss["向き"], 公開可否=pub["公開可否"] if pub else "",
+                   理由="コロナ対応の法律：施行後の窓がコロナの落ち込みと重なり、市場の損失の額はこの法律の効果と分けられない。額は費用便益（covid-benefit-v1）で扱う")
+        return out
 
     # 1) 額あり（後段の出力が優先。題名の規則で打ち消さない）
     if has_amount:

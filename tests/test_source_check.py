@@ -52,7 +52,7 @@ class SourceCheckTests(unittest.TestCase):
         checked = 0
         with (source_check.DERIVED / "loss-v1-triage-v2" / "loss.csv").open(encoding="utf-8") as handle:
             for row in csv.DictReader(handle):
-                industry = re.search(r"OECD 表6 JPN [^（]*（([A-Z_]+)）", row["計算式の要素"])
+                industry = re.search(r"OECD 表6 JPN [^（]*（([A-Z_]+(?:\+[A-Z_]+)*)）", row["計算式の要素"])
                 amount = re.search(r"中央値=(-?\d+);第1四分位=(-?\d+);第3四分位=(-?\d+)", row["損失または便益の額"])
                 countries = re.search(r"比較国：\d+か国（([A-Z・]+)）", row["計算式の要素"])
                 if not (industry and amount and countries):
