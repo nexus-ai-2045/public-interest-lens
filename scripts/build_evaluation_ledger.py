@@ -93,6 +93,8 @@ def classification(o: dict, a: dict | None, t: dict | None) -> tuple[str, str]:
 
 def reach(o: dict, m: dict | None) -> tuple[str, str, str]:
     """(到達点, 額の方法, 額)"""
+    if o["結果"] == "額あり" and o["経路"] == "財政（税収見込み）":
+        return "国の収支の額（GDP とは別欄）", "財務省の税制改正による国税の増減収見込み（順位・配分に使わない）", o["損失または便益の額"]
     if o["結果"] == "額あり":
         return "額（個別の因果の鎖）", "産業別の差の差・合成対照など（法律ごと）", o["損失または便益の額"]
     if m is not None and m["結果"] == "額":
