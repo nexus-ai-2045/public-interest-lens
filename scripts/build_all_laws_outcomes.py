@@ -168,6 +168,8 @@ class Stages:
         # 経済への直接効果の判定（econ-relevance-v1）：2系統が一致した「国・自治体の制度で民間のお金の流れを直接変えない」法律
         rel = derived / "econ-relevance-v1" / "labels.csv"
         self.institutional = {r["id"]: r["理由"] for r in read_csv(rel) if r["区分"] == "制度"} if rel.exists() else {}
+        fiscal = derived / "tax-impact-v1" / "fiscal.csv"
+        self.fiscal = {r["id"]: r for r in read_csv(fiscal) if r["平年度_億円"] != ""} if fiscal.exists() else {}
         self.covid = {r["id"] for r in read_csv(covid) if r.get("コロナ対応") == "はい"} if covid.exists() else set()
 
 
@@ -237,6 +239,13 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     loss = st.loss.get(t["id"])
     pub = st.publish.get(t["id"])
     has_amount = bool(market and imp and loss and loss["損失または便益の額"].strip())
+
+    # 00) 毎年の税制改正の法律：政府（財務省）の国税の増減収見込み。GDP への損失とは別の量なので、順位・合計・議員への配分には入れない
+    fx = st.fiscal.get(t["id"])
+    if fx:
+        out.update(結果="額あり", 経路="財政（税収見込み）", 確かさ="高", 損失または便益の額=fx["平年度_億円"], 単位="億円（国税の増減収見込み・平年度、マイナスは減収）",
+                   理由=f"{fx['理由']}。順位・合計・議員への配分には使わない")
+        return out
 
     # 0) コロナ対応の法律：市場の損失の額は付けない（窓がコロナ期と重なる）。費用便益は全体指標の表（covid-benefit-v1）に出る
     if has_amount and t["id"] in st.covid:

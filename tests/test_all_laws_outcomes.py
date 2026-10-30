@@ -24,7 +24,7 @@ def triage_row(**kw):
 class EmptyStages(ol.Stages):
     def __init__(self):
         self.agreement, self.impact, self.loss, self.benefit, self.publish = {}, {}, {}, {}, {}
-        self.covid, self.institutional, self.crowded = set(), {}, set()
+        self.covid, self.institutional, self.crowded, self.fiscal = set(), {}, set(), {}
 
 
 class LedgerTest(unittest.TestCase):
@@ -81,7 +81,12 @@ class LedgerTest(unittest.TestCase):
         crowded = ol.crowded_ids(loss)
         narrow = {r["id"] for r in loss if r["段階"] == "段階1" and (ol.narrow_measure(r["題名"]) or r["id"] in crowded)}
         # コロナ対応の法律は、損失表に額があっても台帳では保留にする（費用便益で扱う）
-        self.assertEqual({r["id"] for r in self.rows if r["結果"] == "額あり"}, with_amount - covid - narrow)
+        fiscal = {r["id"] for r in read(ROOT / "data" / "derived" / "tax-impact-v1" / "fiscal.csv") if r["平年度_億円"] != ""}
+        market = {r["id"] for r in self.rows if r["結果"] == "額あり" and r["経路"] != "財政（税収見込み）"}
+        self.assertEqual(market, with_amount - covid - narrow - fiscal)
+        # 税制改正の法律は財務省の増減収見込みを別の経路で付ける。損失表の額とは重ならず、順位・配分の対象にならない
+        self.assertFalse(fiscal & with_amount)
+        self.assertEqual({r["id"] for r in self.rows if r["経路"] == "財政（税収見込み）"}, fiscal)
         held = {r["id"]: r for r in self.rows}
         for law_id in with_amount & covid:
             self.assertEqual((held[law_id]["結果"], held[law_id]["経路"]), ("保留", "市場（コロナ対応）"), law_id)
