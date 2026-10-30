@@ -1,6 +1,7 @@
 """小さい架空入力で、npm buildの生成後検査と停止順序を確かめる。"""
 import copy
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -29,6 +30,9 @@ class MemberBuildGateTests(unittest.TestCase):
             dist.mkdir(parents=True)
             (root / "app/node_modules").mkdir()
             (dist / "ranking.json").write_text(json.dumps(ranking), encoding="utf-8")
+            # 物価・賛否・グラフ用の集計はこの検査の対象外。架空の空ファイルを置き、generate_artifacts.py は走らせない
+            for unused in ("price-index.json", "votes.json", "charts.json"):
+                (dist / unused).write_text("{}", encoding="utf-8")
             package = json.loads((ROOT / "app/package.json").read_text(encoding="utf-8"))
             package["scripts"]["build"] = 'node -e "require(\'fs\').writeFileSync(\'build-reached\', \'yes\')"'
             (root / "app/package.json").write_text(json.dumps(package), encoding="utf-8")
@@ -47,12 +51,6 @@ if (process.argv.includes('--attributions')) writeFileSync(process.argv[process.
                 path = root / "data" / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("unused\n", encoding="utf-8")
-            # prebuild は固定した OECD 表6から物価の換算表を作る。架空の入力は日本の名目・実質の2点だけ
-            va = root / "data/acquired/oecd-industry/industry_va.csv"
-            va.parent.mkdir(parents=True, exist_ok=True)
-            va.write_text("国,産業,指標,価格,年,値,単位,基準年\n"
-                          "JPN,_T,総付加価値（B1G）,V,2020,100,百万JPY,\n"
-                          "JPN,_T,総付加価値（B1G）,LR,2020,100,百万JPY,2020\n", encoding="utf-8")
             bad_amount = copy.deepcopy(primary)
             bad_amount["laws"][0]["amount"]["median"] = 101
             private_field = copy.deepcopy(primary)
@@ -70,7 +68,7 @@ if (process.argv.includes('--attributions')) writeFileSync(process.argv[process.
                     generation_calls.unlink(missing_ok=True)
                     for name, payload in (("members.json", member), ("members-reference.json", ref)):
                         (root / "scripts" / (name + ".fixture")).write_text(json.dumps(payload), encoding="utf-8")
-                    result = subprocess.run(["npm", "--prefix", "app", "run", "build"], cwd=root,
+                    result = subprocess.run(["npm", "--prefix", "app", "run", "build"], cwd=root, env={**os.environ, "KOKUZOKU_SKIP_GENERATE": "1"},
                                             capture_output=True, text=True, timeout=30)
                     output = result.stdout + result.stderr
                     self.assertEqual(generation_calls.read_text().splitlines(), ["generated"], output)

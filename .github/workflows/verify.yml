@@ -25,12 +25,10 @@ jobs:
           python-version: '3.12'
       - run: npm ci
         working-directory: app
-      # Git に置かない派生物（members.json と今の世代の catalog.sqlite3）を、リポの中のデータだけから作る
-      - run: python scripts/source_check.py --generate-ranking
-      - run: node scripts/build_public_members.mjs
-      # Git に置かない派生物（設計決定0022）：物価の換算表を固定した OECD 表6から作る
-      - run: python scripts/build_price_index.py
+      # 今の世代の catalog.sqlite3 を、リポの中のデータだけから作る
       - run: python -m scripts.build_public_distribution --input-root data/distribution/sources/world-bank --case data/distribution/case-source.json --output-root data/distribution/generated --public-dir app/public/distribution
+      # Git に置かない派生物（設計決定0022）を入力から作る（scripts/generate_artifacts.py の順）
+      - run: python scripts/generate_artifacts.py
       # CSV（speeches・industry_va）に頼るテストは tests/data_gated_tests.txt の分だけ skip される。一覧に無い skip は赤
       # 計算式のバックテスト：毎回今のデータで測り直し、結果をログに出す（定義は docs/adr/0020）
       - run: python scripts/backtest.py
