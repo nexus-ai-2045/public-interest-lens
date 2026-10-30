@@ -217,6 +217,14 @@ describe('field-expansion-v1 の新分野：OECD の節が未取得なら保留'
     });
   });
 
+  it('日本の OECD 表6は M に N、R に S を含めて公表するので、日本だけ先頭の節を使い、額が出る', () => {
+    const rows = [...oecdRows('JPN', 'M', jpFlat), ...['AUS', 'FRA', 'SWE'].flatMap(c => [...oecdRows(c, 'M', grow(1.02)), ...oecdRows(c, 'N', grow(1.02))])];
+    const [row] = evaluateLosses(oecdTables(rows), [stage1('専門・科学技術、業務支援サービス業の付加価値')], undefined, { includeStage1: true });
+    expect(row.built!.blocked).toBeUndefined();
+    expect(row.built!.input.treated.length).toBeGreaterThan(0);
+    expect(row.built!.input.controls.length).toBe(3);
+  });
+
   it('節が industry_va.csv に無いときは、エラーにせず「国際比較の系列が未取得」で保留にする（今ある H・I・J・K・_T だけの表）', () => {
     const only = oecdTables([...oecdRows('JPN', 'J', jpFlat), ...oecdRows('AUS', 'J', grow(1.02))]);
     for (const indicator of ['建設業の付加価値', '教育の付加価値（代理）', '専門・科学技術、業務支援サービス業の付加価値']) {
