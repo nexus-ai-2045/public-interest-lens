@@ -34,6 +34,7 @@ STEPS = [
     ("derived", DIST / "laws.json", [PY, "scripts/build_laws_catalog.py"]),
     ("derived", DIST / "law-outcomes.json", [PY, "scripts/build_law_outcomes_view.py"]),
     ("derived", DIST / "provisional.json", [PY, "scripts/build_provisional.py"]),
+    ("derived", DIST / "unenacted.json", [PY, "scripts/build_public_unenacted.py"]),
     ("derived", DIST / "charts.json", [PY, "scripts/build_database.py"]),
 ]
 

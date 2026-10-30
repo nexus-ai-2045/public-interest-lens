@@ -48,6 +48,7 @@ app/public/distribution/laws-detail/
 app/public/distribution/law-names.json
 app/public/distribution/law-outcomes.json
 app/public/distribution/provisional.json
+app/public/distribution/unenacted.json
 data/distribution/generated/generations/*/catalog.sqlite3
 
 # 大容量の復元入力。公開可否と配布を確認するまでGitへ追加しない。

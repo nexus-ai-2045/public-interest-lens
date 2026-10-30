@@ -7,6 +7,7 @@ import { LawCatalog } from './LawCatalog';
 import { ProvisionalPanel } from './ProvisionalPanel';
 import { collapseObservations, formatYen, lawsCatalogUrl, parseLawsCatalog, type CatalogItem, type CatalogStep, type LawsCatalog } from './laws-catalog';
 import { plainLawName } from './law-name';
+import { UnenactedBills } from './UnenactedBills';
 import { LensFilterBar, MultiSelect } from './LensFilterBar';
 import { BLOCS, blocStance, parseVotes, distributionVotesUrl, type Bloc, type VoteLaw } from './votes';
 import { CHARACTERS, CHARACTER_LABEL, characterOf, type Character } from './law-character';
@@ -108,6 +109,7 @@ export function LawRankingPage() {
           <p className="fine-note">同じ観測（同じ額の系列・同じ期間）の法律は同じ額を共有するので、棒には代表の1本だけを並べています。足し合わせないでください。ほかの法律と参考の額は下の一覧にあります。上の「国賊／国士」を切り替えると、反対側の上位に変わります。</p>
         </section>}
         <LawCatalog data={view ?? data} />
+        <UnenactedBills natures={natures} />
         <details className="law-funnel-box">
           <summary>どこで止まったか（件数の絞り込み）</summary>
           <section aria-label="件数の絞り込み" className="law-funnel">
