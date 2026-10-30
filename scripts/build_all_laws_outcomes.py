@@ -24,6 +24,7 @@ data/derived/all-laws-v1/spec.md が同じ内容。
 from __future__ import annotations
 
 import csv
+import re
 from collections import Counter
 from pathlib import Path
 
@@ -178,6 +179,15 @@ def market_fields(t: dict[str, str]) -> tuple[str, str]:
     return t["分野"], t["指標"]
 
 
+# 範囲が狭い税の特例（臨時特例など）。産業全体の差を丸ごと当てると桁違いに大きくなる（水田農業の補助金の税の特例が14兆円など）ので、
+# 限定的（段階1）の額は付けない。額は産業全体の動きで、この法律が動かした分とは言えないため。
+NARROW_MEASURE = re.compile(r"臨時特例|所得税及び法人税")
+
+
+def narrow_measure(title: str) -> bool:
+    return bool(NARROW_MEASURE.search(title))
+
+
 def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dict[str, str]:
     """1本の結果。law は enacted の行、t は triage の行、date は施行日（無ければ空）。"""
     title = law["題名"]
@@ -208,6 +218,12 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     if has_amount and t["id"] in st.covid:
         out.update(結果="保留", 経路="市場（コロナ対応）", 段階=loss["段階"], 向き=loss["向き"], 公開可否=pub["公開可否"] if pub else "",
                    理由="コロナ対応の法律：施行後の窓がコロナの落ち込みと重なり、市場の損失の額はこの法律の効果と分けられない。額は費用便益（covid-benefit-v1）で扱う")
+        return out
+
+    # 0b) 範囲が狭い特例の限定的（段階1）の額は付けない
+    if has_amount and loss["段階"] == "段階1" and narrow_measure(title):
+        out.update(結果="保留", 経路="市場（範囲が狭い特例）", 段階=loss["段階"], 向き=loss["向き"], 公開可否=pub["公開可否"] if pub else "",
+                   理由="範囲が狭い税の特例で、産業全体の差を当てると過大になる（この法律が動かした分と言えない）。額は付けない")
         return out
 
     # 1) 額あり（後段の出力が優先。題名の規則で打ち消さない）

@@ -23,8 +23,10 @@ from pathlib import Path
 
 try:
     from scripts.generation_provenance import generation_metadata
+    from scripts.build_all_laws_outcomes import narrow_measure
 except ModuleNotFoundError:
     from generation_provenance import generation_metadata
+    from build_all_laws_outcomes import narrow_measure
 
 ROOT = Path(__file__).resolve().parents[1]
 DERIVED = ROOT / "data" / "derived"
@@ -377,7 +379,7 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
         row = publish.get(law_id)
         title = census_row["題名"]
         # コロナ対応の法律は、市場の損失の額が付いていても使わず、費用便益（covid-benefit-v1）か規模つきの理由で出す（全法律の結果と同じ扱い）
-        if not row or row["損失または便益"] == "保留" or law_id in covid_ids:
+        if not row or row["損失または便益"] == "保留" or law_id in covid_ids or (narrow_measure(title) and loss.get(law_id, {}).get("段階") == "段階1"):
             if approve_all and law_id in macro and law_id not in held_by_check:
                 extra = _covid_sources(covid_rules[law_id], covid_spending, covid_params) if law_id in covid_rules else []
                 laws.append(_macro_law(macro[law_id], list(dict.fromkeys(_sources(law_id, enacted, enforcement) + extra))))

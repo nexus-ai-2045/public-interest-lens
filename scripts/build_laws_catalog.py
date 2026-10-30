@@ -315,7 +315,8 @@ def build() -> dict:
             })
             if law["amountLowYen"] < 0 < law["amountHighYen"]:
                 item["marks"].append("向きが定まらない（幅が0をまたぐ）")
-            item["summary"] = ("損失" if law["side"] == "loss" else "便益") + f"の推計（{law['window']}・{law['indicator']}）"
+            kind = "参考値" if law["certainty"] == "参考" else "推計"
+            item["summary"] = ("損失" if law["side"] == "loss" else "便益") + f"の{kind}（{law['window']}・{law['indicator']}）"
             known = {source["url"] for source in item["sources"]}
             item["sources"] += [link for link in source_links(law["sources"]) if link["url"] not in known]
             if law_id in covid_benefit:
@@ -335,7 +336,7 @@ def build() -> dict:
         if not item["sources"]:
             item["sources"].append({"label": "衆議院 成立した法律の一覧", "url": census["出典URL"]})
         if law:
-            result = ("損失" if law["side"] == "loss" else "便益") + f"の推計 {yen(law['amountMedianYen'])}（幅 {yen(law['amountLowYen'])}〜{yen(law['amountHighYen'])}、{CERTAINTY[law['certainty']]}）"
+            result = ("損失" if law["side"] == "loss" else "便益") + f"の{'参考値' if law['certainty'] == '参考' else '推計'} {yen(law['amountMedianYen'])}（幅 {yen(law['amountLowYen'])}〜{yen(law['amountHighYen'])}、{CERTAINTY[law['certainty']]}）"
         else:
             result = item["summary"]
         item["overview"] = overview(census, speeches.get(law_id), written.get(law_id), result, ambiguous(law_id))

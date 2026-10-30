@@ -295,6 +295,8 @@ export function warekiDate(text: string): string {
 const partyList = (text: string | undefined): string[] => (text ?? '').split(/[;；]/).map(x => x.trim()).filter(Boolean);
 
 export const covidHeld = (p: Record<string, string>): boolean => p['判定表の行'] === 'R3';
+/** 範囲が狭い税の特例の限定的（段階1）の額は付けない（scripts/build_all_laws_outcomes.py の narrow_measure と同じ規則）。 */
+export const narrowHeld = (p: Record<string, string>, l: Record<string, string>): boolean => l['段階'] === '段階1' && /臨時特例|所得税及び法人税/.test(p['題名']);
 
 export function buildMembers(input: MemberInputs): PublicMembers {
   const listed = input.listed === undefined ? null : new Set(input.listed);
@@ -327,14 +329,14 @@ export function buildMembers(input: MemberInputs): PublicMembers {
   for (const p of publish) {
     const l = loss.get(p.id);
     const amount = parseAmount(p['損失または便益']);
-    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || covidHeld(p)) continue;
+    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || covidHeld(p) || narrowHeld(p, l)) continue;
     const key = observationKey(l, p);
     observationLaws.set(key, (observationLaws.get(key) ?? 0) + 1);
   }
   for (const p of publish) {
     const l = loss.get(p.id);
     const amount = parseAmount(p['損失または便益']);
-    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || !involvedLaws.has(p.id) || covidHeld(p)) continue;
+    if (!l || !l['損失または便益の額'] || l['参考フラグ'] === '参考' || !amount || !involvedLaws.has(p.id) || covidHeld(p) || narrowHeld(p, l)) continue;
     const vote = votes.get(p.id);
     if (!vote || !vote.URL.startsWith('https://www.sangiin.go.jp/')) throw new Error(`参議院の投票の記録がありません: ${p.id}`);
     const bill = enacted.get(p.id);
