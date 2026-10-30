@@ -163,6 +163,9 @@ class Stages:
         self.publish = by_id("publish", "publish.csv")
         covid = derived / "covid-response-v1" / "labels.csv"
         # コロナ対応の法律は、施行後の窓がコロナの落ち込みと重なる。市場の損失の額は付けず、費用便益（covid-benefit-v1）で扱う
+        # 経済への直接効果の判定（econ-relevance-v1）：2系統が一致した「国・自治体の制度で民間のお金の流れを直接変えない」法律
+        rel = derived / "econ-relevance-v1" / "labels.csv"
+        self.institutional = {r["id"]: r["理由"] for r in read_csv(rel) if r["区分"] == "制度"} if rel.exists() else {}
         self.covid = {r["id"] for r in read_csv(covid) if r.get("コロナ対応") == "はい"} if covid.exists() else set()
 
 
@@ -246,6 +249,10 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
 
     # 4) 市場の産業がない法律：マクロ指標の代理 → 評価対象外 → 測定できない
     out["分野"] = out["分野"] or NO_FIELD
+    if t["id"] in st.institutional and t["id"] not in st.covid:  # コロナ対応は費用便益の表に載せる
+        out.update(結果="評価対象外", 経路="経済への直接効果なし",
+                   理由=f"国・自治体の制度の法律で、民間の売上・費用・給付・税・規制の負担を直接は変えない（AI 2系統の判定：{st.institutional[t['id']]}）。経済に絞る方針の外")
+        return out
     mr = macro_rule(title)
     if mr:
         sign, label, indicator, word = mr
