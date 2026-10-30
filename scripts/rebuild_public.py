@@ -131,6 +131,9 @@ def rebuild(record: Record = _print) -> bool:
     # 暫定評価（provisional-v1）。直近の法律の件数と政策カードを、laws.json に合わせて作り直す。
     if not _command(record, "暫定評価：provisional.json", [py, "scripts/build_provisional.py"]):
         return False
+    # 未成立の提出法案の暫定規模点（R61）。公開ファイル unenacted.json にする。
+    if not _command(record, "未成立の提出法案：unenacted.json", [py, "scripts/build_public_unenacted.py"]):
+        return False
     # 物価の換算表（price-v1）。法律の額を最新年の円に直して並べるのに使う。
     if not _command(record, "物価の換算表：price-index.json", [py, "scripts/build_price_index.py"]):
         return False
