@@ -58,7 +58,7 @@ describe('政党ランキング', () => {
 
 it('一覧の所属：現職は党名、元職は参議院の最終会派つきで「元職」、表が読めるまでは空', () => {
   const now = new Map([['甲', '自民']]);
-  const last = new Map([['乙', '立憲']]);
+  const last = new Map([['乙', '参議院の最終会派：立憲']]);
   expect(partyLabel('甲', now, true, last)).toBe('自民');
   expect(partyLabel('乙', now, true, last)).toBe('元職（参議院の最終会派：立憲）');
   expect(partyLabel('丙', now, true, last)).toBe('元職');

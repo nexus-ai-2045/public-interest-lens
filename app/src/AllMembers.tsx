@@ -5,7 +5,7 @@ import { pageCount, pageSlice } from './law-ranking-view';
 import type { PublicMember } from './members-build';
 import type { PublicMembersReference } from './members-reference';
 import { LawName, namingOf, useLawNames } from './law-name';
-import { breakdownOf, filterRows, joinConfirmed, partiesOf, SORT_LABEL, sortRows, type HouseFilter, type Row, type SortKey } from './all-members-view';
+import { breakdownOf, filterRows, formerNote, joinConfirmed, partiesOf, SORT_LABEL, sortRows, type HouseFilter, type Row, type SortKey } from './all-members-view';
 
 const signed = (v: number) => v === 0 ? '0円' : `${v < 0 ? '−' : '＋'}${formatYen(Math.abs(v))}`;
 const tone = (v: number | null) => v === null || v === 0 ? 'zero' : v < 0 ? 'loss' : 'benefit';
@@ -59,7 +59,7 @@ export function AllMembers({ confirmed, data, error }: { confirmed: PublicMember
       <ol className="all-members-list" start={(page - 1) * 50 + 1}>{pageSlice(shown, page).map(row => <li key={row.id}>
         <details>
           <summary>
-            <span className="all-member-name">{row.name}{row.current ? <small>{row.current.house === '衆議院' ? '衆' : '参'}・{row.current.party}・{row.current.district}</small> : <small>{row.lastSangiinParty ? `元職（参議院の最終会派：${row.lastSangiinParty}）` : '元職・当時'}</small>}</span>
+            <span className="all-member-name">{row.name}{row.current ? <small>{row.current.house === '衆議院' ? '衆' : '参'}・{row.current.party}・{row.current.district}</small> : <small>{formerNote(row) ? `元職（${formerNote(row)}）` : '元職・当時'}</small>}</span>
             <span className={`all-member-amount ${tone(row.confirmed)}`}><span className="badge confirmed">確かな額</span>{row.confirmed === null ? '—' : signed(row.confirmed)}</span>
             <span className={`all-member-amount ${tone(row.net.median)}`}><span className="badge reference">参考</span>{signed(row.net.median)}</span>
             <span className="all-member-laws-count">{row.laws}本</span>
