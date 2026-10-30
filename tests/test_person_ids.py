@@ -315,3 +315,31 @@ class TypeScriptParityTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class HistoricalRosterTest(unittest.TestCase):
+    """元職の名簿（会議録の発言者から確かめた人）を台帳に足す決まり。"""
+
+    def test_adds_new_name_but_not_same_name_or_suspected_namesake(self) -> None:
+        from scripts.person_ids import build_ledger
+
+        roster = [{"院": "衆議院", "氏名": "山田 太郎", "本名": "", "読み": "やまだ たろう", "会派": "自民", "選挙区": "東京1"}]
+        hist = [
+            {"氏名": "鈴木一郎", "読み": "すずき いちろう", "院": "参議院", "会派（最多）": "民主党", "同姓同名の疑い": ""},
+            {"氏名": "山田太郎", "読み": "やまだ たろう", "院": "衆議院", "会派（最多）": "自民", "同姓同名の疑い": ""},
+            {"氏名": "佐藤次郎", "読み": "さとう じろう", "院": "衆議院", "会派（最多）": "自民", "同姓同名の疑い": "はい"},
+        ]
+        ledger = build_ledger(roster, historical=hist)
+        self.assertEqual(ledger.persons["鈴木一郎"].house, "参議院")
+        self.assertEqual(len(ledger.by_canonical["山田太郎"]), 1)  # 名簿にいる人と混ぜない
+        self.assertNotIn("佐藤次郎", ledger.persons)
+        self.assertTrue(any(u["氏名"] == "佐藤次郎" for u in ledger.undecided))
+
+    def test_glyph_variant_with_same_reading_becomes_alias_not_new_person(self) -> None:
+        from scripts.person_ids import build_ledger
+
+        roster = [{"院": "衆議院", "氏名": "斎藤 裕喜", "本名": "", "読み": "さいとう ゆうき", "会派": "自民", "選挙区": "東京1"}]
+        hist = [{"氏名": "齋藤裕喜", "読み": "さいとうゆうき", "院": "衆議院", "会派（最多）": "自民", "同姓同名の疑い": ""}]
+        ledger = build_ledger(roster, historical=hist)
+        self.assertEqual(len(ledger.persons), 1)
+        self.assertIn("齋藤裕喜", next(iter(ledger.persons.values())).aliases)

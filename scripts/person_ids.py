@@ -3,6 +3,7 @@
 
 入力（すべてリポジトリ内）
 - 現職の名簿 data/acquired/diet-roster/current.csv（院・氏名・読み・会派・選挙区）
+- 元職の名簿 data/acquired/diet-roster/historical.csv（会議録の発言者から確かめた人。scripts/fetch_roster_kokkai.py）
 - 歴代の大臣・副大臣・政務官 data/acquired/office-holders/cabinet.csv
 - 関与の一覧 data/derived/allocation-v1/involvements.csv（氏名・院）
 
@@ -39,6 +40,7 @@ if str(ROOT) not in sys.path:
 from scripts.allocation_involvements import normalize_name  # noqa: E402
 
 ROSTER = ROOT / "data" / "acquired" / "diet-roster" / "current.csv"
+HISTORICAL = ROOT / "data" / "acquired" / "diet-roster" / "historical.csv"
 CABINET = ROOT / "data" / "acquired" / "office-holders" / "cabinet.csv"
 INVOLVEMENTS = ROOT / "data" / "derived" / "allocation-v1" / "involvements.csv"
 REFERENCE = ROOT / "app" / "public" / "distribution" / "members-reference.json"
@@ -67,6 +69,16 @@ FOOTNOTE_MARKS = re.compile(r"[*※†‡]+$")
 def clean_name(name: str) -> str:
     """normalize_name に、末尾の脚注記号を除く（藤村修* → 藤村修）。字体の置き換えはしない。"""
     return normalize_name(FOOTNOTE_MARKS.sub("", normalize_name(name)))
+
+
+# 字体だけが違う同じ字の組（斎・齋・齊・斉 など）。canonical には入れない（別の姓の登録もあるため）が、
+# 元職の名簿を足すとき「読みが同じで、字体だけが違う」人を同じ人の表記として結ぶ根拠にする。
+GLYPH_GROUPS = ["斎齋齊斉", "辺邊邉", "高髙", "崎﨑嵜", "沢澤", "浜濱濵", "島嶋", "広廣", "桜櫻", "竜龍", "真眞", "国國", "関關", "徳德", "渕淵"]
+GLYPH = {c: g[0] for g in GLYPH_GROUPS for c in g}
+
+
+def glyph_equal(a: str, b: str) -> bool:
+    return len(a) == len(b) and all(GLYPH.get(x, x) == GLYPH.get(y, y) for x, y in zip(a, b))
 
 
 def canonical(name: str) -> str:
@@ -236,7 +248,7 @@ def _new(ledger: Ledger, canon: str, r: dict, pid: str) -> None:
 
 def build_ledger(roster: list[dict], cabinet: list[dict] | None = None, involvements: list[dict] | None = None,
                  previous: list[dict] | None = None, overrides: dict[tuple[str, str], str] | None = None,
-                 reference: list[dict] | None = None) -> Ledger:
+                 reference: list[dict] | None = None, historical: list[dict] | None = None) -> Ledger:
     """名簿の人物に、内閣名簿と関与の一覧にしか出ない人物（元職など）を足す。別表記は同じ人物IDに集める。
     previous（前の persons.csv）の人物は、人物IDを変えずに引き継ぐ。"""
     ledger = Ledger()
@@ -270,6 +282,22 @@ def build_ledger(roster: list[dict], cabinet: list[dict] | None = None, involvem
         canon = canonical(m.get("name") or m["id"])
         if canon and canon not in ledger.by_canonical:
             _add(ledger, Person(canon, clean_name(m.get("name") or m["id"]), house="参議院" if m.get("lastSangiinParty") else ""))
+    # 元職の名簿（会議録の発言者から確かめた人。scripts/fetch_roster_kokkai.py）。台帳に同じ氏名がいれば結ばない（同姓同名を混ぜない）。
+    # 読みが複数ある（同姓同名の疑い）人は台帳に入れず、一覧に残す。
+    for h in historical or []:
+        canon = canonical(h["氏名"])
+        if h.get("同姓同名の疑い"):
+            ledger.undecided.append({"氏名": canon, "区分": "元職の名簿", "理由": "会議録の発言者の読みが複数ある（同姓同名の疑い）ので台帳に入れない", "件数": 1})
+        elif canon not in ledger.by_canonical:
+            reading = re.sub(r"\s+", "", h["読み"])
+            twins = [q for q in ledger.persons.values()
+                     if q.reading and re.sub(r"\s+", "", q.reading) == reading and q.name != clean_name(h["氏名"]) and glyph_equal(canonical(q.name), canon)]
+            if len(twins) == 1:  # 読みが同じで字体だけ違う：同じ人の別表記（斎藤／齋藤 など）
+                twins[0].aliases.add(clean_name(h["氏名"]))
+                ledger.by_canonical[canon].append(twins[0])
+                continue
+            houses = h["院"].split("・")
+            _add(ledger, Person(canon, clean_name(h["氏名"]), h["読み"], houses[0] if len(houses) == 1 else "", "", h["会派（最多）"]))
     # 分けた名前が、院の分からない関与の行に出ていないかを一覧に残す。
     for canon, ps in sorted(ledger.by_canonical.items()):
         if len(ps) < 2:
@@ -327,6 +355,7 @@ def main(argv=None) -> int:
     p.add_argument("--overrides", type=Path, default=OVERRIDES, help="同姓同名の行を人物IDに結ぶ対応表（法律ID,証拠URL,人物ID,根拠URL）")
     p.add_argument("--previous", type=Path, help="前の persons.csv（既定は出力先の persons.csv）。付けた人物IDはここから引き継いで変えない")
     p.add_argument("--reference", type=Path, default=REFERENCE, help="前に作った全議員の表。歴代の人を台帳に残すために読む")
+    p.add_argument("--historical", type=Path, default=HISTORICAL, help="元職の名簿（会議録の発言者から確かめた人）")
     p.add_argument("--annotate-involvements", action="store_true", help="関与の一覧に人物ID列を足し直し、役職を canonical で照合し直す")
     a = p.parse_args(argv)
     inv = read_csv(a.involvements) if a.involvements.exists() else []
@@ -334,7 +363,8 @@ def main(argv=None) -> int:
     previous = a.previous or a.out_dir / "persons.csv"
     ledger = build_ledger(read_csv(a.roster), cabinet, inv, read_csv(previous) if previous.exists() else None,
                           load_overrides(a.overrides),
-                          json.loads(a.reference.read_text(encoding="utf-8"))["members"] if a.reference.exists() else None)
+                          json.loads(a.reference.read_text(encoding="utf-8"))["members"] if a.reference.exists() else None,
+                          read_csv(a.historical) if a.historical.exists() else None)
     rows = [{"人物ID": q.id, "氏名": q.name, "読み": q.reading, "院": q.house, "選挙区": q.district, "別表記": "／".join(sorted(q.aliases))}
             for q in sorted(ledger.persons.values(), key=lambda q: q.id)]
     write_csv(a.out_dir / "persons.csv", PERSON_HEADER, rows)

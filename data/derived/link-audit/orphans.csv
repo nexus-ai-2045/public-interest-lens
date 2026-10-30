@@ -22,32 +22,6 @@
 圧力団体の立場→法律,acquired/pressure-groups/positions.csv,22,空欄,
 圧力団体の立場→法律,acquired/pressure-groups/positions.csv,23,空欄,
 圧力団体の立場→法律,acquired/pressure-groups/positions.csv,24,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,6,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,9,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,14,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,16,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,22,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,25,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,26,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,28,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,30,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,34,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,35,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,39,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,46,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,50,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,59,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,61,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,62,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,72,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,73,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,75,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,83,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,85,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,88,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,89,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,95,空欄,
-族議員の表→人物ID,derived/zoku-v1/member-field-ties.csv,97,空欄,
 支部の政党交付金→人物ID,derived/party-subsidy/branch-subsidy-2025.csv,2,空欄,
 支部の政党交付金→人物ID,derived/party-subsidy/branch-subsidy-2025.csv,3,空欄,
 支部の政党交付金→人物ID,derived/party-subsidy/branch-subsidy-2025.csv,4,空欄,
@@ -248,406 +222,70 @@
 支部の政党交付金→人物ID,derived/party-subsidy/branch-subsidy-2025.csv,283,空欄,
 支部の政党交付金→人物ID,derived/party-subsidy/branch-subsidy-2025.csv,285,空欄,
 支部の政党交付金→人物ID,derived/party-subsidy/branch-subsidy-2025.csv,297,空欄,
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,7,台帳に無い,青柳 陽一郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,20,台帳に無い,東 克哉
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,29,台帳に無い,阿部 知子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,31,台帳に無い,阿部 祐美子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,32,台帳に無い,荒井 優
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,33,台帳に無い,新垣 邦男
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,36,台帳に無い,安藤 じゅん子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,50,台帳に無い,石川 香織
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,60,台帳に無い,礒﨑 哲史
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,61,台帳に無い,市來 伴子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,79,台帳に無い,猪口 幸子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,98,台帳に無い,梅谷 守
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,104,台帳に無い,江田 憲司
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,113,台帳に無い,大石 あきこ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,115,台帳に無い,大河原 まさこ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,116,台帳に無い,大串 博志
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,122,台帳に無い,大塚 小百合
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,123,台帳に無い,おおつき 紅葉
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,124,台帳に無い,大椿 ゆうこ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,125,台帳に無い,大西 健介
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,131,台帳に無い,岡田 悟
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,132,台帳に無い,岡田 華子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,135,台帳に無い,岡本 あき子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,142,台帳に無い,奥村 政佳
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,149,台帳に無い,尾辻󠄀 秀久
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,176,台帳に無い,鎌田 さゆり
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,185,台帳に無い,川原田 英世
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,190,台帳に無い,菊池 大二郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,194,台帳に無い,岸田 光広
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,201,台帳に無い,吉良 州司
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,212,台帳に無い,源馬 謙太郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,215,台帳に無い,神津 たけし
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,237,台帳に無い,小山 展弘
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,246,台帳に無い,齋藤 裕喜
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,247,台帳に無い,齋藤 嘉隆
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,250,台帳に無い,坂本 祐之輔
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,252,台帳に無い,櫻井 周
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,255,台帳に無い,佐々木 ナオミ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,269,台帳に無い,篠原 豪
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,271,台帳に無い,柴田 勝之
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,277,台帳に無い,下条 みつ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,278,台帳に無い,下野 幸助
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,292,台帳に無い,杉村 慎治
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,294,台帳に無い,鈴木 敦
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,299,台帳に無い,鈴木 岳幸
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,302,台帳に無い,鈴木 庸介
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,308,台帳に無い,仙田 晃宏
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,309,台帳に無い,宗野 創
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,310,台帳に無い,空本 誠喜
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,317,台帳に無い,高橋 永
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,320,台帳に無い,髙橋 英明
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,322,台帳に無い,たがや 亮
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,327,台帳に無い,竹内 千春
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,352,台帳に無い,辻 英之
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,357,台帳に無い,堤 かなめ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,361,台帳に無い,手塚 仁雄
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,363,台帳に無い,寺田 学
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,371,台帳に無い,徳安 淳子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,385,台帳に無い,中谷 一馬
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,391,台帳に無い,長友 よしひろ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,403,台帳に無い,西川 厚志
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,404,台帳に無い,西川 将人
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,414,台帳に無い,額賀 福志郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,425,台帳に無い,橋本 慧悟
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,428,台帳に無い,長谷川 嘉一
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,433,台帳に無い,鳩山 紀一郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,439,台帳に無い,馬場 雄基
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,444,台帳に無い,林 佑美
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,447,台帳に無い,伴野 豊
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,451,台帳に無い,平岩 征樹
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,463,台帳に無い,福島 伸享
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,466,台帳に無い,福田 玄
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,467,台帳に無い,福田 淳太
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,473,台帳に無い,藤岡 たかお
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,476,台帳に無い,藤巻 健太
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,479,台帳に無い,藤原 規眞
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,480,台帳に無い,太 栄志
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,495,台帳に無い,本庄 知史
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,503,台帳に無い,升田 世喜男
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,504,台帳に無い,松尾 明弘
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,506,台帳に無い,松木けんこう
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,510,台帳に無い,松田 功
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,519,台帳に無い,眞野 哲
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,524,台帳に無い,水沼 秀幸
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,525,台帳に無い,水野 素子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,526,台帳に無い,三角 創太
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,529,台帳に無い,道下 大樹
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,530,台帳に無い,緑川 貴士
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,535,台帳に無い,宮川 伸
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,536,台帳に無い,宮口 治子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,557,台帳に無い,守島 正
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,558,台帳に無い,森田 俊和
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,565,台帳に無い,矢﨑 堅太郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,567,台帳に無い,谷田川 元
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,570,台帳に無い,柳沢 剛
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,571,台帳に無い,八幡 愛
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,573,台帳に無い,山川 仁
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,574,台帳に無い,山岸 一生
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,580,台帳に無い,山口 良治
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,581,台帳に無い,山﨑 誠
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,596,台帳に無い,屋良 朝博
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,605,台帳に無い,吉田 はるみ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,606,台帳に無い,米山 隆一
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,612,台帳に無い,和田 有一朗
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,633,台帳に無い,青柳 陽一郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,634,台帳に無い,青柳 陽一郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,674,台帳に無い,東 克哉
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,675,台帳に無い,東 克哉
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,696,台帳に無い,阿部 知子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,697,台帳に無い,阿部 知子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,698,台帳に無い,阿部 知子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,699,台帳に無い,阿部 知子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,703,台帳に無い,阿部 祐美子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,704,台帳に無い,阿部 祐美子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,705,台帳に無い,荒井 優
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,706,台帳に無い,荒井 優
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,707,台帳に無い,新垣 邦男
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,708,台帳に無い,新垣 邦男
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,713,台帳に無い,安藤 じゅん子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,714,台帳に無い,安藤 じゅん子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,717,台帳に無い,五十嵐 えり
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,718,台帳に無い,五十嵐 えり
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,739,台帳に無い,石井 智恵
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,740,台帳に無い,石井 智恵
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,752,台帳に無い,石川 香織
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,753,台帳に無い,石川 香織
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,754,台帳に無い,石川 香織
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,778,台帳に無い,礒﨑 哲史
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,779,台帳に無い,礒﨑 哲史
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,780,台帳に無い,礒﨑 哲史
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,783,台帳に無い,市來 伴子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,784,台帳に無い,市來 伴子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,833,台帳に無い,猪口 幸子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,834,台帳に無い,猪口 幸子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,876,台帳に無い,上村 英明
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,886,台帳に無い,梅谷 守
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,887,台帳に無い,梅谷 守
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,888,台帳に無い,梅谷 守
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,903,台帳に無い,江田 憲司
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,904,台帳に無い,江田 憲司
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,905,台帳に無い,江田 憲司
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,931,台帳に無い,大石 あきこ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,932,台帳に無い,大石 あきこ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,936,台帳に無い,大河原 まさこ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,937,台帳に無い,大河原 まさこ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,938,台帳に無い,大串博志
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,939,台帳に無い,大串博志
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,958,台帳に無い,おおたけ りえ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,959,台帳に無い,大塚 小百合
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,960,台帳に無い,大塚 小百合
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,961,台帳に無い,おおつき 紅葉
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,962,台帳に無い,おおつき 紅葉
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,963,台帳に無い,おおつき 紅葉
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,964,台帳に無い,大椿 ゆうこ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,965,台帳に無い,大椿 ゆうこ
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,966,台帳に無い,大西 健介
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,967,台帳に無い,大西 健介
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,968,台帳に無い,大西 健介
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,969,台帳に無い,大西 健介
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,984,台帳に無い,岡田 悟
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,985,台帳に無い,岡田 悟
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,987,台帳に無い,岡田 華子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,988,台帳に無い,岡田 華子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,992,台帳に無い,岡本 あき子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,993,台帳に無い,岡本 あき子
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1015,台帳に無い,奥村 政佳
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1016,台帳に無い,奥村 政佳
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1026,台帳に無い,小澤 雅仁
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1027,台帳に無い,小澤 雅仁
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1038,台帳に無い,尾辻󠄀 秀久
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1039,台帳に無い,尾辻󠄀 秀久
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1040,台帳に無い,尾辻󠄀 秀久
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1116,台帳に無い,鎌田 さゆり
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1117,台帳に無い,鎌田 さゆり
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1142,台帳に無い,川原田 英世
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1143,台帳に無い,川原田 英世
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1144,台帳に無い,川原田 英世
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1166,台帳に無い,菊池 大二郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1167,台帳に無い,菊池 大二郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1168,台帳に無い,菊池 大二郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1178,台帳に無い,岸田 光広
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1179,台帳に無い,岸田 光広
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1197,台帳に無い,吉良 州司
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1204,台帳に無い,櫛渕 万里
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1230,台帳に無い,源馬 謙太郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1231,台帳に無い,源馬 謙太郎
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1232,台帳に無い,源馬 謙太郎
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1245,台帳に無い,神津 健
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1246,台帳に無い,神津 健
 政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1247,台帳に無い,神津 健
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1309,台帳に無い,小山 千帆
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1310,台帳に無い,小山 千帆
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1311,台帳に無い,小山 展弘
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1312,台帳に無い,小山 展弘
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1313,台帳に無い,小山 展弘
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1340,台帳に無い,齋藤 裕喜
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1341,台帳に無い,齋藤 裕喜
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1342,台帳に無い,齋藤 嘉隆
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1343,台帳に無い,齋藤 嘉隆
-政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1344,台帳に無い,齋藤 嘉隆
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,4,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,10,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,16,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,17,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,18,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,19,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,20,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,21,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,22,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,23,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,35,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,36,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,37,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,38,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,42,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,43,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,53,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,56,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,57,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,58,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,69,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,71,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,79,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,80,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,81,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,82,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,83,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,84,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,85,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,86,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,87,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,88,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,89,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,90,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,117,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,118,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,119,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,124,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,137,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,138,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,141,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,142,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,143,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,144,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,147,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,148,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,149,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,173,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,185,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,189,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,216,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,218,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,221,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,222,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,226,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,238,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,240,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,241,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,246,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,262,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,277,空欄,
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1526,台帳に無い,髙井 崇志
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1527,台帳に無い,髙井 崇志
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1534,台帳に無い,髙木 真理
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1535,台帳に無い,髙木 真理
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1545,台帳に無い,髙橋 英明
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1546,台帳に無い,髙橋 英明
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1676,台帳に無い,寺田 学
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1677,台帳に無い,寺田 学
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1839,台帳に無い,額賀 福志郎
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,1840,台帳に無い,額賀 福志郎
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,2162,台帳に無い,三上 絵里
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,2320,台帳に無い,山﨑 誠
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,2321,台帳に無い,山﨑 誠
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,2491,台帳に無い,礒﨑 哲史
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,2736,台帳に無い,髙井 崇志
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,2744,台帳に無い,髙橋 英明
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,2784,台帳に無い,寺田 学
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,2831,台帳に無い,額賀 福志郎
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,2942,台帳に無い,丸尾 圭祐
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,2993,台帳に無い,山﨑 誠
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,3180,台帳に無い,礒﨑 哲史
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,3181,台帳に無い,礒﨑 哲史
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,3182,台帳に無い,礒﨑 哲史
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,3921,台帳に無い,髙井 崇志
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,3922,台帳に無い,髙井 崇志
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,3939,台帳に無い,髙橋 英明
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,3940,台帳に無い,髙橋 英明
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,4058,台帳に無い,寺田 学
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,4059,台帳に無い,寺田 学
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,4208,台帳に無い,額賀 福志郎
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,4209,台帳に無い,額賀 福志郎
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,4532,台帳に無い,丸尾 圭祐
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,4533,台帳に無い,丸尾 圭祐
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,4672,台帳に無い,山﨑 誠
+政治資金の関係団体→氏名,acquired/political-funds/member-groups.csv,4673,台帳に無い,山﨑 誠
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,280,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,282,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,283,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,293,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,304,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,305,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,306,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,310,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,317,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,318,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,319,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,320,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,328,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,331,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,337,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,358,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,364,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,371,空欄,
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,372,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,384,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,385,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,386,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,390,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,394,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,396,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,399,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,400,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,401,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,402,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,428,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,432,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,433,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,434,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,436,空欄,
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,437,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,448,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,450,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,457,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,460,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,466,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,467,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,468,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,471,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,472,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,475,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,523,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,525,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,532,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,537,空欄,
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,545,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,575,空欄,
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,576,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,579,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,613,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,625,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,631,空欄,
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,682,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,708,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,709,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,710,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,756,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,757,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,769,空欄,
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,775,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,786,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,789,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,803,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,819,空欄,
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,820,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,832,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,833,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,844,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,848,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,850,空欄,
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,853,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,863,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,865,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,866,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,867,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,868,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,890,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,893,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,894,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,895,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,900,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,905,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,911,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,912,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,957,空欄,
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,972,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,973,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,985,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,998,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1005,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1014,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1015,空欄,
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1017,空欄,
 提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1018,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1025,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1028,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1031,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1054,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1058,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1060,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1065,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1084,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1090,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1092,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1094,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1095,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1096,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1110,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1113,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1128,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1129,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1131,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1133,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1134,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1135,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1147,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1149,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1150,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1151,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1160,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1161,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1162,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1163,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1164,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1166,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1167,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1180,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1181,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1194,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1195,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1196,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1197,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1198,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1206,空欄,
-提出者（未成立法案）→人物ID,derived/unenacted-bills-v1/submitters.csv,1237,空欄,
 経済界の要望の提案主体→団体の帳簿,derived/business-ledger-v1/by-proposer.csv,2,台帳に無い,（個人・名前は出さない）
 経済界の要望の提案主体→団体の帳簿,derived/business-ledger-v1/by-proposer.csv,3,台帳に無い,（一社）日本経済団体連合会
 経済界の要望の提案主体→団体の帳簿,derived/business-ledger-v1/by-proposer.csv,4,台帳に無い,日本商工会議所

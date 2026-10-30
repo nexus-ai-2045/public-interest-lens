@@ -57,7 +57,7 @@ def main() -> None:
     for p in csv.DictReader(open(PERSONS, encoding="utf-8")):
         if not p["人物ID"]:
             continue
-        for n in [p["氏名"], *filter(None, p["別表記"].split(";"))]:
+        for n in [p["氏名"], *filter(None, re.split(r"[;／]", p["別表記"]))]:
             if p["院"] in by_house:
                 by_house[p["院"]][canonical(n)].add(p["人物ID"])
             else:  # 院が決まらない行（元職など）は両院の候補に入れる
@@ -67,10 +67,16 @@ def main() -> None:
 
     def link(name: str, house: str) -> tuple[str, str]:
         c = canonical(KUN.sub("", normalize_name(name)))
+        if c.endswith("委員長"):
+            return "", "委員会の提出（提出者は委員長の役職名）"
         ids = by_house[house].get(c, set())
         if len(ids) == 1:
             return next(iter(ids)), ""
         if not ids:
+            # 院を移った人（台帳の院は今の院だけ）。ほかの院に同じ氏名がちょうど1人なら、その人とする。
+            other = by_house["参議院" if house == "衆議院" else "衆議院"].get(c, set())
+            if len(other) == 1:
+                return next(iter(other)), ""
             return "", "人物IDの台帳に無い（名簿の不足）"
         return "", "同姓同名で決められない"
 
