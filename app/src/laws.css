@@ -51,6 +51,8 @@
 .laws-row-amount strong{font-size:20px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.2}
 .laws-row.loss .laws-row-amount strong{color:var(--loss)}
 .laws-row.benefit .laws-row-amount strong{color:var(--benefit)}
+.laws-row-amount strong.ref{font-size:14px;font-weight:600;color:var(--muted)!important}
+.laws-ref-tag{font-size:10px;font-weight:700;margin-right:4px;padding:1px 4px;border:1px solid currentColor;border-radius:3px;vertical-align:middle}
 .laws-row-amount small{font-size:11px;color:var(--muted);white-space:nowrap}
 .laws-row-noamount{font-size:12px;color:var(--muted);max-width:7em;line-height:1.4}
 .laws-chevron{color:var(--muted);transition:transform .2s ease;margin-top:4px}

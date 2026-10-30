@@ -24,7 +24,7 @@ def triage_row(**kw):
 class EmptyStages(ol.Stages):
     def __init__(self):
         self.agreement, self.impact, self.loss, self.benefit, self.publish = {}, {}, {}, {}, {}
-        self.covid, self.institutional = set(), {}
+        self.covid, self.institutional, self.crowded = set(), {}, set()
 
 
 class LedgerTest(unittest.TestCase):
@@ -78,8 +78,10 @@ class LedgerTest(unittest.TestCase):
         loss = read(ROOT / "data" / "derived" / "loss-v1-triage-v2" / "loss.csv")
         covid = {r["id"] for r in read(ROOT / "data" / "derived" / "covid-response-v1" / "labels.csv") if r["コロナ対応"] == "はい"}
         with_amount = {r["id"] for r in loss if r["損失または便益の額"].strip()}
+        crowded = ol.crowded_ids(loss)
+        narrow = {r["id"] for r in loss if r["段階"] == "段階1" and (ol.narrow_measure(r["題名"]) or r["id"] in crowded)}
         # コロナ対応の法律は、損失表に額があっても台帳では保留にする（費用便益で扱う）
-        self.assertEqual({r["id"] for r in self.rows if r["結果"] == "額あり"}, with_amount - covid)
+        self.assertEqual({r["id"] for r in self.rows if r["結果"] == "額あり"}, with_amount - covid - narrow)
         held = {r["id"]: r for r in self.rows}
         for law_id in with_amount & covid:
             self.assertEqual((held[law_id]["結果"], held[law_id]["経路"]), ("保留", "市場（コロナ対応）"), law_id)
@@ -87,6 +89,22 @@ class LedgerTest(unittest.TestCase):
     def test_committed_ledger_is_what_the_script_produces(self):
         # 後段（影響・損失・便益・公開）や施行日台帳を更新したら、python3 scripts/build_all_laws_outcomes.py を再実行する。
         self.assertEqual(self.rows, ol.build())
+
+
+class NarrowMeasureTest(unittest.TestCase):
+    def test_narrow_tax_special_gets_no_stage1_amount(self):
+        title = "平成十四年度の水田農業経営確立助成補助金等についての所得税及び法人税の臨時特例に関する法律案"
+        self.assertTrue(ol.narrow_measure(title))
+        self.assertFalse(ol.narrow_measure("預金保険法の一部を改正する法律案"))
+
+
+class CrowdedTest(unittest.TestCase):
+    def test_overlapping_or_oversized_stage1_amounts_are_held(self):
+        def row(i, stage, group, median):
+            return {"id": i, "段階": stage, "観測グループ": group, "損失または便益の額": f"損失：中央値={median}"}
+        rows = [row("a", "段階1", "g", 1), row("b", "段階1", "g", 1), row("c", "段階1", "g", 2), row("d", "段階3", "g", 1),
+                row("e", "段階1", "h", 60_000_000_000_000), row("f", "段階3", "h", 60_000_000_000_000)]
+        self.assertEqual(ol.crowded_ids(rows), {"a", "b", "e"})
 
 
 class InstitutionalTest(unittest.TestCase):
