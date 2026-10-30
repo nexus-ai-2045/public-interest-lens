@@ -46,6 +46,7 @@ app/public/distribution/charts.json
 app/public/distribution/laws.json
 app/public/distribution/laws-detail/
 app/public/distribution/law-names.json
+app/public/distribution/law-outcomes.json
 app/public/distribution/provisional.json
 data/distribution/generated/generations/*/catalog.sqlite3
 

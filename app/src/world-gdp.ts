@@ -1,5 +1,8 @@
 /** 世界のGDP比較（/world）のデータ形式・検証・計算。画面の部品は WorldGdpPage.tsx が持ちます。 */
-export const WORLD_METRICS = ['nominalUsd', 'realGrowth', 'perCapitaPpp'] as const;
+/** 配布ファイルに入っている系列。 */
+export const FILE_METRICS = ['nominalUsd', 'realGrowth', 'perCapitaPpp'] as const;
+/** 画面で選べる指標。realGdp は realGrowth（年ごとの実質成長率）を積み上げて作る指数で、ファイルには入っていません。 */
+export const WORLD_METRICS = [...FILE_METRICS, 'realGdp'] as const;
 export type WorldMetric = typeof WORLD_METRICS[number];
 export type YearValue = [number, number];
 export type WorldCountry = {
@@ -50,7 +53,7 @@ export function parseWorldGdp(text: string): WorldGdpSnapshot {
     codes.add(country.code);
     if (!plainObject(country.series) || !plainObject(country.sourceUrls)) throw new Error('系列が不正です。');
     const seriesKeys = Object.keys(country.series);
-    if (seriesKeys.length === 0 || seriesKeys.some(key => !(WORLD_METRICS as readonly string[]).includes(key))) throw new Error('系列が不正です。');
+    if (seriesKeys.length === 0 || seriesKeys.some(key => !(FILE_METRICS as readonly string[]).includes(key))) throw new Error('系列が不正です。');
     if (Object.keys(country.sourceUrls).some(key => !seriesKeys.includes(key))) throw new Error('出典の対応が不正です。');
     for (const metric of seriesKeys as WorldMetric[]) {
       checkSourceUrl(country.sourceUrls[metric]);
@@ -58,12 +61,40 @@ export function parseWorldGdp(text: string): WorldGdpSnapshot {
     }
   }
   if (!codes.has('JPN')) throw new Error('日本の系列がありません。');
-  return value;
+  return withRealGdp(value);
 }
 
-export const WORLD_PERIODS = ['all', '1980', '1990', '2000', '2010', '2015', '2020', '2023'] as const;
+/**
+ * 年ごとの実質成長率（％）を積み上げて、実質GDPの指数にします。最初の成長率の前年を100とします。
+ * 水準ではなく伸びの積み上げなので、国どうしの「大きさ」は比べられません（初期年=100の比較専用）。
+ */
+export function cumulateGrowth(points: YearValue[] | undefined): YearValue[] | undefined {
+  if (!points?.length) return undefined;
+  let level = 100;
+  const result: YearValue[] = [[points[0][0] - 1, level]];
+  let previous = points[0][0] - 1;
+  for (const [year, rate] of points) {
+    if (year !== previous + 1) break; // 年が飛ぶ所で打ち切る（欠けた年を0％で埋めない）
+    level *= 1 + rate / 100;
+    result.push([year, level]);
+    previous = year;
+  }
+  return result;
+}
+
+/** 各国に実質GDPの指数（realGdp）を足した写しを返します。 */
+export function withRealGdp(snapshot: WorldGdpSnapshot): WorldGdpSnapshot {
+  return { ...snapshot, countries: snapshot.countries.map(country => {
+    const realGdp = cumulateGrowth(country.series.realGrowth);
+    return realGdp ? { ...country, series: { ...country.series, realGdp }, sourceUrls: { ...country.sourceUrls, realGdp: country.sourceUrls.realGrowth } } : country;
+  }) };
+}
+
+export const WORLD_PERIODS = ['all', '1960', '1970', '1980', '1990', '2000', '2010', '2015', '2020', '2023'] as const;
 export type WorldPeriod = typeof WORLD_PERIODS[number];
 export const periodLabel = (period: WorldPeriod) => period === 'all' ? '全期間' : `${period}年以降`;
+/** 左の選択肢に出す短い表記。 */
+export const periodShort = (period: WorldPeriod) => period === 'all' ? '全期間' : `${period}年〜`;
 
 /** 全系列の最初と最後の年。 */
 export function yearSpan(snapshot: WorldGdpSnapshot, metric: WorldMetric): { first: number; last: number } | null {
@@ -160,7 +191,7 @@ export function formatUsd(value: number): string {
 export const formatPpp = (value: number) => `${new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 0 }).format(value)}国際ドル`;
 export const formatRate = (value: number) => `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value).toFixed(1)}％`;
 export function formatMetric(metric: WorldMetric, value: number): string {
-  return metric === 'nominalUsd' ? formatUsd(value) : metric === 'perCapitaPpp' ? formatPpp(value) : formatRate(value);
+  return metric === 'nominalUsd' ? formatUsd(value) : metric === 'perCapitaPpp' ? formatPpp(value) : metric === 'realGdp' ? value.toFixed(0) : formatRate(value);
 }
 
 export type GrowthCauseSource = { title: string; url: string };

@@ -57,7 +57,7 @@ function layout(width: number, labelChars: number) {
  * 名前が重なる国は線の終わりに出さず、図の下の一覧（値の大きい順）に出す。一覧の国を選ぶと、その線を濃くして名前を出す。
  * 画面に入ったら線を描く。矢印キーとポインタで年を動かし、その年の値を一覧と読み上げで読める。
  */
-export function LineReveal({ series, highlightId, format, caption, indexed = false, baseYear, unit }: { series: LineSeries[]; highlightId?: string; format: (value: number) => string; caption: string; indexed?: boolean; baseYear?: number; unit?: string }) {
+export function LineReveal({ series, highlightId, accents, log = false, format, caption, indexed = false, baseYear, unit }: { series: LineSeries[]; highlightId?: string; /** 日本のほかに目立たせる系列の色（id→色）。線を太く濃くし、名前を必ず出す。 */ accents?: Record<string, string>; /** 縦軸を対数にする（すべて正の値のときだけ有効）。同じ割合の伸びが同じ傾きになる。 */ log?: boolean; format: (value: number) => string; caption: string; indexed?: boolean; baseYear?: number; unit?: string }) {
   const root = useRef<HTMLDivElement>(null);
   const inView = useInView(root, 0.25);
   const reduced = usePrefersReducedMotion();
@@ -80,12 +80,15 @@ export function LineReveal({ series, highlightId, format, caption, indexed = fal
   const [picked, setPicked] = useState<string | null>(null);
   if (!years.length || !values.length) return <p className="empty-state" role="status">表示できる値がありません。</p>;
   const { narrow, width: W, height: H, gap, pad: PAD } = layout(width, Math.max(2, ...shown.map(item => item.label.length)));
-  const lo = Math.min(...values, indexed ? 100 : 0), hi = Math.max(...values);
+  const useLog = log && values.every(value => value > 0);
+  const lo = Math.min(...values, indexed ? 100 : useLog ? Infinity : 0), hi = Math.max(...values);
+  const f = (value: number) => useLog ? Math.log(value) : value;
   const x = (year: number) => PAD.left + (years.length === 1 ? 0 : (year - years[0]) / (years.at(-1)! - years[0]) * (W - PAD.left - PAD.right));
-  const y = (value: number) => H - PAD.bottom - (value - lo) / (hi - lo || 1) * (H - PAD.top - PAD.bottom);
+  const y = (value: number) => H - PAD.bottom - (f(value) - f(lo)) / (f(hi) - f(lo) || 1) * (H - PAD.top - PAD.bottom);
   const path = (item: LineSeries) => item.points.reduce((d, point, i, all) => point.value === null ? d : `${d}${i && all[i - 1].value !== null ? 'L' : 'M'}${x(point.year).toFixed(1)},${y(point.value).toFixed(1)}`, '');
   const lastPoint = (item: LineSeries) => [...item.points].reverse().find(point => point.value !== null);
-  const rank = (item: LineSeries) => item.id === highlightId ? 2 : item.id === picked ? 1 : 0;
+  const accentOf = (item: LineSeries) => item.id === highlightId ? undefined : accents?.[item.id];
+  const rank = (item: LineSeries) => item.id === highlightId ? 3 : item.id === picked ? 2 : accentOf(item) ? 1 : 0;
   const ordered = [...shown].sort((a, b) => rank(a) - rank(b));
   const ends = ordered.map(item => lastPoint(item));
   const endYs = ends.map(point => point ? y(point.value!) : H);
@@ -94,7 +97,7 @@ export function LineReveal({ series, highlightId, format, caption, indexed = fal
   const spread = spreadLabels(labelIndexes.map(index => endYs[index]), gap, PAD.top, H - PAD.bottom);
   const labelYs = new Map(labelIndexes.map((index, i) => [index, spread[i]]));
   const tickCount = narrow ? 4 : 5;
-  const ticks = Array.from({ length: tickCount }, (_, i) => lo + (hi - lo) * i / (tickCount - 1));
+  const ticks = Array.from({ length: tickCount }, (_, i) => useLog ? Math.exp(f(lo) + (f(hi) - f(lo)) * i / (tickCount - 1)) : lo + (hi - lo) * i / (tickCount - 1));
   const step = narrow && years.at(-1)! - years[0] > 40 ? 20 : 10;
   const minGap = narrow ? 48 : 56;
   const yearTicks = years.filter((year, i) => i === 0 || i === years.length - 1 || (year % step === 0 && x(year) - x(years[0]) >= minGap && x(years.at(-1)!) - x(year) >= minGap));
@@ -129,16 +132,16 @@ export function LineReveal({ series, highlightId, format, caption, indexed = fal
       <title id={titleId}>{caption}{unit ? `（縦軸：${unit}）` : ''}。矢印キーで年を動かすと、その年の値を読み上げます。</title>
       {ticks.map(tick => <g key={tick} className="m-line-grid"><line x1={PAD.left} x2={W - PAD.right} y1={y(tick)} y2={y(tick)} /><text x={PAD.left} y={y(tick) - 5}>{format(tick)}</text></g>)}
       {yearTicks.map((year, i) => <text key={year} className="m-line-year" x={x(year)} y={H - 8} textAnchor={i === 0 ? 'start' : i === yearTicks.length - 1 ? 'end' : 'middle'}>{year}</text>)}
-      {ordered.map((item, index) => <path key={item.id} className={`m-line-path ${lineClass(item)}`} d={path(item)} pathLength={1} style={{ transitionDelay: `${item.id === highlightId ? ordered.length * 60 : index * 60}ms` }} />)}
+      {ordered.map((item, index) => <path key={item.id} className={`m-line-path ${lineClass(item)}`} d={path(item)} pathLength={1} style={{ transitionDelay: `${item.id === highlightId ? ordered.length * 60 : index * 60}ms`, ...(accentOf(item) && item.id !== picked ? { stroke: accentOf(item), strokeWidth: 2.8, opacity: 1 } : {}) }} />)}
       {ordered.map((item, index) => {
         const end = ends[index];
         if (!end) return null;
         const ly = labelYs.get(index);
         const cx = x(end.year), cy = endYs[index];
         return <g key={item.id} className={`m-line-end ${lineClass(item)}`}>
-          <circle cx={cx} cy={cy} r={rank(item) ? 4.5 : 3} />
+          <circle cx={cx} cy={cy} r={rank(item) ? 4.5 : 3} style={accentOf(item) && item.id !== picked ? { fill: accentOf(item) } : undefined} />
           {ly !== undefined && Math.abs(ly - cy) > 2 && <polyline className="m-line-leader" points={`${cx + 5},${cy} ${W - PAD.right + 6},${ly}`} />}
-          {ly !== undefined && <text x={W - PAD.right + 9} y={ly + 4}>{item.label}</text>}
+          {ly !== undefined && <text x={W - PAD.right + 9} y={ly + 4} style={accentOf(item) && item.id !== picked ? { fill: accentOf(item), fontWeight: 800 } : undefined}>{item.label}</text>}
         </g>;
       })}
       {focusYear !== null && <g className="m-line-focus"><line x1={x(focusYear)} x2={x(focusYear)} y1={PAD.top} y2={H - PAD.bottom} />{ordered.map(item => { const value = valueAt(item, focusYear); return value === null ? null : <circle key={item.id} className={lineClass(item)} cx={x(focusYear)} cy={y(value)} r={rank(item) ? 5 : 3.5} />; })}<text className="m-line-focus-year" x={Math.min(Math.max(x(focusYear), PAD.left + 20), W - PAD.right - 20)} y={PAD.top - 8} textAnchor="middle">{focusYear}</text></g>}
@@ -150,7 +153,7 @@ export function LineReveal({ series, highlightId, format, caption, indexed = fal
       <ol>
         {rows.map((row, i) => {
           const body = <>
-            <span className="m-line-swatch" aria-hidden="true" />
+            <span className="m-line-swatch" aria-hidden="true" style={accents?.[row.item.id] && row.item.id !== highlightId ? { background: accents[row.item.id], opacity: 1 } : undefined} />
             <span className="m-line-legend-name">{row.value === null ? '' : `${i + 1}. `}{row.item.label}</span>
             <span className="m-line-legend-value">{row.value === null ? '未取得' : format(row.value)}{focusYear === null && row.year !== undefined && row.year !== lastYear && <small>（{row.year}年）</small>}</span>
           </>;
