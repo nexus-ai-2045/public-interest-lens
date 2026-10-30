@@ -4764,6 +4764,15 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-171-45,額の下端,6365628299404,6365628299404,一致,OECD 表6 _T LR、比較国11か国
 衆法-171-45,額の中央値,160223211663039,160223211663039,一致,OECD 表6 _T LR、比較国11か国
 衆法-171-45,額の上端,292271635236054,292271635236054,一致,OECD 表6 _T LR、比較国11か国
+衆法-173-10,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/24B2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/24B2.htm,一致,
+衆法-173-10,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17320091130094.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17320091130094.htm,一致,
+衆法-173-10,出典URL,https://laws.e-gov.go.jp/law/403AC1000000108,https://laws.e-gov.go.jp/law/403AC1000000108,一致,
+衆法-173-10,題名,国会職員の育児休業等に関する法律の一部を改正する法律案,国会職員の育児休業等に関する法律の一部を改正する法律案,一致,
+衆法-173-10,施行日（推定）,2009-11-30,2009-11-30,一致,公布日を施行日とみなした推定
+衆法-173-10,名目付加価値（開始前最後の年）,531130000百万円,531130000百万円,一致,OECD 表6 JPN _T V 2008年
+衆法-173-10,額の下端,6365628299404,6365628299404,一致,OECD 表6 _T LR、比較国11か国
+衆法-173-10,額の中央値,160223211663039,160223211663039,一致,OECD 表6 _T LR、比較国11か国
+衆法-173-10,額の上端,292271635236054,292271635236054,一致,OECD 表6 _T LR、比較国11か国
 閣法-166-63,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/15CE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/15CE.htm,一致,
 閣法-166-63,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070622093.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070622093.htm,一致,
 閣法-166-63,出典URL,https://laws.e-gov.go.jp/law/323AC1000000186,https://laws.e-gov.go.jp/law/323AC1000000186,一致,
