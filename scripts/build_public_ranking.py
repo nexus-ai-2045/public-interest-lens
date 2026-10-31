@@ -15,18 +15,20 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
-import json
 import io
+import json
 import re
 from collections import Counter
 from pathlib import Path
 
 try:
-    from scripts.generation_provenance import generation_metadata
     from scripts.build_all_laws_outcomes import crowded_ids, narrow_measure
+    from scripts.evaluation_rules import DEMOTED_ROUTES
+    from scripts.generation_provenance import generation_metadata
 except ModuleNotFoundError:
-    from generation_provenance import generation_metadata
     from build_all_laws_outcomes import crowded_ids, narrow_measure
+    from evaluation_rules import DEMOTED_ROUTES
+    from generation_provenance import generation_metadata
 
 ROOT = Path(__file__).resolve().parents[1]
 DERIVED = ROOT / "data" / "derived"
@@ -45,6 +47,7 @@ INPUTS = {
     "publish": DERIVED / "publish-v1-triage-v2" / "publish.csv",
     "enforcement": ACQUIRED / "enforcement-dates" / "enforcement.csv",
     "macro": DERIVED / "macro-v1" / "macro.csv",
+    "outcomes": DERIVED / "all-laws-v1" / "outcomes.csv",
     "covidBenefit": DERIVED / "covid-benefit-v1" / "benefit.csv",
     "covidRules": DERIVED / "covid-benefit-v1" / "rules.csv",
     "covidSpending": ACQUIRED / "covid-spending" / "spending.csv",
@@ -414,17 +417,21 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
     covid_spending = {row["項目ID"]: row for row in _rows("covidSpending", captured)}
     covid_params = _rows("covidParams", captured)
     crowded = crowded_ids(loss.values())
+    # 全法律の結果（outcomes.csv）が、向きと額の符号が逆・関与の出典なしで額を付けないとした法律。同じ判断を使う（論理検査 L1・L3）
+    demoted = {row["id"]: row["理由"] for row in _rows("outcomes", captured) if row["経路"] in DEMOTED_ROUTES}
     laws, others = [], []
     for law_id, census_row in enacted.items():
         row = publish.get(law_id)
         title = census_row["題名"]
         # コロナ対応の法律は、市場の損失の額が付いていても使わず、費用便益（covid-benefit-v1）か規模つきの理由で出す（全法律の結果と同じ扱い）
-        if not row or row["損失または便益"] == "保留" or law_id in covid_ids or law_id in crowded or (narrow_measure(title) and loss.get(law_id, {}).get("段階") == "段階1"):
+        if not row or row["損失または便益"] == "保留" or law_id in covid_ids or law_id in crowded or law_id in demoted or (narrow_measure(title) and loss.get(law_id, {}).get("段階") == "段階1"):
             if approve_all and law_id in macro and law_id not in held_by_check:
                 extra = _covid_sources(covid_rules[law_id], covid_spending, covid_params) if law_id in covid_rules else []
                 laws.append(_macro_law(macro[law_id], list(dict.fromkeys(_sources(law_id, enacted, enforcement) + extra))))
             elif law_id in covid_scale:
                 others.append(_other(law_id, title, "covid_scale", covid_scale[law_id]))
+            elif law_id in demoted:
+                others.append(_other(law_id, title, "amount_hold", demoted[law_id]))
             else:
                 other = _no_amount(law_id, title, publish, loss, impact, dated, triage)
                 if law_id in covid_ids:
@@ -455,7 +462,7 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
             "rules": RULES,
             **generation_metadata(["scripts/build_public_ranking.py"]),
             "inputs": {name: hashlib.sha256(raw).hexdigest() for name, raw in captured.items()},
-            "parameters": {"heldOut": sorted(held_by_check)},
+            "parameters": {"heldOut": sorted(held_by_check), "noAmount": sorted(demoted)},
         },
         "approval": (
             {"approvedAt": approved_at, "scope": APPROVAL_SCOPE, "note": APPROVAL_NOTE}
