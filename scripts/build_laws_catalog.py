@@ -47,6 +47,7 @@ INPUTS = {
 # 無くても一覧は作れる入力（概要の原料と、その AI 要約、桁外れの印に使う日本の付加価値）
 OPTIONAL = {"speechFacts", "overviews", "industryVa"}
 # 額が日本の全産業の付加価値1年分を超えるときの印（額は変えず、順位からも外さない。印と倍率だけ付ける）
+OUTLIER_PREFIX = "額が日本の付加価値1年分を超える"
 OUTLIER_MARK = "額が日本の付加価値1年分を超える（桁外れ。参考にとどめる）"
 # OECD 表6の単位 → 円
 VA_UNIT = {"百万JPY": 1_000_000}
@@ -359,8 +360,9 @@ def build() -> dict:
                 item["sources"].append({"label": label, "url": item["overview"][key]["url"]})
         items.append(item)
 
-    observations = mark_observations(items)
-    outliers = mark_outliers(items, japan_value_added())
+    mark_outliers(items, japan_value_added())
+    observations = mark_observations(items)  # 額を出す法律だけで数える（隠した法律は観測に入れない）
+    outliers = sum(1 for item in items if any(mark.startswith(OUTLIER_PREFIX) for mark in item["marks"]))
     policies = [policy_from_case(_json("case"))]
     counts = {step: sum(1 for item in items if STEPS.index(item["step"]) >= STEPS.index(step)) for step in STEPS}
     return {

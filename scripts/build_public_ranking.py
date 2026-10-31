@@ -53,6 +53,7 @@ INPUTS = {
 RULES = ["bill-triage-v2", "impact-rule-v1", "loss-rule-v1", "benefit-rule-v1.2", "macro-v1", "covid-benefit-v1"]
 # 全体指標（macro-v1）の額の印。影響の段階を経ていない参考の額で、合計・議員への配分に使わない。
 MACRO_GROUP = "全体指標"
+COVID_BENEFIT_GROUP = "全体指標-コロナ費用便益-"
 ESTIMATED = "推定（公布日）"
 MACRO_NOTE = "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）"
 # コロナ対応の法律（covid-benefit-v1）の額。全体指標の差ではなく、支出の規模（一次資料）×帰属×乗数の費用便益。
@@ -89,7 +90,16 @@ OUTCOMES = {
     "impact_hold": "保留（影響の判定）",
     "amount_hold": "保留（額の計算・公開条件）",
     "covid_scale": "額は未計算（コロナ対応・規模のみ記録）",
+    "hidden_failed": "額は出さない（検証で不合格）",
+    "hidden_shared": "額は出さない（他の法律と同じ額）",
+    "hidden_oversize": "額は出さない（桁外れ）",
 }
+HIDDEN_REASONS = {
+    "hidden_failed": "独立検証の抜き取りで不合格だったため、額を出さない",
+    "hidden_shared": "他の法律と同じ額（産業全体の差を法律ごとに分けていない）のため、額を出さない",
+    "hidden_oversize": "額が日本の付加価値1年分を超える（桁外れ）ため、額を出さない",
+}
+LEDGER = DERIVED / "evaluation-ledger-v1" / "ledger.csv"
 REASON_LIMIT = 140
 # 出典チェック（scripts/source_check.py）が公開から外した法律。承認済みでも額を出さない。
 SOURCE_HELD = DERIVED / "source-check" / "summary.json"
@@ -336,6 +346,35 @@ def japan_value_added_max(raw: bytes | None = None) -> int:
     return max(values)
 
 
+def verification_failed() -> set[str]:
+    """独立検証（抜き取り）で不合格と判定された法律。台帳が無いときは空。"""
+    if not LEDGER.exists():
+        return set()
+    with LEDGER.open(encoding="utf-8", newline="") as f:
+        return {row["id"] for row in csv.DictReader(f) if row["検証状態"] == "抜き取り検証で不合格"}
+
+
+def hide_unreliable(laws: list[dict], failed: set[str], ceiling: int) -> tuple[list[dict], list[dict]]:
+    """参考の額のうち、検証で不合格のもの、他の法律と同じ額のもの、桁外れのものは（コロナ対応の費用便益は法律ごとの支出から別に計算するので対象にしない）額を出さず、額なしの側へ回す。
+    確かな額（高・中・低）には触れない。返り値は（残す法律, 額なしに回す行）。"""
+    amounts = Counter((law["amountMedianYen"], law["amountLowYen"], law["amountHighYen"]) for law in laws if law["certainty"] == "参考" and not law["group"].startswith(COVID_BENEFIT_GROUP))
+    kept, moved = [], []
+    for law in laws:
+        key = None
+        if law["certainty"] == "参考" and not law["group"].startswith(COVID_BENEFIT_GROUP):
+            if law["id"] in failed:
+                key = "hidden_failed"
+            elif amounts[(law["amountMedianYen"], law["amountLowYen"], law["amountHighYen"])] >= 2:
+                key = "hidden_shared"
+            elif law["amountMedianYen"] > ceiling:
+                key = "hidden_oversize"
+        if key:
+            moved.append(_other(law["id"], law["title"], key, HIDDEN_REASONS[key]))
+        else:
+            kept.append(law)
+    return kept, moved
+
+
 def _reading_notes(laws: list[dict], ceiling: int | None = None) -> None:
     """額の読み方の注意を機械的に足す。
     - 同じ観測グループ・同じ期間・同じ額の法律が複数ある：1つの観測を分け合っている（足し合わせない）。
@@ -403,7 +442,10 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
     missing = sorted(set(publish) - set(enacted))
     if missing:
         raise ValueError(f"成立法の台帳に無い法律があります: {missing}")
-    _reading_notes(laws, japan_value_added_max(captured["industryVa"]))
+    ceiling = japan_value_added_max(captured["industryVa"])
+    laws, hidden = hide_unreliable(laws, verification_failed(), ceiling)
+    others.extend(hidden)
+    _reading_notes(laws, ceiling)
     # 確かな額（高・中・低）を先、参考を後。どちらも額の大きい順。
     laws.sort(key=lambda law: (law["certainty"] == "参考", law["group"].startswith(MACRO_GROUP), -law["amountMedianYen"], law["id"]))
     reference = sum(1 for law in laws if law["certainty"] == "参考")

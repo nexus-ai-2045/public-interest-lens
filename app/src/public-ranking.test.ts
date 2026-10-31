@@ -68,7 +68,7 @@ describe('公開ランキングの配布データ', () => {
   });
   it('コロナ期と重なる法律と便益側が未測定の法律に注記がある', () => {
     const byId = new Map(parsePublicRanking(committed).laws.map(item => [item.id, item]));
-    for (const id of ['衆法-189-20', '閣法-193-59', '閣法-196-2', '閣法-196-4']) expect(byId.get(id).notes).toContain('コロナ期と重なる');
+    for (const id of ['衆法-189-20', '閣法-196-2']) expect(byId.get(id).notes).toContain('コロナ期と重なる');
     expect(byId.get('閣法-189-27').notes).toContain('便益側の一部が未測定');
   });
   it('承認の記録がある配布データは額を読む', () => {
