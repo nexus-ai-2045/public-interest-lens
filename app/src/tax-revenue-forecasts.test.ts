@@ -6,9 +6,9 @@ import { parseCsv } from './impact-batch';
 
 const csv = readFileSync(new URL('../../data/acquired/tax-revenue-estimates/estimates.csv', import.meta.url), 'utf8');
 
-test('政府予測39行の全10列を欠測とゼロを区別して保持する', () => {
+test('政府予測44行の全10列を欠測とゼロを区別して保持する', () => {
   const raw = parseCsv(csv), forecasts = taxRevenueForecastsOf(csv);
-  expect(forecasts).toHaveLength(39);
+  expect(forecasts).toHaveLength(44);
   expect(forecasts.map(f => ({
     '年度': String(f.fiscalYear), '税目': f.taxCategory,
     '平年度_億円': f.fullYearOku === null ? '' : String(f.fullYearOku),

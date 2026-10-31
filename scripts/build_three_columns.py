@@ -75,7 +75,7 @@ def build() -> list[dict[str, str]]:
                 row["国の支出（円）"] = str(spend)
                 row["採算（付加価値÷国の支出）"] = f"{int(c['中央値']) / spend:.4f}"
                 row["採算の注記"] = COVID_NOTE
-        elif i in macro:
+        elif i in macro and i not in fiscal:  # 税制改正は付加価値の本線に入れず、国の収支の欄だけに額を置く
             row.update({"付加価値の変化（円）": macro[i]["中央値"], "付加価値の由来": ORIGIN_MACRO, "付加価値の確かさ": "参考", "順位に使う": "いいえ"})
         if i in fiscal:
             row.update({"国の収支（億円）": fiscal[i]["平年度_億円"], "国の収支の由来": ORIGIN_FISCAL})
