@@ -72,7 +72,8 @@ export function LawRankingPage() {
   const amounted = (data?.laws ?? []).filter(law => law.amount);
   const confirmed = amounted.filter(law => law.step === 'published');
   // 一覧の「額なし」は法律と政策を合わせて数えるので、カードも同じ数え方にそろえる。
-  const noAmount = (data?.laws ?? []).concat(data?.policies ?? []).filter(item => !item.amount).length;
+  const sharedCount = (data?.laws ?? []).filter(item => item.shared).length;
+  const noAmount = (data?.laws ?? []).concat(data?.policies ?? []).filter(item => !item.amount && !item.shared).length;
   const loss = confirmed.filter(law => law.side === 'loss').length;
   // 国賊を選んでいれば損失の大きい順、国士なら便益の大きい順。その側が0本なら両方を並べる。
   const toneSide = tone === 'harm' ? 'loss' : 'benefit';
@@ -100,7 +101,8 @@ export function LawRankingPage() {
           <a href="#list" className="laws-stat"><span>載せている件数</span><strong>{(data.laws.length + data.policies.length).toLocaleString('ja-JP')}件</strong><small>法律{data.laws.length.toLocaleString('ja-JP')}本＋政策{data.policies.length}件</small></a>
           <a href="?side=confirmed#list" className="laws-stat hit"><span>確かな額</span><strong>{confirmed.length}本</strong><small>国賊側{loss}本・国士側{confirmed.length - loss}本（影響の段階まで確認）</small></a>
           <a href="?side=amount#list" className="laws-stat"><span>参考の額</span><strong>{(amounted.length - confirmed.length).toLocaleString('ja-JP')}本</strong><small>産業・経済全体の差など。確かな額と足さない</small></a>
-          <a href="?side=none#list" className="laws-stat"><span>額なし（理由つき）</span><strong>{noAmount.toLocaleString('ja-JP')}件</strong><small>法律{(data.laws.length - amounted.length).toLocaleString('ja-JP')}本＋政策{data.policies.filter(policy => !policy.amount).length}件。測れていないだけで「影響なし」ではない</small></a>
+          <a href="?side=shared#list" className="laws-stat"><span>共有額の参考</span><strong>{sharedCount.toLocaleString('ja-JP')}本</strong><small>同じ額を共有する{(data.shared?.groups ?? 0).toLocaleString('ja-JP')}群。1本ごとの額は出さず、合計の一部として見せる。足さない</small></a>
+          <a href="?side=none#list" className="laws-stat"><span>額なし（理由つき）</span><strong>{noAmount.toLocaleString('ja-JP')}件</strong><small>法律{(data.laws.length - amounted.length - sharedCount).toLocaleString('ja-JP')}本＋政策{data.policies.filter(policy => !policy.amount).length}件。測れていないだけで「影響なし」ではない</small></a>
         </section>
         {viewConfirmed.length === 0 && confirmed.length === 0 && <section aria-label="額の大きい順" id="top-amounts">
           <h3>額の大きい順</h3>

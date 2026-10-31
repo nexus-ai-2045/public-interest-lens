@@ -64,4 +64,38 @@ test.describe('/ranking（法律ランキング）', () => {
     await expect(head).toHaveAttribute('aria-expanded', 'false');
     watch.expectClean();
   });
+  test('共有額の参考：既定では経済全体の分を畳み、押すと出る。1本ごとの額は出さず、合計の一部として見せる', async ({ page }) => {
+    const watch = watchPage(page);
+    await page.goto('/ranking');
+    const fold = page.locator('.laws-fold', { hasText: '経済全体の共有額の参考が付いた法律' });
+    await expect(fold).toBeVisible();
+    await expect(fold).toContainText('490本は畳んでいます');
+    const sharedRows = page.locator('.laws-row.is-shared');
+    await expect(sharedRows.first()).toBeVisible();
+    await expect(sharedRows.first().locator('.laws-row-amount')).toContainText('共有額の参考');
+    await expect(sharedRows.first().locator('.laws-row-amount')).toContainText('0〜');
+    await expect(sharedRows.first().getByRole('note', { name: '共有額の参考値の注意' })).toContainText('この法律だけの効果ではない');
+    await fold.getByRole('button', { name: '経済全体の共有額も表示' }).click();
+    await expect(page.locator('.laws-fold', { hasText: '経済全体（産業コード _T）' })).toContainText('経済全体（産業コード _T）の共有額も並べています');
+    watch.expectClean();
+  });
+
+  test('共有額の参考で絞ると全行に注意が付き、行を開くと根拠カード（使った前提）が出る。降格の印とは別', async ({ page }) => {
+    const watch = watchPage(page);
+    await page.goto('/ranking?side=shared');
+    await expect(page.getByRole('group', { name: '向きで絞る' }).getByRole('button', { name: '共有額の参考' })).toHaveAttribute('aria-pressed', 'true');
+    const rows = page.locator('.laws-row.is-shared');
+    await expect(rows.first()).toBeVisible();
+    expect(await page.locator('.laws-list > li').count()).toBe(await rows.count());
+    await expect(page.getByText('検証で降格')).toHaveCount(0);
+    const head = rows.first().locator('.laws-row-head');
+    const detailResponse = page.waitForResponse(r => r.url().includes('/distribution/laws-detail/'));
+    await head.click();
+    expect((await detailResponse).ok()).toBe(true);
+    const basis = rows.first().getByRole('region', { name: '根拠カード（使った前提）' });
+    await expect(basis).toContainText('使った前提');
+    await expect(basis).toContainText('OECD 表6');
+    await expect(rows.first().locator('.laws-formula')).toHaveCount(0);
+    watch.expectClean();
+  });
 });
