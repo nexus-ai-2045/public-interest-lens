@@ -29,6 +29,20 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+try:
+    from scripts.evaluation_rules import (
+        ROUTE_NO_CHAIN,
+        ROUTE_SIGN_CONFLICT,
+        involved_law_ids,
+        sign_conflict,
+    )
+except ImportError:  # python3 scripts/build_all_laws_outcomes.py（scripts/ が検索路に入る）
+    from evaluation_rules import (
+        ROUTE_NO_CHAIN,
+        ROUTE_SIGN_CONFLICT,
+        involved_law_ids,
+        sign_conflict,
+    )
 ACQUIRED = ROOT / "data" / "acquired"
 DERIVED = ROOT / "data" / "derived"
 OUT = DERIVED / "all-laws-v1" / "outcomes.csv"
@@ -145,6 +159,8 @@ def hold_segment(reason: str) -> str:
 class Stages:
     """v2 の後段の出力を id で引く。"""
 
+    involved: set[str] | None = None  # 出典つきの関与がある法律（None＝一覧が無く、鎖を判定しない）
+
     def __init__(self, derived: Path = DERIVED, version_dir: str = "-triage-v2"):
         def by_id(stage: str, name: str) -> dict[str, dict[str, str]]:
             return {r["id"]: r for r in read_csv(derived / f"{stage}-v1{version_dir}" / name)}
@@ -171,6 +187,7 @@ class Stages:
         fiscal = derived / "tax-impact-v1" / "fiscal.csv"
         self.fiscal = {r["id"]: r for r in read_csv(fiscal) if r["平年度_億円"] != ""} if fiscal.exists() else {}
         self.covid = {r["id"] for r in read_csv(covid) if r.get("コロナ対応") == "はい"} if covid.exists() else set()
+        self.involved = involved_law_ids(derived / "allocation-v1" / "involvements.csv")
 
 
 def no_market(t: dict[str, str]) -> bool:
@@ -277,6 +294,18 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
         out.update(結果="保留", 経路="市場（分けられない・過大）", 段階=loss["段階"], 向き=loss["向き"], 公開可否=pub["公開可否"] if pub else "",
                    理由="限定的（段階1）の額が、同じ産業・同じ期間・同じ額に2本以上重なって産業全体の動きとして分けられない、または1本の法律として桁が合わない（50兆円以上）。法律ごとの額は付けない")
         return out
+
+    # 0c) 付加価値の欄の額の整合（設計決定0024、論理検査 L1・L3）。向きと額の符号が逆、または出典つきの議員の関与が無い額は、法律の額として付けない
+    if has_amount:
+        side = sign_conflict(loss["向き"], loss["損失または便益の額"])
+        if side:
+            out.update(結果="保留", 経路=ROUTE_SIGN_CONFLICT, 段階=loss["段階"], 向き=loss["向き"], 公開可否="公開不可",
+                       理由=f"向き「{loss['向き']}」と{side}の中央値の符号が逆で、産業全体の動きがこの法律の向きと合わない（この法律が動かした分と言えない）。額は付けない")
+            return out
+        if st.involved is not None and t["id"] not in st.involved:
+            out.update(結果="保留", 経路=ROUTE_NO_CHAIN, 段階=loss["段階"], 向き=loss["向き"], 公開可否="公開不可",
+                       理由="額はあるが、出典つきの議員の関与が1件も無く因果の鎖が閉じない。関与の一次資料が入るまで額は付けない")
+            return out
 
     # 1) 額あり（後段の出力が優先。題名の規則で打ち消さない）
     if has_amount:

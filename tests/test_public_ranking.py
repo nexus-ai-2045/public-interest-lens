@@ -62,7 +62,7 @@ class PublicRankingTests(unittest.TestCase):
             self.assertEqual(result["counts"], expected["counts"])
             self.assertEqual(len(result["laws"]), len(expected["laws"]))
             self.assertEqual(result["generatedFrom"]["inputs"]["industryVa"], hashlib.sha256(before).hexdigest())
-            self.assertEqual(result["generatedFrom"]["parameters"], {"heldOut": ["閣法-169-3"]})
+            self.assertEqual(result["generatedFrom"]["parameters"], {"heldOut": ["閣法-169-3"], "noAmount": expected["generatedFrom"]["parameters"]["noAmount"]})
             self.assertNotIn("閣法-169-3", {r["id"] for r in result["laws"]})
 
     def test_committed_file_matches_inputs(self):
@@ -141,7 +141,9 @@ class PublicRankingTests(unittest.TestCase):
         by_id = {law["id"]: law for law in self.payload["laws"]}
         for law_id in ("衆法-189-20", "閣法-196-2"):
             self.assertIn("コロナ期と重なる", by_id[law_id]["notes"])
-        self.assertIn("便益側の一部が未測定", by_id["閣法-189-27"]["notes"])
+        # 閣法-189-27 は向きと額の符号が逆で法律の額を付けない（全法律の結果と同じ判断）。損失表の額は議員にも配らない
+        self.assertNotIn("便益側の一部が未測定", by_id.get("閣法-189-27", {"notes": []})["notes"])
+        self.assertIn("閣法-189-27", self.payload["generatedFrom"]["parameters"]["noAmount"])
         self.assertFalse({"コロナ期と重なる", "便益側の一部が未測定"} & set(by_id["衆法-186-35"]["notes"]))
 
     def test_source_held_law_moves_to_others(self):

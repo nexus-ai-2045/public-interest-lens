@@ -31,6 +31,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from scripts.evaluation_rules import narrow_whole_economy
 from scripts.source_check import Oecd, recompute
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -69,6 +70,7 @@ INDUSTRY_LABEL = {"_T": "全産業", "H": "運輸・保管", "I": "宿泊・飲�
                   "M+N": "専門・科学技術、業務支援サービス業", "R+S": "芸術・娯楽・その他のサービス",
                   "D": "電気・ガス・蒸気・空調供給業", "B": "鉱業・採石業"}
 COVID_START = 2020
+NARROW_REASON = "題名が特例・特定などの狭い法律で、分野が決まらず経済全体で測るしかない。経済全体の差をこの法律が動かした分とは言えないので、参考の額も付けない"
 ESTIMATED = "推定（公布日）"
 
 
@@ -205,6 +207,10 @@ def build() -> list[dict[str, str]]:
             continue
         if law["id"] in covid:
             apply_covid(row, covid[law["id"]], covid_benefit.get(law["id"]))
+            rows.append(row)
+            continue
+        if narrow_whole_economy(law["題名"], industry, field):  # 論理検査 L2：狭い題名に経済全体の額を当てない（産業全体の差をこの法律が動かした分と言えない）
+            row["理由"] = NARROW_REASON
             rows.append(row)
             continue
         result, countries, why = amount(oecd, industry, start)
