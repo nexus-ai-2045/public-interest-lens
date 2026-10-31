@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { PUBLIC_SITE } from './site-mode';
 import { SiteShell } from './SiteHeader';
 import { GrowthCauses } from './GrowthCauses';
+import { CauseAxisPanel } from './CauseAxisPanel';
 import { LineReveal, type LineSeries } from './motion';
 import {
   WORLD_PERIODS, distributionWorldGdpUrl, formatMetric, formatRate, growthRanking, latestRanking, parseWorldGdp, periodLabel, periodRange, periodShort, pointsInRange,
@@ -251,6 +252,7 @@ export function WorldGdpPage() {
       </section>
     </>}
     <MissedGrowthSummary />
+    <CauseAxisPanel />
     <section id="growth-causes" className="world-causes"><GrowthCauses /></section>
   </main></SiteShell>;
 }

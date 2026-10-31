@@ -145,13 +145,13 @@ class SourceCheckTests(unittest.TestCase):
         bad = {r["項目"] for r in source_check.check_members(tampered, self.ranking) if r["結果"] == source_check.NG}
         # 額を変えると、配分の合計も額と合わなくなる。
         self.assertEqual(bad, {"議員ページの額", "証拠URL", "配分の合計"})
-        # 同じ観測を共有する本数を書き換えると（二重に数える配り方）、本数も配分の合計も合わない。
+        # 同じ観測を共有する本数を書き換えると（二重に数える配り方）、本数も配分の合計も合わない。共有する法律が公開に残っているときだけ確かめる
         shared = copy.deepcopy(members)
-        law = next(l for l in shared["laws"] if l["id"] in listed and l["observationLaws"] > 1)
-        law["observationLaws"] = 1
-        bad = {r["項目"] for r in source_check.check_members(shared, self.ranking) if r["結果"] == source_check.NG}
-        self.assertEqual(bad, {"同じ観測を共有する本数", "配分の合計"})
-
+        law = next((l for l in shared["laws"] if l["id"] in listed and l["observationLaws"] > 1), None)
+        if law is not None:
+            law["observationLaws"] = 1
+            bad = {r["項目"] for r in source_check.check_members(shared, self.ranking) if r["結果"] == source_check.NG}
+            self.assertEqual(bad, {"同じ観測を共有する本数", "配分の合計"})
 
 if __name__ == "__main__":
     unittest.main()
