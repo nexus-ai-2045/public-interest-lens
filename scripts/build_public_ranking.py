@@ -23,11 +23,11 @@ from pathlib import Path
 
 try:
     from scripts.build_all_laws_outcomes import crowded_ids, narrow_measure
-    from scripts.evaluation_rules import DEMOTED_ROUTES
+    from scripts.evaluation_rules import DEMOTED_ROUTES, VERDICT_FAIL, is_demoted
     from scripts.generation_provenance import generation_metadata
 except ModuleNotFoundError:
     from build_all_laws_outcomes import crowded_ids, narrow_measure
-    from evaluation_rules import DEMOTED_ROUTES
+    from evaluation_rules import DEMOTED_ROUTES, VERDICT_FAIL, is_demoted
     from generation_provenance import generation_metadata
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -93,7 +93,7 @@ OUTCOMES = {
     "impact_hold": "保留（影響の判定）",
     "amount_hold": "保留（額の計算・公開条件）",
     "covid_scale": "額は未計算（コロナ対応・規模のみ記録）",
-    "hidden_failed": "額は出さない（検証で不合格）",
+    "hidden_failed": "額は出さない（検証で不合格）",  # 降格の導入後は使わない（不合格は参考値に下げて額を残す）
     "hidden_shared": "額は出さない（他の法律と同じ額）",
     "hidden_oversize": "額は出さない（桁外れ）",
 }
@@ -102,7 +102,7 @@ HIDDEN_REASONS = {
     "hidden_shared": "他の法律と同じ額（産業全体の差を法律ごとに分けていない）のため、額を出さない",
     "hidden_oversize": "額が日本の付加価値1年分を超える（桁外れ）ため、額を出さない",
 }
-LEDGER = DERIVED / "evaluation-ledger-v1" / "ledger.csv"
+SAMPLE_VERDICTS = DERIVED / "evaluation-ledger-v1" / "sample-verdicts.csv"
 REASON_LIMIT = 140
 # 出典チェック（scripts/source_check.py）が公開から外した法律。承認済みでも額を出さない。
 SOURCE_HELD = DERIVED / "source-check" / "summary.json"
@@ -349,25 +349,50 @@ def japan_value_added_max(raw: bytes | None = None) -> int:
     return max(values)
 
 
-def verification_failed() -> set[str]:
-    """独立検証（抜き取り）で不合格と判定された法律。台帳が無いときは空。"""
-    if not LEDGER.exists():
-        return set()
-    with LEDGER.open(encoding="utf-8", newline="") as f:
-        return {row["id"] for row in csv.DictReader(f) if row["検証状態"] == "抜き取り検証で不合格"}
+def verification_failed() -> dict[str, str]:
+    """独立検証（抜き取り）で不合格と判定された法律と、その理由。判定表が無いときは空。
+    台帳の検証状態ではなく判定表（sample-verdicts.csv）を引く（台帳は降格後「参考に下げた」に変わるため）。"""
+    if not SAMPLE_VERDICTS.exists():
+        return {}
+    with SAMPLE_VERDICTS.open(encoding="utf-8", newline="") as f:
+        return {row["id"]: (row.get("食い違い") or "").strip() for row in csv.DictReader(f) if row["判定"] == VERDICT_FAIL}
 
 
-def hide_unreliable(laws: list[dict], failed: set[str], ceiling: int) -> tuple[list[dict], list[dict]]:
-    """参考の額のうち、検証で不合格のもの、他の法律と同じ額のもの、桁外れのものは（コロナ対応の費用便益は法律ごとの支出から別に計算するので対象にしない）額を出さず、額なしの側へ回す。
-    確かな額（高・中・低）には触れない。返り値は（残す法律, 額なしに回す行）。"""
-    amounts = Counter((law["amountMedianYen"], law["amountLowYen"], law["amountHighYen"]) for law in laws if law["certainty"] == "参考" and not law["group"].startswith(COVID_BENEFIT_GROUP))
+def demoted_basis(law: dict, covid_basis: str = "") -> str:
+    """降格した参考値の根拠（出典・由来）。コロナ費用便益は費用便益の規則の根拠文、他は指標・窓・比較国から作る。"""
+    if covid_basis:
+        return covid_basis
+    countries = "・".join(law["comparisonCountries"])
+    if law["group"].startswith(MACRO_GROUP):
+        how = "OECD 同産業の中央値との差"
+    else:
+        how = "OECD 比較国との差" + (f"（{countries}）" if countries else "")
+    return f"{law['indicator']} {law['window']}（{how}）。順位・議員配分に使わない参考値"
+
+
+def hide_unreliable(laws: list[dict], failed: dict[str, str] | set[str], ceiling: int, covid_basis: dict[str, str] | None = None) -> tuple[list[dict], list[dict]]:
+    """検証で不合格の法律は、確かさ（高・中・低・参考）やコロナ費用便益の群を問わず「参考に下げる」。額は消さず参考値として残し、
+    確かさを参考にして、降格の理由（demotedReason）と参考値の根拠（demotedBasis）を付ける。順位・議員配分には使わない。
+    それ以外の参考の額のうち、他の法律と同じ額のもの、桁外れのものは（コロナ対応の費用便益は法律ごとの支出から別に計算するので対象にしない）額を出さず、額なしの側へ回す。
+    確かな額（高・中・低）で不合格でないものには触れない。返り値は（残す法律, 額なしに回す行）。"""
+    covid_basis = covid_basis or {}
+    reasons = failed if isinstance(failed, dict) else {i: "" for i in failed}
+
+    def demoted(law: dict) -> bool:
+        return is_demoted(VERDICT_FAIL if law["id"] in reasons else "", in_ranking=True)
+
+    amounts = Counter((law["amountMedianYen"], law["amountLowYen"], law["amountHighYen"]) for law in laws if law["certainty"] == "参考" and not demoted(law) and not law["group"].startswith(COVID_BENEFIT_GROUP))
     kept, moved = [], []
     for law in laws:
+        if demoted(law):
+            law["certainty"] = "参考"
+            law["demotedReason"] = reasons[law["id"]] or "独立検証の抜き取りで不合格"
+            law["demotedBasis"] = demoted_basis(law, covid_basis.get(law["id"], ""))
+            kept.append(law)
+            continue
         key = None
         if law["certainty"] == "参考" and not law["group"].startswith(COVID_BENEFIT_GROUP):
-            if law["id"] in failed:
-                key = "hidden_failed"
-            elif amounts[(law["amountMedianYen"], law["amountLowYen"], law["amountHighYen"])] >= 2:
+            if amounts[(law["amountMedianYen"], law["amountLowYen"], law["amountHighYen"])] >= 2:
                 key = "hidden_shared"
             elif law["amountMedianYen"] > ceiling:
                 key = "hidden_oversize"
@@ -450,7 +475,8 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
     if missing:
         raise ValueError(f"成立法の台帳に無い法律があります: {missing}")
     ceiling = japan_value_added_max(captured["industryVa"])
-    laws, hidden = hide_unreliable(laws, verification_failed(), ceiling)
+    covid_basis = {i: r["根拠"] for i, r in covid_rules.items() if r.get("根拠")}
+    laws, hidden = hide_unreliable(laws, verification_failed(), ceiling, covid_basis)
     others.extend(hidden)
     _reading_notes(laws, ceiling)
     # 確かな額（高・中・低）を先、参考を後。どちらも額の大きい順。

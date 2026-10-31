@@ -48,3 +48,25 @@ def involved_law_ids(path: Path) -> set[str] | None:
         return None
     with path.open(encoding="utf-8", newline="") as f:
         return {r["法律ID"] for r in csv.DictReader(f) if r["証拠URL"].startswith("http")}
+
+
+# 降格（参考に下げる）の規則。作る側の台帳（build_evaluation_ledger）と公開ランキング（build_public_ranking）が同じ関数を使う。
+# 方針：不合格の法律は「額を消す」のではなく「参考値に下げる」。確かさを参考にし、順位・議員配分に使わず、理由と根拠を添えて額を出し続ける。
+VERDICT_FAIL = "不合格"
+STATE_FAILED = "抜き取り検証で不合格"
+STATE_DEMOTED = "参考に下げた"
+# 台帳の到達点が、額を順位・議員配分に使わない（参考額）か、そもそも評価対象外（額が出ていれば順位に混ざる）のもの
+DEMOTE_REACH_PREFIXES = ("参考額", "評価対象外", "額（個別")
+
+
+def is_demoted(verdict: str, reach: str = "", certainty: str = "", in_ranking: bool = False) -> bool:
+    """不合格（sample-verdicts の判定）で、額を参考値として残す扱いにする法律か。
+
+    台帳側は 到達点（reach）・確かさ（certainty）で呼ぶ。額の無い到達点（保留・測定できない・効果なし）や
+    国の収支の別欄は降格の対象にしない（参考にする額が無い／分類を決め直す必要がある）。
+    公開ランキング側は、額が画面に出ている法律について in_ranking=True で呼ぶ。確かさ（高・中・低・参考）や
+    コロナ費用便益の群を問わず、不合格なら降格する。
+    """
+    if verdict != VERDICT_FAIL:
+        return False
+    return in_ranking or certainty == "参考" or reach.startswith(DEMOTE_REACH_PREFIXES)

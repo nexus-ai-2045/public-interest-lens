@@ -123,7 +123,11 @@ class PublicRankingTests(unittest.TestCase):
         flags = [law["certainty"] == "参考" for law in self.payload["laws"]]
         self.assertEqual(flags, sorted(flags))
         by_id = {law["id"]: law for law in self.payload["laws"]}
-        self.assertEqual(by_id["衆法-186-35"]["certainty"], "高")
+        # 衆法-186-35 は抜き取りで不合格（確かさ高・題名が基本法）。額は消さず参考値に下げ、理由と根拠を付ける（降格の規則）
+        self.assertEqual(by_id["衆法-186-35"]["certainty"], "参考")
+        self.assertGreater(by_id["衆法-186-35"]["amountMedianYen"], 0)
+        self.assertTrue(by_id["衆法-186-35"]["demotedReason"])
+        self.assertTrue(by_id["衆法-186-35"]["demotedBasis"])
         self.assertEqual(by_id["閣法-193-61"]["certainty"], "参考")
 
     def test_shared_observation_and_oversized_notes(self):
