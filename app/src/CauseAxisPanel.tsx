@@ -79,7 +79,7 @@ export function CauseAxisPanel({ data = causeAxisData, initial = 'J62_63' }: { d
     <p className="world-lead" role="status">{industryLead(industry)}</p>
     {industry.realNote !== 'OECD の実質' && <p className="fine-note">日本のこの産業は OECD に実質の系列が無く、親の産業の物価で割った仮定の値です。</p>}
     {industry.withoutKorea && <p className="fine-note">支援の強い韓国を除くと {trillion(industry.withoutKorea.trillionYen)}（{industry.withoutKorea.of}か国中{industry.withoutKorea.rank}位）。</p>}
-    <div className="world-chart-wrap"><LineReveal key={industry.code} series={industrySeries(industry)} highlightId="JPN" indexed baseYear={2000} format={v => v.toFixed(0)} unit="指数（2000年＝100、全体の伸びで割った値）" caption={`${industry.name}の実質付加価値の伸び（全体の伸びで割った値）。日本を赤で強調`} /></div>
+    <div className="world-chart-wrap"><LineReveal key={industry.code} series={industrySeries(industry)} highlightId="JPN" log format={v => v.toFixed(0)} unit="指数（2000年＝100、全体の伸びで割った値）" caption={`${industry.name}の実質付加価値の伸び（全体の伸びで割った値）。日本を赤で強調`} /></div>
     <h4>2023年の比（2000年＝1）</h4>
     <PeerBars industry={industry} />
     <AxisTable data={data} />

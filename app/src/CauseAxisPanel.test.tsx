@@ -41,4 +41,13 @@ describe('産業別の付加価値の比較（原因の軸）', () => {
     expect(html).toContain('産業ごとに、日本は同じ産業の他国より伸びたか');
     expect(html).toContain('人や組織にはまだ配っていません');
   });
+  it('全ての産業で、日本と比べる国の中央値の2本の線が実際に描かれます（2000年の点が無い系列を指数化で捨てない）', () => {
+    for (const industry of causeAxis.industries) {
+      const html = renderToStaticMarkup(<CauseAxisPanel initial={industry.code} />);
+      expect(html.match(/class="m-line-path[^"]*" d="M/g)?.length, industry.code).toBe(2);
+      expect(html).toContain('>日本</text>');
+      expect(html).toContain('>比べる国の中央値</text>');
+      expect(html).not.toContain('NaN');
+    }
+  });
 });
