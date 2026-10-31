@@ -53,8 +53,9 @@ RANGE_VALUES = ("全体", "一部", "不明")
 CLASS_VALUES = ("評価対象", "制度整備", "不明")
 CONFIDENCE = ("高", "中", "低")
 QUESTIONS = {"範囲": ("全体", "一部"), "分類": ("評価対象", "制度整備")}  # (合格の値, 不合格の値)
-ALLOWED = {"範囲": RANGE_VALUES, "分類": CLASS_VALUES, "確信度": CONFIDENCE}
-TEXT_FIELDS = ("使った前提", "計算や比較", "判定理由", "確認できなかった点", "探した場所", "model", "prompt_version")
+WEIGHT_VALUES = ("はい", "いいえ", "不明", "該当なし")  # 重みが観測できるか（範囲が全体なら該当なし）
+ALLOWED = {"範囲": RANGE_VALUES, "分類": CLASS_VALUES, "確信度": CONFIDENCE, "重み観測": WEIGHT_VALUES}
+TEXT_FIELDS = ("使った前提", "計算や比較", "判定理由", "確認できなかった点", "探した場所", "重みの手がかり", "model", "prompt_version")
 REQUIRED = ("id", "範囲", "分類", "読んだ出典", "確信度", "小問", "根拠引用", "仮定") + TEXT_FIELDS
 YES, NO, UNSURE = "はい", "いいえ", "不明"
 SUBQ_KEYS = ("範囲1", "範囲2", "分類1", "分類2")  # 範囲1 限定されるか／範囲2 産業全体に及ぶか／分類1 付加価値を直接動かすか／分類2 整理に限られるか
@@ -449,7 +450,7 @@ def law_verdict(per_q: dict[str, str]) -> str:
 
 
 def _short(rec: dict) -> dict:
-    keys = ("範囲", "分類", "小問", "使った前提", "仮定", "読んだ出典", "根拠引用", "計算や比較", "判定理由", "確認できなかった点", "探した場所", "確信度", "model")
+    keys = ("範囲", "分類", "小問", "使った前提", "仮定", "読んだ出典", "根拠引用", "計算や比較", "判定理由", "確認できなかった点", "探した場所", "確信度", "重み観測", "重みの手がかり", "model")
     return {k: rec[k] for k in keys}
 
 
