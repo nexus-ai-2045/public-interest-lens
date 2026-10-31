@@ -50,4 +50,13 @@ describe('産業別の付加価値の比較（原因の軸）', () => {
       expect(html).not.toContain('NaN');
     }
   });
+  it('経済全体だけは、全体の伸びで割らず就業者1人当たりの伸びだと図に書きます（説明と計算をそろえる）', () => {
+    const total = byCode('_T');
+    expect(total.measure).toContain('就業者1人当たり');
+    expect(total.measure).toContain('割らない');
+    expect(byCode('J61').measure).toContain('全体の実質の伸び');
+    const html = renderToStaticMarkup(<CauseAxisPanel initial="_T" />);
+    expect(html).toContain('data-measure="_T"');
+    expect(html).toContain('この図の値：就業者1人当たり');
+  });
 });

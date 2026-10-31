@@ -72,15 +72,16 @@ export function CauseAxisPanel({ data = causeAxisData, initial = 'J62_63' }: { d
   const industry = data.industries.find(i => i.code === code) ?? data.industries[0];
   return <section id="cause-axis" className="lower-panel cause-axis" aria-labelledby="cause-axis-heading">
     <h3 id="cause-axis-heading">産業ごとに、日本は同じ産業の他国より伸びたか</h3>
-    <p className="fine-note">各産業の実質の付加価値の伸びを、その国全体の実質の伸びで割った比を、2000年＝100にして並べます（名目では比べません。差の大半は物価だからです）。比べる国は、2000年の就業者1人当たりGDPが日本の8割以上の国で、アイルランドは除きます。式と決まりは<a href="/methodology#spec-cause-axis">原因の軸の式と決まり</a>（{data.version}）。</p>
+    <p className="fine-note">各産業の実質の付加価値の伸びを、その国全体の実質の伸びで割った比を、2000年＝100にして並べます（名目では比べません。差の大半は物価だからです）。ただし「経済全体」だけは、全体で割ると常に100になるので、就業者1人当たりの実質付加価値の伸びをそのまま並べます。比べる国は、2000年の就業者1人当たりGDPが日本の8割以上の国で、アイルランドは除きます。式と決まりは<a href="/methodology#spec-cause-axis">原因の軸の式と決まり</a>（{data.version}）。</p>
     <div className="world-segment" role="group" aria-label="産業">
       {data.industries.map(i => <button key={i.code} type="button" aria-pressed={i.code === code} onClick={() => setCode(i.code)}>{i.name}</button>)}
     </div>
     <p className="world-lead" role="status">{industryLead(industry)}</p>
+    <p className="fine-note" data-measure={industry.code}>この図の値：{industry.measure}</p>
     {industry.realNote !== 'OECD の実質' && <p className="fine-note">日本のこの産業は OECD に実質の系列が無く、親の産業の物価で割った仮定の値です。</p>}
     {industry.withoutKorea && <p className="fine-note">支援の強い韓国を除くと {trillion(industry.withoutKorea.trillionYen)}（{industry.withoutKorea.of}か国中{industry.withoutKorea.rank}位）。</p>}
-    <div className="world-chart-wrap"><LineReveal key={industry.code} series={industrySeries(industry)} highlightId="JPN" log format={v => v.toFixed(0)} unit="指数（2000年＝100、全体の伸びで割った値）" caption={`${industry.name}の実質付加価値の伸び（全体の伸びで割った値）。日本を赤で強調`} /></div>
-    <h4>2023年の比（2000年＝1）</h4>
+    <div className="world-chart-wrap"><LineReveal key={industry.code} series={industrySeries(industry)} highlightId="JPN" log format={v => v.toFixed(0)} unit="指数（2000年＝100）" caption={`${industry.name}：${industry.measure}。日本を赤で強調`} /></div>
+    <h4>2023年の値（2000年＝1）</h4>
     <PeerBars industry={industry} />
     <AxisTable data={data} />
     <AccountingTable data={data} />

@@ -37,6 +37,10 @@ EXCLUDED_ALWAYS = {"JPN", "IRL"}  # アイルランドは多国籍企業の計�
 EXOGENOUS = {"C26": {"KOR"}, "J61": {"KOR"}}  # 他国の支援が強い産業は、支援の強い国を除いた額も感度として出す
 RANK_REFERENCE = 3  # 置換検定の順位がこの位以内なら「参考」
 
+# 比の定義。経済全体（_T）は「全体の伸びで割る」と自分自身で割って1になるので、就業者1人当たりの実質の伸びをそのまま使う（文書7章・仕様 cause-axis-v3 の E_t）。
+MEASURE_INDUSTRY = "産業の実質付加価値の伸び ÷ 日本・各国それぞれの全体の実質の伸び（2000年＝1）"
+MEASURE_TOTAL = "就業者1人当たりの実質付加価値の伸び（2000年＝1。全体の伸びでは割らない）"
+
 INDUSTRY_NAMES = {
     "_T": "経済全体（就業者1人当たり）",
     "J": "情報通信",
@@ -302,7 +306,7 @@ def build(src: Path = SRC, dst: Path = DST, app_json: Path | None = APP_JSON) ->
     summary = {
         "version": VERSION, "base": BASE, "last": LAST,
         "industries": [{
-            "code": r["産業"], "name": r["名称"], "trillionYen": round(r["累計_兆円"], 1), "direction": r["向き"], "rank": r["順位"], "of": r["母数"],
+            "code": r["産業"], "name": r["名称"], "measure": MEASURE_TOTAL if r["産業"] == "_T" else MEASURE_INDUSTRY, "trillionYen": round(r["累計_兆円"], 1), "direction": r["向き"], "rank": r["順位"], "of": r["母数"],
             "certainty": r["確かさ"], "peerCount": len(r["比較国"]), "realNote": r["日本の実質"],
             "withoutKorea": None if "韓国を除く_累計_兆円" not in r else {"trillionYen": round(r["韓国を除く_累計_兆円"], 1), "rank": r["韓国を除く_順位"], "of": r["韓国を除く_母数"]},
             "series": [{"year": y["年"], "japan": round(y["日本の比"], 4), "peerMedian": round(y["比較国の中央値の比"], 4)} for y in r["yearly"]],
