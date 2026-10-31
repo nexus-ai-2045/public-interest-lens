@@ -3,8 +3,7 @@
     "nexus-ai-skills": {
       "source": {
         "source": "github",
-        "repo": "nexus-ai-2045/nexus-ai-skills",
-        "ref": "claude/pstack-marketplace"
+        "repo": "nexus-ai-2045/nexus-ai-skills"
       }
     }
   },
