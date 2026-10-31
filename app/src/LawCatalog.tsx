@@ -3,7 +3,7 @@ import { AlertTriangle, ArrowUpRight, ChevronDown, Layers, Search } from 'lucide
 import { ShareButton } from './motion';
 import {
   DEFAULT_QUERY, STEP_LABEL, collapseObservations, detailBundleUrl, filterCatalog, formatYen, groupByObservation, isOutlierMark, readQuery, sideLabel, writeQuery,
-  type CatalogDetail, type CatalogItem, type CatalogOverview, type CatalogQuery, type LawsCatalog, type OverviewQuote,
+  type CatalogColumns, type CatalogDetail, type CatalogItem, type CatalogOverview, type CatalogQuery, type LawsCatalog, type OverviewQuote,
 } from './laws-catalog';
 import { LawName, lawNameText } from './law-name';
 import { loadPriceIndex, toLatestYen, windowBaseYear, type PriceIndex } from './price-index';
@@ -222,6 +222,19 @@ function CatalogRow({ item, open, onToggle, ...peers }: RowProps) {
 }
 
 /** 冒頭の5行：何を・誰が・狙い・反対側の心配・結果。事実・AI 要約・計算を見分けられるように印を付ける。 */
+/** 額の物差し三欄。順位に使うのは付加価値の欄（ranked）だけ。国の収支は足さない別表、採算は参考。 */
+function ColumnsBox({ columns }: { columns: CatalogColumns }) {
+  const { valueAdded, fiscalOku, spendYen, profitability } = columns;
+  return <section className="laws-columns" aria-label="額の三欄">
+    <h5>額の三欄（物差しは3つに分けてある）</h5>
+    <dl className="laws-facts">
+      {valueAdded && <div><dt>付加価値の変化{valueAdded.ranked ? '（本線）' : '（参考）'}</dt><dd>{formatYen(valueAdded.yen)}。{valueAdded.origin}、確かさ{valueAdded.certainty}。{valueAdded.ranked ? '順位に使う欄' : '順位・合計・議員への配分には使わない'}</dd></div>}
+      {fiscalOku !== undefined && <div><dt>国の収支（別表）</dt><dd>{formatYen(fiscalOku * 1e8)}{fiscalOku < 0 ? 'の減収' : 'の増収'}の見込み。{columns.fiscalOrigin}。付加価値には足さない</dd></div>}
+      {profitability !== undefined && spendYen !== undefined && <div><dt>採算（参考）</dt><dd>付加価値の変化 ÷ 国の支出 ＝ {profitability.toFixed(3)}（国の支出 {formatYen(spendYen)}）。{columns.profitabilityNote}</dd></div>}
+    </dl>
+  </section>;
+}
+
 function OverviewBox({ overview }: { overview: CatalogOverview }) {
   const quote = (value: OverviewQuote | undefined, label: string) => value?.url && <a className="laws-ov-src" href={value.url} target="_blank" rel="noopener noreferrer">{label}：{value.speaker}・{value.date} <ArrowUpRight size={12} /></a>;
   return <section className="laws-overview" aria-label="概要">
@@ -259,6 +272,7 @@ function CatalogDetailPanel({ item }: { item: CatalogItem }) {
       {detail.window && <div><dt>額の窓</dt><dd>{detail.window}</dd></div>}
       {detail.comparison && detail.comparison.length > 0 && <div><dt>比べた国</dt><dd>{detail.comparison.join('・')}</dd></div>}
     </dl>
+    {detail.columns && <ColumnsBox columns={detail.columns} />}
     <h5>計算の流れ（どこまで進み、どこで止まったか）</h5>
     <ol className="laws-chain">{detail.chain.map((step, index) => <li key={index}>
       <span className="laws-chain-step">{step.step}</span><strong>{step.result}</strong>
