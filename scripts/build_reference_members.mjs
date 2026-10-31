@@ -23,6 +23,8 @@ const inputs = {
   cabinet: join(root, 'data/acquired/office-holders/cabinet.csv'),
   roster: join(root, 'data/acquired/diet-roster/current.csv'),
   persons: join(root, 'data/derived/person-ids/persons.csv'),
+  // 当時の会派（scripts/fetch_affiliation_at_time.py）。無ければ元職は参議院の最終会派だけになる。
+  affiliationAtTime: join(root, 'data/acquired/member-affiliation/at-time.csv'),
 };
 const { createServer } = await import(join(app, 'node_modules/vite/dist/node/index.js'));
 const server = await createServer({ root: app, logLevel: 'silent', server: { middlewareMode: true }, appType: 'custom' });

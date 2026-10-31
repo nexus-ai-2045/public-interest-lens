@@ -59,5 +59,22 @@ class CommittedTableTest(unittest.TestCase):
             self.assertEqual(bool(r["所管_今"]), not r["決め方"].startswith("決まらない"), r["法律ID"])
 
 
+class MissingSpeechesTest(unittest.TestCase):
+    """speeches.csv は Git に入っていない取得物。無いときは既存の生成物を残して続ける（無ければ止める）。"""
+
+    def test_missing_speeches_keeps_existing_output(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            speeches, out = mb.SPEECHES, mb.OUT
+            mb.SPEECHES, mb.OUT = Path(tmp) / "none.csv", Path(tmp) / "cabinet-bills.csv"
+            try:
+                with self.assertRaises(SystemExit):
+                    mb.build()
+                mb.OUT.write_text("keep", encoding="utf-8")
+                mb.build()
+                self.assertEqual(mb.OUT.read_text(encoding="utf-8"), "keep")
+            finally:
+                mb.SPEECHES, mb.OUT = speeches, out
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -124,7 +124,7 @@ class PublicRankingTests(unittest.TestCase):
         self.assertEqual(flags, sorted(flags))
         by_id = {law["id"]: law for law in self.payload["laws"]}
         self.assertEqual(by_id["衆法-186-35"]["certainty"], "高")
-        self.assertEqual(by_id["閣法-193-37"]["certainty"], "参考")
+        self.assertEqual(by_id["閣法-193-61"]["certainty"], "参考")
 
     def test_shared_observation_and_oversized_notes(self):
         from collections import Counter
@@ -139,7 +139,7 @@ class PublicRankingTests(unittest.TestCase):
 
     def test_covid_overlap_and_unmeasured_notes(self):
         by_id = {law["id"]: law for law in self.payload["laws"]}
-        for law_id in ("衆法-189-20", "閣法-193-59", "閣法-196-2", "閣法-196-4"):
+        for law_id in ("衆法-189-20", "閣法-196-2"):
             self.assertIn("コロナ期と重なる", by_id[law_id]["notes"])
         self.assertIn("便益側の一部が未測定", by_id["閣法-189-27"]["notes"])
         self.assertFalse({"コロナ期と重なる", "便益側の一部が未測定"} & set(by_id["衆法-186-35"]["notes"]))

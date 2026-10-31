@@ -37,7 +37,9 @@ class BuildLawsCatalogTest(unittest.TestCase):
 
     def test_laws_without_amount_carry_the_public_reason(self):
         for other in self.ranking["others"]:
-            self.assertTrue(self.laws[other["id"]]["summary"].startswith(other["outcome"]))
+            summary = self.laws[other["id"]]["summary"]
+            # 税制改正の法律は、政府（財務省）の増減収見込みを要約に出す（GDP への損失とは別の量）
+            self.assertTrue(summary.startswith(other["outcome"]) or summary.startswith("税収の増減見込み"), other["id"])
 
     def test_every_row_has_reason_and_source(self):
         for item in self.payload["laws"]:

@@ -40,6 +40,8 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
   const [scrollTo, setScrollTo] = useState('');
   // 同じ観測の法律は代表の1行にまとめる。「すべて表示」で全部並べ、題名の一覧から選んだ法律・#id で開く法律は行として足す。
   const [showAll, setShowAll] = useState(false);
+  // 参考の額（確かさ低・合計に足さない）は既定では畳む。探す語・「額が出た」の絞り込み・#id で開く時は出す。
+  const [showRef, setShowRef] = useState(false);
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
   const showAllRef = useRef(showAll);
   showAllRef.current = showAll;
@@ -51,7 +53,10 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
   const byId = useMemo(() => new Map(all.map(item => [item.id, item])), [all]);
   const queryRef = useRef(query);
   queryRef.current = query;
-  const filtered = useMemo(() => filterCatalog(all, query), [all, query]);
+  const filteredAll = useMemo(() => filterCatalog(all, query), [all, query]);
+  const refRevealed = showRef || query.text.trim() !== '' || query.side === 'amount';
+  const filtered = useMemo(() => refRevealed ? filteredAll : filteredAll.filter(item => item.step !== 'amounted' || revealed.has(item.id) || open === item.id), [filteredAll, refRevealed, revealed, open]);
+  const foldedRef = filteredAll.length - filtered.length;
   const shown = useMemo(() => showAll ? filtered : collapseObservations(filtered, revealed), [filtered, showAll, revealed]);
   const kinds = useMemo(() => [...new Set(all.map(item => item.kind))], [all]);
 
@@ -59,7 +64,13 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
     const merged = { ...query, ...next };
     setQuery(merged);
     setLimit(PAGE);
-    window.history.replaceState(null, '', `${window.location.pathname}${writeQuery(merged)}${window.location.hash}`);
+    {
+      // 最上部の絞り込み（政党・性格）の URL 項目は消さずに残す。
+      const params = new URLSearchParams(writeQuery(merged).slice(1));
+      const keep = new URLSearchParams(window.location.search);
+      for (const key of ['party', 'nature']) { const value = keep.get(key); if (value) params.set(key, value); }
+      window.history.replaceState(null, '', `${window.location.pathname}${params.size ? `?${params}` : ''}${window.location.hash}`);
+    }
   };
 
   // URL の #法律ID で開く。絞り込みで隠れていたら外し、その行まで一覧を伸ばしてから移る。
@@ -70,6 +81,7 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
       // 代表でない法律の #id は、その法律を行として足す（同じ観測の代表の隣に出る）。
       const reveal = new Set(revealedRef.current).add(id);
       setRevealed(reveal);
+      if (all.find(item => item.id === id)?.step === 'amounted') setShowRef(true);
       const visible = (query: CatalogQuery) => showAllRef.current ? filterCatalog(all, query) : collapseObservations(filterCatalog(all, query), reveal);
       let list = visible(queryRef.current);
       if (!list.some(item => item.id === id)) {
@@ -122,6 +134,11 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
       </div>
     </div>
     <p className="laws-count" role="status">{shown.length.toLocaleString('ja-JP')}件（確かな額{confirmed.toLocaleString('ja-JP')}・参考の額{(amounted - confirmed).toLocaleString('ja-JP')}・額なし{(shown.length - amounted).toLocaleString('ja-JP')}）{JSON.stringify(query) !== JSON.stringify(DEFAULT_QUERY) && <button type="button" onClick={() => update(DEFAULT_QUERY)}>絞り込みを外す</button>} <ShareButton title="法律と政策の一覧｜法律ランキング" text={`法律と政策の一覧（${shown.length.toLocaleString('ja-JP')}件）`} url={`${window.location.origin}/ranking${writeQuery(query)}#list`} label="この一覧を共有" /></p>
+    {(foldedRef > 0 || showRef) && !(query.text.trim() !== '' || query.side === 'amount') && <p className="laws-fold" role="status">
+      <Layers size={15} aria-hidden="true" />
+      <span>{showRef ? '参考の額も並べています。参考の額は産業や経済全体の差から見積もった値で、その法律だけの効果とは言えません（確かさ低。合計・議員には足しません）。' : `参考の額が付いた法律${foldedRef.toLocaleString('ja-JP')}本は畳んでいます。産業や経済全体の差から見積もった値で、その法律だけの効果とは言えず、合計・議員には足しません。`}</span>
+      <button type="button" aria-pressed={showRef} onClick={() => { setShowRef(value => !value); setLimit(PAGE); }}>{showRef ? '畳む' : '参考の額も表示'}</button>
+    </p>}
     {(hidden > 0 || showAll) && <p className="laws-fold" role="status">
       <Layers size={15} aria-hidden="true" />
       <span>{showAll ? '同じ観測の法律も、すべて別の行で並べています（同じ観測の法律は同じ額。足し合わせないでください）。' : <>同じ観測（同じ額の系列・同じ期間）の法律は、代表の1行にまとめています（ほか{hidden.toLocaleString('ja-JP')}本。同じ額なので足し合わせません）。</>}</span>
@@ -184,7 +201,7 @@ function CatalogRow({ item, open, onToggle, ...peers }: RowProps) {
           : <span key={mark} className={`laws-mark${mark.startsWith('確かさ') ? ' is-certain' : mark === '参考の額' ? ' is-reference' : ''}`}>{mark}</span>)}</span>}
       </span>
       <span className="laws-row-amount">
-        {item.amount ? <><strong>{formatYen(item.amount.median)}</strong><small>幅 {formatYen(item.amount.low)}〜{formatYen(item.amount.high)}</small></> : <span className="laws-row-noamount">{STEP_LABEL[item.step]}</span>}
+        {item.amount ? <><strong className={item.step === 'amounted' ? 'ref' : undefined}>{item.step === 'amounted' && <span className="laws-ref-tag">参考値</span>}{formatYen(item.amount.median)}</strong><small>幅 {formatYen(item.amount.low)}〜{formatYen(item.amount.high)}</small></> : <span className="laws-row-noamount">{STEP_LABEL[item.step]}</span>}
         <ChevronDown size={18} className="laws-chevron" aria-hidden="true" />
       </span>
     </button>

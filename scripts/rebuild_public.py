@@ -10,7 +10,7 @@ tests/test_public_sync.py が、公開データ同士の照合値（SHA-256）�
      非公開の作業データが要るので入口に含めない。そちらを回したときも、続けてこの入口を回せば人物IDがそろう
   1. 振り分け v2 系統2（scripts/triage_v2_line2.py）
   2. 判定ルール（app/scripts）：振り分け v2 系統1 → 影響 → 損失 → 便益と公開判定
-  3. 全法律の結果（scripts/build_all_laws_outcomes.py）
+  3. 税制改正の増減収見込み（scripts/build_tax_impact.py）→ 全法律の結果（scripts/build_all_laws_outcomes.py）
   4. コロナ対応の費用便益（scripts/build_covid_benefit.py）→ 全体指標の参考の額（scripts/build_macro_amounts.py）
   5. 公開ランキング ranking.json と出典チェック（scripts/source_check.rebuild）
   6. 閣法の所管の省庁（scripts/build_ministry_bills.py build）→ 税の帳簿（scripts/build_tax_ledger.py）→ 団体の帳簿（scripts/build_org_ledger.py）→ 経済界の帳簿（scripts/build_business_ledger.py）→ 背後の力の結び付け（scripts/build_backing_forces.py）→ 自動の関与（scripts/build_auto_involvements.py）→ 修正案の提出者（scripts/build_committee_amend_involvements.py）→ 反対票の一覧（scripts/build_opposing_votes.py）→ 採決ごとの会派（scripts/build_vote_parties.py）→ 議員ページ members.json（scripts/build_public_members.mjs）→ もう一度出典チェック
@@ -72,6 +72,8 @@ def rebuild(record: Record = _print) -> bool:
     for args in RULES:
         if not _command(record, f"再計算：{args[1]}", args, cwd=ROOT / "app"):
             return False
+    if not _command(record, "再計算：税制改正の増減収見込み", [py, "scripts/build_tax_impact.py"]):
+        return False
     if not _command(record, "再計算：全法律の結果", [py, "scripts/build_all_laws_outcomes.py"]):
         return False
     # コロナ対応の費用便益（支出の規模 × 帰属 × 乗数）。macro.csv のコロナ対応の行がこの出力を読むので、先に回す。
@@ -130,6 +132,9 @@ def rebuild(record: Record = _print) -> bool:
         return False
     # 暫定評価（provisional-v1）。直近の法律の件数と政策カードを、laws.json に合わせて作り直す。
     if not _command(record, "暫定評価：provisional.json", [py, "scripts/build_provisional.py"]):
+        return False
+    # 未成立の提出法案の暫定規模点（R61）。公開ファイル unenacted.json にする。
+    if not _command(record, "未成立の提出法案：unenacted.json", [py, "scripts/build_public_unenacted.py"]):
         return False
     # 物価の換算表（price-v1）。法律の額を最新年の円に直して並べるのに使う。
     if not _command(record, "物価の換算表：price-index.json", [py, "scripts/build_price_index.py"]):

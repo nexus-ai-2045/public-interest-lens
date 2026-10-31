@@ -26,3 +26,45 @@
 .votes-member-detail ul{padding-left:1.2em;margin:6px 0;font-size:14px;line-height:1.7}
 @media(min-width:720px){.votes-rows>li:not(.votes-member){grid-template-columns:6.5em minmax(0,1fr) auto auto auto;align-items:center;gap:10px}.votes-member>button{grid-template-columns:8em minmax(0,1fr) auto;align-items:center;gap:12px}}
 .votes-links a{display:inline-flex;align-items:center;min-height:24px}
+
+/* ページ最上部の絞り込み（政党・法律の性格・分野を横並び） */
+.lens-filter-bar{margin:12px 0 16px}
+.lens-filter-row{display:flex;gap:8px;align-items:flex-start}.lens-filter-row>*{flex:1 1 0;min-width:0}
+.lens-filter{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.lens-filter>summary{display:grid;gap:2px;padding:8px 10px;min-height:48px;cursor:pointer;list-style:none}
+.lens-filter>summary::-webkit-details-marker{display:none}
+.lens-filter[open]{border-color:var(--ink)}
+.lens-filter-label{font-size:11px;color:var(--muted)}
+.lens-filter-value{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lens-filter-menu{position:absolute;z-index:20;left:0;top:calc(100% + 4px);min-width:100%;width:max-content;max-width:min(88vw,360px);max-height:50vh;overflow:auto;display:grid;gap:2px;padding:8px;border:1px solid var(--ink);border-radius:8px;background:var(--surface);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.lens-filter-menu label{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 6px;font-size:14px}
+.lens-filter-clear{min-height:36px;margin-bottom:4px;border:1px dashed var(--line);border-radius:6px;background:transparent;color:var(--muted);font-size:13px}
+.lens-filter:nth-child(n+3) .lens-filter-menu{left:auto;right:0}
+
+/* 法律ごとの性格と態度 */
+.stance-list{list-style:none;padding:0;margin:10px 0;display:grid;gap:6px}
+.stance-law{display:grid;gap:6px;border:1px solid var(--line);border-left-width:3px;border-radius:8px;padding:10px 12px;background:var(--surface)}
+.stance-law.is-bad{border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+.stance-head{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
+.stance-head .votes-title{flex:1 1 14em;min-width:0}
+.stance-tags{display:flex;flex-wrap:wrap;gap:4px;font-size:12px}
+.stance-tag{border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--muted)}
+.stance-tag.char-regulate{border-color:#b7791f;color:#b7791f}
+.stance-tag.char-protect{border-color:#8b5cf6;color:#8b5cf6}
+.stance-tag.loss{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.stance-chips{display:flex;flex-wrap:wrap;gap:6px}
+.stance-chip{display:inline-flex;gap:6px;align-items:center;font-size:12px;border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+.stance-chip b{font-weight:700}
+.stance-chip.is-yes{border-color:#0f9a8f}
+.stance-chip.is-no,.stance-chip.is-split{border-color:var(--accent);background:var(--accent);color:#fff}
+.stance-chip.is-none{color:var(--muted)}
+.stance-sub{font-size:12px;color:var(--muted)}
+@media(min-width:720px){.lens-filter-row{gap:12px}}
+.stance-chart{display:grid;gap:12px;margin:8px 0 14px}
+.stance-chart-bloc{display:grid;gap:4px}
+.stance-chart-name{margin:0}
+.stance-chart-row{display:grid;grid-template-columns:6em minmax(0,1fr);gap:2px 8px;align-items:center;font-size:13px}
+.stance-chart-num{grid-column:2;color:var(--muted);font-size:12px}
+.stance-bar{display:flex;height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.stance-bar .y{background:#0f9a8f}.stance-bar .n{background:var(--accent)}
+@media(min-width:720px){.stance-chart-row{grid-template-columns:6em minmax(0,1fr) 11em}.stance-chart-num{grid-column:auto}}

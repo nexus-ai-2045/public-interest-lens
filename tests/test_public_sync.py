@@ -96,6 +96,7 @@ class PublicSyncTest(unittest.TestCase):
             "cabinet": ROOT / "data/acquired/office-holders/cabinet.csv",
             "roster": ROOT / "data/acquired/diet-roster/current.csv",
             "persons": ROOT / "data/derived/person-ids/persons.csv",
+            "affiliationAtTime": ROOT / "data/acquired/member-affiliation/at-time.csv",
         }
         inputs = dict(reference["inputs"])
         ballots = hashlib.sha256()

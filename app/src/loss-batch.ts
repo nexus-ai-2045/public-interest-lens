@@ -47,6 +47,8 @@ export type OecdSpec = {
   industry: string;
   /** 複数の節を足して1つの産業にするとき（M と N など）の節。industry は代表の節（表示用）。足す節がすべてそろった年だけ使う。 */
   parts?: string[];
+  /** 日本の OECD 表6は parts の先頭の節に残りの節を含めて公表している（M が M+N、R が R+S）。日本だけ先頭の節をそのまま使う。 */
+  jpnFirstIsCombined?: boolean;
   label: string;
   excludeIfCrossing?: { country: string; year: number; evidence: string }[];
   /** 比較国に使ったときに計算式の要素へ書く注記（国ごと）。 */
@@ -72,6 +74,10 @@ export function oecdAggregate(tables: Tables, spec: OecdSpec, price: 'LR' | 'V')
   const byPart = parts.map(p => oecdByCountry(tables, p, price));
   const out = new Map<string, Map<number, number>>();
   for (const country of new Set(byPart.flatMap(m => [...m.keys()]))) {
+    if (country === 'JPN' && spec.jpnFirstIsCombined && byPart[0].has(country) && byPart.slice(1).every(m => !m.has(country))) {
+      out.set(country, byPart[0].get(country)!);
+      continue;
+    }
     const series = byPart.map(m => m.get(country));
     if (series.some(x => !x)) continue;
     const years = [...series[0]!.keys()].filter(y => series.every(x => x!.has(y)));
@@ -161,7 +167,7 @@ export const EXPANSION_LOSS_SOURCES: LossSource[] = NEW_FIELDS.flatMap(field => 
     indicator: newIndicator(field, match),
     definition: `${e.label}の実質付加価値（ISIC Rev.4 ${e.sections.join('+')}）`,
     sector: sna(e.sna),
-    oecd: { industry: e.sections[0], parts: e.sections.length > 1 ? e.sections : undefined, label: e.label, excludeIfCrossing: [ITA_BREAK], countryNotes: { AUS: AUS_NOTE } },
+    oecd: { industry: e.sections[0], parts: e.sections.length > 1 ? e.sections : undefined, jpnFirstIsCombined: e.sections.length > 1, label: e.label, excludeIfCrossing: [ITA_BREAK], countryNotes: { AUS: AUS_NOTE } },
     intl: null, reference: match === '代理',
     note: [OECD_NOTE, e.sections.length > 1 ? COMPOSITE_NOTE : '', e.note ?? '',
       match === '代理' ? `${PROXY_MARK}。向きは機械的な仮定なので参考にとどめ、合計に入れず、公開せず、議員への配分に使わない` : ''].filter(Boolean).join('。'),

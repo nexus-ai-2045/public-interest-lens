@@ -13,13 +13,14 @@ import { DEFAULT_KNOBS, isDefaultKnobs, readKnobs, writeKnobs, type CausalRole, 
 import { adjustMembers } from './members-knobs';
 import { BLOCS as VOTE_BLOCS } from './votes';
 import { AllMembers } from './AllMembers';
-import { distributionReferenceUrl } from './all-members-view';
+import { distributionReferenceUrl, formerNote } from './all-members-view';
 import type { PublicMembersReference } from './members-reference';
 import { partyById, partyComparison, sortPartyRows, type PartySortKey } from './party-compare';
 import { LawName, lawNameText, namingOf, useLawNames } from './law-name';
 import { CORRECTION_EMAIL, correctionIssueUrl, correctionListUrl, correctionMailUrl, type CorrectionTarget } from './correction-link';
 const MethodFormulas = lazy(() => import('./MethodFormulas'));
 const BacktestPanel = lazy(() => import('./BacktestPanel'));
+const LedgerPanel = lazy(() => import('./LedgerPanel'));
 
 export const distributionMembersUrl = '/distribution/members.json';
 export const correctionUrl = 'https://github.com/nexus-ai-2045/public-interest-lens/issues/new?template=correction.yml';
@@ -160,6 +161,7 @@ function MemberDetail({ member, laws, activity, adjusted, backing }: { member: P
       return <section key={entry.lawId + entry.direction} className={`member-law ${entry.effect === 'bad' ? 'loss' : 'benefit'}`} aria-label={lawNameText(law.title, naming.what)}>
         <p className="law-card-side">{entry.effect === 'bad' ? '国賊側' : '国士側'}（{entry.side === 'loss' ? '損失の法律' : '便益の法律'}に{entry.direction === 'against' ? '反対' : '関わった'}）・{law.id}</p>
         <h5><LawName title={law.title} {...naming} /></h5>
+        {law.points && <p className="member-law-points"><strong>仮点数 {law.points.value > 0 ? '+' : ''}{law.points.value}</strong><span>{law.points.basis}（仮計算・確かな額とは別）</span></p>}
         <p className="member-law-link"><a href={`/ranking#${encodeURIComponent(law.id)}`}>この法律の行を法律ランキングで開く（額の計算・一次資料・ほかの議員）</a></p>
         <p className="member-law-share"><span>{entry.effect === 'bad' ? 'この法律で失わせた額' : 'この法律で生んだ額'}{entry.direction === 'against' ? '（反対票）' : ''}</span><strong>{formatYen(entry.share.median)}</strong><span>幅 {formatYen(entry.share.low)}〜{formatYen(entry.share.high)}・{law.observationLaws > 1 ? `この法律の分（観測の額の${law.observationLaws}分の1）の` : '法律の額の'}{pct(entry.fraction)}</span></p>
         <CausalChain entry={entry} law={law} adjusted={adjusted} backing={backing?.get(entry.lawId)} />
@@ -271,10 +273,10 @@ export function PartyRankingPanel({ ranking }: { ranking: PartyRanking }) {
   </section>;
 }
 
-/** 一覧の所属政党の表示。現職は政党名、表がまだ読めていないときは空、それ以外（元職・当時）は「元職」。 */
+/** 一覧の所属の表示。現職は党名（名簿の会派から直したもの）、表がまだ読めていないときは空、それ以外（元職・当時）は「元職」（参議院の記録があれば最終会派つき）。 */
 export function partyLabel(id: string, parties: ReadonlyMap<string, string>, loaded: boolean, former: ReadonlyMap<string, string> = new Map()): string {
   const last = former.get(id);
-  return parties.get(id) ?? (loaded ? (last ? `元職・${last}` : '元職') : '');
+  return parties.get(id) ?? (loaded ? (last ? `元職（${last}）` : '元職') : '');
 }
 
 const AFFILIATION_SORTS: { key: PartySortKey; label: string }[] = [{ key: 'perPerson', label: '1人あたり' }, { key: 'total', label: '合計' }, { key: 'people', label: '人数' }];
@@ -285,14 +287,14 @@ export function PartyAffiliationPanel({ members, parties, loaded, error, adjuste
   const { rows, excluded } = useMemo(() => partyComparison(members, parties), [members, parties]);
   const sorted = useMemo(() => sortPartyRows(rows, by), [rows, by]);
   if (error) return <p className="state-banner" role="alert">{error}</p>;
-  if (!loaded) return <p className="fine-note" role="status">所属政党の表を読み込み中…</p>;
+  if (!loaded) return <p className="fine-note" role="status">所属の表を読み込み中…</p>;
   return <section aria-label="所属政党ごとの比較" className="members-party-ranking">
-    <h3>所属政党ごとの比較（現職の議員の、今の所属政党で集計）</h3>
-    <p className="fine-note">議員の額（上の「議員ランキング」と同じ純額）を、いまの所属政党ごとに足したものです。新しい額ではありません。過去に別の党にいたときの行動も、いまの党に入ります。元職・当時だけの{excluded}人（全{members.length}人のうち）は政党が決められないため入れていません。国賊側の上位は元職が多く、その分は下の「採決した時の会派」で見られます。政党名は名簿の表記（略称）のままです。党は大きいほど合計が大きくなるので、まず1人あたりで並べます。{adjusted && '見え方のつまみを変えた値で集計しています。'}</p>
+    <h3>所属ごとの比較（現職の議員の、今の所属で集計）</h3>
+    <p className="fine-note">議員の額（上の「議員ランキング」と同じ純額）を、いまの所属ごとに足したものです。新しい額ではありません。過去に別の党にいたときの行動も、いまの党に入ります。元職・当時だけの{excluded}人（全{members.length}人のうち）は所属が決められないため入れていません。国賊側の上位は元職が多く、その分は下の「採決した時の会派」で見られます。国会の名簿に載るのは院内の会派だけで、党籍は載りません。ここでは会派の略称を党名に直して集計しています（参議院の「民主」は国民民主党・新緑風会、「い党」はれいわ新選組）。会派の中の無所属の議員（立憲民主・無所属、自由民主党・無所属の会など）は区別できず、会派の党に入ります。党は大きいほど合計が大きくなるので、まず1人あたりで並べます。{adjusted && '見え方のつまみを変えた値で集計しています。'}</p>
     <div className="party-sort" role="group" aria-label="並べ方">{AFFILIATION_SORTS.map(o => <button key={o.key} type="button" aria-pressed={by === o.key} onClick={() => setBy(o.key)}>{o.label}</button>)}</div>
     <div className="ranking-scroll"><table className="party-table">
       <caption className="sr-only">所属政党ごとの比較（{AFFILIATION_SORTS.find(o => o.key === by)!.label}。マイナスが国賊側）</caption>
-      <thead><tr><th scope="col">順位</th><th scope="col">政党</th><th scope="col">1人あたり</th><th scope="col">合計</th><th scope="col">人数</th><th scope="col">国賊側／国士側／0円</th></tr></thead>
+      <thead><tr><th scope="col">順位</th><th scope="col">所属</th><th scope="col">1人あたり</th><th scope="col">合計</th><th scope="col">人数</th><th scope="col">国賊側／国士側／0円</th></tr></thead>
       <tbody>{sorted.map((r, i) => <tr key={r.party} className={r.total < 0 ? 'loss' : 'benefit'}>
         <td>{i + 1}</td>
         <th scope="row"><span className="party-side">{r.total < 0 ? '国賊側' : '国士側'}</span> {r.party}</th>
@@ -365,12 +367,12 @@ export function MembersPage() {
     void fetch(distributionReferenceUrl, { signal: controller.signal, cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.text(); })
       .then(parsePublicMembersReference)
-      .then(setReference).catch(e => { if (!controller.signal.aborted) setReferenceError(`所属政党の表を読み込めませんでした（${e instanceof Error ? e.message : e}）`); });
+      .then(setReference).catch(e => { if (!controller.signal.aborted) setReferenceError(`所属の表を読み込めませんでした（${e instanceof Error ? e.message : e}）`); });
     return () => controller.abort();
   }, []);
   const partyMap = useMemo(() => reference ? partyById(reference.members) : new Map<string, string>(), [reference]);
   // 元職の人は、参議院の投票記録に最後に出てくる会派を添える（あれば）。
-  const formerMap = useMemo(() => new Map((reference?.members ?? []).filter(r => !r.current && r.lastSangiinParty).map(r => [r.id, r.lastSangiinParty] as const)), [reference]);
+  const formerMap = useMemo(() => new Map((reference?.members ?? []).filter(r => !r.current && formerNote(r)).map(r => [r.id, formerNote(r)] as const)), [reference]);
   const [partyFilter, setPartyFilter] = useState('');
   const partyChoices = useMemo(() => { const c = new Map<string, number>(); for (const party of partyMap.values()) c.set(party, (c.get(party) ?? 0) + 1); return [...c].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ja')).map(([party]) => party); }, [partyMap]);
   // 議員ランキング／政党ごとの比較。名前を指した URL は議員ランキングで開く。
@@ -588,6 +590,7 @@ export function MethodologyPage() {
       </ul>
       <Suspense fallback={<p className="empty-state">式を読み込み中…</p>}><MethodFormulas /></Suspense>
       <Suspense fallback={<p className="empty-state">精度の表を読み込み中…</p>}><BacktestPanel /></Suspense>
+      <Suspense fallback={<p className="empty-state">評価台帳を読み込み中…</p>}><LedgerPanel /></Suspense>
     </main>
   </SiteShell>;
 }
