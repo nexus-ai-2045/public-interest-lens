@@ -43,6 +43,7 @@ INPUTS = {
     "industryVa": ACQUIRED / "oecd-industry" / "industry_va.csv",
     "covidBenefit": DERIVED / "covid-benefit-v1" / "benefit.csv",
     "taxImpact": DERIVED / "tax-impact-v1" / "fiscal.csv",
+    "threeColumns": DERIVED / "three-columns-v1" / "columns.csv",
 }
 # 無くても一覧は作れる入力（概要の原料と、その AI 要約、桁外れの印に使う日本の付加価値）
 OPTIONAL = {"speechFacts", "overviews", "industryVa"}
@@ -272,6 +273,7 @@ def build() -> dict:
 
     covid_benefit = {row["id"]: row for row in _rows("covidBenefit") if row["結果"] == "額"}
     tax_impact = {row["id"]: row for row in _rows("taxImpact") if row["平年度_億円"] != ""}
+    columns_by_id = {row["id"]: row for row in _rows("threeColumns")}
     items = []
     for census in _rows("enacted"):
         law_id = f"{census['種別']}-{census['提出回次']}-{census['番号']}"
@@ -341,6 +343,9 @@ def build() -> dict:
             item["marks"].append("政府の見込み。GDP への損失とは別の量で、順位・合計には入れない")
             item["chain"].append({"step": "税収の見込み", "result": item["summary"], "note": tax["理由"] + "。出典：" + tax["出典URL"]})
             item["sources"] += [{"label": "財務省 税制改正の概要", "url": u} for u in tax["出典URL"].split()]
+        columns = three_columns(columns_by_id.get(law_id))
+        if columns:
+            item["columns"] = columns
         if out and out["指標"] and "indicator" not in item:
             item["indicator"] = out["指標"]
         if not item["sources"]:
@@ -377,6 +382,23 @@ def build() -> dict:
         "laws": items,
         "policies": policies,
     }
+
+
+def three_columns(row: dict[str, str] | None) -> dict | None:
+    """額の物差し三欄（設計決定0024）。値がある欄だけ入れる。付加価値の「順位に使う」は個別の因果の鎖の額だけ。"""
+    if not row:
+        return None
+    out: dict = {}
+    if row["付加価値の変化（円）"]:
+        out["valueAdded"] = {"yen": int(row["付加価値の変化（円）"]), "origin": row["付加価値の由来"], "certainty": row["付加価値の確かさ"], "ranked": row["順位に使う"] == "はい"}
+    if row["国の収支（億円）"]:
+        out["fiscalOku"] = int(row["国の収支（億円）"])
+        out["fiscalOrigin"] = row["国の収支の由来"]
+    if row["採算（付加価値÷国の支出）"]:
+        out["spendYen"] = int(row["国の支出（円）"])
+        out["profitability"] = float(row["採算（付加価値÷国の支出）"])
+        out["profitabilityNote"] = row["採算の注記"]
+    return out or None
 
 
 def yen(value: float) -> str:
