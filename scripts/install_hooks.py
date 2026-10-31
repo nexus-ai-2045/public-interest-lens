@@ -8,6 +8,7 @@
 - gitleaks が無ければ repo-preflight の固定版を ~/.local/bin に入れる（pre-commit が要る）。
 
 使い方：python3 scripts/install_hooks.py [--check]
+  core.hooksPath が全体の共通置き場（このリポジトリの外）を指しているときは、何も書かずに終了コード2で止まる。
   --check：入っているかだけ確かめる（入っていなければ終了コード1）。
 """
 
@@ -30,6 +31,15 @@ def hooks_dir() -> Path:
     out = subprocess.run(["git", "rev-parse", "--git-path", "hooks"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
     p = Path(out)
     return p if p.is_absolute() else ROOT / p
+
+
+def is_repo_local(directory: Path) -> bool:
+    common = subprocess.run(["git", "rev-parse", "--git-common-dir"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+    base = Path(common) if Path(common).is_absolute() else ROOT / common
+    return directory.resolve().is_relative_to(base.resolve())
+
+
+SHARED_MESSAGE = "フック：置き場がこのリポジトリの外（core.hooksPath が全体の共通置き場を指している）ので、何も書かない。共通フックを上書きしないため。このリポジトリだけに入れるなら core.hooksPath を外すか、リポジトリ内の .git/hooks を指す設定にしてから回す"
 
 
 def bodies() -> dict[str, str]:
@@ -73,6 +83,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true", help="入っているかだけ確かめる")
     args = ap.parse_args()
+    if not is_repo_local(hooks_dir()):
+        print(SHARED_MESSAGE)
+        return 2
     if args.check:
         gap = missing()
         print("フック：そろっている" if not gap else "フック：足りない・古い " + "、".join(gap) + "（python3 scripts/install_hooks.py）")
