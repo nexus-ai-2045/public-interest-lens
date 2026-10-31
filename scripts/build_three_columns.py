@@ -28,6 +28,7 @@ ORIGIN_CHAIN = "個別の因果の鎖（段階1〜3）"
 ORIGIN_COVID = "コロナ対応の費用便益"
 ORIGIN_MACRO = "全体指標の参考の額（産業の付加価値の差）"
 ORIGIN_FISCAL = "税制改正の増減収見込み（財務省、平年度）"
+ORIGIN_OTHER_TAX = "新設税の歳入見込み（予算案、初年度。平年度は資料に無い）"
 COVID_NOTE = "コロナ対応の費用便益の中央値÷支出の規模（中）。移転そのものは便益に数えない。参考"
 
 
@@ -58,6 +59,8 @@ def build() -> list[dict[str, str]]:
     macro = {r["id"]: r for r in read(D / "macro-v1" / "macro.csv") if r["結果"] == "額"}
     covid = {r["id"]: r for r in read(D / "covid-benefit-v1" / "benefit.csv") if r["結果"] == "額"}
     fiscal = {r["id"]: r for r in read(D / "tax-impact-v1" / "fiscal.csv") if r["平年度_億円"] != ""}
+    # 税制改正の表（所得税法等）に載らない新設税の歳入見込み。法律の付加価値の欄は別に持ち、この欄は国の収支として並べるだけ
+    other_tax = {r["法律ID"]: r for r in read(ROOT / "data" / "acquired" / "tax-revenue-estimates" / "other-taxes.csv")}
     rows = []
     for o in outcomes:
         i = o["id"]
@@ -79,6 +82,8 @@ def build() -> list[dict[str, str]]:
             row.update({"付加価値の変化（円）": macro[i]["中央値"], "付加価値の由来": ORIGIN_MACRO, "付加価値の確かさ": "参考", "順位に使う": "いいえ"})
         if i in fiscal:
             row.update({"国の収支（億円）": fiscal[i]["平年度_億円"], "国の収支の由来": ORIGIN_FISCAL})
+        elif i in other_tax and other_tax[i]["初年度_億円"]:
+            row.update({"国の収支（億円）": other_tax[i]["初年度_億円"], "国の収支の由来": ORIGIN_OTHER_TAX})
         rows.append(row)
     return rows
 
