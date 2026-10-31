@@ -2,6 +2,7 @@
 
 出典（公的・一次）: 総務省ほか10府省庁「産業連関表」
 - 平成23-27-令和2年接続産業連関表（参考：マトリックス形式の取引基本表。基本分類、生産者価格、2011・2015年の名目と実質（2015年価格）、2020年名目）
+- 平成7-12-17年接続産業連関表 投入表（基本分類、1995・2000・2005年。符号体系が違うので読み込みと検証は io_ripple_old.py）
 - 令和2年（2020年）産業連関表 統合大分類（37部門）の取引基本表と逆行列係数表（公式の計算シート。検算にだけ使う）
 
 計算（method-spec の io-ripple-v1）:
@@ -20,6 +21,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import itertools
 import json
 import sys
 import urllib.request
@@ -30,7 +32,7 @@ import numpy as np
 import openpyxl
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from register_external_material import register_once  # noqa: E402
+from register_external_material import register_once
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / 'data/acquired/io-tables/raw'
@@ -43,6 +45,7 @@ SOURCES = {
     'link20.xlsx': ('https://www.soumu.go.jp/main_content/001019115.xlsx', '平成23-27-令和2年接続産業連関表（参考）マトリックス形式の取引基本表'),
     'rensetsu_H12-17-23_105.xlsx': ('https://www.e-stat.go.jp/stat-search/file-download?statInfId=000031413705&fileKind=0', '平成12-17-23年接続産業連関表 生産者価格評価表（統合中分類、105部門）'),
     'rensetsu_H17-23-27_105.xlsx': ('https://www.e-stat.go.jp/stat-search/file-download?statInfId=000031974825&fileKind=0', '平成17-23-27年接続産業連関表 生産者価格評価表（統合中分類、105部門）'),
+    'h7-12-17_input_basic.xls': ('https://www.e-stat.go.jp/stat-search/file-download?statInfId=000007517092&fileKind=0', '平成7-12-17年接続産業連関表 投入表（基本分類別、1995・2000・2005年の名目と実質）。読み込みは io_ripple_old.py'),
     'official2020_large.xlsx': ('https://www.soumu.go.jp/main_content/000954326.xlsx', '令和2年産業連関表 計算シートその１（統合大分類）'),
 }
 # (表の名前, シート名, 年)。実質は2015年価格。
@@ -58,7 +61,7 @@ def fetch() -> None:
     RAW.mkdir(parents=True, exist_ok=True)
     rows = []
     mf = ACQ / 'manifest.csv'
-    prev = {r['file']: r['fetched_at'] for r in csv.DictReader(open(mf, encoding='utf-8'))} if mf.exists() else {}
+    prev = {r['file']: r['fetched_at'] for r in csv.DictReader(mf.read_text(encoding='utf-8').splitlines())} if mf.exists() else {}
     for name, (url, title) in SOURCES.items():
         p = RAW / name
         if not p.exists():
@@ -85,7 +88,7 @@ def _large(code: str) -> str:
 
 
 def _col(names, label):
-    return [i for i, n in enumerate(names) if n == label][0]
+    return next(i for i, n in enumerate(names) if n == label)
 
 
 def load_sheet(sheet, key=None, path='link20.xlsx'):
@@ -98,14 +101,13 @@ def load_sheet(sheet, key=None, path='link20.xlsx'):
     c_dom, c_exp, c_imp, c_x = (_col(names, k) for k in ('国内需要合計', '輸出計', '（控除）輸入計', '国内生産額'))
     body = [r for r in rows[3:] if r[0] is not None]
     inner_rows = [r for r in body if str(r[0]).isdigit() and str(r[0])[0] < '7']
-    va_row = [r for r in body if r[1] == '粗付加価値部門計'][0]
+    va_row = next(r for r in body if r[1] == '粗付加価値部門計')
     key = key or _large
     sec_of_col = [key(str(codes[j])) for j in ic]
     secs = sorted(set(sec_of_col) | {key(str(r[0])) for r in inner_rows})
     idx = {s: k for k, s in enumerate(secs)}
     n = len(secs)
     Z, D, E, M, X, VA = np.zeros((n, n)), np.zeros(n), np.zeros(n), np.zeros(n), np.zeros(n), np.zeros(n)
-    sec_name = {}
     for r in inner_rows:
         i = idx[key(str(r[0]))]
         for j, c in zip(ic, sec_of_col):
@@ -159,7 +161,7 @@ def build_all():
     for label, sheet, year in TABLES:
         secs, Z, D, E, M, X, VA = load_sheet(sheet)
         A, mhat, B = leontief(Z, D, M, X)
-        tabs[label] = dict(year=year, secs=secs, Z=Z, D=D, E=E, M=M, X=X, VA=VA, A=A, mhat=mhat, B=B, r=ripple_ratio(B, VA, X))
+        tabs[label] = {'year': year, 'secs': secs, 'Z': Z, 'D': D, 'E': E, 'M': M, 'X': X, 'VA': VA, 'A': A, 'mhat': mhat, 'B': B, 'r': ripple_ratio(B, VA, X)}
     return tabs
 
 
@@ -175,14 +177,14 @@ def load_official_large():
     D = np.array([r[c['国内需要合計']] for r in body], float)
     M = -np.array([r[c['（控除）輸入計']] for r in body], float)
     X = np.array([r[c['国内生産額']] for r in body], float)
-    va = [r for r in rows[3:] if r[0] is not None and str(r[0]) == '96'][0]
+    va = next(r for r in rows[3:] if r[0] is not None and str(r[0]) == '96')
     VA = np.array([va[2 + j] for j in range(n)], float)
     return [str(r[0]) for r in body], Z, D, M, X, VA
 
 
 def check():
     """同じ式を公式の大分類の表に当て、公式の逆行列係数表 B と比べる。"""
-    secs, Z, D, M, X, VA = load_official_large()
+    secs, Z, D, M, X, _VA = load_official_large()
     _, _, B = leontief(Z, D, M, X)
     ocodes, OB, orows = official_B()
     assert secs == orows == ocodes
@@ -200,7 +202,6 @@ def build() -> None:
     tabs = build_all()
     names = {**sector_names(), **EXTRA_NAMES}
     OUT.mkdir(parents=True, exist_ok=True)
-    secs = tabs['2020名目']['secs']
     # 1) 年ごとの波及比率
     with open(OUT / 'ripple.csv', 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
@@ -231,8 +232,8 @@ def build() -> None:
         direct = (1 - ta['mhat']) * Fd + tb['E']
         xio = ta['B'] @ direct
         big = tb['X'] > np.quantile(tb['X'], 0.25)
-        def med_err(x):
-            return float(np.median(np.abs(np.log(x[big] / tb['X'][big]))))
+        def med_err(x, big=big, xb=tb['X']):
+            return float(np.median(np.abs(np.log(x[big] / xb[big]))))
         pred[f'{a_}→{b_}'] = {
             '部門数': int(big.sum()),
             '産業連関の予測_中央値誤差_対数': med_err(xio),
@@ -285,9 +286,12 @@ def set_ripple(Bm, v, X, VA, members):
 
 
 def half_width(gap: int, kind: str = 'basic'):
-    """区間の半幅（対数）。基本分類の表：5年以内 0.40、10年以内 0.50。統合中分類の表（2000・2005年）：5年以内 0.80、それより遠いものは保留。"""
+    """区間の半幅（対数）。基本分類の表：5年以内 0.40、10年以内 0.50。統合中分類の表（2000・2005年）：5年以内 0.80、それより遠いものは保留。
+    古い基本分類の表（1995・2000・2005年、平成17年基準の符号）：5年以内 0.60（同じ符号の中の5年の動きの最大 0.18＋符号の改訂をまたぐ差の最大 0.57 を覆う）、それより遠いものは保留。"""
     if kind == 'mid':
         return 0.80 if gap <= 5 else None
+    if kind == 'old':
+        return 0.60 if gap <= 5 else None
     if gap <= 5:
         return 0.40
     if gap <= 10:
@@ -299,14 +303,15 @@ def build_mid():
     out = {}
     for label, path, sheet, year in MID_TABLES:
         secs, Z, D, E, M, X, VA = load_sheet(sheet, key=lambda c: c[:3], path=path)
-        A, mhat, Bm = leontief(Z, D, M, X)
+        _A, mhat, Bm = leontief(Z, D, M, X)
         v = np.where(X > 0, VA / np.where(X == 0, 1, X), 0)
-        out[year] = dict(secs=secs, Bm=Bm, v=v, X=X, VA=VA, mhat=mhat, Z=Z, D=D, E=E, M=M, r=ripple_ratio(Bm, VA, X))
+        out[year] = {'secs': secs, 'Bm': Bm, 'v': v, 'X': X, 'VA': VA, 'mhat': mhat, 'Z': Z, 'D': D, 'E': E, 'M': M, 'r': ripple_ratio(Bm, VA, X)}
     return out
 
 
-def isic_ripple_at(level_secs, Bm, v, X, VA, ind, mid):
-    pre = [p[:3] if mid else p for p in ISIC_TO_IO[ind]]
+def isic_ripple_at(level_secs, Bm, v, X, VA, ind, mid, mapping=None):
+    """mapping は ISIC → 部門コードの先頭。既定は 2011 年以降の基本分類の対応（ISIC_TO_IO）。古い表（平成7-12-17年）は符号体系が違うので io_ripple_old.OLD_ISIC_TO_IO を渡す。"""
+    pre = [p[:3] if mid else p for p in (mapping or ISIC_TO_IO)[ind]]
     members = [i for i, c in enumerate(level_secs) if any(c.startswith(p) for p in pre) and v[i] > 0 and X[i] > 0]
     return set_ripple(Bm, v, X, VA, members)
 
@@ -316,13 +321,13 @@ def mid_stability():
     mt = build_mid()
     yrs = [2000, 2005, 2011, 2015]
     steps = []
-    for a_, b_ in zip(yrs, yrs[1:]):
+    for a_, b_ in itertools.pairwise(yrs):
         ra, rb = mt[a_]['r'], mt[b_]['r']
         ok = np.isfinite(ra) & np.isfinite(rb) & (ra > 0) & (rb > 0) & (mt[a_]['X'] > 1e5)
         steps.append(np.log(rb[ok] / ra[ok]))
     # 産業(ISIC)単位での動き
     isic_steps = []
-    for a_, b_ in zip(yrs, yrs[1:]):
+    for a_, b_ in itertools.pairwise(yrs):
         d = []
         for ind in ISIC_TO_IO:
             if ind in ('D', 'E'):
@@ -356,14 +361,19 @@ def apply_laws() -> None:
     basic = {}
     for label, sheet, year in TABLES:
         if label.endswith('名目'):
-            secs, Z, D, E, M, X, VA = load_sheet(sheet, key=lambda c: c[:6])
-            A, mhat, Bm = leontief(Z, D, M, X)
+            secs, Z, D, _E, M, X, VA = load_sheet(sheet, key=lambda c: c[:6])
+            _A, _mhat, Bm = leontief(Z, D, M, X)
             basic[year] = (secs, Bm, np.where(X > 0, VA / np.where(X == 0, 1, X), 0), X, VA)
     mt = build_mid()
     off = aggregation_offset(mt, basic)
-    cand = {2000: 'mid', 2005: 'mid', 2011: 'basic', 2015: 'basic', 2020: 'basic'}
-    rows = list(csv.DictReader(open(ROOT / 'data/derived/macro-v1/macro.csv', encoding='utf-8')))
+    import io_ripple_old as old  # 古い表（平成7-12-17年）。xlrd と原本（io_ripple_old.py fetch）が要る
+    off_old, spread_old = old.aggregation_offset_4digit()
+    old_r = old.old_table_laws_r(off_old, spread_old)  # (表の年, 産業) → 6桁の表に換算した波及比率。補正が定まらない産業は無い
+    # 1995・2000・2005年は古い基本分類の表を使う。その産業で使えないとき（補正が定まらない D など）は、2000・2005年だけ統合中分類で代える
+    cand = {1995: 'old', 2000: 'old', 2005: 'old', 2011: 'basic', 2015: 'basic', 2020: 'basic'}
+    rows = list(csv.DictReader((ROOT / 'data/derived/macro-v1/macro.csv').read_text(encoding='utf-8').splitlines()))
     cache = {}
+    kinds = {}
     out = []
     for r in rows:
         if r['結果'] != '額':
@@ -373,6 +383,9 @@ def apply_laws() -> None:
         kind = cand[near]
         gap = abs(near - y)
         ind = r['産業']
+        no_old = kind == 'old' and (near, ind) not in old_r
+        if no_old and near in (2000, 2005):
+            kind = 'mid'
         hw = half_width(gap, kind)
         rr = None
         reason = ''
@@ -380,13 +393,18 @@ def apply_laws() -> None:
             reason = '全産業の額に波及を足すと二重に数える（全産業は川上も含む）'
         elif ind not in ISIC_TO_IO:
             reason = '産業の対応が未定義'
+        elif no_old and near == 1995:
+            reason = '1995年の表では、この産業の4桁にまとめた差が年によって定まらず、補正できない（統合中分類は1995年が無い）'
         elif hw is None:
-            reason = f'施行年と最も近い表（{near}年）の差が{gap}年で、係数の安定性を確かめた範囲を超える。古い表を足すまで保留'
+            reason = f'施行年と最も近い表（{near}年）の差が{gap}年で、係数の安定性を確かめた範囲を超える'
         else:
             kk = (near, ind)
+            kinds[kk] = kind
             if kk not in cache:
                 if kind == 'basic':
                     cache[kk] = isic_ripple_at(*basic[near], ind, False)
+                elif kind == 'old':
+                    cache[kk] = old_r[kk]
                 else:
                     t = mt[near]
                     cache[kk] = isic_ripple_at(t['secs'], t['Bm'], t['v'], t['X'], t['VA'], ind, True) * float(np.exp(-off.get(ind, 0.0)))
@@ -394,7 +412,7 @@ def apply_laws() -> None:
         med = float(r['中央値'])
         out.append({
             'id': r['id'], '題名': r['題名'], '産業': ind, '施行年': y, '使った表': near if rr is not None else '',
-            '表の粒度': ('基本分類' if kind == 'basic' else '統合中分類（集計差を補正）') if rr is not None else '',
+            '表の粒度': {'basic': '基本分類', 'old': '基本分類（平成17年基準の符号、4桁にまとめた差を補正）', 'mid': '統合中分類（集計差を補正）'}[kind] if rr is not None else '',
             '額_中央値_円': int(med),
             '波及比率r': f'{rr:.4f}' if rr is not None else '',
             '波及比率_下限': f'{rr * np.exp(-hw):.4f}' if rr is not None else '',
@@ -412,11 +430,11 @@ def apply_laws() -> None:
         w = csv.writer(f)
         w.writerow(['表の年', '産業(ISIC)', '波及比率r', '粒度'])
         for (near, ind), rr in sorted(cache.items()):
-            w.writerow([near, ind, f'{rr:.4f}', cand[near]])
+            w.writerow([near, ind, f'{rr:.4f}', kinds[(near, ind)]])
     n_ok = sum(1 for o in out if o['波及比率r'])
     print(f'額のある{len(out)}本のうち波及を付けた{n_ok}本')
     # 統合中分類の検証をまとめて backtest.json に足す
-    mt2, yrs, steps, isteps = mid_stability()
+    _mt2, _yrs, steps, isteps = mid_stability()
     bt = json.loads((OUT / 'backtest.json').read_text(encoding='utf-8'))
     bt['mid_level'] = {
         '表': ['2000名目', '2005名目', '2011名目', '2015名目'],
