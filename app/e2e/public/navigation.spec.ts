@@ -19,8 +19,11 @@ test.describe('全ページ共通の導線', () => {
 
   test('最初の Tab で「本文へ移動」が出て、押すと本文に移る', async ({ page }) => {
     await page.goto('/votes');
-    await page.keyboard.press('Tab');
     const skip = page.getByRole('link', { name: '本文へ移動' });
+    // 描画（ハイドレーション）が終わる前に Tab を押すと、リンクがまだ無く focus が当たらない。主要要素の表示を待ってから押す。
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(skip).toBeAttached();
+    await page.keyboard.press('Tab');
     await expect(skip).toBeFocused();
     await expect(skip).toBeInViewport();
     await page.keyboard.press('Enter');
