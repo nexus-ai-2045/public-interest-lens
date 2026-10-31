@@ -97,3 +97,22 @@ describe('全法律の一覧', () => {
     expect(filterCatalog(catalog.laws, DEFAULT_QUERY).length).toBe(catalog.laws.length);
   });
 });
+
+describe('降格した法律の参考値の理由・根拠', () => {
+  const row = (extra: Record<string, unknown>) => ({ id: '閣法-1-1', kind: '閣法', title: 'テスト法', year: 2000, field: 'その他', side: null, amount: null, marks: [], step: 'enacted', summary: '', ...extra });
+  const parse = (extra: Record<string, unknown>) => parseLawsCatalog(JSON.stringify({ schema: 'public-laws/v1', counts: {}, fields: [], laws: [row(extra)], policies: [] })).laws[0];
+
+  it('refReason・refBasis が文字列なら読む', () => {
+    const item = parse({ refReason: '検証で降格', refBasis: '出典の表' });
+    expect(item.refReason).toBe('検証で降格');
+    expect(item.refBasis).toBe('出典の表');
+  });
+
+  it('文字列以外・空は無視し、欄が無くても落ちない', () => {
+    const item = parse({ refReason: 3, refBasis: { a: 1 } });
+    expect('refReason' in item).toBe(false);
+    expect('refBasis' in item).toBe(false);
+    expect('refReason' in parse({ refReason: '  ' })).toBe(false);
+    expect('refReason' in parse({})).toBe(false);
+  });
+});

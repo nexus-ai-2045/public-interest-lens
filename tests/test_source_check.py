@@ -137,6 +137,13 @@ class SourceCheckTests(unittest.TestCase):
         members = json.loads(source_check.MEMBERS.read_text(encoding="utf-8"))
         rows = source_check.check_members(members, self.ranking)
         self.assertEqual([r for r in rows if r["結果"] == source_check.NG], [])
+        # 検証で参考に降格した法律は、議員の額に配らない（順位と同じ扱い）。
+        demoted = {l["id"] for l in self.ranking["laws"] if l.get("demotedReason")}
+        self.assertEqual(demoted & {l["id"] for l in members["laws"]}, set())
+        if not members["laws"]:
+            # 配分に使える法律が検証を通っていない間は議員別の額が0人で、書き換える相手がいない。
+            self.assertEqual(members["members"], [])
+            return
         tampered = copy.deepcopy(members)
         listed = {l["id"] for l in self.ranking["laws"]}
         law = next(l for l in tampered["laws"] if l["id"] in listed and l["observationLaws"] == 1)

@@ -53,6 +53,9 @@
 .laws-row.benefit .laws-row-amount strong{color:var(--benefit)}
 .laws-row-amount strong.ref{font-size:14px;font-weight:600;color:var(--muted)!important}
 .laws-ref-tag{font-size:10px;font-weight:700;margin-right:4px;padding:1px 4px;border:1px solid currentColor;border-radius:3px;vertical-align:middle}
+.laws-refnote{margin:0 16px 10px;padding:8px 10px;border-left:3px solid var(--muted);font-size:13px;line-height:1.6;color:var(--muted)}
+.laws-refnote p{margin:2px 0}
+.laws-refnote span{font-weight:700;margin-right:6px}
 .laws-row-amount small{font-size:11px;color:var(--muted);white-space:nowrap}
 .laws-row-noamount{font-size:12px;color:var(--muted);max-width:7em;line-height:1.4}
 .laws-chevron{color:var(--muted);transition:transform .2s ease;margin-top:4px}

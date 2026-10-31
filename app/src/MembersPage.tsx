@@ -390,6 +390,8 @@ export function MembersPage() {
     window.history.replaceState(null, '', `${window.location.pathname}${params ? `?${params}` : ''}`);
   };
   const adjusted = !isDefaultKnobs(knobs);
+  // 検証を通った配分の法律が無い（議員別の額は0人）。額は出さず、理由を示す。
+  const noAllocation = !!data && data.members.length === 0;
   const members = useMemo(() => data ? adjustMembers(data, knobs) : [], [data, knobs]);
   const laws = useMemo(() => new Map((data?.laws ?? []).map(l => [l.id, l])), [data]);
   const backingByLaw = useMemo(() => new Map((data?.backing ?? []).map(b => [b.lawId, b])), [data]);
@@ -413,12 +415,13 @@ export function MembersPage() {
       </details>
       {error && <p className="state-banner" role="alert">{error}</p>}
       {data && <>
-        <ToneHero members={members} />
+        {noAllocation ? <section aria-label="議員別の額" className="members-empty"><p className="empty-state" role="note">確かな額がまだ無いため、議員別の額は出していません。理由：配分に使える法律が検証を通っていません（検証で参考に下げた法律の額は、順位にも議員への配分にも使いません）。</p></section> : <ToneHero members={members} />}
         <div className="members-tabs" role="group" aria-label="表示を切り替える">
           <button type="button" aria-pressed={tab === 'members'} onClick={() => switchTab('members')}>議員ランキング</button>
           <button type="button" aria-pressed={tab === 'party'} onClick={() => switchTab('party')}>政党ごとの比較</button>
         </div>
         {tab === 'members' && <>
+        {!noAllocation && <>
         <section aria-label="上位の議員" className="members-top" onClick={onTopClick}>
           {(tone === 'harm' ? ['loss', 'benefit'] as const : ['benefit', 'loss'] as const).map(key => <div key={key} className={`members-top-block ${key}`}>
             <h3>{key === 'loss' ? '失わせた額の上位10人（国賊側）' : '生んだ額の上位10人（国士側）'}</h3>
@@ -450,9 +453,11 @@ export function MembersPage() {
           </li>)}</ol>
           {visible.length < shown.length && <p className="members-more"><button type="button" onClick={() => setLimit(n => n + MEMBERS_PAGE_SIZE)}>さらに表示（残り{shown.length - visible.length}人）</button> <button type="button" onClick={() => setLimit(shown.length)}>全員を表示</button></p>}
         </section>
+        </>}
         <AllMembers confirmed={data.members} data={reference} error={referenceError} />
         </>}
-        {tab === 'party' && <>
+        {tab === 'party' && noAllocation && <p className="empty-state">政党ごとの比較は、議員別の額の合計です。確かな額がまだ無いため出していません（議員別の額と同じ理由です）。</p>}
+        {tab === 'party' && !noAllocation && <>
           <PartyAffiliationPanel members={members} parties={partyMap} loaded={!!reference} error={referenceError} adjusted={adjusted} />
         {/* 政党ランキングは初期の配分から作る。つまみを変えた後の議員の額とは合わないので、そのときは出さない。 */}
         {data.partyRanking && data.partyRanking.blocs.length > 0 && (adjusted

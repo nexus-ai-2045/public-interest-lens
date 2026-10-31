@@ -149,6 +149,21 @@ class BuildLawsCatalogTest(unittest.TestCase):
         self.assertEqual(items[2]["observation"]["size"], 1)
         self.assertNotIn("observation", items[3])
 
+    def test_demoted_fields_become_ref_fields_only_when_present(self):
+        law = {"demotedReason": " 検証で不合格 ", "demotedBasis": "窓の統計表（出典）"}
+        self.assertEqual(catalog.ref_fields(law), {"refReason": "検証で不合格", "refBasis": "窓の統計表（出典）"})
+        self.assertEqual(catalog.ref_fields({"id": "x"}), {})
+        self.assertEqual(catalog.ref_fields(None), {})
+        self.assertEqual(catalog.ref_fields({"demotedReason": 3, "demotedBasis": ""}), {})
+
+    def test_published_laws_without_demotion_have_no_ref_fields(self):
+        for law in self.ranking["laws"]:
+            if "demotedReason" not in law:
+                self.assertNotIn("refReason", self.laws[law["id"]])
+            else:
+                self.assertEqual(self.laws[law["id"]]["step"], "amounted")
+                self.assertEqual(self.laws[law["id"]]["refReason"], law["demotedReason"].strip())
+
     def test_outlier_mark_only_when_amount_exceeds_previous_year_value_added(self):
         value_added = {2000: 500e12, 2001: 510e12}
         items = [

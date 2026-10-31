@@ -163,6 +163,16 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
 type RowProps = { item: CatalogItem; open: boolean; onToggle: () => void; observations: Map<string, CatalogItem[]>; byId: Map<string, CatalogItem>; folded: boolean; revealed: ReadonlySet<string>; onReveal: (id: string) => void };
 
 /** 同じ観測の法律。代表の行では「ほか N 本が同じ観測」を押すと題名の一覧が開く。代表でない行には代表へのリンクを出す。 */
+/** 検証で参考に降格した法律の、参考値の理由と根拠。折りたたまず短く出す。順位・議員配分には使わないことを明記する。 */
+export function RefBasisNote({ item }: { item: Pick<CatalogItem, 'id' | 'refReason' | 'refBasis'> }) {
+  if (!item.refReason) return null;
+  return <div className="laws-refnote" role="note" aria-label="参考値の理由と根拠">
+    <p><strong>参考値（検証で降格）。</strong>順位・議員配分には使わない。</p>
+    <p><span>理由</span>{item.refReason}</p>
+    {item.refBasis && <p><span>根拠</span>{item.refBasis}</p>}
+  </div>;
+}
+
 function ObservationNote({ item, observations, byId, folded, revealed, onReveal }: Omit<RowProps, 'open' | 'onToggle'>) {
   const [listOpen, setListOpen] = useState(false);
   const observation = item.observation;
@@ -201,10 +211,11 @@ function CatalogRow({ item, open, onToggle, ...peers }: RowProps) {
           : <span key={mark} className={`laws-mark${mark.startsWith('確かさ') ? ' is-certain' : mark === '参考の額' ? ' is-reference' : ''}`}>{mark}</span>)}</span>}
       </span>
       <span className="laws-row-amount">
-        {item.amount ? <><strong className={item.step === 'amounted' ? 'ref' : undefined}>{item.step === 'amounted' && <span className="laws-ref-tag">参考値</span>}{formatYen(item.amount.median)}</strong><small>幅 {formatYen(item.amount.low)}〜{formatYen(item.amount.high)}</small></> : <span className="laws-row-noamount">{STEP_LABEL[item.step]}</span>}
+        {item.amount ? <><strong className={item.step === 'amounted' ? 'ref' : undefined}>{item.step === 'amounted' && <span className="laws-ref-tag">{item.refReason ? '参考値（検証で降格）' : '参考値'}</span>}{formatYen(item.amount.median)}</strong><small>幅 {formatYen(item.amount.low)}〜{formatYen(item.amount.high)}</small></> : <span className="laws-row-noamount">{STEP_LABEL[item.step]}</span>}
         <ChevronDown size={18} className="laws-chevron" aria-hidden="true" />
       </span>
     </button>
+    <RefBasisNote item={item} />
     <ObservationNote item={item} {...peers} />
     {open && <CatalogDetailPanel item={item} />}
   </li>;
