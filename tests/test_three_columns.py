@@ -48,8 +48,11 @@ class ColumnsTest(unittest.TestCase):
             if r["付加価値の由来"] in (tc.ORIGIN_COVID, tc.ORIGIN_MACRO):
                 self.assertEqual(r["順位に使う"], "いいえ", r["id"])
             if r["国の収支（億円）"]:
-                self.assertEqual(r["国の収支の由来"], tc.ORIGIN_FISCAL, r["id"])
-                self.assertEqual(r["順位に使う"], "", r["id"])  # 税制改正は付加価値の本線に入らない
+                self.assertIn(r["国の収支の由来"], (tc.ORIGIN_FISCAL, tc.ORIGIN_OTHER_TAX), r["id"])
+                if r["国の収支の由来"] == tc.ORIGIN_FISCAL:
+                    self.assertEqual(r["順位に使う"], "", r["id"])  # 税制改正の法律は付加価値の本線に入らない（別の欄）
+            if r["id"] == "閣法-196-2":  # 国際観光旅客税法：付加価値の鎖と国の収支（初年度60億円）を別の欄に持つ
+                self.assertEqual((r["国の収支（億円）"], r["順位に使う"]), ("60", "はい"))
             if r["採算（付加価値÷国の支出）"]:
                 self.assertTrue(r["国の支出（円）"] and r["付加価値の変化（円）"], r["id"])
 
