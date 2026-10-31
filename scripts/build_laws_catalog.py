@@ -254,6 +254,17 @@ def mark_outliers(items: list[dict], value_added: dict[int, float]) -> int:
     return count
 
 
+def ref_fields(source: dict | None) -> dict:
+    """公開ランキングの項目から、降格した法律の理由（demotedReason）と根拠（demotedBasis）を refReason・refBasis として拾う。
+    文字列で空でないものだけ。欄が無ければ空の辞書（欄自体を持たない）。"""
+    out = {}
+    for src, dst in (("demotedReason", "refReason"), ("demotedBasis", "refBasis")):
+        value = (source or {}).get(src)
+        if isinstance(value, str) and value.strip():
+            out[dst] = value.strip()
+    return out
+
+
 def build() -> dict:
     outcomes = {row["id"]: row for row in _rows("outcomes")}
     estimate = {row["id"]: row for row in _rows("fieldEstimate")}
@@ -307,7 +318,8 @@ def build() -> dict:
                 "amount": {"median": law["amountMedianYen"], "low": law["amountLowYen"], "high": law["amountHighYen"]},
                 "certainty": law["certainty"],
                 "marks": [CERTAINTY[law["certainty"]]] + (["下限（未測定の便益を0として数えた）"] if law["lowerBound"] else []) + law["notes"],
-                "step": "amounted" if law["certainty"] == "参考" else "published",
+                # 降格した法律（refReason あり）は額を外さず、参考値つきの amounted のまま残す
+                "step": "amounted" if law["certainty"] == "参考" or "refReason" in ref_fields(law) else "published",
                 "indicator": law["indicator"],
                 "stage": law["stage"],
                 "enforcedOn": law["enforcedOn"],
@@ -316,9 +328,10 @@ def build() -> dict:
                 "group": law["group"],
                 "benefitStatus": law["benefitStatus"],
             })
+            item.update(ref_fields(law))
             if law["amountLowYen"] < 0 < law["amountHighYen"]:
                 item["marks"].append("向きが定まらない（幅が0をまたぐ）")
-            kind = "参考値" if law["certainty"] == "参考" else "推計"
+            kind = "参考値" if law["certainty"] == "参考" or "refReason" in item else "推計"
             item["summary"] = ("損失" if law["side"] == "loss" else "便益") + f"の{kind}（{law['window']}・{law['indicator']}）"
             known = {source["url"] for source in item["sources"]}
             item["sources"] += [link for link in source_links(law["sources"]) if link["url"] not in known]

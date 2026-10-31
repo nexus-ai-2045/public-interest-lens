@@ -46,6 +46,9 @@ export type CatalogItem = {
   observation?: CatalogObservation;
   /** 額が日本の付加価値1年分を超えるときだけ。額が1年分の何倍か。 */
   scale?: number;
+  /** 検証で参考に降格した法律だけ。降格の理由と、参考値の根拠・出典・由来（空でない文字列のときだけ入る）。 */
+  refReason?: string;
+  refBasis?: string;
 };
 export type LawsCatalog = {
   schema: 'public-laws/v1';
@@ -106,6 +109,11 @@ export function parseLawsCatalog(text: string): LawsCatalog {
     if (typeof item.id !== 'string' || typeof item.title !== 'string' || !STEP_ORDER.includes(item.step)) throw new Error(`行の形が違います: ${String(item.id)}`);
     if (item.observation && (typeof item.observation.key !== 'string' || !(item.observation.size >= 1) || (!item.observation.representative && typeof item.observation.representativeId !== 'string'))) throw new Error(`観測の形が違います: ${item.id}`);
     if (item.scale !== undefined && !(item.scale > 1)) throw new Error(`桁外れの倍率が1を超えていません: ${item.id}`);
+    // 降格の理由・根拠は、空でない文字列だけ読む（それ以外の型は欄ごと無視する）
+    for (const key of ['refReason', 'refBasis'] as const) {
+      const value: unknown = item[key];
+      if (typeof value === 'string' && value.trim() !== '') item[key] = value.trim(); else delete item[key];
+    }
     if (item.amount && !(item.amount.low <= item.amount.median && item.amount.median <= item.amount.high)) throw new Error(`額の幅が中央値を挟んでいません: ${item.id}`);
   }
   return data;
