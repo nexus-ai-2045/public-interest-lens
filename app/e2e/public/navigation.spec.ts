@@ -42,7 +42,7 @@ test.describe('/votes（政党・議員の賛否）', () => {
     await page.goto('/votes');
     await expect(page).toHaveTitle(/政党・議員の賛否/);
     await expect(page.getByRole('heading', { level: 1, name: 'どの政党・議員が、どの法律に賛成・反対したか' })).toBeVisible();
-    const links = page.locator('.votes-links a');
+    const links = page.locator('.stance-sub a', { hasText: '議案の経過' });
     await expect(links.first()).toBeVisible();
     expect((await links.first().boundingBox())!.height).toBeGreaterThanOrEqual(24);
     watch.expectClean();
