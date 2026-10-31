@@ -72,7 +72,17 @@ export type CatalogOverview = {
   result: string;
 };
 export type ChainStep = { step: string; result: string; note: string };
+/** 額の物差し三欄（設計決定0024）。付加価値の変化だけが順位に使われうる（ranked）。国の収支は足さない別表、採算は参考。値のある欄だけ入る。 */
+export type CatalogColumns = {
+  valueAdded?: { yen: number; origin: string; certainty: string; ranked: boolean };
+  fiscalOku?: number;
+  fiscalOrigin?: string;
+  spendYen?: number;
+  profitability?: number;
+  profitabilityNote?: string;
+};
 export type CatalogDetail = {
+  columns?: CatalogColumns;
   proposer?: string;
   promulgatedOn?: string | null;
   enforcedOn?: string;

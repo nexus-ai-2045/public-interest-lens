@@ -56,3 +56,18 @@ class ColumnsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CatalogColumnsTest(unittest.TestCase):
+    def test_detail_columns_carry_only_filled_columns(self):
+        from scripts.build_laws_catalog import three_columns
+        blank = {"付加価値の変化（円）": "", "付加価値の由来": "", "付加価値の確かさ": "", "順位に使う": "", "国の収支（億円）": "", "国の収支の由来": "",
+                 "国の支出（円）": "", "採算（付加価値÷国の支出）": "", "採算の注記": ""}
+        self.assertIsNone(three_columns(blank))
+        self.assertIsNone(three_columns(None))
+        tax = three_columns({**blank, "国の収支（億円）": "-1400", "国の収支の由来": "税制改正"})
+        self.assertEqual(tax, {"fiscalOku": -1400, "fiscalOrigin": "税制改正"})  # 税制改正は付加価値の欄を持たない
+        ref = three_columns({**blank, "付加価値の変化（円）": "5", "付加価値の由来": "参考", "付加価値の確かさ": "参考", "順位に使う": "いいえ"})
+        self.assertFalse(ref["valueAdded"]["ranked"])
+        profit = three_columns({**blank, "付加価値の変化（円）": "5", "順位に使う": "いいえ", "国の支出（円）": "10", "採算（付加価値÷国の支出）": "0.5", "採算の注記": "x"})
+        self.assertEqual((profit["spendYen"], profit["profitability"]), (10, 0.5))
