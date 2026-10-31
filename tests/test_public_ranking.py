@@ -106,6 +106,26 @@ class PublicRankingTests(unittest.TestCase):
             self.assertIn(item["outcome"], OUTCOMES.values())
             self.assertNotRegex(json.dumps(item, ensure_ascii=False), r"Yen|中央値|四分位")
 
+    def test_shared_reference_is_outside_the_ranking_and_holds_group_totals(self):
+        payload = self.payload
+        ref = payload["sharedReference"]
+        in_laws = {law["id"] for law in payload["laws"]}
+        shared_others = {item["id"] for item in payload["others"] if item["outcome"] == OUTCOMES["hidden_shared"]}
+        self.assertEqual({item["id"] for item in ref["laws"]}, shared_others)
+        self.assertFalse(shared_others & in_laws)  # 順位・合計・議員配分に使う laws には居ない
+        self.assertEqual(payload["counts"]["shared"], len(ref["laws"]))
+        self.assertEqual(payload["counts"]["sharedGroups"], len(ref["groups"]))
+        sizes = {g["key"]: g["size"] for g in ref["groups"]}
+        for key, size in sizes.items():
+            self.assertGreaterEqual(size, 2)
+            self.assertEqual(sum(1 for item in ref["laws"] if item["key"] == key), size)
+        for g in ref["groups"]:
+            self.assertGreater(g["medianYen"], 0)
+            self.assertLessEqual(g["lowYen"], g["medianYen"])
+            self.assertLessEqual(g["medianYen"], g["highYen"])
+        for item in ref["laws"]:
+            self.assertNotRegex(json.dumps(item, ensure_ascii=False), r"Yen|中央値|四分位")  # 1本ごとの額は持たない
+
     def test_laws_carry_range_certainty_and_sources(self):
         payload = self.payload
         self.assertEqual(payload["counts"]["confirmed"] + payload["counts"]["reference"], len(payload["laws"]))

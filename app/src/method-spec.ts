@@ -241,7 +241,7 @@ export const SPEC_SECTIONS: SpecSection[] = [
     ],
     symbols: [
       ['\\mathcal N_i', '法律 i に参議院本会議で反対した、人物の決まった議員'],
-      ['\\mathcal G_i,\\ \\mathcal H_i', '法律 i の衆議院の賛成会派・反対会派（議案の経過。第186回国会ごろから）'],
+      ['\\mathcal G_i,\\ \\mathcal H_i', '法律 i の衆議院の賛成会派・反対会派（議案の経過。第187回国会（2014年）から）'],
       ['A_i', '法律の分（同じ観測を共有する本数で割った額）'],
     ],
     rules: [

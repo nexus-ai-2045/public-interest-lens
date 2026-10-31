@@ -82,13 +82,18 @@ export type PublicRankingLaw = {
   demotedReason?: string; demotedBasis?: string;
 };
 export type PublicRankingOther = { id: string; title: string; outcome: string; reason: string };
+/** 共有額の参考値（1本ごとの額は持たない）。法律は others に載り、ここには出典・施行日と、同じ額を共有する群（総枠 medianYen・本数 size）だけがある。順位・合計・議員配分には使わない。 */
+export type SharedGroup = { key: string; group: string; industry: string; window: string; side: 'loss' | 'benefit'; indicator: string; comparisonCountries: string[]; medianYen: number; lowYen: number; highYen: number; size: number };
+export type SharedLaw = { id: string; key: string; field: string; enforcedOn: string; notes: string[]; sources: string[] };
+export const SHARED_OUTCOME = '共有額の参考（1本ごとの額は出さない）';
 export type PublicRanking = {
   schema: 'public-ranking/v3';
   generatedFrom: { rules: string[]; inputs: Record<string, string>; parameters: { heldOut: string[]; noAmount: string[] } } & GenerationMetadata;
   approval: { approvedAt: string | null; scope: 'all-laws' | null; note: string | null };
   laws: PublicRankingLaw[];
   others: PublicRankingOther[];
-  counts: Record<'enacted' | 'evaluated' | 'dated' | 'staged' | 'published' | 'confirmed' | 'reference' | 'others', number>;
+  sharedReference: { groups: SharedGroup[]; laws: SharedLaw[] };
+  counts: Record<'enacted' | 'evaluated' | 'dated' | 'staged' | 'published' | 'confirmed' | 'reference' | 'others' | 'shared' | 'sharedGroups', number>;
 };
 
 export const distributionRankingUrl = '/distribution/ranking.json';
@@ -98,7 +103,7 @@ export const RANKING_TEXT_LIMIT = 4_000_000;
 // 国民投票法の法律案（衆法-166-）は議案情報の番号が空欄のまま台帳にある。id は台帳どおり。
 const LAW_ID = /^(閣法|衆法|参法)-\d+-\d*$/;
 const SOURCE_HOSTS = new Set(['www.shugiin.go.jp', 'www.sangiin.go.jp', 'laws.e-gov.go.jp']);
-const COUNT_KEYS = ['enacted', 'evaluated', 'dated', 'staged', 'published', 'confirmed', 'reference', 'others'];
+const COUNT_KEYS = ['enacted', 'evaluated', 'dated', 'staged', 'published', 'confirmed', 'reference', 'others', 'shared', 'sharedGroups'];
 export const CERTAINTIES = ['高', '中', '低', '参考'];
 const onlyKeys = (value: unknown, keys: string[]) => !!value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(key => keys.includes(key)) && keys.every(key => key in value);
 const yen = (value: unknown) => Number.isSafeInteger(value) && (value as number) > 0;
@@ -108,7 +113,7 @@ const signedYen = (value: unknown) => Number.isSafeInteger(value);
 export function parsePublicRanking(text: string): PublicRanking {
   if (text.length > RANKING_TEXT_LIMIT) throw new Error('ランキングのデータが大きすぎます。');
   const value = JSON.parse(text) as PublicRanking;
-  if (!onlyKeys(value, ['schema', 'generatedFrom', 'approval', 'laws', 'others', 'counts']) || value.schema !== 'public-ranking/v3') throw new Error('ランキングの形式が不正です。');
+  if (!onlyKeys(value, ['schema', 'generatedFrom', 'approval', 'laws', 'others', 'sharedReference', 'counts']) || value.schema !== 'public-ranking/v3') throw new Error('ランキングの形式が不正です。');
   if (!onlyKeys(value.generatedFrom, ['rules', 'inputs', 'methodSpecVersion', 'codeHashes', 'parameters']) || !Array.isArray(value.generatedFrom.rules) || !value.generatedFrom.rules.every(rule => prose(rule, 80)) || !Object.values(value.generatedFrom.inputs ?? {}).every(hash => typeof hash === 'string' && /^[a-f0-9]{64}$/.test(hash))) throw new Error('生成元の記録が不正です。');
   if (!validGenerationMetadata({ methodSpecVersion: value.generatedFrom.methodSpecVersion, codeHashes: value.generatedFrom.codeHashes }, ['scripts/build_public_ranking.py', 'scripts/generation_provenance.py', 'scripts/path_guard.py'])) throw new Error('計算方法・生成ソースの版が不正です。');
   const lawIds = (ids: unknown) => Array.isArray(ids) && ids.every(id => typeof id === 'string' && /^(閣法|衆法|参法)-[0-9]+-[0-9]+$/.test(id));
@@ -144,9 +149,33 @@ export function parsePublicRanking(text: string): PublicRanking {
     if (!onlyKeys(item, ['id', 'title', 'outcome', 'reason']) || !LAW_ID.test(item.id) || seen.has(item.id) || !prose(item.outcome, 80) || !prose(item.title, 500) || !prose(item.reason, 500)) throw new Error('結果の項目が不正です。');
     seen.add(item.id);
   }
+  // 共有額の参考：法律は others に居て（額は持たない）、laws（順位・配分に使う法律）には居ない。群の本数の合計は法律の本数と一致する。
+  const { sharedReference } = value;
+  if (!onlyKeys(sharedReference, ['groups', 'laws']) || !Array.isArray(sharedReference.groups) || !Array.isArray(sharedReference.laws)) throw new Error('共有額の参考の形式が不正です。');
+  const othersById = new Map(value.others.map(item => [item.id, item]));
+  const groups = new Map<string, SharedGroup>();
+  for (const group of sharedReference.groups) {
+    if (!onlyKeys(group, ['key', 'group', 'industry', 'window', 'side', 'indicator', 'comparisonCountries', 'medianYen', 'lowYen', 'highYen', 'size']) || groups.has(group.key) || ![group.key, group.group, group.window, group.indicator].every(item => prose(item, 500)) || typeof group.industry !== 'string' || !['loss', 'benefit'].includes(group.side)
+      || !Array.isArray(group.comparisonCountries) || !group.comparisonCountries.every(code => /^[A-Z]{3}$/.test(code)) || !yen(group.medianYen) || !signedYen(group.lowYen) || !signedYen(group.highYen) || group.lowYen > group.medianYen || group.medianYen > group.highYen || !Number.isSafeInteger(group.size) || group.size < 2) throw new Error('共有額の群が不正です。');
+    groups.set(group.key, group);
+  }
+  const sizes = new Map<string, number>();
+  for (const law of sharedReference.laws) {
+    if (!onlyKeys(law, ['id', 'key', 'field', 'enforcedOn', 'notes', 'sources']) || !LAW_ID.test(law.id) || sizes.has(law.id) || !groups.has(law.key) || !prose(law.field, 500) || !dateText(law.enforcedOn) || !Array.isArray(law.notes) || !law.notes.every(note => prose(note, 300)) || !Array.isArray(law.sources) || !law.sources.length) throw new Error('共有額の法律が不正です。');
+    // 順位・議員配分に使う laws には居ない。額なしの行（others）に、共有額の印つきで居る。
+    if (value.laws.some(item => item.id === law.id) || othersById.get(law.id)?.outcome !== SHARED_OUTCOME) throw new Error('共有額の法律が順位の法律と重なっているか、結果の行がありません。');
+    for (const source of law.sources) {
+      const url = new URL(source);
+      if (url.protocol !== 'https:' || !SOURCE_HOSTS.has(url.hostname) || url.username || url.password) throw new Error('共有額の法律の一次資料が不正です。');
+    }
+    sizes.set(law.id, 1);
+  }
+  const bySize = new Map<string, number>();
+  for (const law of sharedReference.laws) bySize.set(law.key, (bySize.get(law.key) ?? 0) + 1);
+  if ([...groups.values()].some(group => bySize.get(group.key) !== group.size) || value.others.filter(item => item.outcome === SHARED_OUTCOME).length !== sharedReference.laws.length) throw new Error('共有額の群の本数が一致しません。');
   if (!onlyKeys(value.counts, COUNT_KEYS) || !COUNT_KEYS.every(key => Number.isSafeInteger(value.counts[key as keyof PublicRanking['counts']]) && value.counts[key as keyof PublicRanking['counts']] >= 0)) throw new Error('件数が不正です。');
   const { counts } = value;
-  if (counts.published !== value.laws.length || counts.others !== value.others.length || counts.confirmed + counts.reference !== counts.published || counts.published + counts.others !== counts.enacted) throw new Error('公開件数が一致しません。');
+  if (counts.published !== value.laws.length || counts.others !== value.others.length || counts.confirmed + counts.reference !== counts.published || counts.published + counts.others !== counts.enacted || counts.shared !== sharedReference.laws.length || counts.sharedGroups !== sharedReference.groups.length) throw new Error('公開件数が一致しません。');
   return value;
 }
 

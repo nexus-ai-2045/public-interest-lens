@@ -17,7 +17,8 @@ function approved() {
   value.others = [{ id: '閣法-1-1', title: '例の法律案', outcome: '評価対象外', reason: '農業分野で対応表なし' }];
   value.approval = { approvedAt: '2026-10-17', scope: 'all-laws', note };
   value.laws = [law];
-  value.counts = { ...value.counts, enacted: 2, published: 1, confirmed: 1, reference: 0, others: 1 };
+  value.sharedReference = { groups: [], laws: [] };
+  value.counts = { ...value.counts, enacted: 2, published: 1, confirmed: 1, reference: 0, others: 1, shared: 0, sharedGroups: 0 };
   return value;
 }
 
@@ -106,5 +107,40 @@ describe('公開ランキングの配布データ', () => {
     const counts = approved();
     counts.counts.published = 2;
     expect(() => parsePublicRanking(JSON.stringify(counts))).toThrow('件数');
+  });
+});
+
+describe('共有額の参考値の配布データ', () => {
+  const SHARED = '共有額の参考（1本ごとの額は出さない）';
+  const group = { key: 'g', group: '全体指標-_T', industry: '_T', window: '2000〜2009年', side: 'loss', indicator: '全産業の実質付加価値', comparisonCountries: ['AUS'], medianYen: 50, lowYen: 10, highYen: 60, size: 2 };
+  const ref = id => ({ id, key: 'g', field: '経済全体', enforcedOn: '2000-04-01', notes: [], sources: ['https://www.shugiin.go.jp/x'] });
+  function withShared() {
+    const value = approved();
+    value.others = ['閣法-1-1', '閣法-1-2'].map(id => ({ id, title: '例', outcome: SHARED, reason: '同じ額を共有' }));
+    value.sharedReference = { groups: [group], laws: [ref('閣法-1-1'), ref('閣法-1-2')] };
+    value.counts = { ...value.counts, enacted: 3, others: 2, shared: 2, sharedGroups: 1 };
+    return value;
+  }
+  it('群の総枠と本数が合えば読める。法律は others に居て laws には居ない', () => {
+    expect(() => parsePublicRanking(JSON.stringify(withShared()))).not.toThrow();
+  });
+  it('順位の法律と重なる・本数が合わない・額を1本ごとに持つものは拒否する', () => {
+    const overlap = withShared(); overlap.laws = [{ ...law, id: '閣法-1-1' }];
+    expect(() => parsePublicRanking(JSON.stringify(overlap))).toThrow();
+    const size = withShared(); size.sharedReference.groups[0].size = 3;
+    expect(() => parsePublicRanking(JSON.stringify(size))).toThrow();
+    const perLaw = withShared(); perLaw.sharedReference.laws[0].amountMedianYen = 5;
+    expect(() => parsePublicRanking(JSON.stringify(perLaw))).toThrow();
+    const noOther = withShared(); noOther.others[0].outcome = '評価対象外';
+    expect(() => parsePublicRanking(JSON.stringify(noOther))).toThrow();
+    const order = withShared(); order.sharedReference.groups[0].lowYen = 70;
+    expect(() => parsePublicRanking(JSON.stringify(order))).toThrow();
+  });
+  it('公開のデータでは、共有額の法律は laws に居ず、議員の額の対象にならない', () => {
+    const value = JSON.parse(committed);
+    const ids = new Set(value.sharedReference.laws.map(item => item.id));
+    expect(ids.size).toBe(value.counts.shared);
+    expect(value.laws.some(item => ids.has(item.id))).toBe(false);
+    expect(committed.length).toBeLessThan(RANKING_TEXT_LIMIT);
   });
 });

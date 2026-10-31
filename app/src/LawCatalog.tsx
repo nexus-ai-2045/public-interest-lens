@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, ArrowUpRight, ChevronDown, Layers, Search } from 'lucide-react';
 import { ShareButton } from './motion';
 import {
-  DEFAULT_QUERY, STEP_LABEL, collapseObservations, detailBundleUrl, filterCatalog, formatYen, groupByObservation, isOutlierMark, readQuery, sideLabel, writeQuery,
+  DEFAULT_QUERY, SHARED_RATIO_FLOOR, STEP_LABEL, collapseObservations, detailBundleUrl, filterCatalog, formatYen, groupByObservation, isOutlierMark, readQuery, sideLabel, writeQuery,
   type CatalogColumns, type CatalogDetail, type CatalogItem, type CatalogOverview, type CatalogQuery, type LawsCatalog, type OverviewQuote,
 } from './laws-catalog';
 import { LawName, lawNameText } from './law-name';
@@ -11,7 +11,7 @@ import { CORRECTION_EMAIL, correctionIssueUrl, correctionListUrl, correctionMail
 import { isCovidBenefitGroup } from './public-distribution';
 
 const PAGE = 60;
-const SIDE_OPTIONS: [CatalogQuery['side'], string][] = [['all', 'すべて'], ['confirmed', '確かな額'], ['amount', '額が出た（参考を含む）'], ['loss', '国賊側'], ['benefit', '国士側'], ['none', '額なし']];
+const SIDE_OPTIONS: [CatalogQuery['side'], string][] = [['all', 'すべて'], ['confirmed', '確かな額'], ['amount', '額が出た（参考を含む）'], ['shared', '共有額の参考'], ['loss', '国賊側'], ['benefit', '国士側'], ['none', '額なし']];
 const SORT_OPTIONS: [CatalogQuery['sort'], string][] = [['amount', '額の大きい順'], ['loss', '損失の大きい順'], ['benefit', '便益の大きい順'], ['progress', '計算が進んだ順'], ['newest', '新しい順'], ['oldest', '古い順']];
 const ROLE_LABEL: Record<string, string> = { proposer: '提出', vote: '参院で賛成', chair: '委員長' };
 
@@ -42,6 +42,8 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
   const [showAll, setShowAll] = useState(false);
   // 参考の額（確かさ低・合計に足さない）は既定では畳む。探す語・「額が出た」の絞り込み・#id で開く時は出す。
   const [showRef, setShowRef] = useState(false);
+  // 共有額の参考のうち経済全体（産業コード _T）の分は、既定で畳む。産業ごとの分は代表の1行ずつ並べる。
+  const [showWhole, setShowWhole] = useState(false);
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
   const showAllRef = useRef(showAll);
   showAllRef.current = showAll;
@@ -55,8 +57,12 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
   queryRef.current = query;
   const filteredAll = useMemo(() => filterCatalog(all, query), [all, query]);
   const refRevealed = showRef || query.text.trim() !== '' || query.side === 'amount';
-  const filtered = useMemo(() => refRevealed ? filteredAll : filteredAll.filter(item => item.step !== 'amounted' || revealed.has(item.id) || open === item.id), [filteredAll, refRevealed, revealed, open]);
-  const foldedRef = filteredAll.length - filtered.length;
+  const wholeRevealed = showWhole || query.text.trim() !== '' || query.side === 'shared';
+  const opened = (item: CatalogItem) => revealed.has(item.id) || open === item.id;
+  const afterRef = useMemo(() => refRevealed ? filteredAll : filteredAll.filter(item => item.step !== 'amounted' || opened(item)), [filteredAll, refRevealed, revealed, open]);
+  const filtered = useMemo(() => wholeRevealed ? afterRef : afterRef.filter(item => !item.shared?.whole || opened(item)), [afterRef, wholeRevealed, revealed, open]);
+  const foldedRef = filteredAll.length - afterRef.length;
+  const foldedWhole = afterRef.length - filtered.length;
   const shown = useMemo(() => showAll ? filtered : collapseObservations(filtered, revealed), [filtered, showAll, revealed]);
   const kinds = useMemo(() => [...new Set(all.map(item => item.kind))], [all]);
 
@@ -82,6 +88,7 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
       const reveal = new Set(revealedRef.current).add(id);
       setRevealed(reveal);
       if (all.find(item => item.id === id)?.step === 'amounted') setShowRef(true);
+      if (all.find(item => item.id === id)?.shared?.whole) setShowWhole(true);
       const visible = (query: CatalogQuery) => showAllRef.current ? filterCatalog(all, query) : collapseObservations(filterCatalog(all, query), reveal);
       let list = visible(queryRef.current);
       if (!list.some(item => item.id === id)) {
@@ -120,6 +127,7 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
 
   const hidden = filtered.length - shown.length;
   const amounted = shown.filter(item => item.amount).length;
+  const sharedShown = shown.filter(item => item.shared).length;
   const confirmed = shown.filter(item => item.step === 'published').length;
   return <section className="laws-catalog" aria-label="法律と政策の一覧">
     <h3 id="list">全部の法律と政策（{all.length.toLocaleString('ja-JP')}件）</h3>
@@ -133,11 +141,16 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
         <label>並べ替え<select value={query.sort} onChange={event => update({ sort: event.target.value as CatalogQuery['sort'] })}>{SORT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       </div>
     </div>
-    <p className="laws-count" role="status">{shown.length.toLocaleString('ja-JP')}件（確かな額{confirmed.toLocaleString('ja-JP')}・参考の額{(amounted - confirmed).toLocaleString('ja-JP')}・額なし{(shown.length - amounted).toLocaleString('ja-JP')}）{JSON.stringify(query) !== JSON.stringify(DEFAULT_QUERY) && <button type="button" onClick={() => update(DEFAULT_QUERY)}>絞り込みを外す</button>} <ShareButton title="法律と政策の一覧｜法律ランキング" text={`法律と政策の一覧（${shown.length.toLocaleString('ja-JP')}件）`} url={`${window.location.origin}/ranking${writeQuery(query)}#list`} label="この一覧を共有" /></p>
+    <p className="laws-count" role="status">{shown.length.toLocaleString('ja-JP')}件（確かな額{confirmed.toLocaleString('ja-JP')}・参考の額{(amounted - confirmed).toLocaleString('ja-JP')}・共有額の参考{sharedShown.toLocaleString('ja-JP')}・額なし{(shown.length - amounted - sharedShown).toLocaleString('ja-JP')}）{JSON.stringify(query) !== JSON.stringify(DEFAULT_QUERY) && <button type="button" onClick={() => update(DEFAULT_QUERY)}>絞り込みを外す</button>} <ShareButton title="法律と政策の一覧｜法律ランキング" text={`法律と政策の一覧（${shown.length.toLocaleString('ja-JP')}件）`} url={`${window.location.origin}/ranking${writeQuery(query)}#list`} label="この一覧を共有" /></p>
     {(foldedRef > 0 || showRef) && !(query.text.trim() !== '' || query.side === 'amount') && <p className="laws-fold" role="status">
       <Layers size={15} aria-hidden="true" />
       <span>{showRef ? '参考の額も並べています。参考の額は産業や経済全体の差から見積もった値で、その法律だけの効果とは言えません（確かさ低。合計・議員には足しません）。' : `参考の額が付いた法律${foldedRef.toLocaleString('ja-JP')}本は畳んでいます。産業や経済全体の差から見積もった値で、その法律だけの効果とは言えず、合計・議員には足しません。`}</span>
       <button type="button" aria-pressed={showRef} onClick={() => { setShowRef(value => !value); setLimit(PAGE); }}>{showRef ? '畳む' : '参考の額も表示'}</button>
+    </p>}
+    {(foldedWhole > 0 || (showWhole && data.shared && data.shared.whole > 0)) && !(query.text.trim() !== '' || query.side === 'shared') && <p className="laws-fold" role="status">
+      <Layers size={15} aria-hidden="true" />
+      <span>{showWhole ? '経済全体（産業コード _T）の共有額も並べています。経済全体の差を法律ごとに分けていない参考値で、規模が大きく、その法律だけの効果とは言えません（確かさ低。合計・議員には足しません）。' : `経済全体の共有額の参考が付いた法律${foldedWhole.toLocaleString('ja-JP')}本は畳んでいます。産業全体の差をそのまま共有した額で、規模が大きく、その法律だけの効果とは言えません。`}</span>
+      <button type="button" aria-pressed={showWhole} onClick={() => { setShowWhole(value => !value); setLimit(PAGE); }}>{showWhole ? '畳む' : '経済全体の共有額も表示'}</button>
     </p>}
     {(hidden > 0 || showAll) && <p className="laws-fold" role="status">
       <Layers size={15} aria-hidden="true" />
@@ -173,6 +186,19 @@ export function RefBasisNote({ item }: { item: Pick<CatalogItem, 'id' | 'refReas
   </div>;
 }
 
+/** 共有額の参考値の注意。1本ごとの額は出さず、共有された合計の一部（0〜合計）として見せる。検証で降格した法律とは別の印・文言。 */
+export function SharedRefNote({ item }: { item: Pick<CatalogItem, 'id' | 'shared'> }) {
+  const shared = item.shared;
+  if (!shared) return null;
+  const share = shared.ratio !== undefined && shared.ratio >= SHARED_RATIO_FLOOR ? `${(shared.ratio * 100).toLocaleString('ja-JP', { maximumFractionDigits: 0 })}%` : '';
+  return <div className="laws-refnote is-shared" role="note" aria-label="共有額の参考値の注意">
+    <p><strong>共有額の参考値（確かさ：低・産業の差を同じ額で共有）。</strong>順位・合計・議員配分には使わない。足し合わせない。</p>
+    <p><span>額</span>この{shared.whole ? '経済全体' : '業界'}・期間の合計 {formatYen(shared.median)}（幅 {formatYen(shared.low)}〜{formatYen(shared.high)}）の一部（0〜{formatYen(shared.median)}）。同じ額を{shared.size.toLocaleString('ja-JP')}本が共有している。</p>
+    <p><span>注意</span>産業全体の差を法律ごとに分けていない。この法律だけの効果ではない。</p>
+    {share && <p><span>規模</span>日本の付加価値1年分{shared.baseYear ? `（${shared.baseYear}年）` : ''}の約{share}。</p>}
+  </div>;
+}
+
 function ObservationNote({ item, observations, byId, folded, revealed, onReveal }: Omit<RowProps, 'open' | 'onToggle'>) {
   const [listOpen, setListOpen] = useState(false);
   const observation = item.observation;
@@ -200,10 +226,10 @@ function ObservationNote({ item, observations, byId, folded, revealed, onReveal 
 
 function CatalogRow({ item, open, onToggle, ...peers }: RowProps) {
   const tone = item.side ?? 'none';
-  return <li id={`law-${item.id}`} className={`laws-row ${tone} ${item.amount ? 'has-amount' : 'no-amount'} ${open ? 'is-open' : ''}`}>
+  return <li id={`law-${item.id}`} className={`laws-row ${tone} ${item.amount ? 'has-amount' : 'no-amount'}${item.shared ? ' is-shared' : ''} ${open ? 'is-open' : ''}`}>
     <button type="button" className="laws-row-head" aria-expanded={open} onClick={onToggle}>
       <span className="laws-row-main">
-        <span className="laws-row-meta"><span className={`laws-side ${tone}`}>{item.amount ? `${sideLabel(item.side)}${item.step === 'amounted' ? '・参考' : ''}` : item.kind === '政策' ? '政策・額は保留' : '額なし'}</span><span>{item.kind === '政策' ? '政策' : item.id}</span>{item.year && <span>{item.year}年</span>}<span>{item.field}</span></span>
+        <span className="laws-row-meta"><span className={`laws-side ${tone}`}>{item.shared ? '共有額の参考' : item.amount ? `${sideLabel(item.side)}${item.step === 'amounted' ? '・参考' : ''}` : item.kind === '政策' ? '政策・額は保留' : '額なし'}</span><span>{item.kind === '政策' ? '政策' : item.id}</span>{item.year && <span>{item.year}年</span>}<span>{item.field}</span></span>
         <span className="laws-row-title"><LawName title={item.title} what={item.what} withheld={item.whatWithheld} /></span>
         <span className="laws-row-summary">{item.summary}</span>
         {item.marks.length > 0 && <span className="laws-marks">{item.marks.map(mark => isOutlierMark(mark)
@@ -211,11 +237,12 @@ function CatalogRow({ item, open, onToggle, ...peers }: RowProps) {
           : <span key={mark} className={`laws-mark${mark.startsWith('確かさ') ? ' is-certain' : mark === '参考の額' ? ' is-reference' : ''}`}>{mark}</span>)}</span>}
       </span>
       <span className="laws-row-amount">
-        {item.amount ? <><strong className={item.step === 'amounted' ? 'ref' : undefined}>{item.step === 'amounted' && <span className="laws-ref-tag">{item.refReason ? '参考値（検証で降格）' : '参考値'}</span>}{formatYen(item.amount.median)}</strong><small>幅 {formatYen(item.amount.low)}〜{formatYen(item.amount.high)}</small></> : <span className="laws-row-noamount">{STEP_LABEL[item.step]}</span>}
+        {item.shared ? <><strong className="ref"><span className="laws-ref-tag">共有額の参考</span>0〜{formatYen(item.shared.median)}</strong><small>合計の一部・{item.shared.size.toLocaleString('ja-JP')}本で共有</small></> : item.amount ? <><strong className={item.step === 'amounted' ? 'ref' : undefined}>{item.step === 'amounted' && <span className="laws-ref-tag">{item.refReason ? '参考値（検証で降格）' : '参考値'}</span>}{formatYen(item.amount.median)}</strong><small>幅 {formatYen(item.amount.low)}〜{formatYen(item.amount.high)}</small></> : <span className="laws-row-noamount">{STEP_LABEL[item.step]}</span>}
         <ChevronDown size={18} className="laws-chevron" aria-hidden="true" />
       </span>
     </button>
     <RefBasisNote item={item} />
+    <SharedRefNote item={item} />
     <ObservationNote item={item} {...peers} />
     {open && <CatalogDetailPanel item={item} />}
   </li>;
@@ -273,6 +300,10 @@ function CatalogDetailPanel({ item }: { item: CatalogItem }) {
       {detail.comparison && detail.comparison.length > 0 && <div><dt>比べた国</dt><dd>{detail.comparison.join('・')}</dd></div>}
     </dl>
     {detail.columns && <ColumnsBox columns={detail.columns} />}
+    {item.shared && detail.sharedBasis && <section className="laws-basis" aria-label="根拠カード（使った前提）">
+      <h5>根拠カード（使った前提）</h5>
+      <p>{detail.sharedBasis}</p>
+    </section>}
     <h5>計算の流れ（どこまで進み、どこで止まったか）</h5>
     <ol className="laws-chain">{detail.chain.map((step, index) => <li key={index}>
       <span className="laws-chain-step">{step.step}</span><strong>{step.result}</strong>
@@ -297,7 +328,7 @@ function CatalogDetailPanel({ item }: { item: CatalogItem }) {
     </>}
     {!members.length && !detail.people && item.kind !== '政策' && <p className="fine-note">{item.amount && item.certainty === '参考'
       ? <>この法律の参考の額は、提出者と参議院の賛成者に配り、<a href="/members#all-members">議員ページの「全議員」の表</a>に「参考」の欄として出しています（確かな額とは足しません）。</>
-      : item.amount ? 'この法律の額は、まだ議員に配っていません（配分は議員ランキングに載る法律から順に進めています）。' : '額が出ていないので、議員への配分はありません。'}</p>}
+      : item.amount ? 'この法律の額は、まだ議員に配っていません（配分は議員ランキングに載る法律から順に進めています）。' : item.shared ? '共有額の参考値は、法律ごとの額ではないので、議員への配分には使っていません。' : '額が出ていないので、議員への配分はありません。'}</p>}
     <h5>一次資料</h5>
     <ul className="laws-sources">{detail.sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} <ArrowUpRight size={13} /></a></li>)}</ul>
     <p className="laws-deeper">さらに詳しく：<a href="/methodology">計算方法</a>{item.href && <> ・ <a href={item.href}>この政策のページ</a></>} ・ <a href="https://github.com/nexus-ai-2045/public-interest-lens/tree/main/data/derived" target="_blank" rel="noopener noreferrer">計算に使った表 <ArrowUpRight size={13} /></a></p>
