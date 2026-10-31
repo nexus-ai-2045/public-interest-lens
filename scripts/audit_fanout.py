@@ -38,6 +38,7 @@ from scripts.evaluation_rules import (
 DERIVED = ROOT / "data" / "derived"
 LEDGER = DERIVED / "evaluation-ledger-v1" / "ledger.csv"
 SAMPLE_VERDICTS = DERIVED / "evaluation-ledger-v1" / "sample-verdicts.csv"
+CALIB_TRUTH = DERIVED / "audit-fanout-v1" / "calibration-truth.csv"  # 較正の正解（額ありの母集団。作り方は audit_corpus.py truth）
 MACRO = DERIVED / "macro-v1" / "macro.csv"
 BASELINE = DERIVED / "evaluation-ledger-v1" / "audit-fanout-baseline.json"
 PUBLISHED = DERIVED / "audit-fanout-v1"
@@ -556,6 +557,7 @@ def rates(pairs: list[tuple[str, str]], n_total: int) -> dict:
     n_tp = sum(1 for p in truth_pass)
     n_tf = sum(1 for p in truth_fail)
     return {
+        "正解の合格数": n_tp, "正解の不合格数": n_tf,
         "判定できた件": len(pairs), "全件": n_total,
         "一致率": round(sum(1 for p in pairs if p[0] == p[1]) / n_total, 4) if n_total else None,
         "誤検出率": round(sum(1 for p in truth_pass if p[0] == FAIL) / n_tp, 4) if n_tp else None,  # 正解は合格なのに不合格と判定
@@ -607,7 +609,9 @@ def calibration_warnings(cal: dict | None, thresholds: dict, current_hash: str) 
         w.append(f"較正の一致率 {f['一致率']} が基準 {thresholds['min_agreement']} 未満")
     if f["見逃し率"] is not None and f["見逃し率"] > thresholds["max_miss_rate"]:
         w.append(f"較正の見逃し率 {f['見逃し率']} が基準 {thresholds['max_miss_rate']} 超")
-    if f["誤検出率"] is not None and f["誤検出率"] > thresholds["max_false_alarm_rate"]:
+    if f.get("正解の合格数", 0) < thresholds.get("min_truth_pass", 0):
+        w.append(f"較正の正解の合格が {f.get('正解の合格数', 0)} 本で、誤検出率は測れない（基準 {thresholds['min_truth_pass']} 本以上）。誤検出の害は参考への降格にとどまる（参考値と根拠は出し続ける）が、合格と判定した法律は全件を別系統で再確認すること")
+    elif f["誤検出率"] is not None and f["誤検出率"] > thresholds["max_false_alarm_rate"]:
         w.append(f"較正の誤検出率 {f['誤検出率']} が基準 {thresholds['max_false_alarm_rate']} 超")
     if cal.get("promptFilesHash") != current_hash:
         w.append("較正のあとに判定プロンプトが替わった。較正をやり直す")
@@ -673,7 +677,7 @@ def cmd_plan(a: argparse.Namespace) -> int:
     ceiling = japan_ceiling()
     corpus = Path(a.corpus) if a.corpus else None
     if a.calibrate:
-        ids = [r["id"] for r in read_csv(SAMPLE_VERDICTS)]
+        ids = [r["id"] for r in read_csv(CALIB_TRUTH)]
         targets, mode = build_targets(ledger, macro, ids, ceiling, over, corpus), "calibrate"
     elif a.frozen:
         ids = [r["id"] for r in read_csv(FROZEN_FILE)]
@@ -802,7 +806,7 @@ def cmd_calibrate(a: argparse.Namespace) -> int:
     manifest, targets, ret, records = load_state(out)
     if manifest["mode"] != "calibrate":
         raise SystemExit("calibrate は plan --calibrate で作った作業場だけに使う")
-    truth = {r["id"]: r["判定"] for r in read_csv(SAMPLE_VERDICTS)}
+    truth = {r["id"]: r["判定"] for r in read_csv(CALIB_TRUTH)}
     cal = calibration(records, ret["judged"], truth, targets, manifest["prompt_version"])
     write_json(out / "calibration.json", cal)
     if a.publish:
@@ -822,7 +826,7 @@ def main() -> int:
         s.add_argument("--out", default=".local/audit-fanout", help="作業場（束・返却・結果）")
         s.set_defaults(fn=fn)
         if name == "plan":
-            s.add_argument("--calibrate", action="store_true", help="正解既知の sample-verdicts の118本を対象にする")
+            s.add_argument("--calibrate", action="store_true", help="正解既知の calibration-truth.csv（額ありの母集団）を対象にする")
             s.add_argument("--size", type=int, default=BUNDLE_SIZE)
             s.add_argument("--frozen", action="store_true", help="凍結した無作為標本（sample --frozen で作る）を対象にする")
             s.add_argument("--corpus", default="", help="<法律ID>.txt の原文を置いた場所（資料欄に入り、引用検査の対象になる）")

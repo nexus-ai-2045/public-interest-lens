@@ -264,9 +264,15 @@ class CalibrationTest(Base):
         self.assertTrue(any("プロンプトが替わった" in w for w in af.calibration_warnings(cal, {**af.load_baseline()["calibration"], "min_samples": 1}, "別のハッシュ")))
 
     def test_low_agreement_warns(self):
-        cal = {"n": 118, "final": {"一致率": 0.8, "見逃し率": 0.1, "誤検出率": 0.0}, "promptFilesHash": "h"}
+        cal = {"n": 118, "final": {"一致率": 0.8, "見逃し率": 0.1, "誤検出率": 0.0, "正解の合格数": 40}, "promptFilesHash": "h"}
         w = af.calibration_warnings(cal, af.load_baseline()["calibration"], "h")
         self.assertEqual(len(w), 2)
+
+    def test_few_truth_passes_say_false_alarm_is_unmeasurable(self):
+        cal = {"n": 108, "final": {"一致率": 0.92, "見逃し率": 0.03, "誤検出率": 1.0, "正解の合格数": 1}, "promptFilesHash": "h"}
+        w = af.calibration_warnings(cal, af.load_baseline()["calibration"], "h")
+        self.assertEqual(len(w), 1)
+        self.assertIn("測れない", w[0])
 
 
 class BaselineTest(unittest.TestCase):
@@ -281,6 +287,7 @@ class BaselineTest(unittest.TestCase):
         c = af.load_baseline()["calibration"]
         self.assertGreaterEqual(c["min_agreement"], 0.9)
         self.assertLessEqual(c["max_miss_rate"], c["max_false_alarm_rate"])
+        self.assertGreaterEqual(c["min_truth_pass"], 10)
 
 
 if __name__ == "__main__":
