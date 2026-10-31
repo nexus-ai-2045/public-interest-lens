@@ -23,10 +23,16 @@ export function joinConfirmed(reference: ReferenceMember[], confirmed: PublicMem
   const seen = new Set(reference.map(r => r.id));
   for (const [id, c] of byId) {
     if (seen.has(id)) continue;
-    rows.push({ id, name: c.name, current: null, lastSangiinParty: '', loss: zeroRange, credit: zeroRange, net: zeroRange, laws: 0, top: [],
+    rows.push({ id, name: c.name, current: null, lastSangiinParty: '', lastKnownCaucus: null, loss: zeroRange, credit: zeroRange, net: zeroRange, laws: 0, top: [],
       reason: '参考の額の法律で、提出者・参議院の賛成としての記録がない', confirmed: c.net.median, confirmedRank: c.rank });
   }
   return rows;
+}
+
+/** 元職の所属の説明。記録のある最後の年の会派（国会会議録）を優先し、無ければ参議院の最終会派。どちらも無ければ空。 */
+export function formerNote(r: Pick<ReferenceMember, 'lastKnownCaucus' | 'lastSangiinParty'>): string {
+  if (r.lastKnownCaucus) return `${r.lastKnownCaucus.date.slice(0, 4)}年の会派：${r.lastKnownCaucus.name}`;
+  return r.lastSangiinParty ? `参議院の最終会派：${r.lastSangiinParty}` : '';
 }
 
 export function partiesOf(rows: Row[]): string[] {
@@ -37,14 +43,16 @@ export function partiesOf(rows: Row[]): string[] {
 
 /** 額のある人（「額のある人だけ」の絞り込みと同じ決まり）。 */
 const hasAmount = (r: Row): boolean => r.laws > 0 || r.confirmed !== null;
+/** 評価なし：参考の額も確かな額も無い人（0円ではなく、評価の材料がまだ無い）。画面に「評価なし」の印を付ける。 */
+export const isUnscored = (r: Row): boolean => !hasAmount(r);
 
-export type Breakdown = { total: number; current: number; currentWithAmount: number; shu: number; shuWithAmount: number; san: number; sanWithAmount: number; confirmed: number; withAmount: number };
+export type Breakdown = { total: number; current: number; currentWithAmount: number; shu: number; shuWithAmount: number; san: number; sanWithAmount: number; confirmed: number; withAmount: number; unscored: number };
 /** 表の先頭に出す内訳。公開人数・現職・額のある現職（院別）・確かな額のある人。 */
 export function breakdownOf(rows: Row[]): Breakdown {
-  const out: Breakdown = { total: rows.length, current: 0, currentWithAmount: 0, shu: 0, shuWithAmount: 0, san: 0, sanWithAmount: 0, confirmed: 0, withAmount: 0 };
+  const out: Breakdown = { total: rows.length, current: 0, currentWithAmount: 0, shu: 0, shuWithAmount: 0, san: 0, sanWithAmount: 0, confirmed: 0, withAmount: 0, unscored: 0 };
   for (const r of rows) {
     if (r.confirmed !== null) out.confirmed += 1;
-    if (hasAmount(r)) out.withAmount += 1;
+    if (hasAmount(r)) out.withAmount += 1; else out.unscored += 1;
     if (!r.current) continue;
     out.current += 1;
     const amount = hasAmount(r) ? 1 : 0;
@@ -60,7 +68,7 @@ export function filterRows(rows: Row[], o: { house: HouseFilter; party: string; 
     if (o.house === 'former' ? r.current !== null : o.house !== 'all' && r.current?.house !== o.house) return false;
     if (o.party && r.current?.party !== o.party) return false;
     if (o.withAmount && !hasAmount(r)) return false;
-    const hay = `${r.name} ${r.current?.party ?? ''} ${r.current?.district ?? ''} ${r.lastSangiinParty}`;
+    const hay = `${r.name} ${r.current?.party ?? ''} ${r.current?.district ?? ''} ${formerNote(r)}`;
     return words.every(w => hay.includes(w));
   });
 }

@@ -46,7 +46,7 @@ def agreed(t: dict[str, str]) -> bool:
 
 def decide_old(t: dict[str, str], date: str, impact: dict[str, dict[str, str]]) -> dict[str, str]:
     """旧法1本の結果。t は旧法の triage.csv の行、date は施行日。"""
-    stages = SimpleNamespace(agreement={}, line_pick={}, line_kind={}, impact=impact, loss={}, benefit={}, publish={})
+    stages = SimpleNamespace(agreement={}, line_pick={}, line_kind={}, impact=impact, loss={}, benefit={}, publish={}, covid=set(), institutional={}, crowded=set(), fiscal={})
     imp = impact.get(t["id"])
     row = {**t, "指標": imp["指標"] if imp else ""}
     if not agreed(t):

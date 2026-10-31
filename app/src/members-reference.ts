@@ -11,13 +11,15 @@ import type { GenerationMetadata } from './generation-metadata';
  *    代表者に 1/(N+1) を置き、残りは「名前不明の提出者」とする。委員会提出（○○委員長）は人に配らない。
  *    参議院：本会議の押しボタン投票の個人別の賛否（成立した日の、題名が一致する投票）。
  * 3. 参議院の個人別の賛否が見つからない法律は、提出者の組・衆議院の賛成会派・参議院の賛成会派の3者で 1/3 ずつとし、会派の分は人に配らない。
- * 4. 名簿（現職の衆参全議員）に載る人は、配る額が無くても0円で載せ、理由を付ける。
+ * 4. 人物台帳（persons.csv）の全員と名簿（現職の衆参全議員）は、配る額が無くても0円で載せ、理由を付ける（全員公開の方針）。
+ *    額も確かな額も無い人は画面で「評価なし」の印を付ける（0円と区別する）。
  * 5. 人は人物ID（person-id.ts、scripts/person_ids.py の台帳）で結ぶ。同姓同名の可能性がある名前は、一次資料で所属が決まる場合
  *    （衆法・参法の提出者は議案の種別、参議院の賛成は投票記録）だけ人物IDに結び、それ以外は配らない。
  */
 import { allocateLaw, PARTY_ID, UNIDENTIFIED_ID, type LawGame } from './causal-allocation';
 import { parseCsv } from './impact-batch';
 import { warekiDate } from './members-build';
+import { affiliationOf } from './caucus-label';
 import { canonical, PersonLedger } from './person-id';
 
 export type Range = { low: number; median: number; high: number };
@@ -27,10 +29,12 @@ export type ReferenceMember = {
   /** 人物ID（scripts/person_ids.py）。ふつうは寄せた氏名。同姓同名の別人は「名前（衆・福岡2）」のように院と選挙区が付く。 */
   id: string;
   name: string;
-  /** 現職なら院・会派・選挙区（名簿の表記）。元職・当時だけの人は null。 */
-  current: { house: string; party: string; district: string } | null;
+  /** 現職なら院・所属（党名。名簿の会派の略称から caucus-label.ts で直したもの）・会派（名簿の略称）・選挙区。元職・当時だけの人は null。 */
+  current: { house: string; party: string; caucus: string; district: string } | null;
   /** 参議院の投票記録に出てくる会派（最後に記録されたもの）。 */
   lastSangiinParty: string;
+  /** 国会会議録の発言者所属会派から取った、記録のある最後の日付の会派（scripts/fetch_affiliation_at_time.py）。無ければ空。 */
+  lastKnownCaucus: { name: string; date: string } | null;
   loss: Range;
   credit: Range;
   net: Range;
@@ -44,7 +48,7 @@ export type PublicMembersReference = {
   generatedFrom?: GenerationMetadata;
   rules: string[];
   members: ReferenceMember[];
-  counts: { members: number; current: number; withAmount: number; laws: number; lawsWithVotes: number; lawsPartyOnly: number; observations: number; unresolved: number };
+  counts: { members: number; current: number; withAmount: number; ledger: number; laws: number; lawsWithVotes: number; lawsPartyOnly: number; observations: number; unresolved: number };
 };
 /** 1人・1本・1役割ごとの配り先（公開ファイルには入れず、scripts/check_reference_members.py が全件を一次資料と照らす）。member は人物ID、name は出典の表記。 */
 export type ReferenceAttribution = { member: string; name: string; house: string; lawId: string; role: ReferenceRole; side: 'loss' | 'benefit'; median: number };
@@ -53,6 +57,8 @@ export type ReferenceInputs = {
   enacted: string; votesIndex: string; ballots: string[]; sangiinMembers: string; cabinet: string; roster: string;
   /** 人物台帳 data/derived/person-ids/persons.csv。 */
   persons: string;
+  /** 当時の会派の表 data/acquired/member-affiliation/at-time.csv（任意）。 */
+  affiliationAtTime?: string;
 };
 
 const SANKO = '参考';
@@ -212,11 +218,20 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
 
   // 名簿の1行は台帳の1人（院と選挙区が同じ人）。本名で載る参議院議員も、台帳の別名で同じ人になる。
   const rosterId = (r: Record<string, string>) => ledger.rosterPerson(r)?.id ?? canonical(r['氏名']);
-  const current = new Map(roster.map(r => [rosterId(r), { house: r['院'], party: r['会派'], district: r['選挙区'] }]));
+  const current = new Map(roster.map(r => [rosterId(r), { house: r['院'], party: affiliationOf(r['院'], r['会派']), caucus: r['会派'], district: r['選挙区'] }]));
   for (const r of roster) names.set(rosterId(r), ledger.rosterPerson(r)?.name ?? names.get(rosterId(r)) ?? r['氏名'].replace(/[\s\u3000]/g, ''));
+  const lastKnown = new Map<string, { name: string; date: string }>();
+  for (const r of input.affiliationAtTime ? parseCsv(input.affiliationAtTime) : []) {
+    if (!r['当時の会派']) continue;
+    const cur = lastKnown.get(r['人物ID']);
+    if (!cur || r['日付'] > cur.date) lastKnown.set(r['人物ID'], { name: r['当時の会派'], date: r['日付'] });
+  }
   const lastParty = new Map<string, string>();
   for (const v of idName.values()) { const res = ledger.resolve(v.name, '参議院'); if (res) lastParty.set(res.id, v.party); }
-  const keys = new Set([...people.keys(), ...roster.map(rosterId)]);
+  // 台帳の全員（元職を含む）・現職の名簿・額のある人。台帳の空行（ヘッダー直後の空 ID）は除く。
+  const ledgerPeople = [...ledger.byId.values()].filter(p => p.id);
+  for (const p of ledgerPeople) if (!names.has(p.id)) names.set(p.id, p.name);
+  const keys = new Set([...people.keys(), ...roster.map(rosterId), ...ledgerPeople.map(p => p.id)]);
   const members: ReferenceMember[] = [...keys].map(id => {
     const name = names.get(id) ?? id;
     const t = people.get(id) ?? { loss: zero(), credit: zero(), laws: [] };
@@ -224,14 +239,14 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     const reason = t.laws.length ? '' : current.get(id)?.house === '衆議院'
       ? '参考の額の法律で、提出者としての記録がない（衆議院は起立採決で個人の賛否が残らず、会派に置いている）'
       : '参考の額の法律で、提出者・参議院の賛成としての記録がない';
-    return { id, name, current: current.get(id) ?? null, lastSangiinParty: lastParty.get(id) ?? '', loss: t.loss, credit: t.credit, net, laws: new Set(t.laws.map(x => x.lawId)).size,
+    return { id, name, current: current.get(id) ?? null, lastSangiinParty: lastParty.get(id) ?? '', lastKnownCaucus: lastKnown.get(id) ?? null, loss: t.loss, credit: t.credit, net, laws: new Set(t.laws.map(x => x.lawId)).size,
       top: [...t.laws].sort((a, b) => b.share - a.share).slice(0, 5), reason };
   }).sort((a, b) => a.net.median - b.net.median || a.id.localeCompare(b.id));
   return {
     schema: 'public-members-reference/v2',
     rules: ['reference-split-by-observation-v1', 'causal-shapley-v1', 'reference-party-fallback-v1'],
     members,
-    counts: { members: members.length, current: members.filter(m => m.current).length, withAmount: members.filter(m => m.laws > 0).length, laws: laws.length,
+    counts: { members: members.length, current: members.filter(m => m.current).length, withAmount: members.filter(m => m.laws > 0).length, ledger: ledgerPeople.length, laws: laws.length,
       lawsWithVotes: withVotes, lawsPartyOnly: partyOnly, observations: obs.size, unresolved },
     attributions,
   };

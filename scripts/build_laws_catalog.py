@@ -42,10 +42,12 @@ INPUTS = {
     "overviews": DERIVED / "law-overviews-v1" / "overviews.csv",
     "industryVa": ACQUIRED / "oecd-industry" / "industry_va.csv",
     "covidBenefit": DERIVED / "covid-benefit-v1" / "benefit.csv",
+    "taxImpact": DERIVED / "tax-impact-v1" / "fiscal.csv",
 }
 # 無くても一覧は作れる入力（概要の原料と、その AI 要約、桁外れの印に使う日本の付加価値）
 OPTIONAL = {"speechFacts", "overviews", "industryVa"}
 # 額が日本の全産業の付加価値1年分を超えるときの印（額は変えず、順位からも外さない。印と倍率だけ付ける）
+OUTLIER_PREFIX = "額が日本の付加価値1年分を超える"
 OUTLIER_MARK = "額が日本の付加価値1年分を超える（桁外れ。参考にとどめる）"
 # OECD 表6の単位 → 円
 VA_UNIT = {"百万JPY": 1_000_000}
@@ -269,6 +271,7 @@ def build() -> dict:
         return frozenset(source for source, kind in (("説明のURL", "説明"), ("反対のURL", "反対")) if kind in kinds)
 
     covid_benefit = {row["id"]: row for row in _rows("covidBenefit") if row["結果"] == "額"}
+    tax_impact = {row["id"]: row for row in _rows("taxImpact") if row["平年度_億円"] != ""}
     items = []
     for census in _rows("enacted"):
         law_id = f"{census['種別']}-{census['提出回次']}-{census['番号']}"
@@ -315,7 +318,8 @@ def build() -> dict:
             })
             if law["amountLowYen"] < 0 < law["amountHighYen"]:
                 item["marks"].append("向きが定まらない（幅が0をまたぐ）")
-            item["summary"] = ("損失" if law["side"] == "loss" else "便益") + f"の推計（{law['window']}・{law['indicator']}）"
+            kind = "参考値" if law["certainty"] == "参考" else "推計"
+            item["summary"] = ("損失" if law["side"] == "loss" else "便益") + f"の{kind}（{law['window']}・{law['indicator']}）"
             known = {source["url"] for source in item["sources"]}
             item["sources"] += [link for link in source_links(law["sources"]) if link["url"] not in known]
             if law_id in covid_benefit:
@@ -330,12 +334,19 @@ def build() -> dict:
             item["chain"].append({"step": "公開の結果", "result": other["outcome"], "note": other["reason"]})
         else:
             item["summary"] = "公開ランキングに結果がまだない"
+        tax = tax_impact.get(law_id)
+        if tax and not law:  # 政府（財務省）の国税の増減収見込み。GDP への損失とは別の量なので、額の欄・順位・合計・配分には入れない
+            full = int(tax["平年度_億円"])
+            item["summary"] = f"税収の増減見込み（国税・平年度）{yen(full * 1e8)}{'の減収' if full < 0 else 'の増収'}（政府の見込み・確かさ高）"
+            item["marks"].append("政府の見込み。GDP への損失とは別の量で、順位・合計には入れない")
+            item["chain"].append({"step": "税収の見込み", "result": item["summary"], "note": tax["理由"] + "。出典：" + tax["出典URL"]})
+            item["sources"] += [{"label": "財務省 税制改正の概要", "url": u} for u in tax["出典URL"].split()]
         if out and out["指標"] and "indicator" not in item:
             item["indicator"] = out["指標"]
         if not item["sources"]:
             item["sources"].append({"label": "衆議院 成立した法律の一覧", "url": census["出典URL"]})
         if law:
-            result = ("損失" if law["side"] == "loss" else "便益") + f"の推計 {yen(law['amountMedianYen'])}（幅 {yen(law['amountLowYen'])}〜{yen(law['amountHighYen'])}、{CERTAINTY[law['certainty']]}）"
+            result = ("損失" if law["side"] == "loss" else "便益") + f"の{'参考値' if law['certainty'] == '参考' else '推計'} {yen(law['amountMedianYen'])}（幅 {yen(law['amountLowYen'])}〜{yen(law['amountHighYen'])}、{CERTAINTY[law['certainty']]}）"
         else:
             result = item["summary"]
         item["overview"] = overview(census, speeches.get(law_id), written.get(law_id), result, ambiguous(law_id))
@@ -349,8 +360,9 @@ def build() -> dict:
                 item["sources"].append({"label": label, "url": item["overview"][key]["url"]})
         items.append(item)
 
-    observations = mark_observations(items)
-    outliers = mark_outliers(items, japan_value_added())
+    mark_outliers(items, japan_value_added())
+    observations = mark_observations(items)  # 額を出す法律だけで数える（隠した法律は観測に入れない）
+    outliers = sum(1 for item in items if any(mark.startswith(OUTLIER_PREFIX) for mark in item["marks"]))
     policies = [policy_from_case(_json("case"))]
     counts = {step: sum(1 for item in items if STEPS.index(item["step"]) >= STEPS.index(step)) for step in STEPS}
     return {

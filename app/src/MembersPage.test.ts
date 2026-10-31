@@ -35,6 +35,9 @@ describe('政党ランキング', () => {
   it('会派名を系統に寄せる（国民民主・立憲・社民を民主系や社民と取り違えない）', () => {
     expect(blocOf('自由民主党・国民の声')).toBe('自民');
     expect(blocOf('国民民主党・新緑風会')).toBe('国民民主');
+    // 希望の会（自由党・社民党、2019年）は社民党の会派ではない。ほかの会派に名前が入るもの（立憲民主党・民友会・希望の会）は元の系統のまま。
+    expect(blocOf('希望の会（自由・社民）')).toBe('その他');
+    expect(blocOf('立憲民主党・民友会・希望の会')).toBe('立憲');
     expect(blocOf('立憲民主・社民')).toBe('立憲');
     expect(blocOf('社会民主党・護憲連合')).toBe('社民');
     expect(blocOf('民主党・新緑風会')).toBe('民主系');
@@ -53,11 +56,11 @@ describe('政党ランキング', () => {
   });
 });
 
-it('一覧の所属政党：現職は政党名、元職は参議院の最後の会派つきで「元職」、表が読めるまでは空', () => {
+it('一覧の所属：現職は党名、元職は参議院の最終会派つきで「元職」、表が読めるまでは空', () => {
   const now = new Map([['甲', '自民']]);
-  const last = new Map([['乙', '立憲']]);
+  const last = new Map([['乙', '参議院の最終会派：立憲']]);
   expect(partyLabel('甲', now, true, last)).toBe('自民');
-  expect(partyLabel('乙', now, true, last)).toBe('元職・立憲');
+  expect(partyLabel('乙', now, true, last)).toBe('元職（参議院の最終会派：立憲）');
   expect(partyLabel('丙', now, true, last)).toBe('元職');
   expect(partyLabel('甲', new Map(), false)).toBe('');
 });

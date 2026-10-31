@@ -83,4 +83,14 @@ describe('全議員の参考の額', () => {
     expect(out.members.find(m => m.name.startsWith('平田'))).toBeUndefined();
     expect(out.attributions).toEqual([]);
   });
+  it('人物台帳の全員を、額が無くても0円で載せる（元職も。台帳の空行は除く）', () => {
+    const persons = '人物ID,氏名,読み,院,選挙区,別表記\n,,,,,\n元職太郎,元職太郎,もとしょく たろう,衆議院,東京1,\n';
+    const out = buildReferenceMembers({
+      ranking: { laws: [] }, enacted: '回次,種別,提出回次,番号,題名,提出者,提出者一覧,付託日_衆,議決日_衆,議決日_参\n', votesIndex: '投票ID,回次,投票日,議案名,集計_賛成,集計_反対\n',
+      ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n', cabinet: '役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n', persons,
+    });
+    expect(out.members.map(m => m.id)).toEqual(['元職太郎']);
+    expect(out.members[0]).toMatchObject({ current: null, laws: 0 });
+    expect(out.counts).toMatchObject({ members: 1, current: 0, withAmount: 0, ledger: 1 });
+  });
 });
