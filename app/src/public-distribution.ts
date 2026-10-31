@@ -79,6 +79,7 @@ export type PublicRankingLaw = {
   id: string; title: string; side: 'loss' | 'benefit'; certainty: Certainty; notes: string[]; field: string; indicator: string; stage: string; enforcedOn: string;
   amountMedianYen: number; amountLowYen: number; amountHighYen: number; lowerBound: boolean; window: string;
   comparisonCountries: string[]; benefitStatus: string; group: string; sources: string[];
+  demotedReason?: string; demotedBasis?: string;
 };
 export type PublicRankingOther = { id: string; title: string; outcome: string; reason: string };
 export type PublicRanking = {
@@ -120,7 +121,10 @@ export function parsePublicRanking(text: string): PublicRanking {
   if (!recorded && value.laws.length) throw new Error('承認されていない法律の額は表示しません。');
   const seen = new Set<string>();
   for (const law of value.laws) {
-    if (!onlyKeys(law, ['id', 'title', 'side', 'certainty', 'notes', 'field', 'indicator', 'stage', 'enforcedOn', 'amountMedianYen', 'amountLowYen', 'amountHighYen', 'lowerBound', 'window', 'comparisonCountries', 'benefitStatus', 'group', 'sources'])) throw new Error('法律の項目が不正です。');
+    // 検証で参考に降格した法律だけが、理由と根拠（demotedReason・demotedBasis）を2つそろえて持つ。額は残し、順位・配分には使わない。
+    const { demotedReason, demotedBasis, ...lawBody } = law as PublicRankingLaw & { demotedReason?: unknown; demotedBasis?: unknown };
+    if (!onlyKeys(lawBody, ['id', 'title', 'side', 'certainty', 'notes', 'field', 'indicator', 'stage', 'enforcedOn', 'amountMedianYen', 'amountLowYen', 'amountHighYen', 'lowerBound', 'window', 'comparisonCountries', 'benefitStatus', 'group', 'sources'])) throw new Error('法律の項目が不正です。');
+    if ((demotedReason !== undefined || demotedBasis !== undefined) && (!prose(demotedReason, 500) || !prose(demotedBasis, 800) || law.certainty !== '参考')) throw new Error('降格の理由・根拠が不正です。');
     if (!LAW_ID.test(law.id) || seen.has(law.id)) throw new Error('法律の id が不正です。');
     seen.add(law.id);
     if (!['loss', 'benefit'].includes(law.side) || !CERTAINTIES.includes(law.certainty) || !Array.isArray(law.notes) || !law.notes.every(note => prose(note, 300)) || ![law.title, law.field, law.indicator, law.stage, law.window, law.benefitStatus, law.group].every(item => prose(item, 500)) || !dateText(law.enforcedOn) || typeof law.lowerBound !== 'boolean') throw new Error('法律の項目が不正です。');

@@ -102,6 +102,10 @@ export function LawRankingPage() {
           <a href="?side=amount#list" className="laws-stat"><span>参考の額</span><strong>{(amounted.length - confirmed.length).toLocaleString('ja-JP')}本</strong><small>産業・経済全体の差など。確かな額と足さない</small></a>
           <a href="?side=none#list" className="laws-stat"><span>額なし（理由つき）</span><strong>{noAmount.toLocaleString('ja-JP')}件</strong><small>法律{(data.laws.length - amounted.length).toLocaleString('ja-JP')}本＋政策{data.policies.filter(policy => !policy.amount).length}件。測れていないだけで「影響なし」ではない</small></a>
         </section>
+        {viewConfirmed.length === 0 && confirmed.length === 0 && <section aria-label="額の大きい順" id="top-amounts">
+          <h3>額の大きい順</h3>
+          <p className="empty-state">確かな額がまだ無いため、額の大きい順の棒は出していません。検証で参考に下げた法律の額は、参考値として下の一覧に残しています（順位・議員別の額には使いません）。</p>
+        </section>}
         {viewConfirmed.length > 0 && <section aria-label="額の大きい順" id="top-amounts">
           <h3>{sideTop.length ? (toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順') : '額の大きい順'}（確かな額の上位{topList.length}本）</h3>
           <p className="fine-note">赤は国賊側（損失）、緑は国士側（便益）。太い棒が中央値、細い線が幅です。棒を押すと、下の一覧でその法律の詳しい中身が開きます。</p>

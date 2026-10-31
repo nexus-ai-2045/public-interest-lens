@@ -107,7 +107,8 @@ class PublicSyncTest(unittest.TestCase):
         self.assertEqual(inputs.pop("ballots", None), ballots.hexdigest(), "members-reference.json の個人別の賛否の照合値が今のファイルと違う")
         self.assert_inputs("members-reference.json", inputs, paths)
         # コロナ期と重なる・分離できない参考の法律は配らない（設計決定0014、app/src/members-reference.ts）。
-        reference_laws = sum(1 for law in self.ranking["laws"] if law.get("certainty") == "参考"
+        # 検証で参考に降格した法律（demotedReason あり）も配らない。
+        reference_laws = sum(1 for law in self.ranking["laws"] if law.get("certainty") == "参考" and not law.get("demotedReason")
                              and not any(n.startswith("コロナ期と") for n in law.get("notes", [])))
         self.assertEqual(reference["counts"]["laws"], reference_laws, "全議員の表の参考の法律の本数が ranking.json と違う")
         roster = (ROOT / "data/acquired/diet-roster/current.csv").read_text(encoding="utf-8").splitlines()[1:]

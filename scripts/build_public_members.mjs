@@ -43,9 +43,10 @@ try {
   // 同じ観測を共有する本数は、公開ランキングに残った法律だけで数える（出典チェックで外した法律は数えない）。
   const ranking = JSON.parse(text.ranking);
   const certainty = Object.fromEntries(ranking.laws.map(l => [l.id, l.certainty]));
+  // 検証で参考に降格した法律（demotedReason あり）は額を残すが、順位と同じく議員の額には配らない。
   // 向きと額の符号が逆・関与の出典なしで額を付けないとした法律（outcomes.csv の判断。ranking.json の parameters.noAmount）は議員の額に配らない。
   const noAmount = new Set(ranking.generatedFrom.parameters.noAmount ?? []);
-  const payload = buildMembers({ ...text, listed: ranking.laws.map(l => l.id).filter(id => !noAmount.has(id)), certainty });
+  const payload = buildMembers({ ...text, listed: ranking.laws.filter(l => !l.demotedReason).map(l => l.id).filter(id => !noAmount.has(id)), certainty });
   // 公開ランキングで確かさ高・中なのに、関わった議員の記録（提出・参議院の賛否）がまだ無く、ここに入っていない法律。
   // 議員ページに「集めている途中」として出し、全部のページで同じ法律の組が見えるようにする。
   const included = new Set(payload.laws.map(l => l.id));

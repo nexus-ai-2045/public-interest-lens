@@ -27,7 +27,7 @@ it('配布している members.json は、いまの派生データから同じ�
     resistance: read('data/derived/org-ledger-v1/ministry-resistance.csv'),
     orgStances: read('data/derived/org-ledger-v1/org-stances.csv'),
     backing: read('data/derived/backing-forces-v1/law-links.csv'),
-    listed: (() => { const r = JSON.parse(read('app/public/distribution/ranking.json')); const none = new Set<string>(r.generatedFrom.parameters.noAmount); return r.laws.map((l: { id: string }) => l.id).filter((id: string) => !none.has(id)); })(),
+    listed: (() => { const r = JSON.parse(read('app/public/distribution/ranking.json')); const none = new Set<string>(r.generatedFrom.parameters.noAmount); return r.laws.filter((l: { demotedReason?: string }) => !l.demotedReason).map((l: { id: string }) => l.id).filter((id: string) => !none.has(id)); })(),
     certainty: Object.fromEntries(JSON.parse(read('app/public/distribution/ranking.json')).laws.map((l: { id: string; certainty: string }) => [l.id, l.certainty])),
   });
   // pending（配分にまだ入っていない法律の一覧）は公開ランキングから付けるので、計算の一致からは外し、下で別に確かめる。

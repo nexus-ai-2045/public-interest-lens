@@ -11,7 +11,10 @@ test.describe('/ranking（法律ランキング）', () => {
     const rows = page.locator('.laws-list > li');
     await expect(rows.first()).toBeVisible();
     expect(leadingNumber(await page.locator('.laws-count').textContent())).toBeGreaterThan(0);
-    await expect(page.getByRole('region', { name: '額の大きい順' }).locator('svg, [role="img"], ol, ul').first()).toBeVisible();
+    // 検証を通った確かな額が無い間は、棒の代わりに空状態の説明を出す。確かな額が戻れば棒が出る。
+    const top = page.getByRole('region', { name: '額の大きい順' });
+    await expect(top.locator('svg, [role="img"], ol, ul, .empty-state').first()).toBeVisible();
+    await expect(top.getByText('確かな額がまだ無いため、額の大きい順の棒は出していません。', { exact: false })).toBeVisible();
     expect(watch.dataUrls.some(url => url.endsWith('/distribution/laws.json'))).toBe(true);
     watch.expectClean();
   });
@@ -39,8 +42,8 @@ test.describe('/ranking（法律ランキング）', () => {
     await page.getByRole('button', { name: '絞り込みを外す' }).click();
     await expect.poll(async () => leadingNumber(await count.textContent())).toBe(total);
 
-    await page.getByRole('group', { name: '向きで絞る' }).getByRole('button', { name: '額なし' }).click();
-    await expect(page).toHaveURL(/side=none/);
+    await page.getByRole('group', { name: '向きで絞る' }).getByRole('button', { name: '額が出た（参考を含む）' }).click();
+    await expect(page).toHaveURL(/side=amount/);
     await expect.poll(async () => leadingNumber(await count.textContent())).not.toBe(total);
     watch.expectClean();
   });
