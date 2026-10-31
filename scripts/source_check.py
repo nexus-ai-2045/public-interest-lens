@@ -358,10 +358,26 @@ def context(acquired: Path = ACQUIRED, derived: Path = DERIVED, local_root: Path
     }
 
 
+def shared_laws(ranking: dict) -> list[dict]:
+    """共有額の参考（sharedReference）の法律を、check_law が読む形（群の額・窓・比較国＋法律ごとの出典・施行日・題名）にして返す。
+    1本ごとの額は持たないが、共有された額（群の総枠）は一次資料から再計算して突き合わせる。"""
+    shared = ranking.get("sharedReference") or {"groups": [], "laws": []}
+    groups = {g["key"]: g for g in shared["groups"]}
+    titles = {item["id"]: item["title"] for item in ranking["others"]}
+    return [{
+        "id": item["id"], "title": titles[item["id"]], "side": groups[item["key"]]["side"], "notes": item["notes"], "field": item["field"],
+        "enforcedOn": item["enforcedOn"], "sources": item["sources"], "window": groups[item["key"]]["window"],
+        "comparisonCountries": groups[item["key"]]["comparisonCountries"], "group": groups[item["key"]]["group"],
+        "amountLowYen": groups[item["key"]]["lowYen"], "amountMedianYen": groups[item["key"]]["medianYen"], "amountHighYen": groups[item["key"]]["highYen"],
+    } for item in shared["laws"]]
+
+
 def check(ranking: dict, ctx: dict) -> tuple[list[dict[str, str]], dict]:
-    rows = [row for law in ranking["laws"] for row in check_law(law, ctx)]
+    shared = shared_laws(ranking)
+    rows = [row for law in [*ranking["laws"], *shared] for row in check_law(law, ctx)]
     summary = {
-        "checkedLaws": len(ranking["laws"]),
+        "checkedLaws": len(ranking["laws"]) + len(shared),
+        "checkedShared": len(shared),
         "items": len(rows),
         "match": sum(r["結果"] == OK for r in rows),
         "mismatch": sum(r["結果"] == NG for r in rows),

@@ -23,6 +23,14 @@ export type CatalogObservation = { key: string; size: number; representative: bo
 /** 額が日本の付加価値1年分を超える法律に付く印。順位は変えず、印と倍率だけ付く。 */
 export const OUTLIER_MARK = '額が日本の付加価値1年分を超える（桁外れ。参考にとどめる）';
 export const isOutlierMark = (mark: string) => mark.startsWith('額が日本の付加価値1年分を超える');
+/**
+ * 共有額の参考値。額は出したが、同じ額を何本もの法律が共有している（産業全体の差を法律ごとに分けていない）ので、
+ * 1本ごとの額は持たず、共有された合計 median の一部（0〜median）としてだけ見せる。順位・合計・議員配分には入れない。
+ * 検証で降格した法律（refReason）とは別の印。ratio は median が日本の付加価値（baseYear 年）の何倍か。
+ */
+export type CatalogShared = { key: string; size: number; median: number; low: number; high: number; side: 'loss' | 'benefit'; whole: boolean; ratio?: number; baseYear?: number };
+/** 共有額が日本の付加価値1年分のこの割合以上なら「1年分の○%」を添える。 */
+export const SHARED_RATIO_FLOOR = 0.1;
 export type CatalogItem = {
   id: string;
   kind: string;
@@ -49,6 +57,8 @@ export type CatalogItem = {
   /** 検証で参考に降格した法律だけ。降格の理由と、参考値の根拠・出典・由来（空でない文字列のときだけ入る）。 */
   refReason?: string;
   refBasis?: string;
+  /** 共有額の参考値だけ。amount は持たない。 */
+  shared?: CatalogShared;
 };
 export type LawsCatalog = {
   schema: 'public-laws/v1';
@@ -58,6 +68,8 @@ export type LawsCatalog = {
   strict?: { evaluated: number; dated: number; staged: number };
   /** 観測の数（count）と、桁外れの印の本数（outliers）。 */
   observations?: { count: number; outliers: number };
+  /** 共有額の参考（1本ごとの額は出さない）の本数・群の数・経済全体（産業コード _T）の本数。 */
+  shared?: { laws: number; groups: number; whole: number };
   fields: string[];
   laws: CatalogItem[];
   policies: CatalogItem[];
@@ -94,6 +106,8 @@ export type CatalogDetail = {
   window?: string;
   comparison?: string[];
   group?: string;
+  /** 共有額の参考値の根拠（使った前提：共有額・産業・期間・出典）。機械処理だけで、モデルの判定はまだ無い。 */
+  sharedBasis?: string;
   chain: ChainStep[];
   sources: { label: string; url: string }[];
   members?: { id: string; name: string; median: number; roles: string[] }[];
@@ -124,12 +138,17 @@ export function parseLawsCatalog(text: string): LawsCatalog {
       const value: unknown = item[key];
       if (typeof value === 'string' && value.trim() !== '') item[key] = value.trim(); else delete item[key];
     }
+    if (item.shared) {
+      const { shared } = item;
+      const finite = [shared.median, shared.low, shared.high].every(Number.isFinite);
+      if (item.amount || !finite || !(shared.size >= 2) || !(shared.low <= shared.median && shared.median <= shared.high) || !['loss', 'benefit'].includes(shared.side) || typeof shared.whole !== 'boolean' || (shared.ratio !== undefined && !(shared.ratio >= 0))) throw new Error(`共有額の形が違います: ${item.id}`);
+    }
     if (item.amount && !(item.amount.low <= item.amount.median && item.amount.median <= item.amount.high)) throw new Error(`額の幅が中央値を挟んでいません: ${item.id}`);
   }
   return data;
 }
 
-export type SideFilter = 'all' | 'confirmed' | 'loss' | 'benefit' | 'amount' | 'none';
+export type SideFilter = 'all' | 'confirmed' | 'loss' | 'benefit' | 'amount' | 'shared' | 'none';
 export type SortKey = 'amount' | 'loss' | 'benefit' | 'newest' | 'oldest' | 'progress';
 export type CatalogQuery = { text: string; side: SideFilter; field: string; kind: string; sort: SortKey };
 export const DEFAULT_QUERY: CatalogQuery = { text: '', side: 'all', field: '', kind: '', sort: 'amount' };
@@ -146,7 +165,8 @@ export function filterCatalog(items: CatalogItem[], query: CatalogQuery): Catalo
     if (query.side === 'benefit' && item.side !== 'benefit') return false;
     if (query.side === 'amount' && !item.amount) return false;
     if (query.side === 'confirmed' && item.step !== 'published') return false;
-    if (query.side === 'none' && item.amount) return false;
+    if (query.side === 'shared' && !item.shared) return false;
+    if (query.side === 'none' && (item.amount || item.shared)) return false;
     return true;
   });
   const progress = (item: CatalogItem) => STEP_ORDER.indexOf(item.step);
@@ -157,7 +177,8 @@ export function filterCatalog(items: CatalogItem[], query: CatalogQuery): Catalo
   const bySide = (side: 'loss' | 'benefit') => (a: CatalogItem, b: CatalogItem) => Number(b.side === side) - Number(a.side === side) || sorters.amount(a, b);
   const sorters: Record<SortKey, (a: CatalogItem, b: CatalogItem) => number> = {
     // 確かな額 → 参考の額 → 額なしの順。同じ組の中は額の大きい順、額のない行は計算が進んだ順、同じなら新しい順。
-    amount: (a, b) => Number(b.step === 'published') - Number(a.step === 'published') || (b.amount?.median ?? -1) - (a.amount?.median ?? -1) || progress(b) - progress(a) || byYear(a, b),
+    // 共有額の参考は、額のある行の後・額なしの前に置く（合計の大きい群が先）。
+    amount: (a, b) => Number(b.step === 'published') - Number(a.step === 'published') || (b.amount?.median ?? (b.shared ? -0.5 : -1)) - (a.amount?.median ?? (a.shared ? -0.5 : -1)) || (b.shared?.median ?? 0) - (a.shared?.median ?? 0) || progress(b) - progress(a) || byYear(a, b),
     loss: (a, b) => bySide('loss')(a, b),
     benefit: (a, b) => bySide('benefit')(a, b),
     newest: (a, b) => byYear(a, b) || progress(b) - progress(a),
@@ -200,7 +221,7 @@ export function readQuery(search: string): CatalogQuery {
   const sort = params.get('sort') as SortKey | null;
   return {
     text: params.get('q') ?? '',
-    side: side && ['all', 'confirmed', 'loss', 'benefit', 'amount', 'none'].includes(side) ? side : 'all',
+    side: side && ['all', 'confirmed', 'loss', 'benefit', 'amount', 'shared', 'none'].includes(side) ? side : 'all',
     field: params.get('field') ?? '',
     kind: params.get('kind') ?? '',
     sort: sort && ['amount', 'loss', 'benefit', 'newest', 'oldest', 'progress'].includes(sort) ? sort : 'amount',

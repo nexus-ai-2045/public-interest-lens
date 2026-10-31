@@ -53,7 +53,7 @@ export type PublicMembersReference = {
 /** 1人・1本・1役割ごとの配り先（公開ファイルには入れず、scripts/check_reference_members.py が全件を一次資料と照らす）。member は人物ID、name は出典の表記。 */
 export type ReferenceAttribution = { member: string; name: string; house: string; lawId: string; role: ReferenceRole; side: 'loss' | 'benefit'; median: number };
 export type ReferenceInputs = {
-  ranking: { laws: { id: string; title: string; side: string; certainty: string; notes?: string[]; group: string; window: string; amountLowYen: number; amountMedianYen: number; amountHighYen: number; demotedReason?: string }[] };
+  ranking: { laws: { id: string; title: string; side: string; certainty: string; notes?: string[]; group: string; window: string; amountLowYen: number; amountMedianYen: number; amountHighYen: number; demotedReason?: string }[]; sharedReference?: { laws: { id: string }[] } };
   enacted: string; votesIndex: string; ballots: string[]; sangiinMembers: string; cabinet: string; roster: string;
   /** 人物台帳 data/derived/person-ids/persons.csv。 */
   persons: string;
@@ -128,7 +128,9 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
 
   // コロナ期と重なる・分離できない法律は配らない。額がコロナ期の日本と比較国の落ち込みの差をそのまま含み、その法律の効果ではない（設計決定0014）。
   // 検証で参考に降格した法律（demotedReason あり）の額は、実名の議員には配らない。
-  const laws = input.ranking.laws.filter(l => l.certainty === SANKO && !l.demotedReason && !(l.notes ?? []).some(n => n.startsWith('コロナ期と')));
+  // 共有額の参考（sharedReference。1本ごとの額を持たない）も配らない。
+  const sharedIds = new Set((input.ranking.sharedReference?.laws ?? []).map(l => l.id));
+  const laws = input.ranking.laws.filter(l => l.certainty === SANKO && !l.demotedReason && !sharedIds.has(l.id) && !(l.notes ?? []).some(n => n.startsWith('コロナ期と')));
   const obs = new Map<string, number>();
   for (const l of laws) obs.set(`${l.group}|${l.window}`, (obs.get(`${l.group}|${l.window}`) ?? 0) + 1);
 

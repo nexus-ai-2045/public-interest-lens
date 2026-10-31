@@ -94,12 +94,12 @@ OUTCOMES = {
     "amount_hold": "保留（額の計算・公開条件）",
     "covid_scale": "額は未計算（コロナ対応・規模のみ記録）",
     "hidden_failed": "額は出さない（検証で不合格）",  # 降格の導入後は使わない（不合格は参考値に下げて額を残す）
-    "hidden_shared": "額は出さない（他の法律と同じ額）",
+    "hidden_shared": "共有額の参考（1本ごとの額は出さない）",
     "hidden_oversize": "額は出さない（桁外れ）",
 }
 HIDDEN_REASONS = {
     "hidden_failed": "独立検証の抜き取りで不合格だったため、額を出さない",
-    "hidden_shared": "他の法律と同じ額（産業全体の差を法律ごとに分けていない）のため、額を出さない",
+    "hidden_shared": "同じ額を共有する法律の1つ。産業全体の差を法律ごとに分けていないので、1本ごとの額は出さず、共有された合計の一部（0〜合計）としてだけ見せる（sharedReference）",
     "hidden_oversize": "額が日本の付加価値1年分を超える（桁外れ）ため、額を出さない",
 }
 SAMPLE_VERDICTS = DERIVED / "evaluation-ledger-v1" / "sample-verdicts.csv"
@@ -370,11 +370,13 @@ def demoted_basis(law: dict, covid_basis: str = "") -> str:
     return f"{law['indicator']} {law['window']}（{how}）。順位・議員配分に使わない参考値"
 
 
-def hide_unreliable(laws: list[dict], failed: dict[str, str] | set[str], ceiling: int, covid_basis: dict[str, str] | None = None) -> tuple[list[dict], list[dict]]:
+def hide_unreliable(laws: list[dict], failed: dict[str, str] | set[str], ceiling: int, covid_basis: dict[str, str] | None = None, shared_out: list[dict] | None = None) -> tuple[list[dict], list[dict]]:
     """検証で不合格の法律は、確かさ（高・中・低・参考）やコロナ費用便益の群を問わず「参考に下げる」。額は消さず参考値として残し、
     確かさを参考にして、降格の理由（demotedReason）と参考値の根拠（demotedBasis）を付ける。順位・議員配分には使わない。
     それ以外の参考の額のうち、他の法律と同じ額のもの、桁外れのものは（コロナ対応の費用便益は法律ごとの支出から別に計算するので対象にしない）額を出さず、額なしの側へ回す。
-    確かな額（高・中・低）で不合格でないものには触れない。返り値は（残す法律, 額なしに回す行）。"""
+    確かな額（高・中・低）で不合格でないものには触れない。返り値は（残す法律, 額なしに回す行）。
+    共有額の法律は、1本ごとの額を出さない行（others）に回すが、shared_out を渡すと元の法律（額つき）をそこへ入れる
+    （共有額の参考値 sharedReference の材料。順位・合計・議員配分には使わない）。"""
     covid_basis = covid_basis or {}
     reasons = failed if isinstance(failed, dict) else {i: "" for i in failed}
 
@@ -397,10 +399,41 @@ def hide_unreliable(laws: list[dict], failed: dict[str, str] | set[str], ceiling
             elif law["amountMedianYen"] > ceiling:
                 key = "hidden_oversize"
         if key:
+            if key == "hidden_shared" and shared_out is not None:
+                shared_out.append(law)
             moved.append(_other(law["id"], law["title"], key, HIDDEN_REASONS[key]))
         else:
             kept.append(law)
     return kept, moved
+
+
+def shared_key(law: dict) -> str:
+    """同じ額を共有するまとまりの識別子。群・期間・向き・中央値が同じ法律は1つの観測を分け合っている。"""
+    return f"{law['group']}／{law['window']}／{law['side']}／{law['amountMedianYen']}"
+
+
+def shared_reference(shared: list[dict]) -> dict:
+    """共有額の法律（hide_unreliable が1本ごとの額を出さないとした法律）の、画面に出す参考値の材料。
+    1本ごとの額は持たない。持つのは「共有された額（グループの総枠）」「同じ額を共有する本数」と、法律ごとの出典・施行日だけ。
+    法律ごとの配分は、配分の重みが観測できないので行わない（仮定を足さない。調査 B-4・設計決定0024）。
+    将来、重みが観測できる法律へ総枠を配分するときの検査（配分の合計 ≤ 総枠）は、groups の medianYen と size を枠に使う。"""
+    members: dict[str, list[dict]] = {}
+    for law in shared:
+        members.setdefault(shared_key(law), []).append(law)
+    groups = []
+    for key, laws in sorted(members.items()):
+        first = laws[0]
+        prefix = MACRO_GROUP + "-"
+        industry = first["group"].removeprefix(prefix) if first["group"].startswith(prefix) else ""
+        groups.append({
+            "key": key, "group": first["group"], "industry": industry, "window": first["window"], "side": first["side"],
+            "indicator": first["indicator"], "comparisonCountries": first["comparisonCountries"],
+            "medianYen": first["amountMedianYen"], "lowYen": first["amountLowYen"], "highYen": first["amountHighYen"],
+            "size": len(laws),
+        })
+    items = [{"id": law["id"], "key": shared_key(law), "field": law["field"], "enforcedOn": law["enforcedOn"], "notes": law["notes"], "sources": law["sources"]}
+             for law in sorted(shared, key=lambda law: law["id"])]
+    return {"groups": groups, "laws": items}
 
 
 def _reading_notes(laws: list[dict], ceiling: int | None = None) -> None:
@@ -476,8 +509,10 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
         raise ValueError(f"成立法の台帳に無い法律があります: {missing}")
     ceiling = japan_value_added_max(captured["industryVa"])
     covid_basis = {i: r["根拠"] for i, r in covid_rules.items() if r.get("根拠")}
-    laws, hidden = hide_unreliable(laws, verification_failed(), ceiling, covid_basis)
+    shared_laws: list[dict] = []
+    laws, hidden = hide_unreliable(laws, verification_failed(), ceiling, covid_basis, shared_laws)
     others.extend(hidden)
+    shared = shared_reference(shared_laws)
     _reading_notes(laws, ceiling)
     # 確かな額（高・中・低）を先、参考を後。どちらも額の大きい順。
     laws.sort(key=lambda law: (law["certainty"] == "参考", law["group"].startswith(MACRO_GROUP), -law["amountMedianYen"], law["id"]))
@@ -497,12 +532,15 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
         ),
         "laws": laws,
         "others": others,
+        "sharedReference": shared,
         "counts": {
             **_counts(captured),
             "published": len(laws),
             "confirmed": len(laws) - reference,
             "reference": reference,
             "others": len(others),
+            "shared": len(shared["laws"]),
+            "sharedGroups": len(shared["groups"]),
         },
     }
 

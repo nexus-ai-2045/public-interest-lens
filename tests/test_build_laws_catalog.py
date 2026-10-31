@@ -164,6 +164,34 @@ class BuildLawsCatalogTest(unittest.TestCase):
                 self.assertEqual(self.laws[law["id"]]["step"], "amounted")
                 self.assertEqual(self.laws[law["id"]]["refReason"], law["demotedReason"].strip())
 
+    def test_shared_reference_laws_have_no_per_law_amount_and_a_distinct_mark(self):
+        shared = {item["id"]: item for item in self.ranking["sharedReference"]["laws"]}
+        groups = {g["key"]: g for g in self.ranking["sharedReference"]["groups"]}
+        self.assertTrue(shared)
+        for law_id, ref in shared.items():
+            item = self.laws[law_id]
+            self.assertIsNone(item["amount"], law_id)
+            self.assertIsNone(item["side"], law_id)
+            self.assertNotIn("refReason", item)  # 検証で降格した法律とは別の印
+            self.assertEqual(item["shared"]["size"], groups[ref["key"]]["size"])
+            self.assertEqual(item["shared"]["median"], groups[ref["key"]]["medianYen"])
+            self.assertIn(catalog.SHARED_MARKS[0], item["marks"])
+            self.assertEqual(item["observation"]["key"], ref["key"])
+            self.assertIn("モデルの判定はまだ無い", item["sharedBasis"])
+            self.assertNotIn("valueAdded", item.get("columns", {}))  # 三欄にも1本ごとの額（共有額そのもの）を出さない
+        self.assertEqual(self.payload["shared"]["laws"], len(shared))
+        self.assertEqual(self.payload["shared"]["groups"], len(groups))
+
+    def test_index_keeps_ref_and_shared_fields_but_not_the_basis_text(self):
+        index, details = catalog.split(self.payload)
+        demoted = [item for item in index["laws"] if "refReason" in item]
+        self.assertTrue(demoted)
+        self.assertTrue(all("refBasis" in item for item in demoted))
+        shared = [item for item in index["laws"] if "shared" in item]
+        self.assertTrue(shared)
+        self.assertFalse(any("sharedBasis" in item for item in shared))
+        self.assertTrue(all("sharedBasis" in details[catalog.bundle_of(item["id"])]["items"][item["id"]] for item in shared))
+
     def test_outlier_mark_only_when_amount_exceeds_previous_year_value_added(self):
         value_added = {2000: 500e12, 2001: 510e12}
         items = [

@@ -28,7 +28,7 @@ NAMES_OUTPUT = DIST / "law-names.json"
 # 一覧の1行に要る項目。残り（因果の鎖・一次資料・関わった議員など）は開いた時に laws-detail/<束>.json から読む。
 # laws.json で1本1行に並べる一覧（dump_one_per_line）。
 LINE_KEYS = ("laws", "policies")
-INDEX_KEYS = ("id", "kind", "title", "year", "field", "side", "amount", "certainty", "marks", "step", "what", "whatWithheld", "summary", "membersTotal", "href", "observation", "scale")
+INDEX_KEYS = ("id", "kind", "title", "year", "field", "side", "amount", "certainty", "marks", "step", "what", "whatWithheld", "summary", "membersTotal", "href", "observation", "scale", "shared", "refReason", "refBasis")
 
 INPUTS = {
     "enacted": ACQUIRED / "bill-census-full" / "enacted.csv",
@@ -255,6 +255,47 @@ def mark_outliers(items: list[dict], value_added: dict[int, float]) -> int:
     return count
 
 
+SHARED_MARKS = ["共有額の参考（法律ごとに分けていない）", "確かさ：低（産業の差を共有・この法律だけの効果ではない）"]
+SHARED_RATIO_FLOOR = 0.1  # 共有額が日本の付加価値1年分のこの割合以上なら、画面に「1年分の○%」を添える
+
+
+def shared_fields(group: dict, value_added: dict[int, float]) -> dict:
+    """共有額の参考値の欄。1本ごとの額は持たず、共有された額（総枠 X）の一部（0〜X）として見せる材料だけ。
+    ratio は X ÷ 窓の開始前最後の年の日本の付加価値（年が無い・値が無いときは付けない）。"""
+    out = {"key": group["key"], "size": group["size"], "median": group["medianYen"], "low": group["lowYen"], "high": group["highYen"],
+           "side": group["side"], "whole": group["industry"] == "_T"}
+    year = start_year(group["window"])
+    base = value_added.get(year - 1) if year else None
+    if base:
+        out["ratio"] = round(group["medianYen"] / base, 6)
+        out["baseYear"] = year - 1
+    return out
+
+
+def shared_basis(group: dict, shared: dict) -> str:
+    """共有額の根拠カード（機械処理だけ。モデルの判定はまだ無い）。使った前提：共有額・産業・期間・出典。"""
+    where = f"産業コード {group['industry']}（{'経済全体' if shared['whole'] else '産業'}）" if group["industry"] else f"指標の群 {group['group']}"
+    countries = "・".join(group["comparisonCountries"])
+    return (f"使った前提：指標「{group['indicator']}」、{where}、期間 {group['window']}、"
+            f"共有された額（日本と比べた国{'（' + countries + '）' if countries else ''}の差）{yen(group['medianYen'])}（幅 {yen(group['lowYen'])}〜{yen(group['highYen'])}）。"
+            f"出典：OECD 表6（産業別の付加価値）。同じ群・期間・額を{group['size']}本が共有していることを機械的に検出した（モデルの判定はまだ無い）。"
+            f"配分の重み（法文の強さ・対象範囲・施行時期）が観測できていないので、法律ごとの配分はしていない。")
+
+
+def mark_shared_observations(items: list[dict]) -> None:
+    """共有額の法律を、同じ額の群ごとにまとめる（一覧は代表の1行にたたむ）。観測の数には数えない（額のある法律の観測とは別）。"""
+    members: dict[str, list[dict]] = defaultdict(list)
+    for item in items:
+        if item.get("shared"):
+            members[item["shared"]["key"]].append(item)
+    for key, group in members.items():
+        group.sort(key=lambda item: item["id"])
+        for item in group:
+            item["observation"] = {"key": key, "size": len(group), "representative": item is group[0]}
+            if item is not group[0]:
+                item["observation"]["representativeId"] = group[0]["id"]
+
+
 def ref_fields(source: dict | None) -> dict:
     """公開ランキングの項目から、降格した法律の理由（demotedReason）と根拠（demotedBasis）を refReason・refBasis として拾う。
     文字列で空でないものだけ。欄が無ければ空の辞書（欄自体を持たない）。"""
@@ -272,6 +313,10 @@ def build() -> dict:
     ranking = _json("ranking")
     amounted = {law["id"]: law for law in ranking["laws"]}
     others = {item["id"]: item for item in ranking["others"]}
+    shared_ref = ranking.get("sharedReference") or {"groups": [], "laws": []}
+    shared_groups = {group["key"]: group for group in shared_ref["groups"]}
+    shared_laws = {law["id"]: law for law in shared_ref["laws"]}
+    value_added = japan_value_added()
     members = _json("members")
     linked = member_links(members)
     member_law = {law["id"]: law for law in members["laws"]}
@@ -343,6 +388,19 @@ def build() -> dict:
                 item["attributed"] = member_law[law_id]["attributed"]
             if law["certainty"] in ("高", "中") and law_id not in member_law:
                 item["marks"].append(MEMBERS_PENDING)
+        elif other and law_id in shared_laws:
+            # 共有額の参考：1本ごとの額は持たない（amount は None のまま）。順位・合計・議員配分に入れない。降格（検証で不合格）とは別の印
+            ref, group = shared_laws[law_id], shared_groups[shared_laws[law_id]["key"]]
+            shared = shared_fields(group, value_added)
+            item["step"] = OUTCOME_STEP.get(other["outcome"], "enacted")
+            item["field"] = ref["field"].replace("（既存の規則で）", "").strip() or item["field"]
+            item["shared"] = shared
+            item["marks"] += SHARED_MARKS + [mark for mark in ref["notes"] if mark not in item["marks"]]
+            item["summary"] = f"{other['outcome']}：同じ額を{shared['size']}本が共有（この業界・期間の合計 {yen(shared['median'])} の一部。足し合わせない）"
+            item.update({"indicator": group["indicator"], "window": group["window"], "enforcedOn": ref["enforcedOn"], "comparison": group["comparisonCountries"], "group": group["group"],
+                         "sharedBasis": shared_basis(group, shared)})
+            item["sources"] += [link for link in source_links(ref["sources"]) if link["url"] not in {source["url"] for source in item["sources"]}]
+            item["chain"].append({"step": "共有額の検出", "result": f"同じ額を{shared['size']}本が共有", "note": other["reason"]})
         elif other:
             item["step"] = OUTCOME_STEP.get(other["outcome"], "enacted")
             item["summary"] = f"{other['outcome']}：{first_clause(other['reason'], 70)}"
@@ -357,6 +415,11 @@ def build() -> dict:
             item["chain"].append({"step": "税収の見込み", "result": item["summary"], "note": tax["理由"] + "。出典：" + tax["出典URL"]})
             item["sources"] += [{"label": "財務省 税制改正の概要", "url": u} for u in tax["出典URL"].split()]
         columns = three_columns(columns_by_id.get(law_id))
+        if columns and item.get("shared"):
+            # 共有額の法律は1本ごとの額を持たない。三欄の付加価値（共有額そのもの）と、それから作る採算は出さない（国の収支は別の量なので残す）
+            for key in ("valueAdded", "spendYen", "profitability", "profitabilityNote"):
+                columns.pop(key, None)
+            columns = columns or None
         if columns:
             item["columns"] = columns
         if out and out["指標"] and "indicator" not in item:
@@ -378,8 +441,9 @@ def build() -> dict:
                 item["sources"].append({"label": label, "url": item["overview"][key]["url"]})
         items.append(item)
 
-    mark_outliers(items, japan_value_added())
-    observations = mark_observations(items)  # 額を出す法律だけで数える（隠した法律は観測に入れない）
+    mark_outliers(items, value_added)
+    mark_shared_observations(items)
+    observations = mark_observations(items)  # 額を出す法律の観測。共有額の群は別に付け（mark_shared_observations）、count には両方を足す
     outliers = sum(1 for item in items if any(mark.startswith(OUTLIER_PREFIX) for mark in item["marks"]))
     policies = [policy_from_case(_json("case"))]
     counts = {step: sum(1 for item in items if STEPS.index(item["step"]) >= STEPS.index(step)) for step in STEPS}
@@ -390,7 +454,9 @@ def build() -> dict:
         # 公開ランキングの段階ごとの本数（全体指標の参考の額は段階を通っていないので含まない）。/ranking の注記に出す。
         "strict": {key: ranking["counts"][key] for key in ("evaluated", "dated", "staged")},
         # 同じ観測（group＋window）の数と、桁外れの印の本数。一覧は観測ごとに代表1本を並べる。
-        "observations": {"count": observations, "outliers": outliers},
+        "observations": {"count": observations + len(shared_groups), "outliers": outliers},
+        # 共有額の参考（1本ごとの額は出さない）の本数・群の数・経済全体（産業コード _T）の本数。一覧は既定で経済全体の分をたたむ。
+        "shared": {"laws": sum(1 for item in items if item.get("shared")), "groups": len(shared_groups), "whole": sum(1 for item in items if (item.get("shared") or {}).get("whole"))},
         "fields": sorted({item["field"] for item in items}),
         "laws": items,
         "policies": policies,
