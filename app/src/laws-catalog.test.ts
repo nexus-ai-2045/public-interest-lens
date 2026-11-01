@@ -63,6 +63,9 @@ describe('全法律の一覧', () => {
     const query = { text: '観光', side: 'loss' as const, field: '宿泊・観光', kind: '閣法', sort: 'newest' as const };
     expect(readQuery(writeQuery(query))).toEqual(query);
     expect(writeQuery(DEFAULT_QUERY)).toBe('');
+    // 一覧の画面では、明示して選んだ「額の大きい順」も URL に残し、読み戻すと同じ並びになる。
+    expect(writeQuery(DEFAULT_QUERY, true)).toBe('?sort=amount');
+    expect(readQuery(writeQuery(DEFAULT_QUERY, true))).toEqual(DEFAULT_QUERY);
   });
   it('同じ観測は代表の1行にまとめ、絞り込みで代表が外れても1本は残る', () => {
     const list = filterCatalog(catalog.laws, DEFAULT_QUERY);

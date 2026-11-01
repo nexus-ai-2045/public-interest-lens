@@ -91,8 +91,8 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
     setQuery(merged);
     setLimit(PAGE);
     {
-      // 最上部の絞り込み（政党・性格）の URL 項目は消さずに残す。
-      const params = new URLSearchParams(writeQuery(merged).slice(1));
+      // 最上部の絞り込み（政党・性格）の URL 項目は消さずに残す。並びは「額の大きい順」でも明示して残す（無いと向き別の既定になるため）。
+      const params = new URLSearchParams(writeQuery(merged, true).slice(1));
       const keep = new URLSearchParams(window.location.search);
       for (const key of ['party', 'nature']) { const value = keep.get(key); if (value) params.set(key, value); }
       window.history.replaceState(null, '', `${window.location.pathname}${params.size ? `?${params}` : ''}${window.location.hash}`);
@@ -161,7 +161,7 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
         <label>並べ替え<select value={query.sort} onChange={event => update({ sort: event.target.value as CatalogQuery['sort'] })}>{SORT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       </div>
     </div>
-    <p className="laws-count" role="status">{shown.length.toLocaleString('ja-JP')}件（確かな額{confirmed.toLocaleString('ja-JP')}・参考の額{(amounted - confirmed).toLocaleString('ja-JP')}・共有額の参考{sharedShown.toLocaleString('ja-JP')}・額なし{(shown.length - amounted - sharedShown).toLocaleString('ja-JP')}）{JSON.stringify(query) !== JSON.stringify(DEFAULT_QUERY) && <button type="button" onClick={() => update(DEFAULT_QUERY)}>絞り込みを外す</button>} <ShareButton title="法律と政策の一覧｜法律ランキング" text={`法律と政策の一覧（${shown.length.toLocaleString('ja-JP')}件）`} url={`${window.location.origin}/ranking${writeQuery(query)}#list`} label="この一覧を共有" /></p>
+    <p className="laws-count" role="status">{shown.length.toLocaleString('ja-JP')}件（確かな額{confirmed.toLocaleString('ja-JP')}・参考の額{(amounted - confirmed).toLocaleString('ja-JP')}・共有額の参考{sharedShown.toLocaleString('ja-JP')}・額なし{(shown.length - amounted - sharedShown).toLocaleString('ja-JP')}）{JSON.stringify(query) !== JSON.stringify(DEFAULT_QUERY) && <button type="button" onClick={() => update(DEFAULT_QUERY)}>絞り込みを外す</button>} <ShareButton title="法律と政策の一覧｜法律ランキング" text={`法律と政策の一覧（${shown.length.toLocaleString('ja-JP')}件）`} url={`${window.location.origin}/ranking${writeQuery(query, true)}#list`} label="この一覧を共有" /></p>
     {(foldedRef > 0 || showRef) && !(query.text.trim() !== '' || query.side === 'amount' || query.side === 'loss' || query.side === 'benefit') && <p className="laws-fold" role="status">
       <Layers size={15} aria-hidden="true" />
       <span>{showRef ? '参考の額も並べています。参考の額は産業や経済全体の差から見積もった値で、その法律だけの効果とは言えません（確かさ低。合計・議員には足しません）。' : `参考の額が付いた法律${foldedRef.toLocaleString('ja-JP')}本は畳んでいます。産業や経済全体の差から見積もった値で、その法律だけの効果とは言えず、合計・議員には足しません。`}</span>

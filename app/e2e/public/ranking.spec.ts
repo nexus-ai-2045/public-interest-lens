@@ -48,6 +48,23 @@ test.describe('/ranking（法律ランキング）', () => {
     watch.expectClean();
   });
 
+  test('並べ替えは URL で保たれる：初回の指定を上書きせず、額の大きい順も共有・再読み込みで残る', async ({ page }) => {
+    const watch = watchPage(page);
+    const sort = page.getByRole('combobox', { name: '並べ替え' });
+    // 国賊（既定の向き）でも、URL で便益順を指定して開いたらそのまま。
+    await page.goto('/ranking?sort=benefit');
+    await expect(page.locator('.laws-list > li').first()).toBeVisible();
+    await expect(sort).toHaveValue('benefit');
+    await expect(page).toHaveURL(/[?&]sort=benefit/);
+    // 額の大きい順を選ぶと URL に明示され、再読み込みしても向き別の並びに戻らない。
+    await sort.selectOption('amount');
+    await expect(page).toHaveURL(/[?&]sort=amount/);
+    await page.reload();
+    await expect(page.locator('.laws-list > li').first()).toBeVisible();
+    await expect(sort).toHaveValue('amount');
+    watch.expectClean();
+  });
+
   test('行を開くと詳細（laws-detail）を読み込んで表示する', async ({ page }) => {
     const watch = watchPage(page);
     await page.goto('/ranking');
