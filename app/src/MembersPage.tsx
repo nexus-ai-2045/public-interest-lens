@@ -304,6 +304,9 @@ export function PartyAffiliationPanel({ members, parties, loaded, error, adjuste
   </section>;
 }
 
+/** 計算方法の見直し中は、議員・党の順位と点（参考の表を含む）を本番で出さない（ねく 11-01）。戻すときは false にする。 */
+export const MEMBER_RANKING_HIDDEN = true;
+
 export function MembersPage() {
   const [data, setData] = useState<PublicMembers | null>(null);
   const [error, setError] = useState('');
@@ -408,13 +411,17 @@ export function MembersPage() {
   return <SiteShell active="/members" label="議員・実名・実データ" className="law-ranking members-page">
     <main id="main">
       <h1>この人が失わせた額・生んだ額</h1>
+      {MEMBER_RANKING_HIDDEN && <p className="empty-state" role="note">議員・政党の順位と点は、計算方法の見直し中のため、いったん非表示にしています。法律ごとの損失と便益は<a href="/ranking">法律ランキング</a>で見られます。</p>}
+      {MEMBER_RANKING_HIDDEN && <p className="fine-note">記録や判定に誤りがあれば、<a href={correctionUrl} target="_blank" rel="noopener noreferrer">訂正・反論の窓口（GitHub の Issue）</a>から公開資料を添えて知らせてください。</p>}
+      {!MEMBER_RANKING_HIDDEN && <>
       <p>議員ごとに、その人の行動で日本が<strong>失った額（国賊側）・生んだ額（国士側）</strong>を並べています。理由（行動→成立→損失の鎖）は、行を開くと出ます。</p>
       <details className="members-intro"><summary>この数字の意味と訂正窓口</summary>
       <p>法律が日本に与えた損失（国賊側）と便益（国士側）を、<strong>「この人の行動が無かったら、その法律は成立したか」</strong>で人に配りました。提出者が出さなければ、また参議院で賛成票が足りなければ、法律は成立せず、損失も便益も生まれません。成立のしくみ（拒否権者と過半数の投票）の中で、その人の行動が成立を決める場面の割合（Shapley 値）を出し、法律の分（ふつうは法律の額。同じ観測を共有する法律では観測の額を本数で割った分）に掛けたものが<strong>この人が失わせた額</strong>・<strong>生んだ額</strong>です。各人の欄に、行動 → 成立 → 損失のつながりを一次資料（国会会議録・参議院の投票結果・衆議院の議案情報）のリンクつきで示し、式も載せています。計算のしかたは<a href="/methodology">計算方法</a>にあります。</p>
       <p className="fine-note">記録や判定に誤りがあれば、<a href={correctionUrl} target="_blank" rel="noopener noreferrer">訂正・反論の窓口（GitHub の Issue）</a>から公開資料を添えて知らせてください。本人・関係者からの反論も同じ窓口で受け付け、確認できたものは記録と額に反映します。</p>
       </details>
       {error && <p className="state-banner" role="alert">{error}</p>}
-      {data && <>
+      </>}
+      {!MEMBER_RANKING_HIDDEN && data && <>
         {noAllocation ? <section aria-label="議員別の額" className="members-empty"><p className="empty-state" role="note">確かな額がまだ無いため、議員別の額は出していません。理由：配分に使える法律が検証を通っていません（検証で参考に下げた法律の額は、順位にも議員への配分にも使いません）。</p></section> : <ToneHero members={members} />}
         <div className="members-tabs" role="group" aria-label="表示を切り替える">
           <button type="button" aria-pressed={tab === 'members'} onClick={() => switchTab('members')}>議員ランキング</button>

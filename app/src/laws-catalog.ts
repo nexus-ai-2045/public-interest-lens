@@ -228,13 +228,14 @@ export function readQuery(search: string): CatalogQuery {
   };
 }
 
-export function writeQuery(query: CatalogQuery): string {
+/** keepSort が true なら、従来の既定（額の大きい順）でも sort を URL に残す（向き別の既定と区別するため）。 */
+export function writeQuery(query: CatalogQuery, keepSort = false): string {
   const params = new URLSearchParams();
   if (query.text) params.set('q', query.text);
   if (query.side !== 'all') params.set('side', query.side);
   if (query.field) params.set('field', query.field);
   if (query.kind) params.set('kind', query.kind);
-  if (query.sort !== 'amount') params.set('sort', query.sort);
+  if (keepSort || query.sort !== 'amount') params.set('sort', query.sort);
   const text = params.toString();
   return text ? `?${text}` : '';
 }

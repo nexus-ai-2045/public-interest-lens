@@ -83,9 +83,8 @@ test.describe('反論・訂正ボタン', () => {
     await expect(link).toHaveAttribute('rel', /noopener/);
   });
 
-  test('/members は議員別の額が無い間も、訂正・反論の窓口を出す', async ({ page }) => {
+  test('/members は順位を非表示にしている間も、訂正・反論の窓口を出す', async ({ page }) => {
     await page.goto('/members');
-    await page.getByText('この数字の意味と訂正窓口').click();
     const href = new URL((await page.getByRole('link', { name: /訂正・反論の窓口/ }).getAttribute('href'))!);
     expect(href.hostname).toBe('github.com');
     expect(href.searchParams.get('template')).toBe('correction.yml');
