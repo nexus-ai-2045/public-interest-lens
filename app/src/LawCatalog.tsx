@@ -48,6 +48,12 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
     if (lastToneSort.current === toneSort) return; // 初回表示では、URL で指定された並びを上書きしない
     lastToneSort.current = toneSort;
     setQuery(current => ['amount', 'loss', 'benefit'].includes(current.sort) && current.sort !== toneSort ? { ...current, sort: toneSort } : current);
+    // URL に sort を持っている時は、再読み込み・共有でも切り替え後の並びになるよう URL も合わせる。
+    const params = new URLSearchParams(window.location.search);
+    if (['amount', 'loss', 'benefit'].includes(params.get('sort') ?? '')) {
+      params.set('sort', toneSort);
+      window.history.replaceState(null, '', `${window.location.pathname}?${params}${window.location.hash}`);
+    }
   }, [toneSort]);
   const [limit, setLimit] = useState(PAGE);
   const [open, setOpen] = useState<string>(() => hashId());
