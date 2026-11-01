@@ -128,7 +128,7 @@ export function LawRankingPage() {
           </section>
         </details>
         <section className="lower-panel" aria-label="この画面の読み方">
-          <p><Info size={16} /> 議員ごとの「この人が失わせた額・生んだ額」は<a href="/members">議員ランキング</a>にあります。計算のしかたは<a href="/methodology">計算方法</a>にあります。法案ごとの賛否や、直近の政党の動きは<a href="/votes">法案の賛否</a>で見られます。</p>
+          <p><Info size={16} /> 議員・政党の順位は、計算方法の見直し中のため非表示です。計算のしかたは<a href="/methodology">計算方法</a>にあります。法案ごとの賛否や、直近の政党の動きは<a href="/votes">法案の賛否</a>で見られます。</p>
           <p className="fine-note">一覧の元データ：<a href="/distribution/laws.json">laws.json</a>・laws-detail/（開いた時に読む詳細）（入力データの照合値 SHA-256 つき）。</p>
         </section>
       </>}
