@@ -50,6 +50,11 @@ COVID_LABELS = DERIVED / "covid-response-v1" / "labels.csv"
 SECTOR_OVERRIDES = DERIVED / "macro-v1" / "sector-overrides.csv"
 OVERRIDE_ORIGIN = "AI 3段の再判定"
 COVID_BENEFIT = DERIVED / "covid-benefit-v1" / "benefit.csv"
+# 消費税率を変える法律は税の帳簿（scripts/build_tax_ledger.py）に別の物差しで額がある。産業の差は符号まで逆になる（閣法-180-72：帳簿 −18.9兆円、産業の差 ＋100.3兆円）ので出さない。
+TAX_LEDGER = DERIVED / "tax-v1" / "consumption-tax.csv"
+# 税の帳簿の法律と同じ改正で出る地方税法の対（同じ産業の差が付いていた）。
+TAX_LEDGER_COMPANIONS = frozenset({"閣法-180-73", "閣法-192-4"})
+TAX_LEDGER_REASON = "消費税率を変える法律（とその地方税の対）：税の帳簿（ESRI 短期マクロモデル、確かさ低）に別の物差しで額がある。産業の付加価値の差は税の効果ではなく、帳簿と符号が逆になることもあるので、参考の額も付けない"
 COVID_FIELD, COVID_ORIGIN, COVID_INDUSTRY = "コロナ対応", "コロナ対応の費用便益", "COVID"
 COVID_REASON = "コロナ対応の法律（{kind}）：全体指標の差はコロナの落ち込みそのもので、この法律の効果ではない。定説（財政乗数・雇用維持の効果）では落ち込みを和らげる向き（便益）。支出の規模を結ぶ規則（covid-benefit-v1）に無いため額は未計算"
 
@@ -186,6 +191,7 @@ def build() -> list[dict[str, str]]:
     covid_benefit = {r["id"]: r for r in _read(COVID_BENEFIT)}
     laws = [law for law in _read(OUTCOMES) if law["結果"] not in SKIP]
     r2 = frozenset(r["id"] for r in _read(R2_HOLDS))
+    tax_ledger = frozenset(r["法律ID"] for r in _read(TAX_LEDGER)) | TAX_LEDGER_COMPANIONS
     picks = align_by_title(
         {law["id"]: pick("", ai.get(law["id"], "")) if law["id"] in r2 else publication_field(law["分野"], ai.get(law["id"], ""), agreement.get(law["id"])) for law in laws},
         {law["id"]: law["題名"] for law in laws},
@@ -201,6 +207,10 @@ def build() -> list[dict[str, str]]:
         field, origin, industry = picks[law["id"]]
         row = {"id": law["id"], "題名": law["題名"], "分野": field, "分野の由来": origin, "産業": industry, "施行日": start,
                "施行日の由来": start_origin if start else "", "窓": "", "中央値": "", "第1四分位": "", "第3四分位": "", "比較国": "", "計算式の要素": "", "結果": "理由", "理由": ""}
+        if law["id"] in tax_ledger:
+            row["理由"] = TAX_LEDGER_REASON
+            rows.append(row)
+            continue
         if not start:
             row["理由"] = "施行日も公布日も未取得"
             rows.append(row)
