@@ -9,6 +9,7 @@ import { LawName, lawNameText } from './law-name';
 import { loadPriceIndex, toLatestYen, windowBaseYear, type PriceIndex } from './price-index';
 import { CORRECTION_EMAIL, correctionIssueUrl, correctionListUrl, correctionMailUrl } from './correction-link';
 import { isCovidBenefitGroup } from './public-distribution';
+import { useTone } from './site-tone';
 
 const PAGE = 60;
 const SIDE_OPTIONS: [CatalogQuery['side'], string][] = [['all', 'すべて'], ['confirmed', '確かな額'], ['amount', '額が出た（参考を含む）'], ['shared', '共有額の参考'], ['loss', '国賊側'], ['benefit', '国士側'], ['none', '額なし']];
@@ -34,7 +35,15 @@ const hashId = () => { try { return decodeURIComponent(window.location.hash.slic
 
 export function LawCatalog({ data }: { data: LawsCatalog }) {
   const all = useMemo(() => [...data.policies, ...data.laws], [data]);
-  const [query, setQuery] = useState<CatalogQuery>(() => readQuery(window.location.search));
+  const [tone] = useTone();
+  // 並びの既定は国賊／国士の向きに合わせる（国賊＝損失の大きい順、国士＝便益の大きい順）。URL に sort があればそれを優先する。
+  const toneSort: CatalogQuery['sort'] = tone === 'harm' ? 'loss' : 'benefit';
+  const [query, setQuery] = useState<CatalogQuery>(() => {
+    const read = readQuery(window.location.search);
+    return new URLSearchParams(window.location.search).has('sort') ? read : { ...read, sort: toneSort };
+  });
+  // 切り替えボタンを押したら、向きの並びに追従する（自分で新しい順などを選んでいる時は触らない）。
+  useEffect(() => { setQuery(current => ['amount', 'loss', 'benefit'].includes(current.sort) && current.sort !== toneSort ? { ...current, sort: toneSort } : current); }, [toneSort]);
   const [limit, setLimit] = useState(PAGE);
   const [open, setOpen] = useState<string>(() => hashId());
   const [scrollTo, setScrollTo] = useState('');
@@ -56,7 +65,7 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
   const queryRef = useRef(query);
   queryRef.current = query;
   const filteredAll = useMemo(() => filterCatalog(all, query), [all, query]);
-  const refRevealed = showRef || query.text.trim() !== '' || query.side === 'amount';
+  const refRevealed = showRef || query.text.trim() !== '' || query.side === 'amount' || query.side === 'loss' || query.side === 'benefit';
   const wholeRevealed = showWhole || query.text.trim() !== '' || query.side === 'shared';
   const opened = (item: CatalogItem) => revealed.has(item.id) || open === item.id;
   const afterRef = useMemo(() => refRevealed ? filteredAll : filteredAll.filter(item => item.step !== 'amounted' || opened(item)), [filteredAll, refRevealed, revealed, open]);
@@ -142,7 +151,7 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
       </div>
     </div>
     <p className="laws-count" role="status">{shown.length.toLocaleString('ja-JP')}件（確かな額{confirmed.toLocaleString('ja-JP')}・参考の額{(amounted - confirmed).toLocaleString('ja-JP')}・共有額の参考{sharedShown.toLocaleString('ja-JP')}・額なし{(shown.length - amounted - sharedShown).toLocaleString('ja-JP')}）{JSON.stringify(query) !== JSON.stringify(DEFAULT_QUERY) && <button type="button" onClick={() => update(DEFAULT_QUERY)}>絞り込みを外す</button>} <ShareButton title="法律と政策の一覧｜法律ランキング" text={`法律と政策の一覧（${shown.length.toLocaleString('ja-JP')}件）`} url={`${window.location.origin}/ranking${writeQuery(query)}#list`} label="この一覧を共有" /></p>
-    {(foldedRef > 0 || showRef) && !(query.text.trim() !== '' || query.side === 'amount') && <p className="laws-fold" role="status">
+    {(foldedRef > 0 || showRef) && !(query.text.trim() !== '' || query.side === 'amount' || query.side === 'loss' || query.side === 'benefit') && <p className="laws-fold" role="status">
       <Layers size={15} aria-hidden="true" />
       <span>{showRef ? '参考の額も並べています。参考の額は産業や経済全体の差から見積もった値で、その法律だけの効果とは言えません（確かさ低。合計・議員には足しません）。' : `参考の額が付いた法律${foldedRef.toLocaleString('ja-JP')}本は畳んでいます。産業や経済全体の差から見積もった値で、その法律だけの効果とは言えず、合計・議員には足しません。`}</span>
       <button type="button" aria-pressed={showRef} onClick={() => { setShowRef(value => !value); setLimit(PAGE); }}>{showRef ? '畳む' : '参考の額も表示'}</button>

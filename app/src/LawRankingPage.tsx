@@ -75,6 +75,8 @@ export function LawRankingPage() {
   const sharedCount = (data?.laws ?? []).filter(item => item.shared).length;
   const noAmount = (data?.laws ?? []).concat(data?.policies ?? []).filter(item => !item.amount && !item.shared).length;
   const loss = confirmed.filter(law => law.side === 'loss').length;
+  const refLoss = amounted.filter(law => law.step !== 'published' && law.side === 'loss').length;
+  const refBenefit = amounted.filter(law => law.step !== 'published' && law.side === 'benefit').length;
   // 国賊を選んでいれば損失の大きい順、国士なら便益の大きい順。その側が0本なら両方を並べる。
   const toneSide = tone === 'harm' ? 'loss' : 'benefit';
   const viewConfirmed = (view?.laws ?? []).filter(law => law.amount && law.step === 'published');
@@ -104,9 +106,10 @@ export function LawRankingPage() {
           <a href="?side=shared#list" className="laws-stat"><span>共有額の参考</span><strong>{sharedCount.toLocaleString('ja-JP')}本</strong><small>同じ額を共有する{(data.shared?.groups ?? 0).toLocaleString('ja-JP')}群。1本ごとの額は出さず、合計の一部として見せる。足さない</small></a>
           <a href="?side=none#list" className="laws-stat"><span>額なし（理由つき）</span><strong>{noAmount.toLocaleString('ja-JP')}件</strong><small>法律{(data.laws.length - amounted.length - sharedCount).toLocaleString('ja-JP')}本＋政策{data.policies.filter(policy => !policy.amount).length}件。測れていないだけで「影響なし」ではない</small></a>
         </section>
-        {viewConfirmed.length === 0 && confirmed.length === 0 && <section aria-label="額の大きい順" id="top-amounts">
-          <h3>額の大きい順</h3>
-          <p className="empty-state">確かな額がまだ無いため、額の大きい順の棒は出していません。検証で参考に下げた法律の額は、参考値として下の一覧に残しています（順位・議員別の額には使いません）。</p>
+        {viewConfirmed.length === 0 && confirmed.length === 0 && <section aria-label={toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順'} id="top-amounts">
+          <h3>{toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順'}</h3>
+          <p className="empty-state">確かな額がまだ無いため、{toneSide === 'loss' ? '国賊側（損失）' : '国士側（便益）'}の棒は出していません。国賊側・国士側のどちらも0本なので、切り替えても棒の中身は同じです。検証で参考に下げた法律の額は、参考値として下の一覧に残しています（順位・議員別の額には使いません）。</p>
+          <p className="fine-note">参考の額（確かな額とは足さない）：<a href="?side=loss#list">国賊側 {refLoss}本</a>・<a href="?side=benefit#list">国士側 {refBenefit}本</a>。</p>
         </section>}
         {viewConfirmed.length > 0 && <section aria-label="額の大きい順" id="top-amounts">
           <h3>{sideTop.length ? (toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順') : '額の大きい順'}（確かな額の上位{topList.length}本）</h3>
