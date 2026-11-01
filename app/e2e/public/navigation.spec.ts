@@ -19,8 +19,11 @@ test.describe('全ページ共通の導線', () => {
 
   test('最初の Tab で「本文へ移動」が出て、押すと本文に移る', async ({ page }) => {
     await page.goto('/votes');
-    await page.keyboard.press('Tab');
     const skip = page.getByRole('link', { name: '本文へ移動' });
+    // 描画（ハイドレーション）が終わる前に Tab を押すと、リンクがまだ無く focus が当たらない。主要要素の表示を待ってから押す。
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(skip).toBeAttached();
+    await page.keyboard.press('Tab');
     await expect(skip).toBeFocused();
     await expect(skip).toBeInViewport();
     await page.keyboard.press('Enter');
@@ -42,7 +45,7 @@ test.describe('/votes（政党・議員の賛否）', () => {
     await page.goto('/votes');
     await expect(page).toHaveTitle(/政党・議員の賛否/);
     await expect(page.getByRole('heading', { level: 1, name: 'どの政党・議員が、どの法律に賛成・反対したか' })).toBeVisible();
-    const links = page.locator('.votes-links a');
+    const links = page.locator('.stance-sub a', { hasText: '議案の経過' });
     await expect(links.first()).toBeVisible();
     expect((await links.first().boundingBox())!.height).toBeGreaterThanOrEqual(24);
     watch.expectClean();
@@ -80,13 +83,10 @@ test.describe('反論・訂正ボタン', () => {
     await expect(link).toHaveAttribute('rel', /noopener/);
   });
 
-  test('/members の議員を開くと、同じ形のリンクが出る', async ({ page }) => {
+  test('/members は順位を非表示にしている間も、訂正・反論の窓口を出す', async ({ page }) => {
     await page.goto('/members');
-    const first = page.locator('ol.members-list > li').first();
-    await expect(first).toBeVisible();
-    await first.locator('summary').click();
-    const href = new URL((await first.locator('a.correction-link').getAttribute('href'))!);
+    const href = new URL((await page.getByRole('link', { name: /訂正・反論の窓口/ }).getAttribute('href'))!);
+    expect(href.hostname).toBe('github.com');
     expect(href.searchParams.get('template')).toBe('correction.yml');
-    expect(href.searchParams.get('title')).toMatch(/^\[訂正\] /);
   });
 });

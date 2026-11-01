@@ -72,8 +72,11 @@ export function LawRankingPage() {
   const amounted = (data?.laws ?? []).filter(law => law.amount);
   const confirmed = amounted.filter(law => law.step === 'published');
   // 一覧の「額なし」は法律と政策を合わせて数えるので、カードも同じ数え方にそろえる。
-  const noAmount = (data?.laws ?? []).concat(data?.policies ?? []).filter(item => !item.amount).length;
+  const sharedCount = (data?.laws ?? []).filter(item => item.shared).length;
+  const noAmount = (data?.laws ?? []).concat(data?.policies ?? []).filter(item => !item.amount && !item.shared).length;
   const loss = confirmed.filter(law => law.side === 'loss').length;
+  const refLoss = amounted.filter(law => law.step !== 'published' && law.side === 'loss').length;
+  const refBenefit = amounted.filter(law => law.step !== 'published' && law.side === 'benefit').length;
   // 国賊を選んでいれば損失の大きい順、国士なら便益の大きい順。その側が0本なら両方を並べる。
   const toneSide = tone === 'harm' ? 'loss' : 'benefit';
   const viewConfirmed = (view?.laws ?? []).filter(law => law.amount && law.step === 'published');
@@ -100,8 +103,14 @@ export function LawRankingPage() {
           <a href="#list" className="laws-stat"><span>載せている件数</span><strong>{(data.laws.length + data.policies.length).toLocaleString('ja-JP')}件</strong><small>法律{data.laws.length.toLocaleString('ja-JP')}本＋政策{data.policies.length}件</small></a>
           <a href="?side=confirmed#list" className="laws-stat hit"><span>確かな額</span><strong>{confirmed.length}本</strong><small>国賊側{loss}本・国士側{confirmed.length - loss}本（影響の段階まで確認）</small></a>
           <a href="?side=amount#list" className="laws-stat"><span>参考の額</span><strong>{(amounted.length - confirmed.length).toLocaleString('ja-JP')}本</strong><small>産業・経済全体の差など。確かな額と足さない</small></a>
-          <a href="?side=none#list" className="laws-stat"><span>額なし（理由つき）</span><strong>{noAmount.toLocaleString('ja-JP')}件</strong><small>法律{(data.laws.length - amounted.length).toLocaleString('ja-JP')}本＋政策{data.policies.filter(policy => !policy.amount).length}件。測れていないだけで「影響なし」ではない</small></a>
+          <a href="?side=shared#list" className="laws-stat"><span>共有額の参考</span><strong>{sharedCount.toLocaleString('ja-JP')}本</strong><small>同じ額を共有する{(data.shared?.groups ?? 0).toLocaleString('ja-JP')}群。1本ごとの額は出さず、合計の一部として見せる。足さない</small></a>
+          <a href="?side=none#list" className="laws-stat"><span>額なし（理由つき）</span><strong>{noAmount.toLocaleString('ja-JP')}件</strong><small>法律{(data.laws.length - amounted.length - sharedCount).toLocaleString('ja-JP')}本＋政策{data.policies.filter(policy => !policy.amount).length}件。測れていないだけで「影響なし」ではない</small></a>
         </section>
+        {viewConfirmed.length === 0 && confirmed.length === 0 && <section aria-label={toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順'} id="top-amounts">
+          <h3>{toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順'}</h3>
+          <p className="empty-state">確かな額がまだ無いため、{toneSide === 'loss' ? '国賊側（損失）' : '国士側（便益）'}の棒は出していません。国賊側・国士側のどちらも0本なので、切り替えても棒の中身は同じです。検証で参考に下げた法律の額は、参考値として下の一覧に残しています（順位・議員別の額には使いません）。</p>
+          <p className="fine-note">参考の額（確かな額とは足さない）：<a href="?side=loss#list">国賊側 {refLoss}本</a>・<a href="?side=benefit#list">国士側 {refBenefit}本</a>。</p>
+        </section>}
         {viewConfirmed.length > 0 && <section aria-label="額の大きい順" id="top-amounts">
           <h3>{sideTop.length ? (toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順') : '額の大きい順'}（確かな額の上位{topList.length}本）</h3>
           <p className="fine-note">赤は国賊側（損失）、緑は国士側（便益）。太い棒が中央値、細い線が幅です。棒を押すと、下の一覧でその法律の詳しい中身が開きます。</p>
@@ -119,7 +128,7 @@ export function LawRankingPage() {
           </section>
         </details>
         <section className="lower-panel" aria-label="この画面の読み方">
-          <p><Info size={16} /> 議員ごとの「この人が失わせた額・生んだ額」は<a href="/members">議員ランキング</a>にあります。計算のしかたは<a href="/methodology">計算方法</a>にあります。法案ごとの賛否や、直近の政党の動きは<a href="/votes">法案の賛否</a>で見られます。</p>
+          <p><Info size={16} /> 議員・政党の順位は、計算方法の見直し中のため非表示です。計算のしかたは<a href="/methodology">計算方法</a>にあります。法案ごとの賛否や、直近の政党の動きは<a href="/votes">法案の賛否</a>で見られます。</p>
           <p className="fine-note">一覧の元データ：<a href="/distribution/laws.json">laws.json</a>・laws-detail/（開いた時に読む詳細）（入力データの照合値 SHA-256 つき）。</p>
         </section>
       </>}

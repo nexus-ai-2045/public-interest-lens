@@ -1,9 +1,10 @@
 {
-  "checkedLaws": 78,
-  "items": 914,
-  "match": 895,
+  "checkedLaws": 1990,
+  "checkedShared": 1860,
+  "items": 21318,
+  "match": 21139,
   "mismatch": 0,
-  "notApplicable": 19,
+  "notApplicable": 179,
   "heldOut": [],
   "memberMismatch": 0
 }

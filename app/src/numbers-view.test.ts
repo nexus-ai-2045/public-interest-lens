@@ -28,7 +28,8 @@ describe('数字で見る（numbers-view）', () => {
     // @ts-ignore Node の URL を使う
     const charts = parseCharts(JSON.parse(readFileSync(new URL('../public/distribution/charts.json', import.meta.url), 'utf8')));
     expect(charts.histogram.length).toBeGreaterThan(0);
-    expect(charts.members.length).toBeGreaterThan(0);
+    // 検証を通った配分の法律が無い間は、議員別の額（確かな額）は0人。
+    expect(charts.members.length).toBeGreaterThanOrEqual(0);
   });
   it('純額の幅がゼロをまたぐ議員は、下限を0にする（逆向きの可能性を消さない）', () => {
     const m = (low: number, high: number) => ({ id: 'x', name: 'x', rank: 1, net: 1, low, high, loss: 0, credit: 0 });

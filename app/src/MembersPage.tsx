@@ -304,6 +304,9 @@ export function PartyAffiliationPanel({ members, parties, loaded, error, adjuste
   </section>;
 }
 
+/** 計算方法の見直し中は、議員・党の順位と点（参考の表を含む）を本番で出さない（ねく 11-01）。戻すときは false にする。 */
+export const MEMBER_RANKING_HIDDEN = true;
+
 export function MembersPage() {
   const [data, setData] = useState<PublicMembers | null>(null);
   const [error, setError] = useState('');
@@ -390,6 +393,8 @@ export function MembersPage() {
     window.history.replaceState(null, '', `${window.location.pathname}${params ? `?${params}` : ''}`);
   };
   const adjusted = !isDefaultKnobs(knobs);
+  // 検証を通った配分の法律が無い（議員別の額は0人）。額は出さず、理由を示す。
+  const noAllocation = !!data && data.members.length === 0;
   const members = useMemo(() => data ? adjustMembers(data, knobs) : [], [data, knobs]);
   const laws = useMemo(() => new Map((data?.laws ?? []).map(l => [l.id, l])), [data]);
   const backingByLaw = useMemo(() => new Map((data?.backing ?? []).map(b => [b.lawId, b])), [data]);
@@ -406,19 +411,24 @@ export function MembersPage() {
   return <SiteShell active="/members" label="議員・実名・実データ" className="law-ranking members-page">
     <main id="main">
       <h1>この人が失わせた額・生んだ額</h1>
+      {MEMBER_RANKING_HIDDEN && <p className="empty-state" role="note">議員・政党の順位と点は、計算方法の見直し中のため、いったん非表示にしています。法律ごとの損失と便益は<a href="/ranking">法律ランキング</a>で見られます。</p>}
+      {MEMBER_RANKING_HIDDEN && <p className="fine-note">記録や判定に誤りがあれば、<a href={correctionUrl} target="_blank" rel="noopener noreferrer">訂正・反論の窓口（GitHub の Issue）</a>から公開資料を添えて知らせてください。</p>}
+      {!MEMBER_RANKING_HIDDEN && <>
       <p>議員ごとに、その人の行動で日本が<strong>失った額（国賊側）・生んだ額（国士側）</strong>を並べています。理由（行動→成立→損失の鎖）は、行を開くと出ます。</p>
       <details className="members-intro"><summary>この数字の意味と訂正窓口</summary>
       <p>法律が日本に与えた損失（国賊側）と便益（国士側）を、<strong>「この人の行動が無かったら、その法律は成立したか」</strong>で人に配りました。提出者が出さなければ、また参議院で賛成票が足りなければ、法律は成立せず、損失も便益も生まれません。成立のしくみ（拒否権者と過半数の投票）の中で、その人の行動が成立を決める場面の割合（Shapley 値）を出し、法律の分（ふつうは法律の額。同じ観測を共有する法律では観測の額を本数で割った分）に掛けたものが<strong>この人が失わせた額</strong>・<strong>生んだ額</strong>です。各人の欄に、行動 → 成立 → 損失のつながりを一次資料（国会会議録・参議院の投票結果・衆議院の議案情報）のリンクつきで示し、式も載せています。計算のしかたは<a href="/methodology">計算方法</a>にあります。</p>
       <p className="fine-note">記録や判定に誤りがあれば、<a href={correctionUrl} target="_blank" rel="noopener noreferrer">訂正・反論の窓口（GitHub の Issue）</a>から公開資料を添えて知らせてください。本人・関係者からの反論も同じ窓口で受け付け、確認できたものは記録と額に反映します。</p>
       </details>
       {error && <p className="state-banner" role="alert">{error}</p>}
-      {data && <>
-        <ToneHero members={members} />
+      </>}
+      {!MEMBER_RANKING_HIDDEN && data && <>
+        {noAllocation ? <section aria-label="議員別の額" className="members-empty"><p className="empty-state" role="note">確かな額がまだ無いため、議員別の額は出していません。理由：配分に使える法律が検証を通っていません（検証で参考に下げた法律の額は、順位にも議員への配分にも使いません）。</p></section> : <ToneHero members={members} />}
         <div className="members-tabs" role="group" aria-label="表示を切り替える">
           <button type="button" aria-pressed={tab === 'members'} onClick={() => switchTab('members')}>議員ランキング</button>
           <button type="button" aria-pressed={tab === 'party'} onClick={() => switchTab('party')}>政党ごとの比較</button>
         </div>
         {tab === 'members' && <>
+        {!noAllocation && <>
         <section aria-label="上位の議員" className="members-top" onClick={onTopClick}>
           {(tone === 'harm' ? ['loss', 'benefit'] as const : ['benefit', 'loss'] as const).map(key => <div key={key} className={`members-top-block ${key}`}>
             <h3>{key === 'loss' ? '失わせた額の上位10人（国賊側）' : '生んだ額の上位10人（国士側）'}</h3>
@@ -450,9 +460,11 @@ export function MembersPage() {
           </li>)}</ol>
           {visible.length < shown.length && <p className="members-more"><button type="button" onClick={() => setLimit(n => n + MEMBERS_PAGE_SIZE)}>さらに表示（残り{shown.length - visible.length}人）</button> <button type="button" onClick={() => setLimit(shown.length)}>全員を表示</button></p>}
         </section>
+        </>}
         <AllMembers confirmed={data.members} data={reference} error={referenceError} />
         </>}
-        {tab === 'party' && <>
+        {tab === 'party' && noAllocation && <p className="empty-state">政党ごとの比較は、議員別の額の合計です。確かな額がまだ無いため出していません（議員別の額と同じ理由です）。</p>}
+        {tab === 'party' && !noAllocation && <>
           <PartyAffiliationPanel members={members} parties={partyMap} loaded={!!reference} error={referenceError} adjusted={adjusted} />
         {/* 政党ランキングは初期の配分から作る。つまみを変えた後の議員の額とは合わないので、そのときは出さない。 */}
         {data.partyRanking && data.partyRanking.blocs.length > 0 && (adjusted

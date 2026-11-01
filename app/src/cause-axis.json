@@ -1,0 +1,1510 @@
+{
+ "version": "cause-axis-v3",
+ "base": 2000,
+ "last": 2023,
+ "industries": [
+  {
+   "code": "J",
+   "name": "情報通信",
+   "measure": "産業の実質付加価値の伸び ÷ 日本・各国それぞれの全体の実質の伸び（2000年＝1）",
+   "trillionYen": 104.8,
+   "direction": "損失",
+   "rank": 6,
+   "of": 16,
+   "certainty": "誤差の範囲",
+   "peerCount": 15,
+   "realNote": "OECD の実質",
+   "withoutKorea": null,
+   "series": [
+    {
+     "year": 2001,
+     "japan": 1.0919,
+     "peerMedian": 1.0754
+    },
+    {
+     "year": 2002,
+     "japan": 1.1283,
+     "peerMedian": 1.1283
+    },
+    {
+     "year": 2003,
+     "japan": 1.1424,
+     "peerMedian": 1.1583
+    },
+    {
+     "year": 2004,
+     "japan": 1.1063,
+     "peerMedian": 1.2108
+    },
+    {
+     "year": 2005,
+     "japan": 1.111,
+     "peerMedian": 1.2105
+    },
+    {
+     "year": 2006,
+     "japan": 1.1275,
+     "peerMedian": 1.2381
+    },
+    {
+     "year": 2007,
+     "japan": 1.1322,
+     "peerMedian": 1.2745
+    },
+    {
+     "year": 2008,
+     "japan": 1.1645,
+     "peerMedian": 1.32
+    },
+    {
+     "year": 2009,
+     "japan": 1.2154,
+     "peerMedian": 1.3552
+    },
+    {
+     "year": 2010,
+     "japan": 1.1692,
+     "peerMedian": 1.341
+    },
+    {
+     "year": 2011,
+     "japan": 1.1639,
+     "peerMedian": 1.3824
+    },
+    {
+     "year": 2012,
+     "japan": 1.1418,
+     "peerMedian": 1.4381
+    },
+    {
+     "year": 2013,
+     "japan": 1.1449,
+     "peerMedian": 1.4453
+    },
+    {
+     "year": 2014,
+     "japan": 1.1418,
+     "peerMedian": 1.4705
+    },
+    {
+     "year": 2015,
+     "japan": 1.1715,
+     "peerMedian": 1.5078
+    },
+    {
+     "year": 2016,
+     "japan": 1.217,
+     "peerMedian": 1.5401
+    },
+    {
+     "year": 2017,
+     "japan": 1.2549,
+     "peerMedian": 1.6005
+    },
+    {
+     "year": 2018,
+     "japan": 1.3226,
+     "peerMedian": 1.6757
+    },
+    {
+     "year": 2019,
+     "japan": 1.4194,
+     "peerMedian": 1.7411
+    },
+    {
+     "year": 2020,
+     "japan": 1.5937,
+     "peerMedian": 1.8191
+    },
+    {
+     "year": 2021,
+     "japan": 1.5805,
+     "peerMedian": 1.8776
+    },
+    {
+     "year": 2022,
+     "japan": 1.6684,
+     "peerMedian": 1.8705
+    },
+    {
+     "year": 2023,
+     "japan": 1.7423,
+     "peerMedian": 2.0214
+    }
+   ],
+   "peers": [
+    {
+     "country": "JPN",
+     "ratio2023": 1.742
+    },
+    {
+     "country": "AUS",
+     "ratio2023": 1.569
+    },
+    {
+     "country": "AUT",
+     "ratio2023": 1.623
+    },
+    {
+     "country": "BEL",
+     "ratio2023": 1.795
+    },
+    {
+     "country": "DEU",
+     "ratio2023": 2.021
+    },
+    {
+     "country": "DNK",
+     "ratio2023": 2.917
+    },
+    {
+     "country": "ESP",
+     "ratio2023": 1.862
+    },
+    {
+     "country": "FIN",
+     "ratio2023": 2.137
+    },
+    {
+     "country": "FRA",
+     "ratio2023": 2.075
+    },
+    {
+     "country": "GBR",
+     "ratio2023": 4.76
+    },
+    {
+     "country": "ITA",
+     "ratio2023": 1.539
+    },
+    {
+     "country": "KOR",
+     "ratio2023": 1.634
+    },
+    {
+     "country": "NLD",
+     "ratio2023": 1.736
+    },
+    {
+     "country": "NOR",
+     "ratio2023": 2.162
+    },
+    {
+     "country": "SWE",
+     "ratio2023": 2.468
+    },
+    {
+     "country": "USA",
+     "ratio2023": 3.169
+    }
+   ]
+  },
+  {
+   "code": "J62_63",
+   "name": "IT・情報サービス",
+   "measure": "産業の実質付加価値の伸び ÷ 日本・各国それぞれの全体の実質の伸び（2000年＝1）",
+   "trillionYen": 50.0,
+   "direction": "損失",
+   "rank": 5,
+   "of": 14,
+   "certainty": "誤差の範囲",
+   "peerCount": 13,
+   "realNote": "親の物価で割った（仮定）",
+   "withoutKorea": null,
+   "series": [
+    {
+     "year": 2001,
+     "japan": 1.1344,
+     "peerMedian": 1.0978
+    },
+    {
+     "year": 2002,
+     "japan": 1.1828,
+     "peerMedian": 1.1633
+    },
+    {
+     "year": 2003,
+     "japan": 1.1875,
+     "peerMedian": 1.1364
+    },
+    {
+     "year": 2004,
+     "japan": 1.1377,
+     "peerMedian": 1.1632
+    },
+    {
+     "year": 2005,
+     "japan": 1.1548,
+     "peerMedian": 1.1813
+    },
+    {
+     "year": 2006,
+     "japan": 1.1938,
+     "peerMedian": 1.2005
+    },
+    {
+     "year": 2007,
+     "japan": 1.2329,
+     "peerMedian": 1.2733
+    },
+    {
+     "year": 2008,
+     "japan": 1.2982,
+     "peerMedian": 1.2845
+    },
+    {
+     "year": 2009,
+     "japan": 1.3241,
+     "peerMedian": 1.3315
+    },
+    {
+     "year": 2010,
+     "japan": 1.242,
+     "peerMedian": 1.3402
+    },
+    {
+     "year": 2011,
+     "japan": 1.2191,
+     "peerMedian": 1.4488
+    },
+    {
+     "year": 2012,
+     "japan": 1.2091,
+     "peerMedian": 1.4954
+    },
+    {
+     "year": 2013,
+     "japan": 1.2034,
+     "peerMedian": 1.5227
+    },
+    {
+     "year": 2014,
+     "japan": 1.1849,
+     "peerMedian": 1.4998
+    },
+    {
+     "year": 2015,
+     "japan": 1.2027,
+     "peerMedian": 1.5049
+    },
+    {
+     "year": 2016,
+     "japan": 1.2432,
+     "peerMedian": 1.5839
+    },
+    {
+     "year": 2017,
+     "japan": 1.3119,
+     "peerMedian": 1.7005
+    },
+    {
+     "year": 2018,
+     "japan": 1.3926,
+     "peerMedian": 1.7947
+    },
+    {
+     "year": 2019,
+     "japan": 1.5119,
+     "peerMedian": 1.926
+    },
+    {
+     "year": 2020,
+     "japan": 1.5378,
+     "peerMedian": 2.0723
+    },
+    {
+     "year": 2021,
+     "japan": 1.8803,
+     "peerMedian": 2.1773
+    },
+    {
+     "year": 2022,
+     "japan": 2.0655,
+     "peerMedian": 2.2284
+    },
+    {
+     "year": 2023,
+     "japan": 2.2512,
+     "peerMedian": 2.4163
+    }
+   ],
+   "peers": [
+    {
+     "country": "JPN",
+     "ratio2023": 2.251
+    },
+    {
+     "country": "AUT",
+     "ratio2023": 2.432
+    },
+    {
+     "country": "BEL",
+     "ratio2023": 2.344
+    },
+    {
+     "country": "DEU",
+     "ratio2023": 3.775
+    },
+    {
+     "country": "DNK",
+     "ratio2023": 3.077
+    },
+    {
+     "country": "ESP",
+     "ratio2023": 2.416
+    },
+    {
+     "country": "FIN",
+     "ratio2023": 2.233
+    },
+    {
+     "country": "FRA",
+     "ratio2023": 2.059
+    },
+    {
+     "country": "GBR",
+     "ratio2023": 1.914
+    },
+    {
+     "country": "ITA",
+     "ratio2023": 1.578
+    },
+    {
+     "country": "NLD",
+     "ratio2023": 2.494
+    },
+    {
+     "country": "NOR",
+     "ratio2023": 2.403
+    },
+    {
+     "country": "SWE",
+     "ratio2023": 3.346
+    },
+    {
+     "country": "USA",
+     "ratio2023": 6.766
+    }
+   ]
+  },
+  {
+   "code": "J58T60",
+   "name": "出版・映像・放送",
+   "measure": "産業の実質付加価値の伸び ÷ 日本・各国それぞれの全体の実質の伸び（2000年＝1）",
+   "trillionYen": -14.8,
+   "direction": "便益",
+   "rank": 7,
+   "of": 14,
+   "certainty": "誤差の範囲",
+   "peerCount": 13,
+   "realNote": "親の物価で割った（仮定）",
+   "withoutKorea": null,
+   "series": [
+    {
+     "year": 2001,
+     "japan": 1.0164,
+     "peerMedian": 0.9949
+    },
+    {
+     "year": 2002,
+     "japan": 1.0307,
+     "peerMedian": 0.9928
+    },
+    {
+     "year": 2003,
+     "japan": 1.0599,
+     "peerMedian": 0.9601
+    },
+    {
+     "year": 2004,
+     "japan": 1.0645,
+     "peerMedian": 0.968
+    },
+    {
+     "year": 2005,
+     "japan": 1.0746,
+     "peerMedian": 0.9371
+    },
+    {
+     "year": 2006,
+     "japan": 1.0848,
+     "peerMedian": 0.9512
+    },
+    {
+     "year": 2007,
+     "japan": 1.0333,
+     "peerMedian": 0.9687
+    },
+    {
+     "year": 2008,
+     "japan": 0.9539,
+     "peerMedian": 0.9637
+    },
+    {
+     "year": 2009,
+     "japan": 0.9943,
+     "peerMedian": 0.9656
+    },
+    {
+     "year": 2010,
+     "japan": 0.9913,
+     "peerMedian": 1.0213
+    },
+    {
+     "year": 2011,
+     "japan": 0.9684,
+     "peerMedian": 0.9563
+    },
+    {
+     "year": 2012,
+     "japan": 0.9227,
+     "peerMedian": 1.0138
+    },
+    {
+     "year": 2013,
+     "japan": 0.9448,
+     "peerMedian": 0.9883
+    },
+    {
+     "year": 2014,
+     "japan": 1.0171,
+     "peerMedian": 0.9736
+    },
+    {
+     "year": 2015,
+     "japan": 1.1005,
+     "peerMedian": 0.9594
+    },
+    {
+     "year": 2016,
+     "japan": 1.1205,
+     "peerMedian": 0.901
+    },
+    {
+     "year": 2017,
+     "japan": 1.1078,
+     "peerMedian": 0.8732
+    },
+    {
+     "year": 2018,
+     "japan": 1.1641,
+     "peerMedian": 0.8681
+    },
+    {
+     "year": 2019,
+     "japan": 1.2024,
+     "peerMedian": 0.8558
+    },
+    {
+     "year": 2020,
+     "japan": 1.3545,
+     "peerMedian": 0.7766
+    },
+    {
+     "year": 2021,
+     "japan": 1.2079,
+     "peerMedian": 0.7886
+    },
+    {
+     "year": 2022,
+     "japan": 1.2087,
+     "peerMedian": 0.763
+    },
+    {
+     "year": 2023,
+     "japan": 1.1032,
+     "peerMedian": 0.7718
+    }
+   ],
+   "peers": [
+    {
+     "country": "JPN",
+     "ratio2023": 1.103
+    },
+    {
+     "country": "AUT",
+     "ratio2023": 0.687
+    },
+    {
+     "country": "BEL",
+     "ratio2023": 0.69
+    },
+    {
+     "country": "DEU",
+     "ratio2023": 0.588
+    },
+    {
+     "country": "DNK",
+     "ratio2023": 1.357
+    },
+    {
+     "country": "ESP",
+     "ratio2023": 0.574
+    },
+    {
+     "country": "FIN",
+     "ratio2023": 1.369
+    },
+    {
+     "country": "FRA",
+     "ratio2023": 1.237
+    },
+    {
+     "country": "GBR",
+     "ratio2023": 1.127
+    },
+    {
+     "country": "ITA",
+     "ratio2023": 0.6
+    },
+    {
+     "country": "NLD",
+     "ratio2023": 0.599
+    },
+    {
+     "country": "NOR",
+     "ratio2023": 0.772
+    },
+    {
+     "country": "SWE",
+     "ratio2023": 1.378
+    },
+    {
+     "country": "USA",
+     "ratio2023": 2.247
+    }
+   ]
+  },
+  {
+   "code": "J61",
+   "name": "通信",
+   "measure": "産業の実質付加価値の伸び ÷ 日本・各国それぞれの全体の実質の伸び（2000年＝1）",
+   "trillionYen": 64.7,
+   "direction": "損失",
+   "rank": 1,
+   "of": 16,
+   "certainty": "参考",
+   "peerCount": 15,
+   "realNote": "親の物価で割った（仮定）",
+   "withoutKorea": {
+    "trillionYen": 66.8,
+    "rank": 1,
+    "of": 15
+   },
+   "series": [
+    {
+     "year": 2001,
+     "japan": 1.0606,
+     "peerMedian": 1.1361
+    },
+    {
+     "year": 2002,
+     "japan": 1.0884,
+     "peerMedian": 1.2707
+    },
+    {
+     "year": 2003,
+     "japan": 1.1107,
+     "peerMedian": 1.3235
+    },
+    {
+     "year": 2004,
+     "japan": 1.0734,
+     "peerMedian": 1.3689
+    },
+    {
+     "year": 2005,
+     "japan": 1.0498,
+     "peerMedian": 1.3119
+    },
+    {
+     "year": 2006,
+     "japan": 1.0266,
+     "peerMedian": 1.4583
+    },
+    {
+     "year": 2007,
+     "japan": 1.0024,
+     "peerMedian": 1.4765
+    },
+    {
+     "year": 2008,
+     "japan": 1.0468,
+     "peerMedian": 1.498
+    },
+    {
+     "year": 2009,
+     "japan": 1.1545,
+     "peerMedian": 1.5954
+    },
+    {
+     "year": 2010,
+     "japan": 1.1488,
+     "peerMedian": 1.5548
+    },
+    {
+     "year": 2011,
+     "japan": 1.1905,
+     "peerMedian": 1.5013
+    },
+    {
+     "year": 2012,
+     "japan": 1.1608,
+     "peerMedian": 1.6249
+    },
+    {
+     "year": 2013,
+     "japan": 1.1684,
+     "peerMedian": 1.6816
+    },
+    {
+     "year": 2014,
+     "japan": 1.1431,
+     "peerMedian": 1.7278
+    },
+    {
+     "year": 2015,
+     "japan": 1.159,
+     "peerMedian": 1.7217
+    },
+    {
+     "year": 2016,
+     "japan": 1.2323,
+     "peerMedian": 1.8313
+    },
+    {
+     "year": 2017,
+     "japan": 1.2446,
+     "peerMedian": 1.8722
+    },
+    {
+     "year": 2018,
+     "japan": 1.2942,
+     "peerMedian": 1.8902
+    },
+    {
+     "year": 2019,
+     "japan": 1.3874,
+     "peerMedian": 2.0177
+    },
+    {
+     "year": 2020,
+     "japan": 1.8696,
+     "peerMedian": 2.169
+    },
+    {
+     "year": 2021,
+     "japan": 1.2475,
+     "peerMedian": 2.0358
+    },
+    {
+     "year": 2022,
+     "japan": 1.2039,
+     "peerMedian": 1.983
+    },
+    {
+     "year": 2023,
+     "japan": 1.1817,
+     "peerMedian": 1.893
+    }
+   ],
+   "peers": [
+    {
+     "country": "JPN",
+     "ratio2023": 1.182
+    },
+    {
+     "country": "AUS",
+     "ratio2023": 1.666
+    },
+    {
+     "country": "AUT",
+     "ratio2023": 1.48
+    },
+    {
+     "country": "BEL",
+     "ratio2023": 1.893
+    },
+    {
+     "country": "DEU",
+     "ratio2023": 1.65
+    },
+    {
+     "country": "DNK",
+     "ratio2023": 5.277
+    },
+    {
+     "country": "ESP",
+     "ratio2023": 2.103
+    },
+    {
+     "country": "FIN",
+     "ratio2023": 2.512
+    },
+    {
+     "country": "FRA",
+     "ratio2023": 2.797
+    },
+    {
+     "country": "GBR",
+     "ratio2023": 58.79
+    },
+    {
+     "country": "ITA",
+     "ratio2023": 2.001
+    },
+    {
+     "country": "KOR",
+     "ratio2023": 1.889
+    },
+    {
+     "country": "NLD",
+     "ratio2023": 1.606
+    },
+    {
+     "country": "NOR",
+     "ratio2023": 4.08
+    },
+    {
+     "country": "SWE",
+     "ratio2023": 1.817
+    },
+    {
+     "country": "USA",
+     "ratio2023": 1.773
+    }
+   ]
+  },
+  {
+   "code": "C26",
+   "name": "電子機器",
+   "measure": "産業の実質付加価値の伸び ÷ 日本・各国それぞれの全体の実質の伸び（2000年＝1）",
+   "trillionYen": -97.3,
+   "direction": "便益",
+   "rank": 3,
+   "of": 14,
+   "certainty": "参考",
+   "peerCount": 13,
+   "realNote": "OECD の実質",
+   "withoutKorea": {
+    "trillionYen": -100.4,
+    "rank": 2,
+    "of": 13
+   },
+   "series": [
+    {
+     "year": 2001,
+     "japan": 0.9039,
+     "peerMedian": 0.9892
+    },
+    {
+     "year": 2002,
+     "japan": 0.9808,
+     "peerMedian": 1.0168
+    },
+    {
+     "year": 2003,
+     "japan": 1.2348,
+     "peerMedian": 1.0192
+    },
+    {
+     "year": 2004,
+     "japan": 1.4301,
+     "peerMedian": 1.09
+    },
+    {
+     "year": 2005,
+     "japan": 1.5425,
+     "peerMedian": 1.1364
+    },
+    {
+     "year": 2006,
+     "japan": 1.7334,
+     "peerMedian": 1.2826
+    },
+    {
+     "year": 2007,
+     "japan": 2.0361,
+     "peerMedian": 1.3457
+    },
+    {
+     "year": 2008,
+     "japan": 2.1723,
+     "peerMedian": 1.3141
+    },
+    {
+     "year": 2009,
+     "japan": 2.094,
+     "peerMedian": 1.2591
+    },
+    {
+     "year": 2010,
+     "japan": 2.6179,
+     "peerMedian": 1.2001
+    },
+    {
+     "year": 2011,
+     "japan": 2.7039,
+     "peerMedian": 1.1047
+    },
+    {
+     "year": 2012,
+     "japan": 2.5247,
+     "peerMedian": 1.1322
+    },
+    {
+     "year": 2013,
+     "japan": 2.3787,
+     "peerMedian": 1.0845
+    },
+    {
+     "year": 2014,
+     "japan": 2.5619,
+     "peerMedian": 1.0094
+    },
+    {
+     "year": 2015,
+     "japan": 2.6074,
+     "peerMedian": 1.0252
+    },
+    {
+     "year": 2016,
+     "japan": 2.5546,
+     "peerMedian": 0.9635
+    },
+    {
+     "year": 2017,
+     "japan": 2.4378,
+     "peerMedian": 1.0018
+    },
+    {
+     "year": 2018,
+     "japan": 2.6694,
+     "peerMedian": 1.0865
+    },
+    {
+     "year": 2019,
+     "japan": 2.6467,
+     "peerMedian": 1.1147
+    },
+    {
+     "year": 2020,
+     "japan": 2.8602,
+     "peerMedian": 1.0999
+    },
+    {
+     "year": 2021,
+     "japan": 3.371,
+     "peerMedian": 1.2309
+    },
+    {
+     "year": 2022,
+     "japan": 3.0738,
+     "peerMedian": 1.2894
+    },
+    {
+     "year": 2023,
+     "japan": 3.0742,
+     "peerMedian": 1.2657
+    }
+   ],
+   "peers": [
+    {
+     "country": "JPN",
+     "ratio2023": 3.074
+    },
+    {
+     "country": "AUT",
+     "ratio2023": 1.266
+    },
+    {
+     "country": "BEL",
+     "ratio2023": 0.861
+    },
+    {
+     "country": "DEU",
+     "ratio2023": 3.943
+    },
+    {
+     "country": "DNK",
+     "ratio2023": 1.917
+    },
+    {
+     "country": "ESP",
+     "ratio2023": 0.696
+    },
+    {
+     "country": "FIN",
+     "ratio2023": 0.696
+    },
+    {
+     "country": "FRA",
+     "ratio2023": 2.181
+    },
+    {
+     "country": "GBR",
+     "ratio2023": 2.757
+    },
+    {
+     "country": "ITA",
+     "ratio2023": 1.049
+    },
+    {
+     "country": "KOR",
+     "ratio2023": 3.471
+    },
+    {
+     "country": "NLD",
+     "ratio2023": 1.667
+    },
+    {
+     "country": "NOR",
+     "ratio2023": 0.792
+    },
+    {
+     "country": "SWE",
+     "ratio2023": 1.003
+    }
+   ]
+  },
+  {
+   "code": "M72",
+   "name": "研究開発サービス",
+   "measure": "産業の実質付加価値の伸び ÷ 日本・各国それぞれの全体の実質の伸び（2000年＝1）",
+   "trillionYen": 3.3,
+   "direction": "損失",
+   "rank": 5,
+   "of": 12,
+   "certainty": "誤差の範囲",
+   "peerCount": 11,
+   "realNote": "親の物価で割った（仮定）",
+   "withoutKorea": null,
+   "series": [
+    {
+     "year": 2001,
+     "japan": 1.0367,
+     "peerMedian": 0.9559
+    },
+    {
+     "year": 2002,
+     "japan": 1.0539,
+     "peerMedian": 0.9783
+    },
+    {
+     "year": 2003,
+     "japan": 1.0996,
+     "peerMedian": 1.0183
+    },
+    {
+     "year": 2004,
+     "japan": 1.1303,
+     "peerMedian": 1.0029
+    },
+    {
+     "year": 2005,
+     "japan": 1.1553,
+     "peerMedian": 0.9716
+    },
+    {
+     "year": 2006,
+     "japan": 1.0523,
+     "peerMedian": 0.9399
+    },
+    {
+     "year": 2007,
+     "japan": 1.0728,
+     "peerMedian": 0.9289
+    },
+    {
+     "year": 2008,
+     "japan": 1.1294,
+     "peerMedian": 0.9579
+    },
+    {
+     "year": 2009,
+     "japan": 1.1697,
+     "peerMedian": 0.9906
+    },
+    {
+     "year": 2010,
+     "japan": 1.1226,
+     "peerMedian": 1.0306
+    },
+    {
+     "year": 2011,
+     "japan": 0.8986,
+     "peerMedian": 1.1045
+    },
+    {
+     "year": 2012,
+     "japan": 0.8785,
+     "peerMedian": 1.0074
+    },
+    {
+     "year": 2013,
+     "japan": 0.905,
+     "peerMedian": 1.0828
+    },
+    {
+     "year": 2014,
+     "japan": 0.9874,
+     "peerMedian": 1.1459
+    },
+    {
+     "year": 2015,
+     "japan": 0.9338,
+     "peerMedian": 1.211
+    },
+    {
+     "year": 2016,
+     "japan": 0.9509,
+     "peerMedian": 1.1921
+    },
+    {
+     "year": 2017,
+     "japan": 0.959,
+     "peerMedian": 1.193
+    },
+    {
+     "year": 2018,
+     "japan": 0.9546,
+     "peerMedian": 1.1846
+    },
+    {
+     "year": 2019,
+     "japan": 0.8669,
+     "peerMedian": 1.0329
+    },
+    {
+     "year": 2020,
+     "japan": 1.0399,
+     "peerMedian": 1.2455
+    },
+    {
+     "year": 2021,
+     "japan": 0.8244,
+     "peerMedian": 1.3812
+    },
+    {
+     "year": 2022,
+     "japan": 1.3073,
+     "peerMedian": 1.3841
+    },
+    {
+     "year": 2023,
+     "japan": 1.2534,
+     "peerMedian": 1.4374
+    }
+   ],
+   "peers": [
+    {
+     "country": "JPN",
+     "ratio2023": 1.253
+    },
+    {
+     "country": "AUT",
+     "ratio2023": 4.141
+    },
+    {
+     "country": "BEL",
+     "ratio2023": 1.437
+    },
+    {
+     "country": "DEU",
+     "ratio2023": 1.015
+    },
+    {
+     "country": "DNK",
+     "ratio2023": 2.095
+    },
+    {
+     "country": "ESP",
+     "ratio2023": 1.617
+    },
+    {
+     "country": "FIN",
+     "ratio2023": 0.786
+    },
+    {
+     "country": "FRA",
+     "ratio2023": 1.029
+    },
+    {
+     "country": "GBR",
+     "ratio2023": 2.304
+    },
+    {
+     "country": "ITA",
+     "ratio2023": 1.485
+    },
+    {
+     "country": "NLD",
+     "ratio2023": 1.173
+    },
+    {
+     "country": "NOR",
+     "ratio2023": 1.369
+    }
+   ]
+  },
+  {
+   "code": "_T",
+   "name": "経済全体（就業者1人当たり）",
+   "measure": "就業者1人当たりの実質付加価値の伸び（2000年＝1。全体の伸びでは割らない）",
+   "trillionYen": 378.3,
+   "direction": "損失",
+   "rank": 3,
+   "of": 18,
+   "certainty": "参考",
+   "peerCount": 17,
+   "realNote": "OECD の実質",
+   "withoutKorea": null,
+   "series": [
+    {
+     "year": 2001,
+     "japan": 1.0013,
+     "peerMedian": 1.0071
+    },
+    {
+     "year": 2002,
+     "japan": 1.0175,
+     "peerMedian": 1.0146
+    },
+    {
+     "year": 2003,
+     "japan": 1.0326,
+     "peerMedian": 1.0278
+    },
+    {
+     "year": 2004,
+     "japan": 1.0486,
+     "peerMedian": 1.05
+    },
+    {
+     "year": 2005,
+     "japan": 1.063,
+     "peerMedian": 1.0605
+    },
+    {
+     "year": 2006,
+     "japan": 1.0696,
+     "peerMedian": 1.0764
+    },
+    {
+     "year": 2007,
+     "japan": 1.0766,
+     "peerMedian": 1.0947
+    },
+    {
+     "year": 2008,
+     "japan": 1.0659,
+     "peerMedian": 1.0898
+    },
+    {
+     "year": 2009,
+     "japan": 1.0084,
+     "peerMedian": 1.059
+    },
+    {
+     "year": 2010,
+     "japan": 1.0479,
+     "peerMedian": 1.0822
+    },
+    {
+     "year": 2011,
+     "japan": 1.0483,
+     "peerMedian": 1.0962
+    },
+    {
+     "year": 2012,
+     "japan": 1.0675,
+     "peerMedian": 1.091
+    },
+    {
+     "year": 2013,
+     "japan": 1.0833,
+     "peerMedian": 1.1013
+    },
+    {
+     "year": 2014,
+     "japan": 1.0824,
+     "peerMedian": 1.1137
+    },
+    {
+     "year": 2015,
+     "japan": 1.0988,
+     "peerMedian": 1.1138
+    },
+    {
+     "year": 2016,
+     "japan": 1.0965,
+     "peerMedian": 1.1251
+    },
+    {
+     "year": 2017,
+     "japan": 1.1068,
+     "peerMedian": 1.1397
+    },
+    {
+     "year": 2018,
+     "japan": 1.0944,
+     "peerMedian": 1.1403
+    },
+    {
+     "year": 2019,
+     "japan": 1.0786,
+     "peerMedian": 1.1427
+    },
+    {
+     "year": 2020,
+     "japan": 1.0345,
+     "peerMedian": 1.1012
+    },
+    {
+     "year": 2021,
+     "japan": 1.0667,
+     "peerMedian": 1.1551
+    },
+    {
+     "year": 2022,
+     "japan": 1.0848,
+     "peerMedian": 1.1684
+    },
+    {
+     "year": 2023,
+     "japan": 1.0981,
+     "peerMedian": 1.1563
+    }
+   ],
+   "peers": [
+    {
+     "country": "JPN",
+     "ratio2023": 1.098
+    },
+    {
+     "country": "AUS",
+     "ratio2023": 1.211
+    },
+    {
+     "country": "AUT",
+     "ratio2023": 1.103
+    },
+    {
+     "country": "BEL",
+     "ratio2023": 1.163
+    },
+    {
+     "country": "CAN",
+     "ratio2023": 1.156
+    },
+    {
+     "country": "CHE",
+     "ratio2023": 1.155
+    },
+    {
+     "country": "DEU",
+     "ratio2023": 1.135
+    },
+    {
+     "country": "DNK",
+     "ratio2023": 1.152
+    },
+    {
+     "country": "ESP",
+     "ratio2023": 1.103
+    },
+    {
+     "country": "FIN",
+     "ratio2023": 1.057
+    },
+    {
+     "country": "FRA",
+     "ratio2023": 1.125
+    },
+    {
+     "country": "GBR",
+     "ratio2023": 1.181
+    },
+    {
+     "country": "ITA",
+     "ratio2023": 0.979
+    },
+    {
+     "country": "KOR",
+     "ratio2023": 1.712
+    },
+    {
+     "country": "NLD",
+     "ratio2023": 1.166
+    },
+    {
+     "country": "NOR",
+     "ratio2023": 1.157
+    },
+    {
+     "country": "SWE",
+     "ratio2023": 1.238
+    },
+    {
+     "country": "USA",
+     "ratio2023": 1.375
+    }
+   ]
+  }
+ ],
+ "axes": [
+  {
+   "code": "E1",
+   "name": "大学・研究への公的支出",
+   "observation": "IT・情報サービス・研究開発サービス",
+   "trillionYen": null,
+   "recordedOnly": "J62_63・M72",
+   "sharedBy": 3,
+   "treatment": "記録だけ（誤差の範囲）"
+  },
+  {
+   "code": "F1",
+   "name": "VC と出口",
+   "observation": "IT・情報サービス",
+   "trillionYen": null,
+   "recordedOnly": "J62_63",
+   "sharedBy": 3,
+   "treatment": "記録だけ（誤差の範囲）"
+  },
+  {
+   "code": "G1",
+   "name": "政府の IT 調達",
+   "observation": "IT・情報サービス",
+   "trillionYen": null,
+   "recordedOnly": "J62_63",
+   "sharedBy": 3,
+   "treatment": "記録だけ（誤差の範囲）"
+  },
+  {
+   "code": "R1",
+   "name": "配信・著作権の規制",
+   "observation": "出版・映像・放送",
+   "trillionYen": null,
+   "recordedOnly": "J58T60",
+   "sharedBy": 1,
+   "treatment": "記録だけ（誤差の範囲）"
+  },
+  {
+   "code": "C2",
+   "name": "通信事業者主導の端末モデル",
+   "observation": "通信・電子機器",
+   "trillionYen": -32.6,
+   "recordedOnly": "",
+   "sharedBy": 1,
+   "treatment": "便益の方が大きい（損失の額はつけない）"
+  },
+  {
+   "code": "M1/M2",
+   "name": "金融政策・為替・デフレ／不良債権とゾンビ企業（共有）",
+   "observation": "経済全体（就業者1人当たり）",
+   "trillionYen": 378.3,
+   "recordedOnly": "",
+   "sharedBy": 1,
+   "treatment": "参考（決定の効果の推定ができるまで配らない）"
+  }
+ ],
+ "accounting": [
+  {
+   "code": "J",
+   "name": "情報通信",
+   "period": "2000→2019",
+   "peers": [
+    "BEL",
+    "FRA",
+    "GBR",
+    "ITA",
+    "USA"
+   ],
+   "gap": 0.558,
+   "labor": -0.108,
+   "capital": 0.317,
+   "tfp": 0.791,
+   "mark": "なし"
+  },
+  {
+   "code": "C26",
+   "name": "電子機器",
+   "period": "2000→2019",
+   "peers": [
+    "BEL",
+    "CAN",
+    "FRA",
+    "GBR",
+    "ITA",
+    "USA"
+   ],
+   "gap": -0.77,
+   "labor": 0.197,
+   "capital": 0.24,
+   "tfp": 0.563,
+   "mark": "なし"
+  },
+  {
+   "code": "J62_63",
+   "name": "IT・情報サービス",
+   "period": null,
+   "peers": null,
+   "gap": null,
+   "labor": null,
+   "capital": null,
+   "tfp": null,
+   "mark": "日本の就業者・資本の系列が STAN に無い（内訳は出せない）"
+  },
+  {
+   "code": "J61",
+   "name": "通信",
+   "period": null,
+   "peers": null,
+   "gap": null,
+   "labor": null,
+   "capital": null,
+   "tfp": null,
+   "mark": "日本の就業者・資本の系列が STAN に無い（内訳は出せない）"
+  },
+  {
+   "code": "J58T60",
+   "name": "出版・映像・放送",
+   "period": null,
+   "peers": null,
+   "gap": null,
+   "labor": null,
+   "capital": null,
+   "tfp": null,
+   "mark": "日本の就業者・資本の系列が STAN に無い（内訳は出せない）"
+  },
+  {
+   "code": "M72",
+   "name": "研究開発サービス",
+   "period": null,
+   "peers": null,
+   "gap": null,
+   "labor": null,
+   "capital": null,
+   "tfp": null,
+   "mark": "日本の就業者・資本の系列が STAN に無い（内訳は出せない）"
+  },
+  {
+   "code": "_T",
+   "name": "経済全体（就業者1人当たり）",
+   "period": "2000→2019",
+   "peers": [
+    "BEL",
+    "CAN",
+    "FRA",
+    "GBR",
+    "ITA",
+    "USA"
+   ],
+   "gap": 0.159,
+   "labor": 0.388,
+   "capital": 0.702,
+   "tfp": -0.089,
+   "mark": "なし"
+  }
+ ]
+}

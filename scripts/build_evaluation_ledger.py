@@ -34,14 +34,23 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from scripts.evaluation_rules import (
+    STATE_DEMOTED,
+    STATE_FAILED,
+    is_demoted,
+    narrow_whole_economy,
+)
+
 D = ROOT / "data" / "derived"
 LEDGER_DIR = D / "evaluation-ledger-v1"
 SEED = 20261030
 SAMPLE_TARGET = 100
 
 HEADER = ["id", "題名", "分類", "分類の方法", "類型", "経済に効くか", "分野", "分野の方法", "到達点", "向き",
-          "額の方法", "額（円）", "確かさ", "公開可否", "概要の方法", "常識検査③", "頑健性④", "同型の誤り候補⑤", "ロジック検査", "検証状態", "検証メモ"]
-VERIFY_STATES = ("未検証", "分類を2系統で照合済み", "分類を第3判定で決着", "抜き取り検証で合格", "抜き取り検証で不合格")
+          "額の方法", "額（円）", "付加価値の変化（円）", "付加価値の由来", "国の収支（億円）", "国の支出（円）", "採算（付加価値÷国の支出）", "確かさ", "公開可否", "概要の方法", "常識検査③", "頑健性④", "同型の誤り候補⑤", "ロジック検査", "検証状態", "検証メモ"]
+VERIFY_STATES = ("未検証", "分類を2系統で照合済み", "分類を第3判定で決着", "抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた")
+SAMPLED_STATES = ("抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた")
 
 
 def read(path: Path) -> list[dict]:
@@ -66,6 +75,7 @@ def load():
         "pub": by_id(read(D / "publish-v1-triage-v2" / "publish.csv")),
         "ov": by_id(read(D / "law-overviews-v1" / "overviews.csv")),
         "sample": by_id(read(LEDGER_DIR / "sample-verdicts.csv")),
+        "cols": by_id(read(D / "three-columns-v1" / "columns.csv")),  # 額の物差し三欄（設計決定0024）
     }
 
 
@@ -108,10 +118,7 @@ def reach(o: dict, m: dict | None) -> tuple[str, str, str]:
     return "評価対象外", "なし", ""
 
 
-NARROW_WORDS = ("特例", "特定", "臨時", "暫定", "特別措置")
-
-
-def sense_checks(rows_macro: dict[str, dict]) -> dict[str, dict]:
+def sense_checks(rows_macro: dict[str, dict], title_of: dict[str, str]) -> dict[str, dict]:
     """③常識の歯止め（規模・重なり）と④頑健性（四分位が0をまたぐか）。macro-v1 の参考額だけが対象。"""
     shared = Counter((m["産業"], m["窓"], m["中央値"]) for m in rows_macro.values() if m["結果"] == "額")
     out = {}
@@ -128,15 +135,19 @@ def sense_checks(rows_macro: dict[str, dict]) -> dict[str, dict]:
         crosses = float(m["第1四分位"]) < 0 < float(m["第3四分位"])
         out[i] = {"scale": scale, "overlap": overlap,
                   "robust": "四分位が0をまたぐ（向きが定まらない）" if crosses else "四分位が同じ向き",
-                  "narrow_flag": bool(m["産業"] == "_T" or m["分野"] == "経済全体")}
+                  "narrow_flag": narrow_whole_economy(title_of.get(i, ""), m["産業"], m["分野"])}
     return out
 
 
-def verify_state(id_: str, cls_how: str, sample: dict) -> tuple[str, str]:
+def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "") -> tuple[str, str]:
     s = sample.get(id_)
     if s:
-        ok = s["判定"] == "合格"
-        return ("抜き取り検証で合格" if ok else "抜き取り検証で不合格"), s.get("食い違い", "")
+        if s["判定"] == "合格":
+            return "抜き取り検証で合格", s.get("食い違い", "")
+        # 不合格のうち額を参考値に下げたものは「参考に下げた」。分類を決め直す必要があるものは不合格のまま残す（隠さない）
+        if is_demoted(s["判定"], reach_, certainty):
+            return STATE_DEMOTED, s.get("食い違い", "")
+        return STATE_FAILED, s.get("食い違い", "")
     if "第3" in cls_how or "Sonnet" in cls_how or "Opus" in cls_how or cls_how.startswith("2系統の食い違い"):
         return "分類を第3判定で決着", ""
     if cls_how == "2系統が一致":
@@ -149,7 +160,7 @@ def build_rows(src) -> list[dict]:
     import check_evaluation_logic as logic
     lv = logic.check()
     rows = []
-    sc = sense_checks(src["macro"])
+    sc = sense_checks(src["macro"], {o["id"]: o["題名"] for o in src["out"]})
     for o in src["out"]:
         i = o["id"]
         a, t, m = src["agree"].get(i), src["tie"].get(i), src["macro"].get(i)
@@ -161,17 +172,22 @@ def build_rows(src) -> list[dict]:
         field_how = m["分野の由来"] if m else ("AI 2系統" if f else ("題名の語の規則" if o["分野"] else ""))
         pub = src["pub"].get(i)
         ov = src["ov"].get(i)
-        state, memo = verify_state(i, how, src["sample"])
+        certainty = o["確かさ"] or (m["結果"] and "参考" if m and m["結果"] == "額" else "")
+        state, memo = verify_state(i, how, src["sample"], reach_, certainty)
+        col = src["cols"].get(i, {})
         rows.append({
             "id": i, "題名": o["題名"], "分類": cls, "分類の方法": how, "類型": o["種類"] or "",
             "経済に効くか": (f"{e['区分']}（{e['決め方']}）" if e else ""),
             "分野": field, "分野の方法": field_how, "到達点": reach_, "向き": o["向き"],
-            "額の方法": amt_how, "額（円）": amt, "確かさ": o["確かさ"] or (m["結果"] and "参考" if m and m["結果"] == "額" else ""),
+            "額の方法": amt_how, "額（円）": amt,
+            "付加価値の変化（円）": col.get("付加価値の変化（円）", ""), "付加価値の由来": col.get("付加価値の由来", ""),
+            "国の収支（億円）": col.get("国の収支（億円）", ""), "国の支出（円）": col.get("国の支出（円）", ""),
+            "採算（付加価値÷国の支出）": col.get("採算（付加価値÷国の支出）", ""), "確かさ": certainty,
             "公開可否": (pub["公開可否"] if pub else o["公開可否"]),
             "概要の方法": ("AI 1行要約→別の読み手で照合" if ov else "概要なし"),
             "常識検査③": (f"{sc[i]['scale']}／{sc[i]['overlap']}" if i in sc else ""),
             "頑健性④": (sc[i]["robust"] if i in sc else ""),
-            "同型の誤り候補⑤": ("狭い題名に全産業の額" if i in sc and sc[i]["narrow_flag"] and any(w in o["題名"] for w in NARROW_WORDS) else ""),
+            "同型の誤り候補⑤": ("狭い題名に全産業の額" if i in sc and sc[i]["narrow_flag"] else ""),
             "ロジック検査": "、".join(f"{k}違反" for k in logic.RULES if i in lv[k]) or "違反なし",
             "検証状態": state, "検証メモ": memo,
         })
@@ -213,14 +229,16 @@ def make_sample(rows: list[dict]) -> list[dict]:
 def summarize(rows: list[dict]) -> dict:
     n = len(rows)
     c = lambda k: dict(Counter(r[k] for r in rows).most_common())
-    samp = [r for r in rows if r["検証状態"].startswith("抜き取り")]
+    samp = [r for r in rows if r["検証状態"] in SAMPLED_STATES]
     ok = sum(r["検証状態"] == "抜き取り検証で合格" for r in samp)
     by_reach: dict[str, dict] = {}
     for k in sorted({r["到達点"] for r in rows}):
         rs = [r for r in rows if r["到達点"] == k]
-        ss = [r for r in rs if r["検証状態"].startswith("抜き取り")]
+        ss = [r for r in rs if r["検証状態"] in SAMPLED_STATES]
         by_reach[k] = {"本数": len(rs), "抜き取り": len(ss), "合格": sum(r["検証状態"] == "抜き取り検証で合格" for r in ss),
-                       "うち額あり": sum(bool(r["額（円）"]) for r in rs)}
+                       "うち額あり": sum(bool(r["額（円）"]) for r in rs),
+                       "参考に下げた": sum(r["検証状態"] == STATE_DEMOTED for r in ss),
+                       "不合格のまま": sum(r["検証状態"] == STATE_FAILED for r in ss)}
     return {
         "total": n,
         "by_reach": by_reach,
@@ -237,8 +255,16 @@ def summarize(rows: list[dict]) -> dict:
             "⑤同型の誤り候補": sum(bool(r["同型の誤り候補⑤"]) for r in rows),
             "③④の両方を通った参考額": sum(1 for r in rows if r["常識検査③"].startswith("規模内／重ならない") and r["頑健性④"] == "四分位が同じ向き"),
         },
-        "sample": {"n": len(samp), "pass": ok, "fail": len(samp) - ok},
-        "rule": "分類の2系統照合は『分類』だけを確かめたもの。向き・類型・額まで確かめたのは抜き取り検証だけ。",
+        "sample": {"n": len(samp), "pass": ok, "fail": len(samp) - ok,
+                   "demoted": sum(r["検証状態"] == STATE_DEMOTED for r in samp),
+                   "failed_kept": sum(r["検証状態"] == STATE_FAILED for r in samp)},
+        "three_columns": {
+            "付加価値の変化": dict(Counter(r["付加価値の由来"] for r in rows if r["付加価値の変化（円）"])),
+            "国の収支（億円）": sum(bool(r["国の収支（億円）"]) for r in rows),
+            "採算": sum(bool(r["採算（付加価値÷国の支出）"]) for r in rows),
+            "合計": n,
+        },
+        "rule": "分類の2系統照合は『分類』だけを確かめたもの。向き・類型・額まで確かめたのは抜き取り検証だけ。抜き取りで不合格だった法律のうち、額を順位・議員配分に使わない（参考値）ものは『参考に下げた』（額と根拠は参考値として出し続ける）、分類を決め直す必要があるものは『抜き取り検証で不合格』のまま数える。",
     }
 
 
@@ -258,6 +284,13 @@ def write_docs(s: dict, path: Path) -> None:
     lines += [f"| {k} | {v['本数']:,} | {v['うち額あり']:,} | {v['抜き取り']} | {v['合格']} |" for k, v in s["by_reach"].items()]
     lines += ["", table("分類の方法", s["by_classification_method"]), table("分野の方法", s["by_field_method"]),
               table("額の方法", s["by_amount_method"]), table("確かさ", s["by_certainty"]), table("検証状態", s["by_verify_state"]), table("③ 規模（参考額）", s["angles"]["③規模"]), table("③ 同額の重なり（参考額）", s["angles"]["③重なり"]), table("④ 頑健性（参考額）", s["angles"]["④頑健性"]), f"⑤ 同型の誤り候補（狭い題名に全産業の額）：{s['angles']['⑤同型の誤り候補']}本　／　③④を両方通った参考額：{s['angles']['③④の両方を通った参考額']}本\n"]
+    tc = s["three_columns"]
+    lines += ["", "## 額の物差し三欄（設計決定0024）", "",
+              "| 欄 | 本数 | 扱い |", "|---|---|---|"]
+    lines += [f"| 付加価値の変化（{k}） | {v:,} | " + ("本線。順位・配分に使う" if k.startswith("個別") else "参考。順位・配分に使わない") + " |" for k, v in tc["付加価値の変化"].items()]
+    lines += [f"| 国の収支（税収見込み） | {tc['国の収支（億円）']:,} | 別表。足さない・使わない |",
+              f"| 採算（付加価値÷国の支出） | {tc['採算']:,} | 参考。国の支出が一次資料で分かる法律だけ |",
+              "", f"全{tc['合計']:,}本のうち、どの欄にも値が無い法律は理由つきの『保留・測定できない・評価対象外』のいずれか（`outcomes.csv`）。表は `data/derived/three-columns-v1/columns.csv`。"]
     path.write_text("\n".join(lines), encoding="utf-8")
 
 

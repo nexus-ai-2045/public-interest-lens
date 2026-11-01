@@ -2,8 +2,10 @@
 import csv
 import unittest
 from pathlib import Path
+from types import MappingProxyType
 
 from scripts import build_all_laws_outcomes as ol
+from scripts.evaluation_rules import DEMOTED_ROUTES
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTCOMES = ROOT / "data" / "derived" / "all-laws-v1" / "outcomes.csv"
@@ -84,7 +86,10 @@ class LedgerTest(unittest.TestCase):
         fiscal = {r["id"] for r in read(ROOT / "data" / "derived" / "tax-impact-v1" / "fiscal.csv") if r["平年度_億円"] != ""}
         market = {r["id"] for r in self.rows if r["結果"] == "額あり" and r["経路"] != "財政（税収見込み）"}
         inst = {r["id"] for r in loss if ol.institutional_title(r["題名"])}
-        self.assertEqual(market, with_amount - covid - narrow - fiscal - inst)
+        # 向きと額の符号が逆・関与の出典なしの額は、法律の額にしない（evaluation_rules、論理検査 L1・L3）
+        no_amount = {r["id"] for r in self.rows if r["経路"] in DEMOTED_ROUTES}
+        self.assertTrue(no_amount <= with_amount)
+        self.assertEqual(market, with_amount - covid - narrow - fiscal - inst - no_amount)
         # 税制改正の法律は財務省の増減収見込みを別の経路で付ける。損失表の額とは重ならず、順位・配分の対象にならない
         self.assertFalse(fiscal & with_amount)
         self.assertEqual({r["id"] for r in self.rows if r["経路"] == "財政（税収見込み）"}, fiscal)
@@ -193,3 +198,38 @@ class InstitutionalTitleTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AmountConsistencyTest(unittest.TestCase):
+    """論理検査 L1・L3：向きと額の符号が逆、または出典つきの議員の関与が無い額は、法律の額にしない（設計決定0024）。"""
+    law = MappingProxyType({"題名": "預金保険法の一部を改正する法律案"})
+
+    def stages(self, direction, amount, involved):
+        st = EmptyStages()
+        key = "閣法-999-1"
+        st.agreement = {key: {"結果": "採用", "解消規則": "", "系統1_判定": "評価対象", "系統2_判定": "評価対象", "系統1_分野": "金融", "系統1_指標": "貸出残高"}}
+        st.impact = {key: {"id": key, "判定": "段階2", "分野": "金融", "指標": "貸出残高", "理由": ""}}
+        st.loss = {key: {"id": key, "段階": "段階2", "向き": direction, "損失または便益の額": amount, "単位": "円（名目は開始前最後の年）", "参考フラグ": "", "理由": ""}}
+        st.publish = {key: {"id": key, "公開可否": "公開可"}}
+        st.involved = involved
+        return st
+
+    def decide(self, direction, amount, involved):
+        return ol.decide(dict(self.law), triage_row(), "2020-04-01", self.stages(direction, amount, involved))
+
+    def test_consistent_amount_with_a_chain_stays(self):
+        r = self.decide("貢献", "便益：中央値=100", {"閣法-999-1"})
+        self.assertEqual((r["結果"], r["経路"]), ("額あり", "市場（v2の後段）"))
+
+    def test_sign_conflict_is_held_and_not_published(self):
+        r = self.decide("貢献", "便益：中央値=-100", {"閣法-999-1"})
+        self.assertEqual((r["結果"], r["経路"], r["公開可否"]), ("保留", ol.ROUTE_SIGN_CONFLICT, "公開不可"))
+        self.assertIn("符号が逆", r["理由"])
+
+    def test_amount_without_a_sourced_involvement_is_held(self):
+        r = self.decide("悪影響", "損失：中央値=100", set())
+        self.assertEqual((r["結果"], r["経路"], r["公開可否"]), ("保留", ol.ROUTE_NO_CHAIN, "公開不可"))
+
+    def test_unknown_involvement_table_does_not_judge_the_chain(self):
+        r = self.decide("悪影響", "損失：中央値=100", None)
+        self.assertEqual(r["結果"], "額あり")

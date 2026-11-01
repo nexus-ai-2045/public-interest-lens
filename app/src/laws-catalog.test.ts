@@ -63,6 +63,9 @@ describe('全法律の一覧', () => {
     const query = { text: '観光', side: 'loss' as const, field: '宿泊・観光', kind: '閣法', sort: 'newest' as const };
     expect(readQuery(writeQuery(query))).toEqual(query);
     expect(writeQuery(DEFAULT_QUERY)).toBe('');
+    // 一覧の画面では、明示して選んだ「額の大きい順」も URL に残し、読み戻すと同じ並びになる。
+    expect(writeQuery(DEFAULT_QUERY, true)).toBe('?sort=amount');
+    expect(readQuery(writeQuery(DEFAULT_QUERY, true))).toEqual(DEFAULT_QUERY);
   });
   it('同じ観測は代表の1行にまとめ、絞り込みで代表が外れても1本は残る', () => {
     const list = filterCatalog(catalog.laws, DEFAULT_QUERY);
@@ -95,5 +98,62 @@ describe('全法律の一覧', () => {
     for (const item of outliers) { expect(item.scale).toBeGreaterThan(1); expect(item.amount).not.toBeNull(); }
     expect(catalog.laws.filter(item => item.scale !== undefined).length).toBe(outliers.length);
     expect(filterCatalog(catalog.laws, DEFAULT_QUERY).length).toBe(catalog.laws.length);
+  });
+});
+
+describe('降格した法律の参考値の理由・根拠', () => {
+  const row = (extra: Record<string, unknown>) => ({ id: '閣法-1-1', kind: '閣法', title: 'テスト法', year: 2000, field: 'その他', side: null, amount: null, marks: [], step: 'enacted', summary: '', ...extra });
+  const parse = (extra: Record<string, unknown>) => parseLawsCatalog(JSON.stringify({ schema: 'public-laws/v1', counts: {}, fields: [], laws: [row(extra)], policies: [] })).laws[0];
+
+  it('refReason・refBasis が文字列なら読む', () => {
+    const item = parse({ refReason: '検証で降格', refBasis: '出典の表' });
+    expect(item.refReason).toBe('検証で降格');
+    expect(item.refBasis).toBe('出典の表');
+  });
+
+  it('文字列以外・空は無視し、欄が無くても落ちない', () => {
+    const item = parse({ refReason: 3, refBasis: { a: 1 } });
+    expect('refReason' in item).toBe(false);
+    expect('refBasis' in item).toBe(false);
+    expect('refReason' in parse({ refReason: '  ' })).toBe(false);
+    expect('refReason' in parse({})).toBe(false);
+  });
+});
+
+describe('共有額の参考値', () => {
+  const shared = catalog.laws.filter(item => item.shared);
+  it('1本ごとの額を持たず、群の総枠と本数を持つ。降格の印とは別', () => {
+    expect(shared.length).toBe(catalog.shared?.laws);
+    expect(shared.filter(item => item.shared.whole).length).toBe(catalog.shared?.whole);
+    for (const item of shared) {
+      expect(item.amount).toBeNull();
+      expect(item.side).toBeNull();
+      expect(item.shared.size).toBeGreaterThanOrEqual(2);
+      expect(item.refReason).toBeUndefined();
+      expect(item.observation?.key).toBe(item.shared.key);
+      expect(item.observation?.size).toBe(item.shared.size);
+      expect(detailOf(item.id).sharedBasis).toContain('使った前提');
+    }
+  });
+  it('額なし・向きの絞り込みには入らず、専用の絞り込みで出る', () => {
+    const ids = new Set(shared.map(item => item.id));
+    expect(filterCatalog(catalog.laws, { ...DEFAULT_QUERY, side: 'shared' }).map(item => item.id).sort()).toEqual([...ids].sort());
+    expect(filterCatalog(catalog.laws, { ...DEFAULT_QUERY, side: 'none' }).some(item => ids.has(item.id))).toBe(false);
+    expect(filterCatalog(catalog.laws, { ...DEFAULT_QUERY, side: 'amount' }).some(item => ids.has(item.id))).toBe(false);
+    expect(readQuery('?side=shared').side).toBe('shared');
+  });
+  it('既定の並びでは、額のある行の後・額なしの前に置く', () => {
+    const list = filterCatalog(catalog.laws, DEFAULT_QUERY);
+    const rank = (item: { amount: unknown; shared?: unknown }) => item.amount ? 0 : item.shared ? 1 : 2;
+    const ranks = list.map(rank);
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+  });
+  it('形の悪い共有額は読み込みを拒否する', () => {
+    const row = (shared: unknown, amount: unknown = null) => JSON.stringify({ schema: 'public-laws/v1', counts: {}, fields: [], laws: [{ id: 'x', kind: '閣法', title: 't', year: 1, field: 'f', side: null, amount, marks: [], step: 'enacted', summary: 's', shared }], policies: [] });
+    const ok = { key: 'k', size: 2, median: 10, low: 5, high: 20, side: 'loss', whole: false };
+    expect(() => parseLawsCatalog(row(ok))).not.toThrow();
+    expect(() => parseLawsCatalog(row({ ...ok, size: 1 }))).toThrow();
+    expect(() => parseLawsCatalog(row({ ...ok, median: 30 }))).toThrow();
+    expect(() => parseLawsCatalog(row(ok, { median: 1, low: 1, high: 1 }))).toThrow();
   });
 });

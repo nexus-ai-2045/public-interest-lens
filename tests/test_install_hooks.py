@@ -2,6 +2,7 @@ import re
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from scripts import install_hooks, strip_commit_trace
 
@@ -78,6 +79,24 @@ class InstallHooksTest(unittest.TestCase):
             install_hooks.install(d)
             (d / "commit-msg").write_text("#!/bin/sh\nexit 0\n")
             self.assertEqual(["commit-msg"], install_hooks.missing(d))
+
+
+class SharedHooksPathTest(unittest.TestCase):
+    def test_hooks_dir_outside_the_repo_is_not_repo_local(self):
+        with tempfile.TemporaryDirectory() as t:
+            self.assertFalse(install_hooks.is_repo_local(Path(t)))
+
+    def test_main_refuses_and_writes_nothing_when_hooks_path_is_shared(self):
+        with tempfile.TemporaryDirectory() as t:
+            shared = Path(t)
+            real = install_hooks.hooks_dir
+            install_hooks.hooks_dir = lambda: shared
+            try:
+                with mock.patch("sys.argv", ["install_hooks.py"]):
+                    self.assertEqual(2, install_hooks.main())
+            finally:
+                install_hooks.hooks_dir = real
+            self.assertEqual([], list(shared.iterdir()))
 
 
 if __name__ == "__main__":

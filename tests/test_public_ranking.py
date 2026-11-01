@@ -62,7 +62,7 @@ class PublicRankingTests(unittest.TestCase):
             self.assertEqual(result["counts"], expected["counts"])
             self.assertEqual(len(result["laws"]), len(expected["laws"]))
             self.assertEqual(result["generatedFrom"]["inputs"]["industryVa"], hashlib.sha256(before).hexdigest())
-            self.assertEqual(result["generatedFrom"]["parameters"], {"heldOut": ["閣法-169-3"]})
+            self.assertEqual(result["generatedFrom"]["parameters"], {"heldOut": ["閣法-169-3"], "noAmount": expected["generatedFrom"]["parameters"]["noAmount"]})
             self.assertNotIn("閣法-169-3", {r["id"] for r in result["laws"]})
 
     def test_committed_file_matches_inputs(self):
@@ -106,6 +106,26 @@ class PublicRankingTests(unittest.TestCase):
             self.assertIn(item["outcome"], OUTCOMES.values())
             self.assertNotRegex(json.dumps(item, ensure_ascii=False), r"Yen|中央値|四分位")
 
+    def test_shared_reference_is_outside_the_ranking_and_holds_group_totals(self):
+        payload = self.payload
+        ref = payload["sharedReference"]
+        in_laws = {law["id"] for law in payload["laws"]}
+        shared_others = {item["id"] for item in payload["others"] if item["outcome"] == OUTCOMES["hidden_shared"]}
+        self.assertEqual({item["id"] for item in ref["laws"]}, shared_others)
+        self.assertFalse(shared_others & in_laws)  # 順位・合計・議員配分に使う laws には居ない
+        self.assertEqual(payload["counts"]["shared"], len(ref["laws"]))
+        self.assertEqual(payload["counts"]["sharedGroups"], len(ref["groups"]))
+        sizes = {g["key"]: g["size"] for g in ref["groups"]}
+        for key, size in sizes.items():
+            self.assertGreaterEqual(size, 2)
+            self.assertEqual(sum(1 for item in ref["laws"] if item["key"] == key), size)
+        for g in ref["groups"]:
+            self.assertGreater(g["medianYen"], 0)
+            self.assertLessEqual(g["lowYen"], g["medianYen"])
+            self.assertLessEqual(g["medianYen"], g["highYen"])
+        for item in ref["laws"]:
+            self.assertNotRegex(json.dumps(item, ensure_ascii=False), r"Yen|中央値|四分位")  # 1本ごとの額は持たない
+
     def test_laws_carry_range_certainty_and_sources(self):
         payload = self.payload
         self.assertEqual(payload["counts"]["confirmed"] + payload["counts"]["reference"], len(payload["laws"]))
@@ -123,7 +143,11 @@ class PublicRankingTests(unittest.TestCase):
         flags = [law["certainty"] == "参考" for law in self.payload["laws"]]
         self.assertEqual(flags, sorted(flags))
         by_id = {law["id"]: law for law in self.payload["laws"]}
-        self.assertEqual(by_id["衆法-186-35"]["certainty"], "高")
+        # 衆法-186-35 は抜き取りで不合格（確かさ高・題名が基本法）。額は消さず参考値に下げ、理由と根拠を付ける（降格の規則）
+        self.assertEqual(by_id["衆法-186-35"]["certainty"], "参考")
+        self.assertGreater(by_id["衆法-186-35"]["amountMedianYen"], 0)
+        self.assertTrue(by_id["衆法-186-35"]["demotedReason"])
+        self.assertTrue(by_id["衆法-186-35"]["demotedBasis"])
         self.assertEqual(by_id["閣法-193-61"]["certainty"], "参考")
 
     def test_shared_observation_and_oversized_notes(self):
@@ -141,7 +165,9 @@ class PublicRankingTests(unittest.TestCase):
         by_id = {law["id"]: law for law in self.payload["laws"]}
         for law_id in ("衆法-189-20", "閣法-196-2"):
             self.assertIn("コロナ期と重なる", by_id[law_id]["notes"])
-        self.assertIn("便益側の一部が未測定", by_id["閣法-189-27"]["notes"])
+        # 閣法-189-27 は向きと額の符号が逆で法律の額を付けない（全法律の結果と同じ判断）。損失表の額は議員にも配らない
+        self.assertNotIn("便益側の一部が未測定", by_id.get("閣法-189-27", {"notes": []})["notes"])
+        self.assertIn("閣法-189-27", self.payload["generatedFrom"]["parameters"]["noAmount"])
         self.assertFalse({"コロナ期と重なる", "便益側の一部が未測定"} & set(by_id["衆法-186-35"]["notes"]))
 
     def test_source_held_law_moves_to_others(self):

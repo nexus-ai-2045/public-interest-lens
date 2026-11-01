@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "nexus-ai-skills": {
+      "source": {
+        "source": "github",
+        "repo": "nexus-ai-2045/nexus-ai-skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "pstack@nexus-ai-skills": true
+  }
+}

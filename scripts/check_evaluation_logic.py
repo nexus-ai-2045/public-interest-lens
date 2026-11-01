@@ -22,9 +22,14 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from scripts.evaluation_rules import (
+    narrow_whole_economy,
+    sign_conflict,
+)
+
 D = ROOT / "data" / "derived"
 BASELINE = D / "evaluation-ledger-v1" / "logic-baseline.json"
-NARROW_WORDS = ("特例", "特定", "臨時", "暫定", "特別措置")
 RULES = ("L1", "L2", "L3", "L4", "L5", "L6")
 
 
@@ -56,14 +61,9 @@ def check() -> dict[str, dict[str, str]]:
             viol["L1"][i] = "個別の額があるが出典つきの関与が無い"
         # L3
         if has_amount:
-            m = re.search(r"(便益|損失)：中央値=(-?\d+)", o["損失または便益の額"])
-            if m:
-                side, v = m.group(1), int(m.group(2))
-                good = o["向き"] in ("貢献", "上昇")
-                bad = o["向き"] in ("悪影響", "低下")
-                if (side == "便益" and good and v < 0) or (side == "損失" and bad and v < 0) \
-                        or (side == "便益" and bad and v > 0) or (side == "損失" and good and v > 0):
-                    viol["L3"][i] = f"向き「{o['向き']}」と{side}の中央値の符号が逆"
+            side = sign_conflict(o["向き"], o["損失または便益の額"])
+            if side:
+                viol["L3"][i] = f"向き「{o['向き']}」と{side}の中央値の符号が逆"
             # L5
             if not o["単位"] or "名目は開始前最後の年" not in o["単位"]:
                 viol["L5"][i] = "額に単位または基準年が無い"
@@ -77,7 +77,7 @@ def check() -> dict[str, dict[str, str]]:
     for i, m in macro.items():
         title = outcomes[i]["題名"] if i in outcomes else ""
         # L2
-        if (m["産業"] == "_T" or m["分野"] == "経済全体") and any(w in title for w in NARROW_WORDS):
+        if narrow_whole_economy(title, m["産業"], m["分野"]):
             viol["L2"][i] = "狭い題名に全産業の額"
         # L5
         yr = re.search(r"開始前最後の年（(\d{4})年）", m["計算式の要素"])

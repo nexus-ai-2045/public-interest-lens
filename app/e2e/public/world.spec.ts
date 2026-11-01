@@ -7,7 +7,7 @@ test.describe('/world（世界のGDP比較）', () => {
     await page.goto('/world');
     await expect(page).toHaveTitle(/世界のGDP比較/);
     await expect(page.getByRole('heading', { level: 1, name: '日本の経済は、世界と比べてどうですか？' })).toBeVisible();
-    const chart = page.locator('.world-chart-wrap svg[role="img"]');
+    const chart = page.locator('section[aria-labelledby="world-chart-heading"] .world-chart-wrap svg[role="img"]');
     await expect(chart).toBeVisible();
     expect(await chart.locator('path, polyline').count()).toBeGreaterThan(0);
     expect(await page.locator('.world-table tbody tr').count()).toBeGreaterThan(0);
@@ -20,19 +20,27 @@ test.describe('/world（世界のGDP比較）', () => {
     const watch = watchPage(page);
     await page.goto('/world');
     const heading = page.locator('#world-chart-heading');
-    // 既定は名目ではなく実質成長率（国どうしは物価と為替を除いて比べる）。
-    await expect(heading).toContainText('実質成長率');
+    // 既定は名目ではなく、物価と為替を除いた一人あたりGDP（購買力平価）の初期年＝100（国どうしを同じ条件で比べる）。
+    await expect(heading).toContainText('一人あたりGDP');
 
-    await page.getByRole('group', { name: '見る指標' }).getByRole('button', { name: '名目GDP' }).click();
+    const metrics = page.getByRole('group', { name: '見る指標' });
+    await metrics.getByRole('button', { name: '実質成長率（年ごと）' }).click();
+    await expect(heading).toContainText('実質成長率');
+    await expect(page).toHaveURL(/metric=growth/);
+    await metrics.getByRole('button', { name: '名目GDP' }).click();
     await expect(heading).toContainText('名目GDP');
     await expect(page).toHaveURL(/metric=nominal/);
 
-    await page.getByLabel('見る期間').selectOption('2000');
+    const period2000 = page.getByRole('group', { name: '見る期間' }).getByRole('button', { name: '2000年〜' });
+    await period2000.click();
+    await expect(period2000).toHaveAttribute('aria-pressed', 'true');
     await expect(page).toHaveURL(/period=2000/);
 
-    const chart = page.locator('.world-chart-wrap svg[role="img"]');
+    const chart = page.locator('section[aria-labelledby="world-chart-heading"] .world-chart-wrap svg[role="img"]');
     await expect(chart).toBeVisible();
     const lines = await chart.locator('path').count();
+    // 国の選択は折りたたみの中にある。開いてから触る。
+    await page.locator('.world-countries summary').click();
     const countries = page.locator('.world-country-list input[type="checkbox"]:not([disabled])');
     await countries.first().uncheck();
     await expect(page).toHaveURL(/hide=[A-Z]{3}/);
@@ -49,10 +57,10 @@ test.describe('/world（世界のGDP比較）', () => {
     const watch = watchPage(page);
     await page.goto('/world?metric=ppp&period=2010');
     await expect(page.locator('#world-chart-heading')).toContainText('一人あたりGDP');
-    await expect(page.getByLabel('見る期間')).toHaveValue('2010');
-    const chart = page.locator('.world-chart-wrap svg[role="img"]');
+    await expect(page.getByRole('group', { name: '見る期間' }).getByRole('button', { name: '2010年〜' })).toHaveAttribute('aria-pressed', 'true');
+    const chart = page.locator('section[aria-labelledby="world-chart-heading"] .world-chart-wrap svg[role="img"]');
     await expect(chart).toBeVisible();
-    const readout = page.locator('.world-chart-wrap .m-line-readout');
+    const readout = page.locator('section[aria-labelledby="world-chart-heading"] .m-line-readout');
     const before = await readout.innerText();
     await chart.focus();
     await page.keyboard.press('ArrowLeft');
