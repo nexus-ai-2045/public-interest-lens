@@ -12,9 +12,9 @@ test.describe('/ranking（法律ランキング）', () => {
     await expect(rows.first()).toBeVisible();
     expect(leadingNumber(await page.locator('.laws-count').textContent())).toBeGreaterThan(0);
     // 検証を通った確かな額が無い間は、棒の代わりに空状態の説明を出す。確かな額が戻れば棒が出る。
-    const top = page.getByRole('region', { name: '額の大きい順' });
+    const top = page.getByRole('region', { name: /^国賊側：損失の大きい順$/ });
     await expect(top.locator('svg, [role="img"], ol, ul, .empty-state').first()).toBeVisible();
-    await expect(top.getByText('確かな額がまだ無いため、額の大きい順の棒は出していません。', { exact: false })).toBeVisible();
+    await expect(top.getByText('確かな額がまだ無いため、国賊側（損失）の棒は出していません。', { exact: false })).toBeVisible();
     expect(watch.dataUrls.some(url => url.endsWith('/distribution/laws.json'))).toBe(true);
     watch.expectClean();
   });

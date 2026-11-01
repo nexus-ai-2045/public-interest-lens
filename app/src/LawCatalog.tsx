@@ -43,7 +43,12 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
     return new URLSearchParams(window.location.search).has('sort') ? read : { ...read, sort: toneSort };
   });
   // 切り替えボタンを押したら、向きの並びに追従する（自分で新しい順などを選んでいる時は触らない）。
-  useEffect(() => { setQuery(current => ['amount', 'loss', 'benefit'].includes(current.sort) && current.sort !== toneSort ? { ...current, sort: toneSort } : current); }, [toneSort]);
+  const lastToneSort = useRef(toneSort);
+  useEffect(() => {
+    if (lastToneSort.current === toneSort) return; // 初回表示では、URL で指定された並びを上書きしない
+    lastToneSort.current = toneSort;
+    setQuery(current => ['amount', 'loss', 'benefit'].includes(current.sort) && current.sort !== toneSort ? { ...current, sort: toneSort } : current);
+  }, [toneSort]);
   const [limit, setLimit] = useState(PAGE);
   const [open, setOpen] = useState<string>(() => hashId());
   const [scrollTo, setScrollTo] = useState('');
