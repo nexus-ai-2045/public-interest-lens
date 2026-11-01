@@ -1,6 +1,7 @@
 """全体指標の参考の額（macro-v1）：保存済みの出力が、額か理由のどちらかを必ず持ち、額は OECD 表6 から同じ値に計算し直せる。"""
 import csv
 import unittest
+from pathlib import Path
 
 from scripts import build_macro_amounts as macro
 from scripts.source_check import Oecd, recompute
@@ -94,3 +95,17 @@ class EstimatedStartTest(unittest.TestCase):
         for r in estimated:
             if r["id"] in laws:
                 self.assertIn(f"施行日は{ESTIMATED}", laws[r["id"]]["notes"], r["id"])
+
+
+class TaxLedgerTest(unittest.TestCase):
+    """消費税率を変える法律は、税の帳簿に別の物差しがあるので産業の差の参考額を付けない（閣法-180-72 は帳簿 −18.9兆円に対し産業の差が ＋100.3兆円で符号が逆だった）。"""
+
+    def test_laws_in_tax_ledger_have_no_industry_gap_amount(self):
+        import csv
+        root = Path(__file__).resolve().parents[1]
+        with (root / "data/derived/tax-v1/consumption-tax.csv").open(encoding="utf-8", newline="") as f:
+            ledger_ids = {r["法律ID"] for r in csv.DictReader(f)}
+        with (root / "data/derived/macro-v1/macro.csv").open(encoding="utf-8", newline="") as f:
+            macro_rows = {r["id"]: r for r in csv.DictReader(f)}
+        for law_id in ledger_ids & set(macro_rows):
+            self.assertEqual(macro_rows[law_id]["結果"], "理由", law_id)
