@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 import time
 import tomllib
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
@@ -98,14 +99,27 @@ def check_output_collisions(outputs, inputs):
 
 def atomic_write_text(path, text):
     target = path.resolve()
-    temporary = pending_path(target)
     check_output_collisions([target], [])
+    if pending_path(target).exists():
+        raise TransferError('temporary_output_exists')
+    descriptor, name = tempfile.mkstemp(prefix='.' + target.name + '.', suffix='.pending', dir=target.parent)
+    temporary = Path(name)
+    created = None
     try:
-        with temporary.open('x', encoding='utf-8') as handle:
+        with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
+            status = os.fstat(handle.fileno())
+            created = status.st_dev, status.st_ino
             handle.write(text)
         temporary.replace(target)
-    except FileExistsError:
-        raise TransferError('temporary_output_exists') from None
+    except BaseException:
+        if created is not None:
+            try:
+                status = temporary.lstat()
+                if (status.st_dev, status.st_ino) == created:
+                    temporary.unlink()
+            except OSError:
+                pass
+        raise
 
 
 def check_output_paths(corpus_root, plan, outputs):

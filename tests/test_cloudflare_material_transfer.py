@@ -393,20 +393,64 @@ class MaterialTransferTests(unittest.TestCase):
         self.assertEqual(output.read_bytes(), b'previous output')
         self.assertEqual(stage.read_bytes(), b'unrelated stage fixture')
 
-    def test_writer_exclusive_creation_prevents_alias_created_after_validation(self):
+    def test_failed_replace_removes_owned_stage_and_allows_retry(self):
+        output = self.root / 'output.json'
+        output.write_bytes(b'previous output')
+        with patch.object(Path, 'replace', side_effect=PermissionError('locked')), self.assertRaises(PermissionError):
+            transfer.write_json(output, dict(new=True))
+        self.assertEqual(output.read_bytes(), b'previous output')
+        self.assertFalse(transfer.pending_path(output).exists())
+        self.assertEqual(list(self.root.glob('.output.json.*.pending')), [])
+        transfer.write_json(output, dict(new=True))
+        self.assertEqual(json.loads(output.read_text(encoding='utf-8')), dict(new=True))
+
+    def test_failed_write_removes_owned_stage_and_preserves_previous_output(self):
+        output = self.root / 'output.json'
+        output.write_bytes(b'previous output')
+        with self.assertRaises(UnicodeEncodeError):
+            transfer.atomic_write_text(output, '\ud800')
+        self.assertEqual(output.read_bytes(), b'previous output')
+        self.assertFalse(transfer.pending_path(output).exists())
+        self.assertEqual(list(self.root.glob('.output.json.*.pending')), [])
+
+    def test_cleanup_failure_preserves_original_replace_exception(self):
+        output = self.root / 'output.json'
+        with patch.object(Path, 'replace', side_effect=PermissionError('replace locked')), patch.object(Path, 'unlink', side_effect=OSError('cleanup locked')), self.assertRaisesRegex(PermissionError, '^replace locked$'):
+            transfer.write_json(output, dict(new=True))
+        self.assertEqual(len(list(self.root.glob('.output.json.*.pending'))), 1)
+
+    def test_failed_replace_preserves_stage_replaced_by_another_writer(self):
+        output = self.root / 'output.json'
+        output.write_bytes(b'previous output')
+        other = self.root / 'other.json'
+        other.write_bytes(b'unrelated stage fixture')
+        stages = []
+        def fail_after_replacement(path, target):
+            stages.append(path)
+            path.unlink()
+            os.link(other, path)
+            raise PermissionError('locked')
+        with patch.object(Path, 'replace', autospec=True, side_effect=fail_after_replacement), self.assertRaises(PermissionError):
+            transfer.write_json(output, dict(new=True))
+        self.assertEqual(output.read_bytes(), b'previous output')
+        self.assertEqual(stages[0].read_bytes(), b'unrelated stage fixture')
+        self.assertEqual(other.read_bytes(), b'unrelated stage fixture')
+
+    def test_unique_stage_preserves_shared_alias_created_after_validation(self):
         victim = self.root / 'victim.json'
         victim.write_bytes(b'private fixture')
         output = self.root / 'output.json'
         stage = output.with_suffix('.json.pending')
-        original_open = Path.open
-        def raced_open(path, *args, **kwargs):
-            if path == stage and not stage.exists():
+        original_create = transfer.tempfile.mkstemp
+        def raced_create(*args, **kwargs):
+            if not stage.exists():
                 os.link(victim, stage)
-            return original_open(path, *args, **kwargs)
-        with patch.object(Path, 'open', autospec=True, side_effect=raced_open), self.assertRaises(transfer.TransferError):
+            return original_create(*args, **kwargs)
+        with patch.object(transfer.tempfile, 'mkstemp', side_effect=raced_create):
             transfer.write_json(output, dict(new=True))
         self.assertEqual(victim.read_bytes(), b'private fixture')
-        self.assertFalse(output.exists())
+        self.assertEqual(stage.read_bytes(), b'private fixture')
+        self.assertEqual(json.loads(output.read_text(encoding='utf-8')), dict(new=True))
 
 
 class TokenProviderTests(unittest.TestCase):

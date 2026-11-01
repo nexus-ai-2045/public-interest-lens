@@ -452,7 +452,7 @@ class IndexTests(unittest.TestCase):
                     self.assertEqual(output.read_bytes(), b'previous output')
                     self.assertEqual(stage.read_bytes(), b'unrelated fixture stage')
 
-    def test_public_manifest_exclusive_stage_blocks_late_hardlink_to_receipt(self):
+    def test_public_manifest_unique_stage_preserves_late_shared_alias_to_receipt(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             victim = root / 'receipt.json'
@@ -460,16 +460,16 @@ class IndexTests(unittest.TestCase):
             victim.write_bytes(original)
             output = root / 'data' / 'cloudflare' / 'materials.json'
             stage = output.with_suffix('.json.pending')
-            original_open = Path.open
-            def raced_open(path, *args, **kwargs):
-                if path == stage and not stage.exists():
+            original_create = tempfile.mkstemp
+            def raced_create(*args, **kwargs):
+                if not stage.exists():
                     os.link(victim, stage)
-                return original_open(path, *args, **kwargs)
-            with patch.object(index, 'ROOT', root), patch.object(Path, 'open', autospec=True, side_effect=raced_open), self.assertRaises(index.TransferError):
+                return original_create(*args, **kwargs)
+            with patch.object(index, 'ROOT', root), patch.object(tempfile, 'mkstemp', side_effect=raced_create):
                 index.write_public_manifest(output, dict(safe=True))
             self.assertEqual(victim.read_bytes(), original)
             self.assertEqual(stage.read_bytes(), original)
-            self.assertFalse(output.exists())
+            self.assertEqual(json.loads(output.read_text(encoding='utf-8')), dict(safe=True))
 
 
 class FakeReadClient:
