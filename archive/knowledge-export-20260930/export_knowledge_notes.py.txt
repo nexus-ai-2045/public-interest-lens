@@ -1,0 +1,371 @@
+"""保存済み国会資料から、出典を保持した閲覧用ノートを有限生成する。"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+from html.parser import HTMLParser
+import json
+import os
+from pathlib import Path, PureWindowsPath
+import re
+import subprocess
+import sys
+import tempfile
+from datetime import date, datetime
+
+BILLS = ("bill-221-53", "bill-221-41", "bill-221-26")
+IDS = (*BILLS, "page-1")
+CHUNKS = ".local/data-content-rag-chunks-20260929.jsonl"
+START, ASOF = date(2022, 9, 24), date(2026, 9, 24)
+STAMP = "2026-09-29"
+UNKNOWN = "成立法本文・提出法案本文・修正案本文・個人別投票結果・実施結果・政策効果は未取得または未検証。個人の賛否・責任・採点へ昇格しない。"
+
+
+def digest(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def safe_path(root: Path, relative: str) -> Path:
+    """未信頼参照をroot内の実ファイルに束縛し、link/junctionも拒否する。"""
+    rel = Path(relative)
+    if rel.is_absolute() or PureWindowsPath(relative).is_absolute() or ".." in rel.parts or "\\" in relative:
+        raise ValueError("資料参照のディレクトリ脱出")
+    root = root.absolute()
+    target = root / rel
+    for node in (root, *root.parents, *[root.joinpath(*rel.parts[:i]) for i in range(1, len(rel.parts) + 1)]):
+        if node.is_symlink() or (hasattr(node, "is_junction") and node.is_junction()):
+            raise ValueError("symlink/junction参照は禁止")
+    if not target.resolve().is_relative_to(root.resolve()):
+        raise ValueError("資料参照が保存先外")
+    return target
+
+
+def timestamp(value: str) -> datetime:
+    dt = datetime.fromisoformat(value)
+    if dt.tzinfo is None or dt.utcoffset() is None:
+        raise ValueError("観測時刻には時差が必要")
+    return dt
+
+
+class Tables(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.tables = []
+        self.table = None
+        self.row = None
+        self.cell = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "table":
+            self.table = {"summary": dict(attrs).get("summary", ""), "line": self.getpos()[0], "rows": []}
+        elif tag == "tr" and self.table is not None:
+            self.row = []
+        elif tag in {"th", "td"} and self.row is not None:
+            self.cell = {"tag": tag, "text": "", "line": self.getpos()[0]}
+        elif tag == "br" and self.cell is not None:
+            self.cell["text"] += "\n"
+
+    def handle_data(self, data):
+        if self.cell is not None:
+            self.cell["text"] += data
+
+    def handle_endtag(self, tag):
+        if tag in {"th", "td"} and self.cell is not None:
+            self.cell["text"] = "\n".join(s.strip() for s in self.cell["text"].splitlines() if s.strip())
+            self.row.append(self.cell)
+            self.cell = None
+        elif tag == "tr" and self.row is not None:
+            self.table["rows"].append(self.row)
+            self.row = None
+        elif tag == "table" and self.table is not None:
+            self.tables.append(self.table)
+            self.table = None
+
+
+def event_date(text: str) -> str | None:
+    match = re.fullmatch(r"令和(元|\d+)年(\d+)月(\d+)日", text.strip())
+    if not match:
+        return None
+    try:
+        return date(2018 + (1 if match[1] == "元" else int(match[1])), int(match[2]), int(match[3])).isoformat()
+    except ValueError:
+        return None
+
+
+def bill_content(raw: bytes) -> dict:
+    parser = Tables()
+    parser.feed(raw.decode("utf-8-sig"))
+    submitted, title, body, locator = None, "", "", 0
+    progress = []
+    for table in parser.tables:
+        for row in table["rows"]:
+            if len(row) >= 2 and row[0]["text"] == "提出日":
+                submitted = event_date(row[1]["text"])
+            if len(row) >= 2 and row[0]["text"] == "件名":
+                title = row[1]["text"]
+        if table["summary"] == "議案要旨情報":
+            cells = [c for row in table["rows"] for c in row if c["tag"] == "td"]
+            if cells:
+                body, locator = cells[0]["text"], cells[0]["line"]
+        if "経過情報" in table["summary"] or table["summary"] == "その他の情報":
+            for row in table["rows"]:
+                if len(row) == 2:
+                    progress.append((table["summary"], row[0]["text"], row[1]["text"], row[1]["line"]))
+    reason = None
+    # タイトル・リンクのみのmetadataを、制度の要旨本文として数えない。
+    if len(re.sub(r"\s", "", body)) < 30 or not re.search(r"本法律案|本法案|一、|１[\s　]", body):
+        reason = "議案要旨本文なし（空またはメタデータのみ）"
+    elif submitted is None:
+        reason = "提出日不明"
+    elif not START <= date.fromisoformat(submitted) <= ASOF:
+        reason = "対象期間外"
+    return dict(title=title, body=body, locator=locator, event_date=submitted, progress=progress, held_reason=reason)
+
+
+def load_materials(source_root: Path) -> list[dict]:
+    rows = [json.loads(line) for line in safe_path(source_root, CHUNKS).read_text(encoding="utf-8-sig").splitlines() if line.strip()]
+    if len(rows) != 4 or {r["source_document_id"] for r in rows} != set(IDS):
+        raise ValueError("有限入力は指定4資料のみ")
+    result = []
+    for chunk in rows:
+        mid = chunk["source_document_id"]
+        if chunk["schema_version"] != "material-summary-chunk/v1" or chunk["chunk_id"] != mid + "-summary":
+            raise ValueError("要約ID/schema不一致")
+        note = safe_path(source_root, chunk["canonical_note"]).read_bytes()
+        if digest(note) != chunk["canonical_note_sha256"]:
+            raise ValueError("確認ノートハッシュ不一致")
+        normalized = re.sub(r"(?m)^#+\s*", "", note.decode("utf-8-sig").replace("\r\n", "\n"))
+        if chunk["text"].strip() not in normalized:
+            raise ValueError("要約本文が確認ノートと一致しない")
+        record_path = safe_path(source_root, chunk["source_record"])
+        record = json.loads(record_path.read_text(encoding="utf-8-sig"))
+        url = chunk["source_url"]
+        expected = f"https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221080221{mid.rsplit('-', 1)[-1].zfill(3)}.htm" if mid in BILLS else "https://kokkai.ndl.go.jp/api/speech?sessionFrom=1&sessionTo=1&startRecord=1&maximumRecords=1&recordPacking=json"
+        if url != expected or record["source_url"] != url or record["task_id"] != mid:
+            raise ValueError("資料ID/公式URL/登録記録不一致")
+        timestamp(chunk["source_observed_at"])
+        if record["observed_at"] != chunk["source_observed_at"]:
+            raise ValueError("取得時刻不一致")
+        raw_path = safe_path(source_root, (record_path.parent / record["saved_filename"]).relative_to(source_root).as_posix())
+        raw = raw_path.read_bytes()
+        if digest(raw) != chunk["source_sha256"] or record["sha256"] != digest(raw) or record["bytes"] != len(raw):
+            raise ValueError("原本ハッシュ/サイズ不一致")
+        item = dict(id=mid, url=url, sha256=digest(raw), observed_at=record["observed_at"], raw_path=raw_path, summary=chunk["text"], note_sha256=digest(note))
+        if mid in BILLS:
+            item.update(bill_content(raw))
+        else:
+            payload = json.loads(raw)
+            speech = payload.get("speechRecord", [])
+            if len(speech) != 1 or speech[0].get("imageKind") != "附録" or any(speech[0].get(k) is not None for k in ("speech", "speaker", "date")):
+                raise ValueError("NDL欠落fixtureの形が変更された")
+            item.update(title="NDL附録メタデータ", body="", locator=1, event_date=None, held_reason="附録・発言本文なし・発言者と日時不明")
+        result.append(item)
+    return sorted(result, key=lambda r: IDS.index(r["id"]))
+
+
+def front(title: str, kind: str) -> str:
+    return f"---\ntitle: {json.dumps(title, ensure_ascii=False)}\ntype: {kind}\ncreated: {STAMP}\nupdated: {STAMP}\ntags: [国会資料, 出典付き, 未検証]\n---\n\n# {title}\n\n"
+
+
+def render(materials: list[dict]) -> dict[str, bytes]:
+    readable = sum(m["held_reason"] is None for m in materials if m["id"] in BILLS)
+    index = front("保存済み国会資料一覧", "project")
+    index += f"対象: 研究開発・行政データ活用。期間: {START}〜{ASOF}（提出日で判定）。資料観測時刻とは区別する。\n\n| 指標 | 件数 |\n|---|---|\n| 保存レコード数 | {len(materials)} |\n| 読める政策資料本文数 | {readable} |\n| 読める発言本文数 | 0 |\n| 個人の行動評価に使える確認済み根拠数 | 0 |\n\n"
+    files = {}
+    for m in materials:
+        if m["id"] not in BILLS:
+            index += f"- 国立国会図書館（`NDL`）附録: {m['held_reason']}。欠落テスト用に原本を保全。本文検索対象外。\n"
+            continue
+        name = f"references/{m['id']}.md"
+        index += f"- [{m['title'] or m['id']}](references/{m['id']}.md): {m['held_reason'] or '議案要旨・審議経過まで'}\n"
+        text = front(m["title"] or m["id"], "reference")
+        text += f"資料識別子（`ID`）: `{m['id']}`\n\n[公式出典]({m['url']})\n\n提出日: {m['event_date'] or '不明'}\n資料観測時刻: `{m['observed_at']}`\n原本ハッシュ（`SHA-256`）: `{m['sha256']}`\n要約正本ハッシュ（`SHA-256`）: `{m['note_sha256']}`\n引用位置: 保存`HTML` {m['locator']}行（議案要旨の本文セル）\n\n"
+        if m["held_reason"]:
+            text += f"## 保留\n\n{m['held_reason']}。通常の本文検索・成功件数へ昇格しない。\n\n"
+        else:
+            # 原本登録の私的リンク段落は丸ごと除去する。本文要約は正本との束縛済み。
+            summary = re.split(r"(?m)^原本:", m["summary"], maxsplit=1)[0].strip()
+            text += "## 確認済み要約\n\n" + summary + "\n\n## 保存ページの審議経過\n\n"
+            for section, label, value, line in m["progress"]:
+                text += f"- {section} / {label}: {value or '記載なし'}（保存`HTML` {line}行）\n"
+        text += f"\n## 未確認点\n\n{UNKNOWN}\n\n本文の読解と内容の正しさ・政策効果の検証は別。現時点で収集経路全体の受入は未達。\n"
+        if re.search('|'.join((r"(?<![A-Za-z])[A-Za-z]:[/\\]", "file://", "/Users" + "/", "/home" + "/", r"\.local/")), text):
+            raise ValueError("Vault出力に私的パスを検出")
+        files[name] = text.encode("utf-8")
+    index += f"\n## 欠落と次に必要な資料\n\n{UNKNOWN}\n\n追加取得は別承認。国立国会図書館（`NDL`）経路の受入には目的・期間に合う読める発言本文1件以上、公式出典、日時、観測時刻、ハッシュ、引用位置が必要。保存件数を収集成功と扱わない。\n\n[[考察・疑問]]は人が編集するノート。\n"
+    files["資料一覧.md"] = index.encode("utf-8")
+    return files
+
+
+def atomic_write(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=".knowledge-export-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def export(source_root: Path, output_dir: Path, *, dry_run=False, state_dir: Path | None = None) -> dict:
+    source_root, output_dir = source_root.absolute(), output_dir.absolute()
+    safe_path(output_dir, "references")
+    if output_dir.resolve().is_relative_to(source_root.resolve()) or source_root.resolve().is_relative_to(output_dir.resolve()):
+        raise ValueError("出力先は原本repoと分離する")
+    state_dir = (state_dir or source_root / ".local/knowledge/diet-export-state").absolute()
+    state = safe_path(source_root, state_dir.relative_to(source_root).as_posix() + "/state.json")
+    if not state_dir.resolve().is_relative_to((source_root / ".local/knowledge").resolve()):
+        raise ValueError("stateは非公開knowledge配下に限定")
+    materials = load_materials(source_root)
+    files = render(materials)
+    state_before = state.read_bytes() if state.exists() else None
+    old_state = json.loads(state_before) if state_before is not None else {"files": {}}
+    if old_state.get("output_dir", str(output_dir)) != str(output_dir):
+        raise ValueError("stateの出力先不一致")
+    if set(old_state["files"]) - set(files):
+        raise ValueError("stateに未知の生成対象")
+    before, actions = {}, []
+    for name, data in files.items():
+        target = safe_path(output_dir, name)
+        prior = target.read_bytes() if target.exists() else None
+        if prior is not None and digest(prior) != old_state["files"].get(name):
+            raise ValueError(f"生成対象に人の編集または未知ファイル: {name}")
+        if prior is None and name in old_state["files"]:
+            raise ValueError(f"前回生成ファイルの欠落: {name}")
+        before[name] = prior
+        actions.append({"path": name, "action": "unchanged" if prior == data else "create" if prior is None else "update", "sha256": digest(data)})
+    memo = safe_path(output_dir, "考察・疑問.md")
+    create_memo = not memo.exists()
+    result = {"status": "dry-run" if dry_run else "written", "counts": {"saved_records": 4, "readable_policy_texts": sum(m['held_reason'] is None for m in materials if m['id'] in BILLS), "readable_speeches": 0, "personal_action_evidence": 0}, "planned": actions, "memo": "create" if create_memo else "preserve", "collection_acceptance": "unmet"}
+    if dry_run:
+        return result
+    changed = []
+    memo_created = False
+    state_written = False
+    memo_data = (front("考察・疑問", "project") + "資料から確認できたこと、疑問、次に照合したい出典を記入する。生成処理はこのノートを上書きしない。\n").encode("utf-8")
+    try:
+        for name, data in files.items():
+            if before[name] != data:
+                # 直前にも比較し、検証後に加わった編集を上書きしない。
+                target = safe_path(output_dir, name)
+                current = target.read_bytes() if target.exists() else None
+                if current != before[name]:
+                    raise ValueError("書込前に出力が変更された")
+                changed.append(name)
+                atomic_write(target, data)
+        if create_memo:
+            memo.parent.mkdir(parents=True, exist_ok=True)
+            with memo.open("xb") as stream:
+                memo_created = True
+                stream.write(memo_data)
+        for name, data in files.items():
+            if safe_path(output_dir, name).read_bytes() != data:
+                raise ValueError("書込後の読み戻し不一致")
+        if create_memo and not memo.read_bytes():
+            raise ValueError("考察ノートの読み戻し失敗")
+        state_data = (json.dumps({"schema_version": "knowledge-export-state/v1", "output_dir": str(output_dir), "files": {name: digest(data) for name, data in files.items()}}, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+        state_written = True
+        atomic_write(state, state_data)
+        if state.read_bytes() != state_data:
+            raise ValueError("state読み戻し不一致")
+    except Exception as failure:
+        conflicts = []
+        def restore_if_owned(target, written, previous):
+            current = target.read_bytes() if target.exists() else None
+            if current == previous:
+                return
+            if current != written:
+                conflicts.append(target.name)
+                return
+            if previous is None:
+                target.unlink()
+            else:
+                atomic_write(target, previous)
+        for name in reversed(changed):
+            target = safe_path(output_dir, name)
+            restore_if_owned(target, files[name], before[name])
+        if memo_created:
+            restore_if_owned(memo, memo_data, None)
+        if state_written:
+            restore_if_owned(state, state_data, state_before)
+        if conflicts:
+            raise ValueError("rollback incomplete: 外部編集を保全: " + ", ".join(conflicts)) from failure
+        raise
+    return result
+
+
+def resolve(source_root: Path, material_id: str) -> dict:
+    for m in load_materials(source_root.absolute()):
+        if m["id"] == material_id:
+            return {"material_id": material_id, "original_path": str(m["raw_path"]), "line": m["locator"], "source_url": m["url"], "observed_at": m["observed_at"], "sha256": m["sha256"], "held_reason": m["held_reason"]}
+    raise ValueError("指定有限入力に資料IDなし")
+
+
+def query(source_root: Path, output_dir: Path, helper: Path, phrase: str) -> dict:
+    materials = {m["id"]: m for m in load_materials(source_root.absolute())}
+    # queryでも現在入力との完全一致を検証する（state更新・書込なし）。
+    expected = render(list(materials.values()))
+    for name, data in expected.items():
+        if safe_path(output_dir.absolute(), name).read_bytes() != data:
+            raise ValueError("検索対象が現在の入力と一致しない")
+    if not phrase.strip():
+        raise ValueError("検索語が空")
+    root = safe_path(output_dir.absolute(), "references")
+    proc = subprocess.run([sys.executable, "-X", "utf8", str(helper), re.escape(phrase), "--root", str(root), "--limit", "40", "--json"], capture_output=True, text=True, encoding="utf-8", check=False, timeout=30)
+    if proc.returncode:
+        raise ValueError("既存全文検索が失敗: " + proc.stderr[-500:])
+    hits = []
+    for hit in json.loads(proc.stdout):
+        if hit["path"] not in {mid + ".md" for mid in BILLS}:
+            continue
+        path = safe_path(root, hit["path"])
+        m = materials.get(path.stem)
+        if m is None or path.suffix != ".md" or m["held_reason"]:
+            continue
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if not isinstance(hit["line"], int) or not 1 <= hit["line"] <= len(lines) or hit["text"] != lines[hit["line"] - 1].strip() or phrase not in hit["text"]:
+            raise ValueError("検索hitの行・本文がノートと一致しない")
+        hits.append({**hit, "source": {k: m[k] for k in ("id", "url", "observed_at", "sha256", "locator")}, "unknowns": UNKNOWN})
+    return {"status": "matched" if hits else "unknown", "hits": hits, "limitation": "文字列一致の全文検索。言い換え・意味検索は未接続。ヒットは質問への回答の確定ではない。"}
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description="保存国会資料の出典付きノート生成・原本照合・限定全文検索")
+    sub = parser.add_subparsers(dest="command", required=True)
+    for cmd in ("export", "resolve", "query"):
+        p = sub.add_parser(cmd)
+        p.add_argument("--source-root", required=True, type=Path)
+        if cmd != "resolve":
+            p.add_argument("--output-dir", required=True, type=Path)
+        if cmd == "export":
+            p.add_argument("--dry-run", action="store_true")
+            p.add_argument("--state-dir", type=Path)
+        elif cmd == "resolve":
+            p.add_argument("--material-id", required=True, choices=IDS)
+        else:
+            p.add_argument("--helper-path", required=True, type=Path)
+            p.add_argument("--query", required=True)
+    args = parser.parse_args(argv)
+    try:
+        if args.command == "export":
+            result = export(args.source_root, args.output_dir, dry_run=args.dry_run, state_dir=args.state_dir)
+        elif args.command == "resolve":
+            result = resolve(args.source_root, args.material_id)
+        else:
+            result = query(args.source_root, args.output_dir, args.helper_path, args.query)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+        print(json.dumps({"status": "failed", "error": str(exc)}, ensure_ascii=False), file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
+    raise SystemExit(main())
