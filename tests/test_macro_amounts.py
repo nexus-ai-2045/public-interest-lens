@@ -101,11 +101,13 @@ class TaxLedgerTest(unittest.TestCase):
     """消費税率を変える法律は、税の帳簿に別の物差しがあるので産業の差の参考額を付けない（閣法-180-72 は帳簿 −18.9兆円に対し産業の差が ＋100.3兆円で符号が逆だった）。"""
 
     def test_laws_in_tax_ledger_have_no_industry_gap_amount(self):
-        import csv
-        root = Path(__file__).resolve().parents[1]
-        with (root / "data/derived/tax-v1/consumption-tax.csv").open(encoding="utf-8", newline="") as f:
+        with macro.TAX_LEDGER.open(encoding="utf-8", newline="") as f:
             ledger_ids = {r["法律ID"] for r in csv.DictReader(f)}
-        with (root / "data/derived/macro-v1/macro.csv").open(encoding="utf-8", newline="") as f:
+        with macro.OUT.open(encoding="utf-8", newline="") as f:
             macro_rows = {r["id"]: r for r in csv.DictReader(f)}
-        for law_id in ledger_ids & set(macro_rows):
+        # 税の帳簿の3本のうち、macro の対象になるもの（閣法-189-3 は国の収支の額で、対象外）と、地方税の対
+        for law_id in ("閣法-180-72", "閣法-192-3", *macro.TAX_LEDGER_COMPANIONS):
+            self.assertIn(law_id, macro_rows)
             self.assertEqual(macro_rows[law_id]["結果"], "理由", law_id)
+        self.assertEqual(macro_rows["閣法-180-72"]["理由"], macro.TAX_LEDGER_REASON)
+        self.assertIn("閣法-180-72", ledger_ids)
