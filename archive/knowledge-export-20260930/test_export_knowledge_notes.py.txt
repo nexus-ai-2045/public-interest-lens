@@ -1,0 +1,231 @@
+"""有限資料生成の実失敗経路と人編集保護を検証する。"""
+import json
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+
+from scripts import export_knowledge_notes as export
+
+
+class KnowledgeExportTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.source = self.root / "source"
+        self.output = self.root / "vault" / "notes"
+        self.source.mkdir()
+        self.build()
+
+    def build(self, *, date_text="令和8年3月31日", body="本法律案の主な内容は次のとおりである。一、行政財産は無償ではなく有償化する。", metadata_change=None):
+        chunks = []
+        note_parts = []
+        for mid in export.IDS:
+            is_bill = mid in export.BILLS
+            raw = (f'<table summary="議案審議情報一覧"><tr><th>件名</th><td>架空の制度変更資料</td></tr><tr><th>提出日</th><td>{date_text}</td></tr></table>\n<table summary="参議院本会議経過情報"><tr><th>議決日</th><td>令和8年7月13日</td></tr><tr><th>議決</th><td>可決</td></tr></table>\n<table summary="議案要旨情報"><tr><th>議案要旨</th></tr><tr><td>{body}</td></tr></table>' if is_bill else json.dumps({"speechRecord": [{"imageKind": "附録", "speech": None, "speaker": None, "date": None}]}, ensure_ascii=False)).encode("utf-8")
+            url = f"https://www.sangiin.go.jp/japanese/joho1/kousei/gian/221/meisai/m221080221{mid.rsplit('-', 1)[-1].zfill(3)}.htm" if is_bill else "https://kokkai.ndl.go.jp/api/speech?sessionFrom=1&sessionTo=1&startRecord=1&maximumRecords=1&recordPacking=json"
+            folder = self.source / ".local/materials" / mid
+            folder.mkdir(parents=True, exist_ok=True)
+            filename = "original.html" if is_bill else "original.json"
+            (folder / filename).write_bytes(raw)
+            record = dict(task_id=mid, source_url=url, observed_at="2026-09-24T01:00:00+09:00", saved_filename=filename, sha256=export.digest(raw), bytes=len(raw))
+            (folder / "record.json").write_text(json.dumps(record), encoding="utf-8")
+            summary = f"{mid}: 架空の回帰テスト要約\n行政財産の貸付けを有償化する。\n原本: 私的リンクを載せない。\n"
+            note_parts.append("## " + summary)
+            chunks.append(dict(schema_version="material-summary-chunk/v1", chunk_id=mid + "-summary", source_document_id=mid, source_url=url, source_sha256=export.digest(raw), source_observed_at=record["observed_at"], source_record=(folder / "record.json").relative_to(self.source).as_posix(), canonical_note=".local/knowledge/confirmed.md", text=summary))
+        note = "\n".join(note_parts).encode("utf-8")
+        note_path = self.source / ".local/knowledge/confirmed.md"
+        note_path.parent.mkdir(parents=True, exist_ok=True)
+        note_path.write_bytes(note)
+        for chunk in chunks:
+            chunk["canonical_note_sha256"] = export.digest(note)
+        if metadata_change:
+            metadata_change(chunks)
+        self.chunks = chunks
+        self.write_chunks()
+
+    def write_chunks(self):
+        (self.source / export.CHUNKS).write_text("\n".join(json.dumps(c, ensure_ascii=False) for c in self.chunks), encoding="utf-8")
+
+    def test_dry_run_writes_nothing_and_counts(self):
+        before = sorted(p.relative_to(self.root).as_posix() for p in self.root.rglob("*"))
+        result = export.export(self.source, self.output, dry_run=True)
+        self.assertEqual(result["counts"], dict(saved_records=4, readable_policy_texts=3, readable_speeches=0, personal_action_evidence=0))
+        self.assertEqual(before, sorted(p.relative_to(self.root).as_posix() for p in self.root.rglob("*")))
+
+    def test_dates_attribution_and_private_links_absent(self):
+        export.export(self.source, self.output)
+        for mid in export.BILLS:
+            text = (self.output / f"references/{mid}.md").read_text(encoding="utf-8")
+            self.assertIn("提出日: 2026-03-31", text)
+            self.assertIn("2026-09-24T01:00:00+09:00", text)
+            self.assertIn(self.chunks[export.IDS.index(mid)]["source_sha256"], text)
+            self.assertIn("保存`HTML` 3行", text)
+            self.assertNotIn("私的リンク", text)
+        self.assertFalse((self.output / "references/page-1.md").exists())
+
+    def test_idempotent_and_human_memo_preserved(self):
+        export.export(self.source, self.output)
+        memo = self.output / "考察・疑問.md"
+        memo.write_text("人が追記した疑問", encoding="utf-8")
+        result = export.export(self.source, self.output)
+        self.assertTrue(all(p["action"] == "unchanged" for p in result["planned"]))
+        self.assertEqual(memo.read_text(encoding="utf-8"), "人が追記した疑問")
+
+    def test_edited_generated_note_stops_before_write(self):
+        export.export(self.source, self.output)
+        target = self.output / "references/bill-221-41.md"
+        target.write_text("人の追記", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "人の編集"):
+            export.export(self.source, self.output)
+        self.assertEqual(target.read_text(encoding="utf-8"), "人の追記")
+
+    def test_unknown_existing_target_collision(self):
+        self.output.mkdir(parents=True)
+        (self.output / "資料一覧.md").write_text("人のノート", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "未知ファイル"):
+            export.export(self.source, self.output)
+        self.assertFalse((self.output / "references").exists())
+
+    def test_hash_mismatch_stops(self):
+        self.chunks[0]["source_sha256"] = "0" * 64
+        self.write_chunks()
+        with self.assertRaisesRegex(ValueError, "原本ハッシュ"):
+            export.export(self.source, self.output)
+        self.assertFalse(self.output.exists())
+
+    def test_note_hash_and_summary_binding(self):
+        self.chunks[0]["canonical_note_sha256"] = "0" * 64
+        self.write_chunks()
+        with self.assertRaisesRegex(ValueError, "ノートハッシュ"):
+            export.load_materials(self.source)
+        self.build()
+        self.chunks[0]["text"] = "正本にない要約"
+        self.write_chunks()
+        with self.assertRaisesRegex(ValueError, "要約本文"):
+            export.load_materials(self.source)
+
+    def test_observed_at_without_timezone(self):
+        self.chunks[0]["source_observed_at"] = "2026-09-24T01:00:00"
+        self.write_chunks()
+        with self.assertRaisesRegex(ValueError, "時差"):
+            export.load_materials(self.source)
+
+    def test_record_id_mismatch(self):
+        path = self.source / self.chunks[0]["source_record"]
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["task_id"] = "different"
+        path.write_text(json.dumps(data), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "登録記録"):
+            export.load_materials(self.source)
+
+    def test_escape_rejected(self):
+        self.chunks[0]["source_record"] = "../outside.json"
+        self.write_chunks()
+        with self.assertRaisesRegex(ValueError, "脱出"):
+            export.load_materials(self.source)
+
+    def test_empty_metadata_unknown_date_outside_period(self):
+        for kwargs, reason in [({"body": ""}, "本文なし"), ({"body": "タイトルとPDFリンクのみ"}, "本文なし"), ({"date_text": "unknown"}, "提出日不明"), ({"date_text": "令和3年9月23日"}, "対象期間外")]:
+            with self.subTest(kwargs=kwargs):
+                self.build(**kwargs)
+                result = export.export(self.source, self.output, dry_run=True)
+                self.assertEqual(result["counts"]["readable_policy_texts"], 0)
+                self.assertTrue(all(reason in m["held_reason"] for m in export.load_materials(self.source)[:3]))
+
+    def test_two_file_write_failure_rolls_back_new_export(self):
+        real_write = export.atomic_write
+        count = 0
+        def failure(path, data):
+            nonlocal count
+            count += 1
+            if count == 2:
+                raise OSError("injected write failure")
+            real_write(path, data)
+        with patch.object(export, "atomic_write", side_effect=failure):
+            with self.assertRaisesRegex(OSError, "injected"):
+                export.export(self.source, self.output)
+        self.assertEqual(list(self.output.rglob("*.md")), [])
+        self.assertFalse((self.source / ".local/knowledge/diet-export-state/state.json").exists())
+
+    def test_update_failure_preserves_previous_notes_and_state(self):
+        export.export(self.source, self.output)
+        before = {p: p.read_bytes() for p in self.output.rglob("*.md")}
+        state = self.source / ".local/knowledge/diet-export-state/state.json"
+        prior_state = state.read_bytes()
+        self.build(date_text="令和8年4月1日")
+        real_write = export.atomic_write
+        count = 0
+        def failure(path, data):
+            nonlocal count
+            count += 1
+            if count == 2:
+                raise OSError("injected update failure")
+            real_write(path, data)
+        with patch.object(export, "atomic_write", side_effect=failure):
+            with self.assertRaises(OSError):
+                export.export(self.source, self.output)
+        self.assertEqual(before, {p: p.read_bytes() for p in self.output.rglob("*.md")})
+        self.assertEqual(state.read_bytes(), prior_state)
+
+    def test_readback_failure_not_success(self):
+        real_write = export.atomic_write
+        def corrupt(path, data):
+            real_write(path, data + b"corrupt")
+        with patch.object(export, "atomic_write", side_effect=corrupt):
+            with self.assertRaisesRegex(ValueError, "rollback incomplete"):
+                export.export(self.source, self.output)
+        self.assertFalse((self.source / ".local/knowledge/diet-export-state/state.json").exists())
+
+    def test_separate_output_states_deterministic(self):
+        export.export(self.source, self.output)
+        other = self.root / "other-vault"
+        export.export(self.source, other, state_dir=self.source / ".local/knowledge/second-state")
+        self.assertEqual({p.relative_to(self.output).as_posix(): p.read_bytes() for p in self.output.rglob("*.md")}, {p.relative_to(other).as_posix(): p.read_bytes() for p in other.rglob("*.md")})
+
+    def test_resolve_read_only(self):
+        self.assertEqual(export.resolve(self.source, "bill-221-41")["line"], 3)
+        self.assertFalse(self.output.exists())
+
+    def test_query_helper_limited_to_references_and_unknown(self):
+        export.export(self.source, self.output)
+        helper = self.root / "helper.py"
+        helper.write_text("import json,sys\nfrom pathlib import Path\nroot=Path(sys.argv[sys.argv.index('--root')+1])\nassert root.name=='references'\nlines=(root/'bill-221-41.md').read_text(encoding='utf-8').splitlines()\nhits=[{'path':'bill-221-41.md','line':i+1,'text':line.strip()} for i,line in enumerate(lines) if '有償化' in line]\nprint(json.dumps(hits,ensure_ascii=False))", encoding="utf-8")
+        result = export.query(self.source, self.output, helper, "有償化")
+        self.assertEqual(result["status"], "matched")
+        self.assertEqual(result["hits"][0]["source"]["id"], "bill-221-41")
+        helper.write_text("print('[]')", encoding="utf-8")
+        self.assertEqual(export.query(self.source, self.output, helper, "経済効果いくら")["status"], "unknown")
+
+    def test_rollback_preserves_concurrent_note_and_memo_edits(self):
+        real_write = export.atomic_write
+        def fail_state(path, data):
+            if path.name == "state.json":
+                (self.output / "references/bill-221-41.md").write_text("別writerの追記", encoding="utf-8")
+                (self.output / "考察・疑問.md").write_text("人の疑問", encoding="utf-8")
+                raise OSError("state write failed")
+            real_write(path, data)
+        with patch.object(export, "atomic_write", side_effect=fail_state):
+            with self.assertRaisesRegex(ValueError, "rollback incomplete"):
+                export.export(self.source, self.output)
+        self.assertEqual((self.output / "references/bill-221-41.md").read_text(encoding="utf-8"), "別writerの追記")
+        self.assertEqual((self.output / "考察・疑問.md").read_text(encoding="utf-8"), "人の疑問")
+
+    def test_unknown_hit_cannot_inherit_official_attribution(self):
+        export.export(self.source, self.output)
+        helper = self.root / "helper.py"
+        helper.write_text("import json\nprint(json.dumps([{'path':'unknown/bill-221-41.md','line':1,'text':'有償化'}]))", encoding="utf-8")
+        self.assertEqual(export.query(self.source, self.output, helper, "有償化")["status"], "unknown")
+
+    def test_https_allowed_local_drive_link_rejected(self):
+        notes = export.render(export.load_materials(self.source))
+        self.assertIn(b"https://www.sangiin.go.jp", notes['references/bill-221-41.md'])
+        data = export.load_materials(self.source)
+        data[0]["summary"] = "悪いリンク C:/example/private\n"
+        with self.assertRaisesRegex(ValueError, "私的パス"):
+            export.render(data)
+
+
+if __name__ == "__main__":
+    unittest.main()
