@@ -3,7 +3,8 @@
   "min_agreement": 0.9,
   "max_miss_rate": 0.05,
   "max_false_alarm_rate": 0.15,
-  "min_samples": 100
+  "min_samples": 100,
+  "min_truth_pass": 10
  },
  "flag_violations": {
   "narrow_whole_economy": 0,
