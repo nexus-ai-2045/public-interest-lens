@@ -56,8 +56,11 @@ def run_one(name: str) -> tuple[str, int, str, float]:
     env = dict(os.environ)
     env["PYTHONPATH"] = os.pathsep.join([str(TESTS), env.get("PYTHONPATH", "")]).rstrip(os.pathsep)
     t0 = time.time()
+    # モジュール単位は discover で回す（import 時の SkipTest を discover と同じく skip 扱いにするため）。試験 ID は名前指定
+    cmd = [sys.executable, "-m", "unittest", "-v", name] if name.count(".") >= 2 else [
+        sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", f"{name}.py", "-v"]
     proc = subprocess.run(
-        [sys.executable, "-m", "unittest", "-v", name],
+        cmd,
         cwd=ROOT, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     return name, proc.returncode, proc.stdout + proc.stderr, time.time() - t0
