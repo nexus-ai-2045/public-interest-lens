@@ -32,7 +32,8 @@ jobs:
       # CSV（speeches・industry_va）に頼るテストは tests/data_gated_tests.txt の分だけ skip される。一覧に無い skip は赤
       # 計算式のバックテスト：毎回今のデータで測り直し、結果をログに出す（定義は docs/adr/0020）
       - run: python scripts/backtest.py
-      - run: python -m unittest discover -s tests -v
+      # 試験は1本も外さず、tests/test_*.py を CPU の数だけ並列に回す（直列では約6分）。試験1件ずつ分けるモジュールは scripts/run_tests_parallel.py の PER_TEST
+      - run: python scripts/run_tests_parallel.py
       - run: npm test
         working-directory: app
       - run: npm run build
