@@ -81,8 +81,27 @@ def _build_url(
     return f"{BASE_URL}/{endpoint}?{params}"
 
 
+def _page_records(data, endpoint):
+    key = ENDPOINT_RECORD_KEYS[endpoint]
+    if key not in data and (
+        type(data.get("numberOfRecords")) is int
+        and data["numberOfRecords"] == 0
+        and type(data.get("numberOfReturn")) is int
+        and data["numberOfReturn"] == 0
+        and type(data.get("startRecord")) is int
+        and data["startRecord"] == 1
+        and "nextRecordPosition" in data
+        and data["nextRecordPosition"] is None
+    ):
+        return []
+    records = data.get(key)
+    if not isinstance(records, list):
+        raise ValueError("invalid record collection")
+    return records
+
+
 def _validate_page(data, endpoint, start, maximum, reported, seen):
-    records = data.get(ENDPOINT_RECORD_KEYS[endpoint])
+    records = _page_records(data, endpoint)
     total = data.get("numberOfRecords")
     next_record = data.get("nextRecordPosition")
     if (
@@ -413,11 +432,14 @@ def collect_pages(
         readable = sum(
             _readable_body_count(
                 endpoint,
-                json.loads(
-                    (
-                        output_dir / "pages" / f"{entry['start_record']:09d}.json"
-                    ).read_text(encoding="utf-8")
-                )[ENDPOINT_RECORD_KEYS[endpoint]],
+                _page_records(
+                    json.loads(
+                        (
+                            output_dir / "pages" / f"{entry['start_record']:09d}.json"
+                        ).read_text(encoding="utf-8")
+                    ),
+                    endpoint,
+                ),
             )
             for entry in checkpoint["pages"]
         )
@@ -569,11 +591,14 @@ def collect_pages(
         "readable_body_count": sum(
             _readable_body_count(
                 endpoint,
-                json.loads(
-                    (
-                        output_dir / "pages" / f"{entry['start_record']:09d}.json"
-                    ).read_text(encoding="utf-8")
-                )[ENDPOINT_RECORD_KEYS[endpoint]],
+                _page_records(
+                    json.loads(
+                        (
+                            output_dir / "pages" / f"{entry['start_record']:09d}.json"
+                        ).read_text(encoding="utf-8")
+                    ),
+                    endpoint,
+                ),
             )
             for entry in pages
         ),
