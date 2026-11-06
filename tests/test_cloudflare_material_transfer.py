@@ -2,6 +2,7 @@ import contextlib
 import hashlib
 import io
 import json
+import os
 import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
@@ -202,12 +203,9 @@ class MaterialTransferTests(unittest.TestCase):
         folder = self.record()
         record_path = folder / 'record.json'
         original = record_path.read_bytes()
-        alias = self.root / 'alias.json'
-        alias.symlink_to(record_path)
         receipt = self.root / 'receipt.json'
         cases = (
             ['--plan-output', str(record_path), '--write', '--plan-only'],
-            ['--plan-output', str(alias), '--write', '--plan-only'],
             ['--plan-output', str(self.root / 'new' / 'record.json'), '--write', '--plan-only'],
             ['--plan-output', str(receipt), '--receipt-output', str(receipt), '--write'],
             ['--plan-output', str(receipt) + '.pending', '--receipt-output', str(receipt), '--write'],
@@ -221,6 +219,24 @@ class MaterialTransferTests(unittest.TestCase):
                 self.assertEqual(record_path.read_bytes(), original)
                 self.assertFalse(receipt.exists())
 
+    def test_output_symlink_to_input_is_rejected_before_write(self):
+        folder = self.record()
+        record_path = folder / 'record.json'
+        original = record_path.read_bytes()
+        alias = self.root / 'alias.json'
+        try:
+            alias.symlink_to(record_path)
+        except OSError as error:
+            if getattr(error, 'winerror', None) == 1314:
+                self.skipTest('symlink_creation_not_permitted')
+            raise
+        with patch.object(transfer, 'R2Client', side_effect=AssertionError), contextlib.redirect_stdout(io.StringIO()) as output:
+            result = transfer.main(['--corpus-root', str(self.root), '--account-id', 'a'*32, '--bucket', 'private-test', '--credential-file', str(self.root / 'credential.toml'), '--plan-output', str(alias), '--write', '--plan-only'])
+        self.assertEqual(result, 1)
+        self.assertEqual(json.loads(output.getvalue())['errorCode'], 'output_path_conflict')
+        self.assertEqual(record_path.read_bytes(), original)
+        self.assertTrue(alias.is_symlink())
+
     def test_credential_query_keys_are_rejected(self):
         folder = self.record()
         path = folder / 'record.json'
@@ -231,6 +247,210 @@ class MaterialTransferTests(unittest.TestCase):
                 path.write_text(json.dumps(record))
                 with self.assertRaises(transfer.TransferError):
                     transfer.build_plan(self.root)
+
+    def test_plan_output_cannot_replace_corpus_record_or_original(self):
+        folder = self.record()
+        for name in ('record.json', 'original.pdf'):
+            target = folder / name
+            before = target.read_bytes()
+            with self.subTest(name=name), patch.object(transfer, 'OAuthTokenProvider', side_effect=AssertionError), contextlib.redirect_stdout(io.StringIO()):
+                result = transfer.main(['--corpus-root', str(self.root), '--account-id', 'a'*32, '--bucket', 'private-test', '--credential-file', str(self.root / 'credential.toml'), '--plan-output', str(target), '--write', '--plan-only'])
+            self.assertEqual(result, 1)
+            self.assertEqual(target.read_bytes(), before)
+
+    def test_plan_receipt_and_credential_collisions_stop_before_any_write_or_client(self):
+        self.record()
+        output = self.root / 'plan.json'
+        stage = output.with_suffix('.json.pending')
+        credential = self.root / 'credential.toml.pending'
+        credential.write_bytes(b'private fixture credential')
+        cases = [(output, output, credential), (output, stage, credential), (stage, output, credential), (self.root / 'credential.toml', self.root / 'receipt.json', credential)]
+        for plan_path, receipt_path, credential_path in cases:
+            with self.subTest(plan=plan_path.name, receipt=receipt_path.name):
+                plan_path.write_bytes(b'previous plan')
+                if receipt_path != plan_path:
+                    receipt_path.write_bytes(b'previous receipt')
+                before = {path: path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
+                with patch.object(transfer, 'OAuthTokenProvider') as provider, patch.object(transfer, 'R2Client') as client, contextlib.redirect_stdout(io.StringIO()):
+                    result = transfer.main(['--corpus-root', str(self.root), '--account-id', 'a'*32, '--bucket', 'private-test', '--credential-file', str(credential_path), '--plan-output', str(plan_path), '--receipt-output', str(receipt_path), '--write'])
+                self.assertEqual(result, 1)
+                provider.assert_not_called()
+                client.assert_not_called()
+                self.assertEqual(before, {path: path.read_bytes() for path in self.root.rglob('*') if path.is_file()})
+
+    def test_same_hash_conflicting_media_types_stop_before_plan_or_send(self):
+        self.record(media_type='application/pdf')
+        self.record('two', media_type='application/octet-stream')
+        output = self.root / 'plan.json'
+        with patch.object(transfer, 'OAuthTokenProvider') as provider, patch.object(transfer, 'R2Client', side_effect=AssertionError), contextlib.redirect_stdout(io.StringIO()):
+            result = transfer.main(['--corpus-root', str(self.root), '--account-id', 'a'*32, '--bucket', 'private-test', '--credential-file', str(self.root / 'credential.toml'), '--plan-output', str(output), '--receipt-output', str(self.root / 'receipt.json'), '--write'])
+        self.assertEqual(result, 1)
+        provider.assert_not_called()
+        self.assertFalse(output.exists())
+
+    def test_same_hash_same_media_type_different_suffix_keeps_one_deterministic_key(self):
+        self.record()
+        folder = self.record('two', saved_filename='original.bin')
+        (folder / 'original.pdf').rename(folder / 'original.bin')
+        plan = transfer.build_plan(self.root)
+        self.assertEqual(len(plan['objects']), 1)
+        self.assertEqual(len(plan['records']), 2)
+        self.assertEqual(plan['records'][0]['key'], plan['records'][1]['key'])
+        self.assertEqual(plan['objects'][0]['mediaType'], 'application/pdf')
+
+    def test_resolved_output_and_stage_aliases_preserve_source_and_credential(self):
+        folder = self.record()
+        credential = self.root / 'credential.toml'
+        credential.write_bytes(b'private credential fixture')
+        output = self.root / 'plan.json'
+        stage = output.with_suffix('.json.pending')
+        original_resolve = Path.resolve
+        for alias, source in ((output, folder / 'record.json'), (stage, folder / 'original.pdf'), (stage, credential)):
+            with self.subTest(alias=alias.name, source=source.name):
+                before = {path: path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
+                def mapped(path, *args, **kwargs):
+                    return original_resolve(source) if path == alias else original_resolve(path, *args, **kwargs)
+                with patch.object(Path, 'resolve', autospec=True, side_effect=mapped), patch.object(transfer, 'OAuthTokenProvider') as provider, patch.object(transfer, 'R2Client') as client, contextlib.redirect_stdout(io.StringIO()):
+                    code = transfer.main(['--corpus-root', str(self.root), '--account-id', 'a'*32, '--bucket', 'private-test', '--credential-file', str(credential), '--plan-output', str(output), '--receipt-output', str(self.root / 'receipt.json'), '--write'])
+                self.assertEqual(code, 1)
+                provider.assert_not_called()
+                client.assert_not_called()
+                self.assertEqual(before, {path: path.read_bytes() for path in self.root.rglob('*') if path.is_file()})
+
+    def test_pending_symlink_output_is_refused_without_privileged_symlink_creation(self):
+        output = self.root / 'plan.json'
+        stage = output.with_suffix('.json.pending')
+        with patch.object(Path, 'is_symlink', autospec=True, side_effect=lambda path: path == stage), self.assertRaisesRegex(transfer.TransferError, 'output_path_conflict'):
+            transfer.check_output_collisions([output], [])
+
+    def test_direct_transfer_receipt_cannot_replace_registered_input(self):
+        folder = self.record()
+        target = folder / 'record.json'
+        before = target.read_bytes()
+        plan = transfer.build_plan(self.root)
+        with self.assertRaisesRegex(transfer.TransferError, 'output_path_conflict'):
+            transfer.transfer_plan(plan, MemoryClient(None), target, 'a'*32, 'private-test')
+        self.assertEqual(target.read_bytes(), before)
+
+    def test_corpus_and_directory_outputs_leave_no_pending_artifacts(self):
+        self.record()
+        output = self.root / 'plan.json'
+        output.with_suffix('.json.pending').mkdir()
+        for target in (self.root, self.root / 'one', output):
+            with self.subTest(target=target.name):
+                before = {path.relative_to(self.root): path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
+                directory = sorted(path.relative_to(self.root) for path in self.root.rglob('*'))
+                with patch.object(transfer, 'OAuthTokenProvider') as provider, patch.object(transfer, 'R2Client') as client, contextlib.redirect_stdout(io.StringIO()):
+                    code = transfer.main(['--corpus-root', str(self.root), '--account-id', 'a'*32, '--bucket', 'private-test', '--credential-file', str(self.root / 'credential.toml'), '--plan-output', str(target), '--receipt-output', str(self.root / 'receipt.json'), '--write'])
+                self.assertEqual(code, 1)
+                provider.assert_not_called()
+                client.assert_not_called()
+                self.assertEqual(before, {path.relative_to(self.root): path.read_bytes() for path in self.root.rglob('*') if path.is_file()})
+                self.assertEqual(directory, sorted(path.relative_to(self.root) for path in self.root.rglob('*')))
+                self.assertFalse(self.root.with_suffix('.pending').exists())
+
+    def test_hardlinked_pending_output_preserves_each_registered_input(self):
+        for number, name in enumerate(('original.pdf', 'record.json', 'credential.toml')):
+            with self.subTest(source=name), tempfile.TemporaryDirectory() as temp:
+                self.root = Path(temp) / '.local' / 'corpus'
+                self.root.mkdir(parents=True)
+                folder = self.record()
+                credential = self.root / 'credential.toml'
+                credential.write_bytes(b'private credential fixture')
+                source = credential if name == 'credential.toml' else folder / name
+                output = self.root / f'plan-{number}.json'
+                stage = output.with_suffix('.json.pending')
+                os.link(source, stage)
+                before = source.read_bytes()
+                with patch.object(transfer, 'OAuthTokenProvider') as provider, patch.object(transfer, 'R2Client') as client, contextlib.redirect_stdout(io.StringIO()):
+                    code = transfer.main(['--corpus-root', str(self.root), '--account-id', 'a'*32, '--bucket', 'private-test', '--credential-file', str(credential), '--plan-output', str(output), '--write', '--plan-only'])
+                self.assertEqual(code, 1)
+                provider.assert_not_called()
+                client.assert_not_called()
+                self.assertEqual(source.read_bytes(), before)
+                self.assertEqual(stage.read_bytes(), before)
+                self.assertFalse(output.exists())
+
+    def test_hardlinked_final_output_and_two_outputs_are_rejected(self):
+        source = self.root / 'input.json'
+        source.write_bytes(b'input fixture')
+        output = self.root / 'output.json'
+        second = self.root / 'second.json'
+        os.link(source, output)
+        os.link(source, second)
+        with self.assertRaisesRegex(transfer.TransferError, 'output_path_conflict'):
+            transfer.check_output_collisions([output], [source])
+        with self.assertRaisesRegex(transfer.TransferError, 'output_path_conflict'):
+            transfer.check_output_collisions([output, second], [])
+
+    def test_writer_rejects_existing_unrelated_stage_without_replacing_it(self):
+        output = self.root / 'output.json'
+        output.write_bytes(b'previous output')
+        stage = output.with_suffix('.json.pending')
+        stage.write_bytes(b'unrelated stage fixture')
+        with self.assertRaises(transfer.TransferError):
+            transfer.write_json(output, dict(new=True))
+        self.assertEqual(output.read_bytes(), b'previous output')
+        self.assertEqual(stage.read_bytes(), b'unrelated stage fixture')
+
+    def test_failed_replace_removes_owned_stage_and_allows_retry(self):
+        output = self.root / 'output.json'
+        output.write_bytes(b'previous output')
+        with patch.object(Path, 'replace', side_effect=PermissionError('locked')), self.assertRaises(PermissionError):
+            transfer.write_json(output, dict(new=True))
+        self.assertEqual(output.read_bytes(), b'previous output')
+        self.assertFalse(transfer.pending_path(output).exists())
+        self.assertEqual(list(self.root.glob('.output.json.*.pending')), [])
+        transfer.write_json(output, dict(new=True))
+        self.assertEqual(json.loads(output.read_text(encoding='utf-8')), dict(new=True))
+
+    def test_failed_write_removes_owned_stage_and_preserves_previous_output(self):
+        output = self.root / 'output.json'
+        output.write_bytes(b'previous output')
+        with self.assertRaises(UnicodeEncodeError):
+            transfer.atomic_write_text(output, '\ud800')
+        self.assertEqual(output.read_bytes(), b'previous output')
+        self.assertFalse(transfer.pending_path(output).exists())
+        self.assertEqual(list(self.root.glob('.output.json.*.pending')), [])
+
+    def test_cleanup_failure_preserves_original_replace_exception(self):
+        output = self.root / 'output.json'
+        with patch.object(Path, 'replace', side_effect=PermissionError('replace locked')), patch.object(Path, 'unlink', side_effect=OSError('cleanup locked')), self.assertRaisesRegex(PermissionError, '^replace locked$'):
+            transfer.write_json(output, dict(new=True))
+        self.assertEqual(len(list(self.root.glob('.output.json.*.pending'))), 1)
+
+    def test_failed_replace_preserves_stage_replaced_by_another_writer(self):
+        output = self.root / 'output.json'
+        output.write_bytes(b'previous output')
+        other = self.root / 'other.json'
+        other.write_bytes(b'unrelated stage fixture')
+        stages = []
+        def fail_after_replacement(path, target):
+            stages.append(path)
+            path.unlink()
+            os.link(other, path)
+            raise PermissionError('locked')
+        with patch.object(Path, 'replace', autospec=True, side_effect=fail_after_replacement), self.assertRaises(PermissionError):
+            transfer.write_json(output, dict(new=True))
+        self.assertEqual(output.read_bytes(), b'previous output')
+        self.assertEqual(stages[0].read_bytes(), b'unrelated stage fixture')
+        self.assertEqual(other.read_bytes(), b'unrelated stage fixture')
+
+    def test_unique_stage_preserves_shared_alias_created_after_validation(self):
+        victim = self.root / 'victim.json'
+        victim.write_bytes(b'private fixture')
+        output = self.root / 'output.json'
+        stage = output.with_suffix('.json.pending')
+        original_create = transfer.tempfile.mkstemp
+        def raced_create(*args, **kwargs):
+            if not stage.exists():
+                os.link(victim, stage)
+            return original_create(*args, **kwargs)
+        with patch.object(transfer.tempfile, 'mkstemp', side_effect=raced_create):
+            transfer.write_json(output, dict(new=True))
+        self.assertEqual(victim.read_bytes(), b'private fixture')
+        self.assertEqual(stage.read_bytes(), b'private fixture')
+        self.assertEqual(json.loads(output.read_text(encoding='utf-8')), dict(new=True))
 
 
 class TokenProviderTests(unittest.TestCase):

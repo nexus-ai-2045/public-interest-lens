@@ -2,6 +2,7 @@ import contextlib
 import copy
 import io
 import json
+import os
 import sqlite3
 import tempfile
 import unittest
@@ -429,6 +430,46 @@ class IndexTests(unittest.TestCase):
                         index.public_output(target)
                 with patch.object(Path, 'resolve', autospec=True, side_effect=mapped), self.assertRaises(index.IndexError):
                     index.public_output(target)
+
+    def test_index_collision_wrapper_uses_transfer_canonical_checker(self):
+        with patch.object(index, 'check_transfer_output_collisions', side_effect=index.TransferError('output_path_conflict')) as checker, self.assertRaisesRegex(index.IndexError, '^output_path_conflict$'):
+            index.check_output_collisions([Path('output')], [Path('input')])
+        checker.assert_called_once_with([Path('output')], [Path('input')])
+
+    def test_sql_and_public_manifest_writers_preserve_existing_unrelated_stages(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            sql_output = root / '.local' / 'index.sql'
+            public_output = root / 'data' / 'cloudflare' / 'materials.json'
+            for output, writer, payload in ((sql_output, index.write_sql, 'SELECT 1;'), (public_output, index.write_public_manifest, dict(safe=True))):
+                with self.subTest(output=output.name):
+                    output.parent.mkdir(parents=True, exist_ok=True)
+                    output.write_bytes(b'previous output')
+                    stage = output.with_suffix(output.suffix + '.pending')
+                    stage.write_bytes(b'unrelated fixture stage')
+                    with patch.object(index, 'ROOT', root), self.assertRaises(index.TransferError):
+                        writer(output, payload)
+                    self.assertEqual(output.read_bytes(), b'previous output')
+                    self.assertEqual(stage.read_bytes(), b'unrelated fixture stage')
+
+    def test_public_manifest_unique_stage_preserves_late_shared_alias_to_receipt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            victim = root / 'receipt.json'
+            original = json.dumps(self.receipt()).encode()
+            victim.write_bytes(original)
+            output = root / 'data' / 'cloudflare' / 'materials.json'
+            stage = output.with_suffix('.json.pending')
+            original_create = tempfile.mkstemp
+            def raced_create(*args, **kwargs):
+                if not stage.exists():
+                    os.link(victim, stage)
+                return original_create(*args, **kwargs)
+            with patch.object(index, 'ROOT', root), patch.object(tempfile, 'mkstemp', side_effect=raced_create):
+                index.write_public_manifest(output, dict(safe=True))
+            self.assertEqual(victim.read_bytes(), original)
+            self.assertEqual(stage.read_bytes(), original)
+            self.assertEqual(json.loads(output.read_text(encoding='utf-8')), dict(safe=True))
 
 
 class FakeReadClient:
