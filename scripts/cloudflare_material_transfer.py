@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 import time
 import tomllib
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
@@ -63,27 +64,73 @@ def private_output(path):
 def write_json(path, data):
     target = private_output(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    temporary = pending_path(target)
-    temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    temporary.replace(target)
+    atomic_write_text(target, json.dumps(data, ensure_ascii=False, indent=2) + '\n')
 
 
 def pending_path(path):
     return path.with_suffix(path.suffix + '.pending')
 
 
+def existing_file_identity(path):
+    try:
+        status = path.stat()
+    except FileNotFoundError:
+        return None
+    return status.st_dev, status.st_ino
+
+
+def check_output_collisions(outputs, inputs):
+    destinations = []
+    for path in outputs:
+        target = path.resolve()
+        temporary = pending_path(target)
+        if target.is_dir() or temporary.is_dir() or temporary.is_symlink() or getattr(temporary, 'is_junction', lambda: False)():
+            raise TransferError('output_path_conflict')
+        destinations.extend((target, temporary.resolve()))
+    sources = {path.resolve() for path in inputs}
+    if len(set(destinations)) != len(destinations) or set(destinations) & sources:
+        raise TransferError('output_path_conflict')
+    destination_files = [existing_file_identity(path) for path in destinations]
+    destination_files = [identity for identity in destination_files if identity is not None]
+    source_files = {existing_file_identity(path) for path in sources}
+    if len(set(destination_files)) != len(destination_files) or set(destination_files) & source_files:
+        raise TransferError('output_path_conflict')
+
+
+def atomic_write_text(path, text):
+    target = path.resolve()
+    check_output_collisions([target], [])
+    if pending_path(target).exists():
+        raise TransferError('temporary_output_exists')
+    descriptor, name = tempfile.mkstemp(prefix='.' + target.name + '.', suffix='.pending', dir=target.parent)
+    temporary = Path(name)
+    created = None
+    try:
+        with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
+            status = os.fstat(handle.fileno())
+            created = status.st_dev, status.st_ino
+            handle.write(text)
+        temporary.replace(target)
+    except BaseException:
+        if created is not None:
+            try:
+                status = temporary.lstat()
+                if (status.st_dev, status.st_ino) == created:
+                    temporary.unlink()
+            except OSError:
+                pass
+        raise
+
+
 def check_output_paths(corpus_root, plan, outputs):
     root = corpus_root.resolve(strict=True)
     inputs = {Path(row[key]).resolve() for row in plan['records'] for key in ('recordPath', 'sourcePath') if row.get(key)}
-    seen = set()
+    check_output_collisions(outputs, [root, *inputs])
     for output in outputs:
         target = private_output(output)
         for path in (target, pending_path(target).resolve()):
-            if path in seen or path in inputs:
-                raise TransferError('output_path_conflict')
             if path.is_relative_to(root) and (path.name == 'record.json' or path.name.startswith('original.')):
                 raise TransferError('output_path_conflict')
-            seen.add(path)
 
 
 def build_plan(corpus_root):
@@ -288,6 +335,8 @@ def transfer_object(item, client):
 
 def transfer_plan(plan, client, receipt_output, account_id, bucket, workers=2):
     private_output(receipt_output)
+    inputs = [Path(row[key]) for row in plan['records'] for key in ('sourcePath', 'recordPath') if key in row]
+    check_output_collisions([receipt_output], inputs)
     results = {}
     if receipt_output.exists():
         old = json.loads(receipt_output.read_text(encoding='utf-8'))
@@ -357,7 +406,9 @@ def main(argv=None):
         if args.write and not args.plan_only and not args.receipt_output:
             raise TransferError('receipt_required')
         plan = build_plan(args.corpus_root)
-        check_output_paths(args.corpus_root, plan, [path for path in (args.plan_output, args.receipt_output) if path])
+        outputs = [path for path in (args.plan_output, args.receipt_output) if path]
+        check_output_paths(args.corpus_root, plan, outputs)
+        check_output_collisions(outputs, [args.credential_file])
         if args.write and args.plan_output:
             write_json(args.plan_output, plan)
         if args.write and not args.plan_only:
