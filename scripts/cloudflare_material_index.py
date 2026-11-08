@@ -13,10 +13,12 @@ from pathlib import Path
 from urllib.parse import parse_qsl, urlparse
 
 try:
-    from scripts.cloudflare_material_transfer import OFFICIAL_HOSTS, SCHEMA, check_target, private_output, write_json
+    from scripts.cloudflare_material_transfer import OFFICIAL_HOSTS, SCHEMA, TransferError, atomic_write_text, check_target, private_output, write_json
+    from scripts.cloudflare_material_transfer import check_output_collisions as check_transfer_output_collisions
     from scripts.path_guard import inside_without_links
 except ModuleNotFoundError:
-    from cloudflare_material_transfer import OFFICIAL_HOSTS, SCHEMA, check_target, private_output, write_json
+    from cloudflare_material_transfer import OFFICIAL_HOSTS, SCHEMA, TransferError, atomic_write_text, check_target, private_output, write_json
+    from cloudflare_material_transfer import check_output_collisions as check_transfer_output_collisions
     from path_guard import inside_without_links
 
 
@@ -134,22 +136,14 @@ def sql_text(packet):
 def write_sql(path, sql):
     target = private_output(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    temporary = target.with_suffix(target.suffix + '.pending')
-    temporary.write_text(sql, encoding='utf-8')
-    temporary.replace(target)
+    atomic_write_text(target, sql)
 
 
 def check_output_collisions(outputs, inputs):
-    destinations = []
-    for path in outputs:
-        target = path.resolve()
-        temporary = target.with_suffix(target.suffix + '.pending')
-        if temporary.is_symlink():
-            raise IndexError('output_path_conflict')
-        destinations.extend((target, temporary.resolve()))
-    sources = {path.resolve() for path in inputs}
-    if len(set(destinations)) != len(destinations) or set(destinations) & sources:
-        raise IndexError('output_path_conflict')
+    try:
+        check_transfer_output_collisions(outputs, inputs)
+    except TransferError as error:
+        raise IndexError(str(error)) from None
 
 
 def public_output(path):
@@ -181,8 +175,7 @@ def write_public_manifest(path, manifest):
     temporary = target.with_suffix(target.suffix + '.pending')
     public_output(temporary)
     target.parent.mkdir(parents=True, exist_ok=True)
-    temporary.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    temporary.replace(target)
+    atomic_write_text(target, json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
 
 
 def normalize_numbers(value):
@@ -363,7 +356,7 @@ def main(argv=None):
                     result['sqlHash'] = hashlib.sha256(sql.encode('utf-8')).hexdigest()
         print(json.dumps(result, ensure_ascii=False), flush=True)
         return 0
-    except IndexError as error:
+    except (IndexError, TransferError) as error:
         code = str(error) if re.fullmatch('[a-z0-9_]+', str(error)) else 'index_error'
     except Exception:
         code = 'invalid_input_or_io'

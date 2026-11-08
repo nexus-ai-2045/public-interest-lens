@@ -221,7 +221,7 @@ npm run dev
 
 `test:e2e` は専用ポート4179でヘッドレスブラウザを起動し、テスト終了時に自身のサーバーを閉じる。使用中ポートは奪わずエラーにする。通常閲覧は5173。スクリーンショットは`Git`対象外の `app/test-results/` に出力する。既存`Chrome`やログイン済みブラウザの状態は操作しない。
 
-`CI`の `.github/workflows/verify.yml` は`Python`、算定、型・`build`、依存監査、`E2E`を同じ`PR`で実行する。公式`API`へのライブリクエストは`CI`に含めない。実行前の設定だけで`CI`成功としない。
+`CI`の `.github/workflows/verify.yml` は`Python`（`scripts/run_tests_parallel.py` で `tests/test_*.py` を並列に回す。1本も外さない。単独なら `python -m unittest discover -s tests -v`）、算定、型・`build`、依存監査、`E2E`を同じ`PR`で実行する。公式`API`へのライブリクエストは`CI`に含めない。実行前の設定だけで`CI`成功としない。
 
 ## 取得と障害時の復旧
 

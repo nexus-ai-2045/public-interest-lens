@@ -29,7 +29,7 @@ class LoopStatusTest(unittest.TestCase):
 class LocalVerifyTest(unittest.TestCase):
     def test_steps_come_from_the_ci_workflow(self):
         runs = [s["run"] for s in local_verify.load_steps()]
-        self.assertTrue(any("unittest" in r for r in runs))
+        self.assertTrue(any("unittest" in r or "run_tests_parallel" in r for r in runs))
         self.assertTrue(any("npm test" in r for r in runs))
 
     def test_browser_download_is_skipped_locally(self):
