@@ -37,6 +37,25 @@ describe('全議員の参考の額', () => {
     expect(out.counts).toMatchObject({ laws: 2, lawsWithVotes: 1, lawsPartyOnly: 1, observations: 1 });
   });
 
+  it('額なし（noAmount）の法律は、額が残っていても人に配らない', () => {
+    const law = (id, median) => ({ id, title: id, side: 'loss', certainty: '参考', group: id, window: '2000〜2009年', amountLowYen: median, amountMedianYen: median, amountHighYen: median });
+    const enacted = '回次,種別,提出回次,番号,題名,提出者,提出者一覧,付託日_衆,議決日_衆,議決日_参\n150,衆法,150,1,甲法案,山田 太郎君,,,,平成12年 3月 1日\n150,衆法,150,2,乙法案,山田 太郎君,,,,平成12年 3月 1日\n';
+    const base = {
+      enacted, votesIndex: '投票ID,回次,投票日,議案名,集計_賛成,集計_反対\n', ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n',
+      cabinet: '役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n衆議院,田中 四,,,無,東京1\n',
+    };
+    const laws = [law('衆法-150-1', 100), law('衆法-150-2', 100)];
+    const withNone = buildReferenceMembers({ ...base, ranking: { laws, generatedFrom: { parameters: { noAmount: ['衆法-150-2'] } } } });
+    const without = buildReferenceMembers({ ...base, ranking: { laws } });
+    const total = (o) => o.members.reduce((s, m) => s + m.loss.median, 0);
+    expect(withNone.counts.laws).toBe(1);
+    expect(without.counts.laws).toBe(2);
+    // 同じ群・期間の相棒が減るので、残る法律の取り分の分母は1になる（既存の共有額・降格の除外と同じ扱い）。
+    expect(total(without)).toBeGreaterThan(0);
+    expect(withNone.attributions.some(a => a.lawId === '衆法-150-1')).toBe(true);
+    expect(withNone.attributions.every(a => a.lawId !== '衆法-150-2')).toBe(true);
+  });
+
   it('閣法は提出した回次の総理大臣に配り、継続審査で後の付託日になっても後任に付けない。会期中に替わった回次は配らない', () => {
     const law = (id: string) => ({ id, title: id, side: 'loss', certainty: '参考', group: id, window: '2000〜2009年', amountLowYen: 90, amountMedianYen: 90, amountHighYen: 90 });
     const enacted = '回次,種別,提出回次,番号,題名,提出者,提出者一覧,付託日_衆,議決日_衆,議決日_参\n'
