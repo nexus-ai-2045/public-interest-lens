@@ -122,7 +122,9 @@ def main():
             if r.get("missing"):
                 continue
             rc, out = git(root, "worktree", "remove", r["path"])  # --force なし：変更があれば失敗する
-            print("remove", r["path"], "OK" if rc == 0 else f"失敗: {out}")
+            name = os.path.basename(r["path"])
+            detail = out.replace(r["path"], name)
+            print("remove", name, "OK" if rc == 0 else f"失敗: {detail}")
         git(root, "worktree", "prune")
 
 
