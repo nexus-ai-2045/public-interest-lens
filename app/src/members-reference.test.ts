@@ -23,7 +23,7 @@ describe('全議員の参考の額', () => {
     const out = buildReferenceMembers({
       ranking: { laws: [law('衆法-150-1', 100), law('衆法-150-2', 100)] }, enacted, votesIndex,
       ballots: ['投票ID,議員ID,賛否\nv1,1,Y\nv1,2,Y\nv1,3,N\n'], sangiinMembers: '議員ID,回次,議員名,会派\n1,150,佐藤 一,自民\n2,150,鈴木 二,自民\n3,150,高橋 三,民主\n',
-      cabinet: '役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n衆議院,田中 四,,,無,東京1\n',
+      cabinet: '区分,役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n衆議院,田中 四,,,無,東京1\n',
     });
     const by = new Map(out.members.map(m => [m.name, m]));
     // 1本目（投票あり）：額100÷2本＝50 を配る。2本目（投票なし）は提出者に 1/3。
@@ -42,7 +42,7 @@ describe('全議員の参考の額', () => {
     const enacted = '回次,種別,提出回次,番号,題名,提出者,提出者一覧,付託日_衆,議決日_衆,議決日_参\n150,衆法,150,1,甲法案,山田 太郎君,,,,平成12年 3月 1日\n150,衆法,150,2,乙法案,山田 太郎君,,,,平成12年 3月 1日\n';
     const base = {
       enacted, votesIndex: '投票ID,回次,投票日,議案名,集計_賛成,集計_反対\n', ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n',
-      cabinet: '役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n衆議院,田中 四,,,無,東京1\n',
+      cabinet: '区分,役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n衆議院,田中 四,,,無,東京1\n',
     };
     const laws = [law('衆法-150-1', 100), law('衆法-150-2', 100)];
     const withNone = buildReferenceMembers({ ...base, ranking: { laws, generatedFrom: { parameters: { noAmount: ['衆法-150-2'] } } } });
@@ -56,13 +56,34 @@ describe('全議員の参考の額', () => {
     expect(withNone.attributions.every(a => a.lawId !== '衆法-150-2')).toBe(true);
   });
 
+  it('閣法は首相1人に付けず、会期の最初から最後まで在任した閣僚に均等に配る。途中で替わった閣僚には配らない', () => {
+    const law = (id: string) => ({ id, title: id, side: 'loss', certainty: '参考', group: id, window: '2000〜2009年', amountLowYen: 90, amountMedianYen: 90, amountHighYen: 90 });
+    const enacted = '回次,種別,提出回次,番号,題名,提出者,提出者一覧,付託日_衆,議決日_衆,議決日_参\n'
+      + '171,閣法,171,1,甲法案,,,平成21年 1月 5日,,\n171,閣法,171,2,乙法案,,,平成21年 6月 5日,,\n';
+    const cabinet = '区分,役職,氏名,就任日_西暦,退任日_西暦\n'
+      + '閣僚,内閣総理大臣,首相 一,2008-09-24,\n閣僚,財務大臣,財務 二,2008-09-24,\n閣僚,法務大臣,法務 三,2008-09-24,2009-03-01\n閣僚,法務大臣,法務 四,2009-03-01,\n'
+      + '副大臣,財務副大臣,副 五,2008-09-24,\n';
+    const out = buildReferenceMembers({
+      ranking: { laws: [law('閣法-171-1')] }, enacted, votesIndex: '投票ID,回次,投票日,議案名,集計_賛成,集計_反対\n',
+      ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n', cabinet, roster: '院,氏名,本名,読み,会派,選挙区\n',
+    } as never);
+    const names = out.attributions.map(a => a.name).sort();
+    // 付託日が1月と6月の両端 → 在任が両端にまたがるのは首相一と財務二だけ。副大臣は閣僚ではない。
+    expect(names).toEqual(['財務二', '首相一']);
+    const shares = out.attributions.map(a => a.median);
+    expect(shares[0]).toBeCloseTo(shares[1], 6);
+    // 首相1人だけに配った旧方式の半分になる（均等配分）。
+    const pm = out.attributions.find(a => a.name === '首相一')!;
+    expect(out.attributions.reduce((s, a) => s + a.median, 0)).toBeCloseTo(pm.median * 2, 6);
+  });
+
   it('閣法は提出した回次の総理大臣に配り、継続審査で後の付託日になっても後任に付けない。会期中に替わった回次は配らない', () => {
     const law = (id: string) => ({ id, title: id, side: 'loss', certainty: '参考', group: id, window: '2000〜2009年', amountLowYen: 90, amountMedianYen: 90, amountHighYen: 90 });
     const enacted = '回次,種別,提出回次,番号,題名,提出者,提出者一覧,付託日_衆,議決日_衆,議決日_参\n'
       + '169,閣法,169,1,甲法案,,,平成20年 2月 1日,,\n169,閣法,169,2,乙法案,,,平成20年 5月 1日,,\n'
       + '170,閣法,169,3,丙法案,,,平成20年 9月24日,,\n'
       + '171,閣法,171,1,丁法案,,,平成21年 1月 5日,,\n171,閣法,171,2,戊法案,,,平成21年 9月20日,,\n';
-    const cabinet = '役職,氏名,就任日_西暦,退任日_西暦\n内閣総理大臣,前 首相,2007-09-26,2008-09-24\n内閣総理大臣,後 首相,2008-09-24,2009-09-16\n内閣総理大臣,次 首相,2009-09-16,\n';
+    const cabinet = '区分,役職,氏名,就任日_西暦,退任日_西暦\n閣僚,内閣総理大臣,前 首相,2007-09-26,2008-09-24\n閣僚,内閣総理大臣,後 首相,2008-09-24,2009-09-16\n閣僚,内閣総理大臣,次 首相,2009-09-16,\n';
     const out = buildReferenceMembers({
       ranking: { laws: [law('閣法-169-3'), law('閣法-171-1')] }, enacted, votesIndex: '投票ID,回次,投票日,議案名,集計_賛成,集計_反対\n',
       ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n', cabinet, roster: '院,氏名,本名,読み,会派,選挙区\n',
@@ -81,7 +102,7 @@ describe('全議員の参考の額', () => {
     const roster = '院,氏名,本名,読み,会派,選挙区\n衆議院,山田 太郎,,やまだ たろう,自民,東京1\n参議院,山田 太郎,,やまだ たろう,立憲,比例\n';
     const out = buildReferenceMembers({
       ranking: { laws: [law('衆法-150-1'), law('参法-150-2'), law('閣法-150-3')] }, enacted, votesIndex: '投票ID,回次,投票日,議案名,集計_賛成,集計_反対\n',
-      ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n', cabinet: '役職,氏名,就任日_西暦,退任日_西暦\n内閣総理大臣,山田 太郎,1999-01-01,\n', roster, persons,
+      ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n', cabinet: '区分,役職,氏名,就任日_西暦,退任日_西暦\n閣僚,内閣総理大臣,山田 太郎,1999-01-01,\n', roster, persons,
     });
     const by = new Map(out.members.map(m => [m.id, m]));
     // 台帳は今の院しか持たない（院を移った人がいる）ので、衆法・参法・閣法のどれでも、院では決めずに配らない。
@@ -97,7 +118,7 @@ describe('全議員の参考の額', () => {
     const enacted = '回次,種別,提出回次,番号,題名,提出者,提出者一覧,付託日_衆,議決日_衆,議決日_参\n145,衆法,145,21,甲法案,建設委員長,平田米男君,,,\n';
     const out = buildReferenceMembers({
       ranking: { laws: [law] }, enacted, votesIndex: '投票ID,回次,投票日,議案名,集計_賛成,集計_反対\n',
-      ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n', cabinet: '役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n',
+      ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n', cabinet: '区分,役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n',
     });
     expect(out.members.find(m => m.name.startsWith('平田'))).toBeUndefined();
     expect(out.attributions).toEqual([]);
@@ -106,7 +127,7 @@ describe('全議員の参考の額', () => {
     const persons = '人物ID,氏名,読み,院,選挙区,別表記\n,,,,,\n元職太郎,元職太郎,もとしょく たろう,衆議院,東京1,\n';
     const out = buildReferenceMembers({
       ranking: { laws: [] }, enacted: '回次,種別,提出回次,番号,題名,提出者,提出者一覧,付託日_衆,議決日_衆,議決日_参\n', votesIndex: '投票ID,回次,投票日,議案名,集計_賛成,集計_反対\n',
-      ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n', cabinet: '役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n', persons,
+      ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n', cabinet: '区分,役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n', persons,
     });
     expect(out.members.map(m => m.id)).toEqual(['元職太郎']);
     expect(out.members[0]).toMatchObject({ current: null, laws: 0 });

@@ -110,8 +110,10 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     const prev = idName.get(r['議員ID']);
     if (!prev || Number(r['回次']) >= prev.session) idName.set(r['議員ID'], { name: normName(r['議員名']), party: r['会派'], session: Number(r['回次']) });
   }
-  const pms = parseCsv(input.cabinet).filter(r => r['役職'] === '内閣総理大臣' && r['就任日_西暦']);
-  const pmOn = (date: string) => pms.filter(r => r['就任日_西暦'] <= date && (!r['退任日_西暦'] || date < r['退任日_西暦'])).map(r => normName(r['氏名']))[0] ?? '';
+  const ministers = parseCsv(input.cabinet).filter(r => r['区分'] === '閣僚' && r['就任日_西暦']);
+  const servingOn = (date: string, rows: Record<string, string>[]) => rows.filter(r => r['就任日_西暦'] <= date && (!r['退任日_西暦'] || date < r['退任日_西暦']));
+  const pms = ministers.filter(r => r['役職'] === '内閣総理大臣');
+  const pmOn = (date: string) => servingOn(date, pms).map(r => normName(r['氏名']))[0] ?? '';
   // 閣法の提出者は提出した時の内閣総理大臣。提出日の列が無いので、提出した回次の会期中の衆議院の付託日（継続審査でない閣法のもの）の
   // 最初と最後で同じ総理大臣ならその人にする。会期中に総理大臣が替わった回次は、提出時の総理大臣を決められないので配らない。
   const span = new Map<string, { first: string; last: string }>();
@@ -126,6 +128,14 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     if (!x) return '';
     const a = pmOn(x.first);
     return a && a === pmOn(x.last) ? a : '';
+  };
+  // 閣法は内閣の提出。総理大臣1人に全部付けず（首相だけが突出する原因）、提出した回次の会期の最初から最後まで在任した閣僚（総理大臣を含む）に均等に配る
+  // （設計確定 v2.1：閣法は首相1人に付けない）。総理大臣が会期中に替わる回次は、どの内閣の提出か決められないので配らない。途中で替わった閣僚は含めない。
+  const cabinetOf = (session: string): string[] => {
+    const x = span.get(session);
+    if (!x || !submitterPm(session)) return [];
+    const last = new Set(servingOn(x.last, ministers).map(r => normName(r['氏名'])));
+    return [...new Set(servingOn(x.first, ministers).map(r => normName(r['氏名'])).filter(n => last.has(n)))];
   };
 
   // コロナ期と重なる・分離できない法律は配らない。額がコロナ期の日本と比較国の落ち込みの差をそのまま含み、その法律の効果ではない（設計決定0014）。
@@ -148,8 +158,8 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     const vote = day ? pickVote(b['題名'], byDay.get(day) ?? []) : null;
     let proposers: { name: string; weight: number }[] = [];
     if (l.id.startsWith('閣法')) {
-      const pm = submitterPm(b['提出回次']);
-      if (pm) proposers = [{ name: pm, weight: 1 }];
+      const cabinet = cabinetOf(b['提出回次']);
+      proposers = cabinet.map(name => ({ name, weight: 1 / cabinet.length }));
     } else if (COMMITTEE.test(parseProposer(b['提出者']).lead)) {
       // 委員会提出（「建設委員長」など）は人の提出ではないので、提出者一覧に委員長の名前があっても人には配らない。
     } else if (b['提出者一覧']) {
