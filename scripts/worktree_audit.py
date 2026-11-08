@@ -43,8 +43,12 @@ def inspect(root, wt, base):
         info.update(missing=True, size=0, dirty=0, unpushed=0, merged=False)
         return info
     info["size"] = du_mb(path)
-    _, st = git(path, "status", "--porcelain")
-    info["dirty"] = len([l for l in st.splitlines() if l.strip()])
+    _, st = git(path, "status", "--porcelain", "--ignored")
+    regenerable = ("node_modules", ".next", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache")
+    info["dirty"] = len([
+        l for l in st.splitlines()
+        if l.strip() and not (l.startswith("!!") and any(r in l for r in regenerable))
+    ])
     head = wt.get("HEAD", "")
     info["head"] = head[:7]
     info["merged"] = git(root, "merge-base", "--is-ancestor", head, base)[0] == 0
@@ -63,11 +67,19 @@ def stale_branches(root):
     _, branches = git(root, "for-each-ref", "--format=%(refname:short)", "refs/remotes/origin")
     names = {b.removeprefix("origin/") for b in branches.splitlines()} - {"origin", "HEAD", "main"}
     r = subprocess.run(
-        ["gh", "pr", "list", "--state", "all", "--limit", "1000", "--json", "headRefName,state"],
+        ["gh", "pr", "list", "--state", "all", "--limit", "1000", "--json",
+         "headRefName,state,isCrossRepository"],
         cwd=root, capture_output=True, text=True,
     )
+    if r.returncode != 0:
+        sys.exit(f"gh pr list が失敗しました: {r.stderr.strip()}")
+    prs = json.loads(r.stdout)
+    if len(prs) >= 1000:
+        print("警告: PR が 1000 件に達しました。古い PR が漏れている可能性があります", file=sys.stderr)
     states = {}
-    for p in json.loads(r.stdout or "[]"):
+    for p in prs:
+        if p.get("isCrossRepository"):
+            continue
         states.setdefault(p["headRefName"], set()).add(p["state"])
     return sorted(n for n in names if n in states and "OPEN" not in states[n])
 
