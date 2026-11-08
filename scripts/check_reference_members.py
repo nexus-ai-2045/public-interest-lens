@@ -77,7 +77,10 @@ def check(attributions_path: Path | None = None) -> list[str]:
             return check(path)
     attributions = read_csv(attributions_path)
     reference = json.loads(REFERENCE.read_text(encoding="utf-8"))
-    ranking = {law["id"]: law for law in json.loads(RANKING.read_text(encoding="utf-8"))["laws"]}
+    ranking_json = json.loads(RANKING.read_text(encoding="utf-8"))
+    ranking = {law["id"]: law for law in ranking_json["laws"]}
+    # 額なし（noAmount）の法律は人に配らない（設計確定 v2.1）。
+    no_amount = set(ranking_json.get("generatedFrom", {}).get("parameters", {}).get("noAmount", []))
     enacted = {f"{r['種別']}-{r['提出回次']}-{r['番号']}": r for r in read_csv(ENACTED)}
     pms = [r for r in read_csv(CABINET) if r["役職"] == "内閣総理大臣" and r["就任日_西暦"]]
     referrals: dict[str, set[str]] = {}
@@ -125,6 +128,9 @@ def check(attributions_path: Path | None = None) -> list[str]:
         where = f"{m['id']} / {law_id}（{role}）"
         law = ranking.get(law_id)
         bill = enacted.get(law_id)
+        if law_id in no_amount:
+            errors.append(f"{where}：額なし（noAmount）の法律を人に配っている")
+            continue
         if not law or law.get("certainty") != "参考" or not bill:
             errors.append(f"{where}：公開ランキングの参考の法律、または成立法の一覧に無い")
             continue

@@ -50,7 +50,9 @@ describe('全議員の参考の額', () => {
     const total = (o) => o.members.reduce((s, m) => s + m.loss.median, 0);
     expect(withNone.counts.laws).toBe(1);
     expect(without.counts.laws).toBe(2);
-    expect(total(withNone)).toBeLessThan(total(without));
+    // 同じ群・期間の相棒が減るので、残る法律の取り分の分母は1になる（既存の共有額・降格の除外と同じ扱い）。
+    expect(total(without)).toBeGreaterThan(0);
+    expect(withNone.attributions.some(a => a.lawId === '衆法-150-1')).toBe(true);
     expect(withNone.attributions.every(a => a.lawId !== '衆法-150-2')).toBe(true);
   });
 
