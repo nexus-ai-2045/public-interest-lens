@@ -5,7 +5,7 @@ app/src/members-reference.ts が配った全員・全法律の配り先（build_
 （top の5本だけでなく、合計と順位に入るすべての配り先が照合の対象になる）。
 - 法律が公開ランキングにあり、確かさが「参考」であること。
 - 提出者（proposer）：衆法・参法は成立法の一覧の「提出者」「提出者一覧」にその名前があること。
-  閣法は内閣総理大臣で、提出した回次の会期中（継続審査でない閣法の衆議院の付託日のどれか）に在任していたこと。
+  閣法は内閣の提出なので、提出した回次の会期の最初から最後まで（継続審査でない閣法の衆議院の付託日の最初と最後）在任した閣僚であること。
 - 人物ID：配り先の人物IDが人物台帳（persons.csv）にあり、氏名が同じ人物の氏名と canonical で一致すること。同姓同名で分けた名前は
   配っていないこと（台帳は今の院しか持たず院を移った人がいるので、院では決めない）。
 - 参議院の賛成（vote）：参議院で議決した日の押しボタン投票のうち、議案名に題名を含むものに、その名前の議員の「賛成」があること。
@@ -82,16 +82,25 @@ def check(attributions_path: Path | None = None) -> list[str]:
     # 額なし（noAmount）の法律は人に配らない（設計確定 v2.1）。
     no_amount = set(ranking_json.get("generatedFrom", {}).get("parameters", {}).get("noAmount", []))
     enacted = {f"{r['種別']}-{r['提出回次']}-{r['番号']}": r for r in read_csv(ENACTED)}
-    pms = [r for r in read_csv(CABINET) if r["役職"] == "内閣総理大臣" and r["就任日_西暦"]]
+    # 区分「閣僚」には副長官・法制局長官も入るが、閣僚（国務大臣）ではない。
+    ministers = [r for r in read_csv(CABINET) if r["区分"] == "閣僚" and r["就任日_西暦"] and not re.search(r"副長官|法制局長官", r["役職"])]
     referrals: dict[str, set[str]] = {}
     for r in enacted.values():
         d = wareki(r["付託日_衆"]) if r["種別"] == "閣法" and r["回次"] == r["提出回次"] else ""
         if d:
             referrals.setdefault(r["提出回次"], set()).add(d)
 
-    def pm_served(name: str, dates: set[str]) -> bool:
-        return any(norm_name(p["氏名"]) == name and p["就任日_西暦"] <= d and (not p["退任日_西暦"] or d < p["退任日_西暦"])
-                   for p in pms for d in dates)
+    def cabinet_served(name: str, dates: set[str]) -> bool:
+        """閣法は内閣の提出。提出した回次の会期の最初と最後の付託日の両方に在任した閣僚（総理大臣を含む）か。"""
+        if not dates:
+            return False
+        lo, hi = min(dates), max(dates)
+        # 総理大臣が会期中に替わる回次は、どの内閣の提出か決められないので配らない。
+        pm_at = lambda d: {norm_name(p["氏名"]) for p in ministers if p["役職"] == "内閣総理大臣" and p["就任日_西暦"] <= d and (not p["退任日_西暦"] or d < p["退任日_西暦"])}
+        if not pm_at(lo) or pm_at(lo) != pm_at(hi):
+            return False
+        return all(any(norm_name(p["氏名"]) == name and p["就任日_西暦"] <= d and (not p["退任日_西暦"] or d < p["退任日_西暦"])
+                       for p in ministers) for d in (min(dates), max(dates)))
 
     votes_by_day: dict[str, list[dict[str, str]]] = {}
     for v in read_csv(VOTES_INDEX):
@@ -144,8 +153,8 @@ def check(attributions_path: Path | None = None) -> list[str]:
             errors.append(f"{where}：人物IDが人物台帳に無い")
         if role == "proposer":
             if law_id.startswith("閣法"):
-                if not pm_served(m["name"], referrals.get(bill["提出回次"], set())):
-                    errors.append(f"{where}：提出した回次の会期中に在任した内閣総理大臣ではない")
+                if not cabinet_served(m["name"], referrals.get(bill["提出回次"], set())):
+                    errors.append(f"{where}：提出した回次の会期の最初から最後まで在任した閣僚ではない")
             elif COMMITTEE.search(re.sub(r"君(外.+名)?$", "", squash(bill["提出者"]))):
                 errors.append(f"{where}：委員会提出の法律を人に配っている")
             elif m["name"] not in squash(bill["提出者"]) + squash(bill["提出者一覧"]):
