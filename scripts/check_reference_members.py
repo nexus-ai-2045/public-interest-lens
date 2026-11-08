@@ -82,7 +82,8 @@ def check(attributions_path: Path | None = None) -> list[str]:
     # 額なし（noAmount）の法律は人に配らない（設計確定 v2.1）。
     no_amount = set(ranking_json.get("generatedFrom", {}).get("parameters", {}).get("noAmount", []))
     enacted = {f"{r['種別']}-{r['提出回次']}-{r['番号']}": r for r in read_csv(ENACTED)}
-    ministers = [r for r in read_csv(CABINET) if r["区分"] == "閣僚" and r["就任日_西暦"]]
+    # 区分「閣僚」には副長官・法制局長官も入るが、閣僚（国務大臣）ではない。
+    ministers = [r for r in read_csv(CABINET) if r["区分"] == "閣僚" and r["就任日_西暦"] and not re.search(r"副長官|法制局長官", r["役職"])]
     referrals: dict[str, set[str]] = {}
     for r in enacted.values():
         d = wareki(r["付託日_衆"]) if r["種別"] == "閣法" and r["回次"] == r["提出回次"] else ""
@@ -92,6 +93,11 @@ def check(attributions_path: Path | None = None) -> list[str]:
     def cabinet_served(name: str, dates: set[str]) -> bool:
         """閣法は内閣の提出。提出した回次の会期の最初と最後の付託日の両方に在任した閣僚（総理大臣を含む）か。"""
         if not dates:
+            return False
+        lo, hi = min(dates), max(dates)
+        # 総理大臣が会期中に替わる回次は、どの内閣の提出か決められないので配らない。
+        pm_at = lambda d: {norm_name(p["氏名"]) for p in ministers if p["役職"] == "内閣総理大臣" and p["就任日_西暦"] <= d and (not p["退任日_西暦"] or d < p["退任日_西暦"])}
+        if not pm_at(lo) or pm_at(lo) != pm_at(hi):
             return False
         return all(any(norm_name(p["氏名"]) == name and p["就任日_西暦"] <= d and (not p["退任日_西暦"] or d < p["退任日_西暦"])
                        for p in ministers) for d in (min(dates), max(dates)))

@@ -7,7 +7,7 @@ import type { GenerationMetadata } from './generation-metadata';
  * 1. 対象は公開ランキングで確かさ「参考」の法律。同じ観測（指標の組 group と窓 window が同じ）を共有する N 本は、
  *    観測の額を N 本で等分してから配る（足し合わせで同じ差を N 回数えないため）。
  * 2. 配り方は確かな額と同じ Shapley 値（causal-allocation.ts）。提出者の組と衆議院の賛成会派が拒否権者、参議院の賛成票が多数決。
- *    提出者：閣法は提出時の内閣総理大臣（閣議決定の長）。衆法・参法は議案の提出者の欄。「○○君外N名」で名前の一覧が無いときは、
+ *    提出者：閣法は提出した回次の会期の最初から最後まで在任した閣僚（総理大臣を含む）に均等に配る（内閣の提出。副長官・法制局長官は閣僚ではない）。衆法・参法は議案の提出者の欄。「○○君外N名」で名前の一覧が無いときは、
  *    代表者に 1/(N+1) を置き、残りは「名前不明の提出者」とする。委員会提出（○○委員長）は人に配らない。
  *    参議院：本会議の押しボタン投票の個人別の賛否（成立した日の、題名が一致する投票）。
  * 3. 参議院の個人別の賛否が見つからない法律は、提出者の組・衆議院の賛成会派・参議院の賛成会派の3者で 1/3 ずつとし、会派の分は人に配らない。
@@ -110,7 +110,9 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     const prev = idName.get(r['議員ID']);
     if (!prev || Number(r['回次']) >= prev.session) idName.set(r['議員ID'], { name: normName(r['議員名']), party: r['会派'], session: Number(r['回次']) });
   }
-  const ministers = parseCsv(input.cabinet).filter(r => r['区分'] === '閣僚' && r['就任日_西暦']);
+  // 閣僚＝国務大臣（総理大臣・各大臣・官房長官・担当大臣）。区分が「閣僚」の行には内閣官房副長官・総理府総務副長官・内閣法制局長官も入るが、閣僚ではないので除く。
+  const NOT_MINISTER = /副長官|法制局長官/;
+  const ministers = parseCsv(input.cabinet).filter(r => r['区分'] === '閣僚' && r['就任日_西暦'] && !NOT_MINISTER.test(r['役職']));
   const servingOn = (date: string, rows: Record<string, string>[]) => rows.filter(r => r['就任日_西暦'] <= date && (!r['退任日_西暦'] || date < r['退任日_西暦']));
   const pms = ministers.filter(r => r['役職'] === '内閣総理大臣');
   const pmOn = (date: string) => servingOn(date, pms).map(r => normName(r['氏名']))[0] ?? '';
@@ -131,11 +133,23 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
   };
   // 閣法は内閣の提出。総理大臣1人に全部付けず（首相だけが突出する原因）、提出した回次の会期の最初から最後まで在任した閣僚（総理大臣を含む）に均等に配る
   // （設計確定 v2.1：閣法は首相1人に付けない）。総理大臣が会期中に替わる回次は、どの内閣の提出か決められないので配らない。途中で替わった閣僚は含めない。
+  // 人物台帳に結べない人は分母に入れない（入れると、配られない分が黙って消える）。回次ごとに1回だけ計算する。
+  let unresolved = 0;
+  const cabinetCache = new Map<string, string[]>();
+  const cabinetDropped = new Map<string, number>();
   const cabinetOf = (session: string): string[] => {
+    const hit = cabinetCache.get(session);
+    if (hit) return hit;
     const x = span.get(session);
-    if (!x || !submitterPm(session)) return [];
-    const last = new Set(servingOn(x.last, ministers).map(r => normName(r['氏名'])));
-    return [...new Set(servingOn(x.first, ministers).map(r => normName(r['氏名'])).filter(n => last.has(n)))];
+    let out: string[] = [];
+    if (x && submitterPm(session)) {
+      const last = new Set(servingOn(x.last, ministers).map(r => normName(r['氏名'])));
+      const all = [...new Set(servingOn(x.first, ministers).map(r => normName(r['氏名'])).filter(n => last.has(n)))];
+      out = all.filter(n => ledger.resolve(n, ''));
+      cabinetDropped.set(session, all.length - out.length);
+    }
+    cabinetCache.set(session, out);
+    return out;
   };
 
   // コロナ期と重なる・分離できない法律は配らない。額がコロナ期の日本と比較国の落ち込みの差をそのまま含み、その法律の効果ではない（設計決定0014）。
@@ -159,6 +173,7 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     let proposers: { name: string; weight: number }[] = [];
     if (l.id.startsWith('閣法')) {
       const cabinet = cabinetOf(b['提出回次']);
+      unresolved += cabinetDropped.get(b['提出回次']) ?? 0;
       proposers = cabinet.map(name => ({ name, weight: 1 / cabinet.length }));
     } else if (COMMITTEE.test(parseProposer(b['提出者']).lead)) {
       // 委員会提出（「建設委員長」など）は人の提出ではないので、提出者一覧に委員長の名前があっても人には配らない。
@@ -191,7 +206,6 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
   const people = new Map<string, Tot>();
   const names = new Map<string, string>();
   const attributions: ReferenceAttribution[] = [];
-  let unresolved = 0;
   // memberHouse は一次資料で所属院が決まるときだけ渡す（衆法・参法の提出者は議案の種別。閣法の総理大臣は決まらないので渡さない）。
   const give = (name: string, memberHouse: string, law: (typeof laws)[number], role: ReferenceRole, amount: Range) => {
     const res = ledger.resolve(name, memberHouse);
