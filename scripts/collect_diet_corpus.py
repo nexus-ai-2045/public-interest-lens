@@ -8,11 +8,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:
-    from .fetch_diet_minutes import collect_pages
+    from .fetch_diet_minutes import _page_records, collect_pages
     from .official_raw import atomic_json, host_lock
     from .register_external_material import validate_task_id
 except ImportError:
-    from fetch_diet_minutes import collect_pages
+    from fetch_diet_minutes import _page_records, collect_pages
     from official_raw import atomic_json, host_lock
     from register_external_material import validate_task_id
 
@@ -87,7 +87,10 @@ def collect_corpus(
                         / f"{page['start_record']:09d}.json"
                     ).read_bytes()
                     issue_ids.extend(
-                        m["issueID"] for m in json.loads(payload)["meetingRecord"]
+                        m["issueID"]
+                        for m in _page_records(
+                            json.loads(payload), shard["endpoint"]
+                        )
                     )
                 actual = hashlib.sha256(
                     "\n".join(sorted(issue_ids)).encode("utf-8")
