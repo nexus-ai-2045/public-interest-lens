@@ -805,6 +805,61 @@ class RawTests(unittest.TestCase):
             result["results"][0]["error_type"], "FrozenInventoryIdentifiersMismatch"
         )
 
+    def test_zero_record_page_without_meeting_record_passes_id_check(self):
+        import hashlib
+        from scripts.collect_diet_corpus import collect_corpus
+
+        empty_ids = hashlib.sha256(b"").hexdigest()
+        plan = {
+            "run_id": "zero-page-test",
+            "shards": [
+                {
+                    "id": "empty-one",
+                    "endpoint": "meeting",
+                    "session_from": 1,
+                    "session_to": 1,
+                    "date_from": "1947-05-03",
+                    "date_to": "2026-10-03",
+                    "house": "衆議院",
+                    "expected_index_records": 0,
+                    "expected_issue_ids_sha256": empty_ids,
+                }
+            ],
+        }
+        path = self.local / "zero-page-plan.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(plan), encoding="utf-8")
+        # 実APIの件数0応答と同じく meetingRecord キー無し
+        empty_page = (
+            b'{"numberOfRecords":0,"numberOfReturn":0,'
+            b'"startRecord":1,"nextRecordPosition":null}'
+        )
+
+        def complete(**args):
+            page = args["output_dir"] / "pages" / "000000001.json"
+            page.parent.mkdir(parents=True)
+            page.write_bytes(empty_page)
+            return {
+                "complete": True,
+                "status": "query_exhausted",
+                "records_saved": 0,
+                "records_reported": 0,
+                "readable_body_count": 0,
+                "raw_response_pages": 1,
+                "pages": [{"start_record": 1}],
+            }
+
+        with patch("scripts.collect_diet_corpus.collect_pages", side_effect=complete):
+            result = collect_corpus(
+                path, material_root=self.material, max_shards=1, pages_per_shard=1
+            )
+        self.assertTrue(result["corpus_complete"])
+        self.assertEqual(result["results"][0]["status"], "query_exhausted")
+        self.assertIsNone(result["results"][0].get("error_type"))
+        self.assertTrue(
+            (self.local / "diet" / "zero-page-test" / "corpus-receipt.json").exists()
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
