@@ -14,7 +14,7 @@ function OutcomeRow({ item }: { item: LawOutcome }) {
     <summary>
       <span>{item.title}</span>{' '}
       <small>（{item.enforced || '施行日不明'}施行・{item.result}）</small>
-      {item.median !== null && <small className={reference ? 'law-outcome-reference' : undefined} style={reference ? { color: 'gray' } : undefined}> {reference ? '参考' : amountWord(item.side)} {formatYen(item.median)}{reference ? '（合計に足しません）' : ''}</small>}
+      {item.median !== null && <small className={reference ? 'law-outcome-reference' : undefined} style={reference ? { color: 'gray' } : undefined}> {reference ? (item.side === 'undetermined' ? '参考・向き未確定' : '参考') : amountWord(item.side)} {formatYen(item.median)}{reference ? '（合計に足しません）' : ''}</small>}
     </summary>
     <dl>
       <dt>結果</dt><dd>{item.result}{item.direction && `（向き：${item.direction}）`}</dd>

@@ -22,7 +22,7 @@ if str(ROOT) not in sys.path:
 from scripts.build_public_ranking import direction_undetermined  # noqa: E402
 
 RANKING = ROOT / "app" / "public" / "distribution" / "ranking.json"
-WITHHELD = "1本ごとの額は公開ランキングで出していません（{outcome}）。法律ランキングで見てください"
+WITHHELD = "1本ごとの額は公開ランキングで出していない（{outcome}）。法律ランキングで見る"
 SOURCE = ROOT / "data" / "derived" / "all-laws-v1" / "outcomes.csv"
 OUTPUT = ROOT / "app" / "public" / "distribution" / "law-outcomes.json"
 RESULTS = ("額あり", "保留", "測定できない", "評価対象外", "効果なし（定例）")
@@ -33,8 +33,8 @@ def parse_amount(text: str) -> tuple[str | None, float | None]:
     return (("benefit" if match.group(1) == "便益" else "loss"), float(match.group(2))) if match else (None, None)
 
 
-def build() -> dict:
-    ranking = json.loads(RANKING.read_text(encoding="utf-8"))
+def build(ranking: dict | None = None) -> dict:
+    ranking = ranking if ranking is not None else json.loads(RANKING.read_text(encoding="utf-8"))
     published = {law["id"]: law for law in ranking["laws"]}
     others = {law["id"]: law for law in ranking["others"]}
     items = []
@@ -43,21 +43,32 @@ def build() -> dict:
             if row["結果"] not in RESULTS:
                 raise ValueError(f"結果が想定外: {row['id']} {row['結果']}")
             side, median = parse_amount(row["損失または便益の額"])
-            withheld = None
-            if median is not None:
-                law = published.get(row["id"])
-                if law is None:
-                    # 公開ランキングが1本ごとの額を出さない法律は、ここでも額を出さない（画面どうしで食い違わせない）
-                    side, median = None, None
-                    withheld = WITHHELD.format(outcome=others.get(row["id"], {}).get("outcome", "結果なし"))
-                elif direction_undetermined(law["notes"]):
-                    side = "undetermined"
+            result, reason, certainty, direction = row["結果"], row["理由"], row["確かさ"], row["向き"]
+            indicator, stage, unit = row["指標"], row["段階"], row["単位"]
+            law = published.get(row["id"])
+            if law is not None:
+                # 公開ランキングに額がある法律は、額・向き・確かさをそちらに合わせる（/ranking と /history で食い違わせない）
+                side = "undetermined" if direction_undetermined(law["notes"]) else law["side"]
+                median, certainty, result = law["amountMedianYen"], law["certainty"], "額あり"
+                indicator, stage = law["indicator"], law["stage"]
+                unit = row["単位"] or f"円（窓 {law['window']} の差）"
+                if result != row["結果"] or side == "undetermined":
+                    reason = "法律ランキングで出した額（" + "・".join(law["notes"][:2] or [law["certainty"]]) + "）"
+                if side == "undetermined":
+                    direction = ""  # 向きの欄も出さない（損失・便益の証拠が無い）
+            elif median is not None or row["結果"] == "額あり":
+                if row["id"] not in others:
+                    raise ValueError(f"結果台帳に額があるのに公開ランキングに無い: {row['id']}")
+                # 公開ランキングが1本ごとの額を出さない法律（共有額の参考・税収の見込みなど）は、額を出さず、ランキングの結果にそろえる
+                outcome = others[row["id"]]["outcome"]
+                side, median = None, None
+                result = "評価対象外" if outcome == "評価対象外" else "保留"
+                reason = WITHHELD.format(outcome=outcome) + "。" + row["理由"]
             items.append({
-                "id": row["id"], "title": row["題名"], "field": row["分野"], "indicator": row["指標"], "certainty": row["確かさ"],
-                "result": row["結果"], "reason": row["理由"], "route": row["経路"], "enforced": row["施行日"], "kind": row["種類"],
-                "stage": row["段階"], "direction": row["向き"], "side": side, "median": median, "unit": row["単位"],
-                "publishable": row["公開可否"] == "公開可",
-                **({"amountWithheld": withheld} if withheld else {}),
+                "id": row["id"], "title": row["題名"], "field": row["分野"], "indicator": indicator, "certainty": certainty,
+                "result": result, "reason": reason, "route": row["経路"], "enforced": row["施行日"], "kind": row["種類"],
+                "stage": stage, "direction": direction, "side": side, "median": median, "unit": unit,
+                "publishable": row["公開可否"] == "公開可" and law is not None and law["certainty"] != "参考",
             })
     counts = Counter(item["result"] for item in items)
     return {"schema": "law-outcomes/v1", "counts": {key: counts.get(key, 0) for key in RESULTS}, "items": items}

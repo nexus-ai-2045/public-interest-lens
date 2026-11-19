@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countByResult, enforcedBetween, groupByResult, isReferenceAmount, parseLawOutcomes, reasonBreakdown, type LawOutcome } from './law-outcomes-view';
+import { amountWord, countByResult, enforcedBetween, groupByResult, isReferenceAmount, parseLawOutcomes, reasonBreakdown, type LawOutcome } from './law-outcomes-view';
 
 const row = (id: string, result: LawOutcome['result'], enforced: string, extra: Partial<LawOutcome> = {}): LawOutcome => ({
   id, title: `法${id}`, field: '分野', indicator: '', certainty: '', result, reason: '理由A：詳細', route: '経路', enforced, kind: '新規', stage: '', direction: '', side: null, median: null, unit: '', publishable: false, ...extra,
@@ -33,5 +33,10 @@ describe('全法律の結果一覧', () => {
     expect(() => parseLawOutcomes('{"schema":"x","items":[]}')).toThrow();
     expect(() => parseLawOutcomes(JSON.stringify({ schema: 'law-outcomes/v1', counts: {}, items: [{ id: 'z', result: '謎' }] }))).toThrow();
     expect(parseLawOutcomes(JSON.stringify({ schema: 'law-outcomes/v1', counts: {}, items }))).toBeTruthy();
+  });
+  it('額の呼び名：向き未確定は損失とも便益とも呼ばない', () => {
+    expect(amountWord('loss')).toBe('損失');
+    expect(amountWord('benefit')).toBe('便益');
+    expect(amountWord('undetermined')).toBe('差の大きさ（向き未確定）');
   });
 });
