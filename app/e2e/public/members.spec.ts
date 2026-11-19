@@ -8,7 +8,7 @@ test.describe('/members（順位を非表示）', () => {
     const watch = watchPage(page);
     await page.goto('/members');
     await expect(page).toHaveTitle(/議員・実名/);
-    await expect(page.getByRole('heading', { level: 1, name: 'この人が失わせた額・生んだ額' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: '議員が関わった法律と、その産業の伸び損ね（記述）' })).toBeVisible();
     await expect(page.getByRole('note').filter({ hasText: '計算方法の見直し中' })).toBeVisible();
     for (const selector of ['ol.members-list', '.tone-hero', '.all-members', '.members-top', '.members-tabs']) await expect(page.locator(selector)).toHaveCount(0);
     await expect(page.getByRole('region', { name: '全議員' })).toHaveCount(0);
