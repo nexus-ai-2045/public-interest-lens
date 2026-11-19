@@ -371,7 +371,7 @@ describe('公開用への変換（法律1本ぶんの額を出さない）', () 
     expect(p.totals.people).toEqual(out.totals.people);
     expect(p.totals.parties).toEqual(out.totals.parties);
     // 検算は公開用でも合う：人＋会派＋未配分＝期待値。
-    for (const k of ['low', 'median', 'high'] as const) expect(p.totals.people![k] + p.totals.parties![k] + p.totals.unallocated[k]).toBeCloseTo(p.totals.expected[k], 6);
+    for (const k of ['low', 'median', 'high'] as const) expect(p.totals.people![k] + p.totals.parties![k] + p.totals.unallocated![k]).toBeCloseTo(p.totals.expected![k], 6);
     // 階層に入った人の額の和と、額を出さない人の合計の和が、全員の合計になる。
     const ranked = p.people.filter(x => x.tier !== null).reduce((s, x) => s + x.exposureYen!.median, 0);
     expect(ranked + p.hidden.people.exposureYen!.median).toBeCloseTo(p.totals.people!.median);
