@@ -141,13 +141,55 @@ class ConsistencyTest(unittest.TestCase):
         stale = {(s["file"], s["section"], s["status"], tuple(s["methods"])) for s in result["withdrawn"]["stale"]}
         self.assertEqual(stale, {
             ("app/src/method-spec.ts", "allocation-v0（成立への寄与）", "採用", ("Shapley 値による配分",)),
-            ("docs/配り方.md", "（ファイル全体）", "", ("群の額の本数割り", "確かさ「低」の配分")),
+            ("docs/配り方.md", "（冒頭）", "", ("群の額の本数割り", "確かさ「低」の配分")),
         })
         self.assertFalse(dc.verdict(result, strict=False)[0])
 
     def test_saying_the_method_is_not_used_is_not_a_hit(self):
-        result = self.run_tree(**{"docs/配り方.md": "群の差は法律の本数で割らない。「低」は額と印を出すが、配らない。\n"})
+        for text in ["群の差は法律の本数で割らない。「低」は額と印を出すが、配らない。", "群の額は本数で割りません。「低」は配りません。",
+                     "「低」と「参考」は順位にも配分にも使わない。", "Shapley 値による配分は撤回した。"]:
+            with self.subTest(text=text):
+                self.assertEqual(dc.withdrawn_hits(text), [])
+
+    def test_the_wordings_the_documents_actually_use_are_hits(self):
+        for text in ["段階1の額は確かさ「低」として印を付け、議員への配分にも使う。", "配るのは確かさ「高」「中」「低」の法律（印つき）。",
+                     "今の実装は確かさ「低」の額も議員に配る（設計決定0014 決定6）。"]:
+            with self.subTest(text=text):
+                self.assertEqual(dc.withdrawn_hits(text), ["確かさ「低」の配分"])
+        self.assertEqual(dc.withdrawn_hits("本数で等分し「同じ観測を共有」の印を付ける。"), ["群の額の本数割り"])
+
+    def test_a_pointer_elsewhere_in_the_file_does_not_clear_another_section(self):
+        doc = "# 仕様の版\n\n## 決まり\n\n観測の額を本数で割る。\n\n## 変更の記録\n\n| v3 | 点数設計 v2.1 を採用 |\n"
+        result = self.run_tree(**{"docs/adr/0013-spec.md": doc})
+        self.assertEqual([(s["file"], s["section"]) for s in result["withdrawn"]["stale"]], [("docs/adr/0013-spec.md", "決まり")])
+
+    def test_a_replacement_note_at_the_top_covers_the_whole_decision(self):
+        doc = "# 設計決定0014\n\n> **一部を置き換え済み**：設計決定0027 が置き換えた。\n\n## 決定\n\nShapley 値の賛成1票分を配る。\n"
+        result = self.run_tree(**{"docs/adr/0014-allocation.md": doc})
         self.assertEqual(result["withdrawn"]["stale"], [])
+        # 計算式は節ごとに版と状態を持つので、冒頭の注記では済まない
+        formula = "# 計算式\n\n移行中。設計決定0027 が置き換える。\n\n## 点数設計 v2.1\n\n- " + FIXED + "\n\n## 成立への寄与\n\nShapley 値で配る。\n"
+        result = self.run_tree(**{"docs/計算式.md": formula})
+        self.assertEqual([s["section"] for s in result["withdrawn"]["stale"]], ["成立への寄与"])
+
+    def test_measured_results_and_past_values_are_not_claims(self):
+        def claims(text):
+            return [(c["key"], c["value"]) for c in dc.find_claims(text)]
+
+        self.assertEqual(claims("今回のバックテストの的中率 62%（合格線 80% に届かない）"), [("hitRateFloor", 0.8)])
+        self.assertEqual(claims("以前の合格線 95%（v5 まで）。固定済みの測定は当時の合格線 95% のまま残す。"), [])
+        self.assertEqual(claims("確かさの下限を高くする案は採らない"), [])
+        self.assertEqual(claims("| 確かさの下限 | 中以上 |"), [("certaintyFloor", "中")])
+
+    def test_latex_bounds_are_read_in_the_usual_spellings(self):
+        def values(text):
+            return [c["value"] for c in dc.find_claims(text)]
+
+        for text in [r"上位3本の占有率 $s \le 0.5$", r"上位3本の占有率 $s \leq 0.5$", r"上位3本の占有率 $s \le 50\%$", "上位3本の占有率 s ≤ 50%",
+                     r"'\\frac{\\sum_{i\\in\\text{上位3本}} x}{y} \\le 0.5'"]:
+            with self.subTest(text=text):
+                self.assertEqual(values(text), [0.5])
+        self.assertEqual(values(r"|\mathcal L_p| \geq 5"), [5.0])
 
     def test_code_residue_fails_only_in_strict(self):
         result = self.run_tree(**{"app/src/causal-allocation.ts": "export function shapley() {}\n", "app/src/causal-allocation.test.ts": "shapley();\n"})
@@ -179,6 +221,7 @@ class CompletionTest(unittest.TestCase):
             ".local/release-check/2026-11-19.json": json.dumps([{"step": "事前チェック", "ok": True}, {"step": "CI と同じ検査", "ok": False}]),
         }, logic_counts=lambda: {"L1": 0, "L2": 2})
         self.assertEqual(status[1]["state"], "未達")  # C が台帳に無い
+        self.assertIn("議員：", status[1]["now"])
         self.assertIn("台帳に無い 1", status[1]["now"])
         self.assertEqual(status[2]["state"], "未達")
         self.assertIn("計 2 本", status[2]["now"])
@@ -186,6 +229,36 @@ class CompletionTest(unittest.TestCase):
         self.assertIn("参考に下げた 1 本、不合格のまま 0 本", status[3]["now"])
         self.assertEqual(status[4]["state"], "未達")
         self.assertIn("CI と同じ検査", status[4]["now"])
+
+    def test_laws_alone_do_not_make_the_ledger_condition_done(self):
+        # 進め方 5章-1 は法律と議員の全件。議員の側は測る台帳が無いので「達成」とは言わない
+        d = "data/derived/"
+        status = self.status({d + "all-laws-v1/outcomes.csv": "id\nA\n", d + "evaluation-ledger-v1/ledger.csv": LEDGER_HEAD + "A,測定できない,,,未検証\n"})
+        self.assertEqual(status[1]["state"], "一部達成")
+
+    def test_empty_or_broken_inputs_are_not_measured_and_do_not_crash(self):
+        d = "data/derived/"
+        status = self.status({
+            d + "all-laws-v1/outcomes.csv": "id\nA\n",
+            d + "evaluation-ledger-v1/ledger.csv": "id,到達点\nA,測定できない\n",  # 額の列が無い
+            d + "evaluation-ledger-v1/sample.csv": "層,id,題名\n",
+            d + "evaluation-ledger-v1/sample-verdicts.csv": "id,判定,食い違い\n",
+            ".local/release-check/2026-11-19.json": "{",
+        }, logic_counts=dict)
+        self.assertEqual({no: c["state"] for no, c in status.items()}, {1: "未実行", 2: "未実行", 3: "未実行", 4: "未実行"})
+        self.assertIn("KeyError", status[1]["now"])
+        status = self.status({".local/release-check/2026-11-19.json": "[]"})
+        self.assertEqual(status[4]["state"], "未実行")
+
+    def test_every_sampled_law_needs_its_own_verdict(self):
+        d = "data/derived/evaluation-ledger-v1/"
+        status = self.status({
+            d + "ledger.csv": LEDGER_HEAD + "A,測定できない,,,抜き取り検証で合格\nB,測定できない,,,未検証\nC,測定できない,,,未検証\n",
+            d + "sample.csv": "層,id,題名\nx,A,a\nx,B,b\nx,C,c\n",
+            d + "sample-verdicts.csv": "id,判定,食い違い\nA,不合格,向き\nA,合格,\nB,,\n",  # A はやり直しで2行、B は空欄、C は行が無い
+        })
+        self.assertEqual(status[3]["state"], "未達")
+        self.assertIn("判定済み 1 本（合格 1、不合格 0）、判定なし 2 本", status[3]["now"])
 
     def test_completion_does_not_change_the_verdict(self):
         with tempfile.TemporaryDirectory() as tmp:

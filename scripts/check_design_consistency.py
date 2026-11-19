@@ -9,7 +9,7 @@
   ④ 完了の条件  docs/進め方.md 5章の4つ（評価台帳の全件、ロジック検査の違反0、抜き取り検証、公開前検査）の今の状態
 
 終了コード：①か③に不一致があれば 1。--strict は、②の印と③のコードに残る実装が1件でもあれば 1（移行が終わったかの検査）。
-④は状態を出すだけで、終了コードには入れない（完了の判定は人が表を見てする）。
+④は状態を出すだけで、終了コードには入れない（完了の判定は人が表を見てする）。材料が無い条件は「未実行」と出す。
 
 使い方：python3 scripts/check_design_consistency.py            表（Markdown）を標準出力へ
         python3 scripts/check_design_consistency.py --strict   移行の残りがあれば失敗
@@ -52,18 +52,24 @@ CONSTANT_RE = {
 _SEP = r"(?:[\s|:：（(「*]|は|を|が)*"
 _NUM = r"(\d+(?:\.\d+)?)"
 _PCT = r"\s*[%％](?!\s*から)"  # 「95% から 80% に」のような変更の経緯は、今の値の主張として読まない
+_MARK = r"(高|中|低|参考)(?=」|以上|\s*\||[。、）)\s]|$)"  # 「下限を高くする」の「高」は印ではない
+_LE = r"(?:\\+leq?|≤)"
+_GE = r"(?:\\+geq?|≥)"
+# 直前にこの語があれば、過去の値の話（今の値の主張ではない）
+_PAST = re.compile(r"(?:以前|当時|従来|旧い?|まで)の?\s*$")
 
-# (定数, 正規表現, 読み取った値の単位)。単位 pct は百分率、raw はそのまま、mark は確かさの印。
+# (定数, 正規表現, 読み取った値の単位)。pct は百分率、raw はそのまま（後ろに % があれば百分率）、mark は確かさの印。
+# 「的中率 62%」のような測った結果は合格線の主張ではないので、的中率の型は「以上」「の合格線」が続くときだけ拾う。
 CLAIMS: list[tuple[str, re.Pattern[str], str]] = [
-    ("hitRateFloor", re.compile(rf"的中率\s*{_NUM}{_PCT}"), "pct"),
+    ("hitRateFloor", re.compile(rf"的中率\s*{_NUM}{_PCT}\s*(?:以上|の合格線)"), "pct"),
     ("hitRateFloor", re.compile(rf"(?:合格線|合格の線){_SEP}(?:的中率|一致率)?\s*{_NUM}{_PCT}"), "pct"),
     ("hitRateFloor", re.compile(rf"{_NUM}\s*[%％]\s*以上\**\s*を合格"), "pct"),
     ("hitRateFloor", re.compile(rf"精度は?\s*{_NUM}\s*[%％]\s*以上"), "pct"),
     ("minContributingLaws", re.compile(rf"寄与法律数の?下限{_SEP}(\d+)"), "raw"),
-    ("minContributingLaws", re.compile(r"\|\\+mathcal L_p\|\s*\\+ge\s*(\d+)"), "raw"),
+    ("minContributingLaws", re.compile(rf"\|\\+mathcal L_p\|\s*{_GE}\s*(\d+)"), "raw"),
     ("topThreeShareCap", re.compile(rf"上位3本の占有率の上限{_SEP}{_NUM}\s*[%％]"), "pct"),
-    ("topThreeShareCap", re.compile(rf"上位3本.*\\+le\s*{_NUM}"), "raw"),
-    ("certaintyFloor", re.compile(rf"確かさの下限{_SEP}(高|中|低|参考)"), "mark"),
+    ("topThreeShareCap", re.compile(rf"上位3本.*?{_LE}\s*{_NUM}(?P<pct>\s*\\*[%％])?"), "raw"),
+    ("certaintyFloor", re.compile(rf"確かさの下限{_SEP}{_MARK}"), "mark"),
     ("certaintyFloor", re.compile(r"確かさが(高|中|低|参考)以上"), "mark"),
 ]
 
@@ -84,9 +90,11 @@ REPLACE_MARK = "【置き換え予定"
 V21_POINTER = re.compile(r"【置き換え予定|置き換え済み|設計決定\s*0027|0027-score-design|点数設計 v2\.1|score-design-v2\.1")
 WITHDRAWN: list[tuple[str, re.Pattern[str]]] = [
     ("Shapley 値による配分", re.compile(r"shapley|シャープレイ", re.IGNORECASE)),
-    ("群の額の本数割り", re.compile(r"本数で割(?!らない)|本数割り|observation-split")),
-    ("確かさ「低」の配分", re.compile(r"「低」[^。\n]{0,12}配[るりっ]|「低」も印つき")),
+    ("群の額の本数割り", re.compile(r"本数で割|本数割り|本数で等分|observation-split")),
+    ("確かさ「低」の配分", re.compile(r"「低」[^。\n]{0,30}配(?:分|る|り|っ)|配るのは[^。\n]*「低」|「低」も印つき")),
 ]
+# 同じ文の中でこう言っていれば「使っている」ではない（使わない・やめた、の説明）
+NEGATION = re.compile(r"ない|ません|せず|らず|やめ|撤回|廃止|不採用")
 # ③で見ない文書と、その理由（理由なしに足さない）
 EXEMPT = {
     "docs/adr/0008-publish-everything-with-certainty-marks.md": "実名公開の線引き。設計決定0027 が「0008 は書き換えない」と決めている",
@@ -154,11 +162,12 @@ def find_claims(text: str) -> list[dict]:
         for key, pat, unit in CLAIMS:
             for m in pat.finditer(line):
                 at = (key, no, m.start(1))
-                if at in seen:
+                if at in seen or _PAST.search(line[:m.start()]):
                     continue
                 seen.add(at)
                 raw = m.group(1)
-                value: float | str = raw if unit == "mark" else (float(raw) / 100 if unit == "pct" else float(raw))
+                percent = unit == "pct" or bool(m.groupdict().get("pct"))
+                value: float | str = raw if unit == "mark" else (float(raw) / 100 if percent else float(raw))
                 out.append({"key": key, "line": no, "value": value, "text": m.group(0)})
     return out
 
@@ -262,29 +271,20 @@ def spec_units(text: str) -> list[dict]:
     return _join(units)
 
 
-def whole_file_unit(text: str) -> list[dict]:
-    return [{"title": "（ファイル全体）", "line": 1, "text": text}]
-
-
 def _join(units: list[dict]) -> list[dict]:
     for u in units:
         u["text"] = "\n".join(u.pop("lines"))
     return units
 
 
-def units_of(root: Path, path: Path) -> list[dict]:
-    name = rel(root, path)
-    text = read_text(path)
-    if name == SPEC_FILE:
-        return spec_units(text)
-    if name == FORMULA_DOC:
-        return markdown_units(text)
-    return whole_file_unit(text)  # 設計決定などは、冒頭の注記がファイル全体にかかる
-
-
 def design_docs(root: Path) -> list[Path]:
     """設計を述べる文書：docs 直下、設計決定、仕様。報告・学習記録・提案は過去の記録なので見ない。"""
     return sorted(root.glob("docs/*.md")) + sorted(root.glob("docs/adr/*.md")) + resolve(root, SPEC_FILE)
+
+
+def units_of(root: Path, path: Path) -> list[dict]:
+    text = read_text(path)
+    return spec_units(text) if rel(root, path) == SPEC_FILE else markdown_units(text)
 
 
 # ---------- ② 置き換え予定の印 ----------
@@ -293,8 +293,7 @@ def check_replace_marks(root: Path) -> list[dict]:
     out = []
     for path in design_docs(root):
         name = rel(root, path)
-        units = spec_units(read_text(path)) if name == SPEC_FILE else markdown_units(read_text(path))
-        for u in units:
+        for u in units_of(root, path):
             for offset, line in enumerate(u["text"].splitlines()):
                 if REPLACE_MARK in line:
                     out.append({"file": name, "line": u["line"] + offset, "section": u["title"]})
@@ -302,6 +301,29 @@ def check_replace_marks(root: Path) -> list[dict]:
 
 
 # ---------- ③ 撤回した方式 ----------
+
+def withdrawn_hits(text: str) -> list[str]:
+    """節の中で「使っている」と読める撤回済みの方式。同じ文で否定している（割らない・配りません）ものは数えない。"""
+    hits = []
+    for label, pat in WITHDRAWN:
+        for m in pat.finditer(text):
+            end = min((i for i in (text.find("。", m.start()), text.find("\n", m.start())) if i != -1), default=len(text))
+            if not NEGATION.search(text[m.start():end]):
+                hits.append(label)
+                break
+    return hits
+
+
+def file_note_points_to_v21(name: str, units: list[dict]) -> bool:
+    """冒頭（最初の見出しより前）の「置き換え」の注記は、その文書全体にかかる。
+
+    計算式と仕様は節ごとに版と状態を持つので、冒頭の注記では済ませない（節ごとに印が要る）。
+    """
+    if name in (SPEC_FILE, FORMULA_DOC) or not units:
+        return False
+    head = units[0]["text"]
+    return "置き換え" in head and bool(V21_POINTER.search(head))
+
 
 def check_withdrawn(root: Path) -> dict:
     """文書：撤回した方式に触れる節が v2.1 を指しているか。コード：実装がまだ残るファイルを数える。"""
@@ -311,11 +333,13 @@ def check_withdrawn(root: Path) -> dict:
         if name in EXEMPT:
             exempt.append({"file": name, "reason": EXEMPT[name]})
             continue
-        for u in units_of(root, path):
-            hits = [label for label, pat in WITHDRAWN if pat.search(u["text"])]
+        units = units_of(root, path)
+        covered = file_note_points_to_v21(name, units)
+        for u in units:
+            hits = withdrawn_hits(u["text"])
             if not hits:
                 continue
-            if V21_POINTER.search(u["text"]):
+            if covered or V21_POINTER.search(u["text"]):
                 pointed += 1
                 continue
             stale.append({"file": name, "line": u["line"], "section": u["title"], "methods": hits,
@@ -335,6 +359,10 @@ def check_withdrawn(root: Path) -> dict:
 
 # ---------- ④ 完了の条件（docs/進め方.md 5章） ----------
 
+class NotMeasured(Exception):
+    """測る材料が無い。達成にも未達にもせず「未実行」と出す。"""
+
+
 def _logic_counts_from_repo() -> dict[str, int]:
     sys.path.insert(0, str(ROOT))
     from scripts import check_evaluation_logic as logic
@@ -342,79 +370,103 @@ def _logic_counts_from_repo() -> dict[str, int]:
     return {rule: len(found) for rule, found in logic.check().items()}
 
 
-def completion_status(root: Path, logic_counts=None) -> list[dict]:
-    """4つの条件の今の状態。state は 達成・未達・未実行。測れないものを達成にしない。"""
-    d = root / "data" / "derived"
-    rows = []
+def _amount(row: dict[str, str]) -> bool:
+    return bool(row["額（円）"] or row["国の収支（億円）"])
 
-    # 1. 評価台帳の全件：全法律が「額あり」か「額なし＋理由」で載っている
+
+def _ledger_condition(d: Path) -> dict:
+    """1. 全法律が「額あり」か「額なし＋到達点（理由）」で台帳に載っている。議員の側は台帳が無いので測れない。"""
     ledger_path, outcomes_path = d / "evaluation-ledger-v1" / "ledger.csv", d / "all-laws-v1" / "outcomes.csv"
-    ledger: list[dict[str, str]] = []
-    if ledger_path.is_file() and outcomes_path.is_file():
-        ledger = read_csv(ledger_path)
-        target = {r["id"] for r in read_csv(outcomes_path)}
-        listed = {r["id"] for r in ledger}
-        with_amount = sum(1 for r in ledger if r["額（円）"] or r["国の収支（億円）"])
-        with_reason = sum(1 for r in ledger if not (r["額（円）"] or r["国の収支（億円）"]) and r["到達点"])
-        neither = len(ledger) - with_amount - with_reason
-        missing = len(target - listed)
-        persons = d / "person-ids" / "persons.csv"
-        people = f"。人物台帳 {len(read_csv(persons)):,} 人" if persons.is_file() else ""
-        rows.append({
-            "no": 1, "name": "評価台帳の全件",
-            "state": "達成" if not missing and not neither and len(listed) == len(ledger) else "未達",
-            "now": f"対象 {len(target):,} 本中、台帳に {len(target & listed):,} 本（額あり {with_amount:,}、額なし＋到達点 {with_reason:,}、どちらでもない {neither:,}、台帳に無い {missing:,}）{people}",
-            "how": "data/derived/evaluation-ledger-v1/ledger.csv を all-laws-v1/outcomes.csv と照合",
-        })
-    else:
-        rows.append({"no": 1, "name": "評価台帳の全件", "state": "未実行", "now": "台帳か全法律の一覧が無い",
-                     "how": "python3 scripts/build_evaluation_ledger.py build"})
+    if not (ledger_path.is_file() and outcomes_path.is_file()):
+        raise NotMeasured("台帳か全法律の一覧が無い")
+    ledger = read_csv(ledger_path)
+    target = {r["id"] for r in read_csv(outcomes_path)}
+    if not target:
+        raise NotMeasured("全法律の一覧が空")
+    listed = {r["id"] for r in ledger}
+    with_amount = sum(1 for r in ledger if _amount(r))
+    with_reason = sum(1 for r in ledger if not _amount(r) and r["到達点"])
+    neither = len(ledger) - with_amount - with_reason
+    missing = len(target - listed)
+    persons = d / "person-ids" / "persons.csv"
+    people = f"（人物台帳は {len(read_csv(persons)):,} 人）" if persons.is_file() else ""
+    laws_ok = not missing and not neither and len(listed) == len(ledger)
+    return {
+        "state": "一部達成" if laws_ok else "未達",
+        "now": f"法律：対象 {len(target):,} 本中、台帳に {len(target & listed):,} 本（額あり {with_amount:,}、額なし＋到達点 {with_reason:,}、どちらでもない {neither:,}、台帳に無い {missing:,}）。議員：1人ごとの「額あり／額なし＋理由」の台帳が無く、測れない{people}",
+        "how": "data/derived/evaluation-ledger-v1/ledger.csv を all-laws-v1/outcomes.csv と照合",
+    }
 
-    # 2. ロジック検査の違反0
-    try:
-        counts = (logic_counts or _logic_counts_from_repo)() if (logic_counts or root == ROOT) else None
-    except (OSError, KeyError) as e:  # 派生データが無い環境
-        counts, note = None, f"測れない（{type(e).__name__}）"
-    else:
-        note = "測っていない（リポジトリの外）"
-    if counts is None:
-        rows.append({"no": 2, "name": "ロジック検査の違反0", "state": "未実行", "now": note,
-                     "how": "python3 scripts/check_evaluation_logic.py"})
-    else:
-        total = sum(counts.values())
-        rows.append({"no": 2, "name": "ロジック検査の違反0", "state": "達成" if total == 0 else "未達",
-                     "now": "違反 " + "・".join(f"{k} {v}" for k, v in sorted(counts.items())) + f"（計 {total:,} 本）",
-                     "how": "scripts/check_evaluation_logic.py の check()（tests/test_evaluation_logic.py と同じ規則）"})
 
-    # 3. 抜き取り検証：不合格0
-    sample_path, verdict_path = d / "evaluation-ledger-v1" / "sample.csv", d / "evaluation-ledger-v1" / "sample-verdicts.csv"
-    if sample_path.is_file() and verdict_path.is_file() and ledger:
-        sample = {r["id"] for r in read_csv(sample_path)}
-        verdicts = Counter(r["判定"] for r in read_csv(verdict_path) if r["id"] in sample)
-        judged = sum(verdicts.values())
-        state = Counter(r["検証状態"] for r in ledger if r["id"] in sample)
-        still_failed, demoted = state["抜き取り検証で不合格"], state["参考に下げた"]
-        rows.append({
-            "no": 3, "name": "抜き取り検証（不合格0が目標）",
-            "state": "達成" if judged == len(sample) and still_failed == 0 else "未達",
-            "now": f"抜き取り {len(sample):,} 本中、判定済み {judged:,} 本（合格 {verdicts['合格']:,}、不合格 {verdicts['不合格']:,}）。不合格のうち参考に下げた {demoted:,} 本、不合格のまま {still_failed:,} 本",
-            "how": "sample.csv・sample-verdicts.csv と台帳の検証状態。やり直しの有無は判定の中身からは分からない",
-        })
-    else:
-        rows.append({"no": 3, "name": "抜き取り検証（不合格0が目標）", "state": "未実行", "now": "抜き取りか判定の記録が無い",
-                     "how": "python3 scripts/build_evaluation_ledger.py sample"})
+def _logic_condition(root: Path, logic_counts) -> dict:
+    """2. ロジック検査の違反0。"""
+    if logic_counts is None and root != ROOT:
+        raise NotMeasured("測っていない（リポジトリの外）")
+    counts = (logic_counts or _logic_counts_from_repo)()
+    if not counts:
+        raise NotMeasured("規則が1つも走っていない")
+    total = sum(counts.values())
+    return {"state": "達成" if total == 0 else "未達",
+            "now": "違反 " + "・".join(f"{k} {v}" for k, v in sorted(counts.items())) + f"（計 {total:,} 本）",
+            "how": "scripts/check_evaluation_logic.py の check()（tests/test_evaluation_logic.py と同じ規則）"}
 
-    # 4. 公開前検査：release_check.py が残した最新の記録を読む（ここでは走らせない）
+
+def _sampling_condition(d: Path) -> dict:
+    """3. 抜き取り検証で不合格のままの法律が0。抜き取った全件に判定があること。"""
+    base = d / "evaluation-ledger-v1"
+    if not all((base / n).is_file() for n in ("sample.csv", "sample-verdicts.csv", "ledger.csv")):
+        raise NotMeasured("抜き取りか判定の記録が無い")
+    sample = {r["id"] for r in read_csv(base / "sample.csv")}
+    if not sample:
+        raise NotMeasured("抜き取りが0本")
+    # 同じ法律の判定が2行あれば後の行（やり直し）を採る。空欄や知らない語は判定として数えない
+    verdict_of = {r["id"]: r["判定"] for r in read_csv(base / "sample-verdicts.csv") if r["id"] in sample and r["判定"] in ("合格", "不合格")}
+    tally = Counter(verdict_of.values())
+    state = Counter(r["検証状態"] for r in read_csv(base / "ledger.csv") if r["id"] in sample)
+    still_failed, demoted = state["抜き取り検証で不合格"], state["参考に下げた"]
+    unjudged = len(sample) - len(verdict_of)
+    return {
+        "state": "達成" if unjudged == 0 and still_failed == 0 else "未達",
+        "now": f"抜き取り {len(sample):,} 本中、判定済み {len(verdict_of):,} 本（合格 {tally['合格']:,}、不合格 {tally['不合格']:,}）、判定なし {unjudged:,} 本。不合格のうち参考に下げた {demoted:,} 本、不合格のまま {still_failed:,} 本",
+        "how": "sample.csv・sample-verdicts.csv と台帳の検証状態。やり直しの有無は判定の中身からは分からない",
+    }
+
+
+def _release_condition(root: Path) -> dict:
+    """4. 公開前検査。release_check.py が残した最新の記録を読む（ここでは走らせない）。"""
     records = sorted((root / ".local" / "release-check").glob("*.json"))
-    if records:
-        steps = json.loads(read_text(records[-1]))
-        bad = [s["step"] for s in steps if not s["ok"]]
-        rows.append({"no": 4, "name": "公開前検査（出典・議員ページ・個人名義）", "state": "未達" if bad else "達成",
-                     "now": f"{records[-1].stem} の記録：{len(steps) - len(bad)}/{len(steps)} 合格" + (f"（失敗：{'、'.join(bad)}）" if bad else ""),
-                     "how": "python3 scripts/release_check.py の記録（.local/release-check/）。記録より後の変更は見ていない"})
-    else:
-        rows.append({"no": 4, "name": "公開前検査（出典・議員ページ・個人名義）", "state": "未実行", "now": "記録が無い",
-                     "how": "python3 scripts/release_check.py"})
+    if not records:
+        raise NotMeasured("記録が無い")
+    steps = json.loads(read_text(records[-1]))
+    if not isinstance(steps, list) or not steps:
+        raise NotMeasured(f"{records[-1].stem} の記録が空")
+    bad = [s["step"] for s in steps if not s["ok"]]
+    return {"state": "未達" if bad else "達成",
+            "now": f"{records[-1].stem} の記録：{len(steps) - len(bad)}/{len(steps)} 合格" + (f"（失敗：{'、'.join(bad)}）" if bad else ""),
+            "how": "python3 scripts/release_check.py の記録（.local/release-check/）。記録より後の変更は見ていない"}
+
+
+def completion_status(root: Path, logic_counts=None) -> list[dict]:
+    """4つの条件の今の状態。state は 達成・一部達成・未達・未実行。測れないものを達成にしない。
+
+    材料が無い・壊れている条件は「未実行」にして先へ進む（1つ読めなくても、ほかの検査の結果は出す）。
+    """
+    d = root / "data" / "derived"
+    conditions = [
+        ("評価台帳の全件（法律と議員）", "python3 scripts/build_evaluation_ledger.py build", lambda: _ledger_condition(d)),
+        ("ロジック検査の違反0", "python3 scripts/check_evaluation_logic.py", lambda: _logic_condition(root, logic_counts)),
+        ("抜き取り検証（不合格0が目標）", "python3 scripts/build_evaluation_ledger.py sample", lambda: _sampling_condition(d)),
+        ("公開前検査（出典・議員ページ・個人名義）", "python3 scripts/release_check.py", lambda: _release_condition(root)),
+    ]
+    rows = []
+    for no, (name, command, measure) in enumerate(conditions, 1):
+        try:
+            row = measure()
+        except NotMeasured as e:
+            row = {"state": "未実行", "now": str(e), "how": command}
+        except (OSError, KeyError, TypeError, ValueError) as e:  # 列が無い・JSON が壊れている・派生データが無い
+            row = {"state": "未実行", "now": f"読めない（{type(e).__name__}: {e}）", "how": command}
+        rows.append({"no": no, "name": name} | row)
     return rows
 
 
