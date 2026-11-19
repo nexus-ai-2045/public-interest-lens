@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { SiteShell } from './SiteHeader';
 import { toneTitle, useTone } from './site-tone';
 import { ExposureRankingPanel } from './ExposureRankingPanel';
-import type { ExposureRanking } from './exposure-ranking';
+import type { PanelExposureRanking } from './exposure-ranking';
 import { parsePublicExposureRanking, panelExposureRanking } from './public-distribution';
 const MethodFormulas = lazy(() => import('./MethodFormulas'));
 const BacktestPanel = lazy(() => import('./BacktestPanel'));
@@ -20,7 +20,7 @@ export function MembersPage() {
   // トップ（/）から来たら、URL を議員ページのものに揃える。
   if (window.location.pathname === '/') window.history.replaceState(window.history.state, '', `/members${window.location.search}${window.location.hash}`);
   useEffect(() => { document.title = `議員・実名｜${toneTitle(tone)}`; }, [tone]);
-  const [ranking, setRanking] = useState<ExposureRanking | null>(null);
+  const [ranking, setRanking] = useState<PanelExposureRanking | null>(null);
   const [error, setError] = useState('');
   useEffect(() => {
     if (MEMBER_RANKING_HIDDEN) return;
@@ -52,16 +52,16 @@ export function MethodologyPage() {
       <ol>
         <li>1998年以降に成立した法律から、経済の指標で影響を追える法律を選ぶ（評価の対象）。</li>
         <li>施行日を法令の原文で確かめ、施行の前後で日本の指標（宿泊者数、通信業の付加価値など）を比較国と比べる。</li>
-        <li>比較国の伸びの中央値と、施行前の日本の伸びとの差を織り込んだ「施行しなかった場合」との差を、損失（国賊側）または便益（国士側）の額とする。幅は比較国の伸びの第1・第3四分位。</li>
+        <li>比較国の伸びの中央値と、施行前の日本の伸びとの差を織り込んだ「施行しなかった場合」との差を額とする。幅は比較国の伸びの第1・第3四分位。損失（国賊側）か便益（国士側）かの向きは、法律ごとの外部の証拠で確かめたものだけに付ける。産業と比較国の差の符号だけで決まる額は「向きは未確定（参考）」として出し、順位にも議員にも使わない。</li>
         <li>確かさの印を付ける。新型コロナの時期と窓が重なるもの、便益を減らしうる項目が未測定のもの、未測定の便益を0とした下限など。</li>
       </ol>
       <h3>2. 議員の見せ方（点数設計 v2.1、設計決定0027・0028）</h3>
       <p>識別できる単位は「産業×期間の群」までです（単独で識別できる法律は 1,982 本中 2 本）。そこで議員には、次の2つを分けて出します。足し合わせません。</p>
       <ol>
         <li><strong>因果の点</strong>：外部の証拠（他国の実測・官庁の見込みなど）で法律単位の額が取れ、確かさが「中」以上の法律だけを、役割ごとの固定比率（発議 0.4・賛成 0.2・反対 −0.2・閣議決定 0.2。取り決め）で人に配ります。関与した法律が5本以上で、上位3本の占有率が50%以下の人だけに点を出します。いまは該当する法律が0本なので、点のある議員は0人です。</li>
-        <li><strong>曝露ランキング（記述）</strong>：関与した法律が属する産業×年の群が、OECD の同じ産業・同じ年の中央値よりどれだけ伸び損ねたかを、同じ固定比率で配った額です。その人や法律が原因だという意味ではありません。順位は1位・2位ではなく、幅が重なる人を同じ階層にまとめて出します。</li>
+        <li><strong>曝露ランキング（記述）</strong>：関与した法律が属する産業×年の群が、OECD の同じ産業・同じ年の中央値よりどれだけ伸び損ねたかを、同じ固定比率で配った額です。その人や法律が原因だという意味ではありません。順位は1位・2位ではなく、幅が重なる人を同じ階層にまとめ、階層の中は名前の順に出します（いまは全員の幅が重なり階層は1つです）。「国賊」「国士」の札は付けません。関与した法律が5本未満の人、上位3本の法律で額の半分を超える人、関与の記録が無い人は、額を出さず理由を出します。</li>
       </ol>
-      <p>閣法は首相1人に付けず、提出した回次の会期を通して在任した閣僚の全員に付けます（総理大臣が会期中に替わる回次は、交代より前に付託された閣法だけ）。賛成・反対の枠は院で半分ずつに分け、衆議院は会派単位の賛否、参議院は押しボタン投票の個人票に配ります。記録の無い分は未配分として残し、別の人へ寄せません。</p>
+      <p>閣法は首相1人に付けず、提出した回次の会期を通して在任した閣僚の全員に付けます（総理大臣が会期中に替わる回次は、交代より前に付託された閣法だけ）。賛成・反対の枠は院で半分ずつに分け、衆議院は会派単位の賛否、参議院は押しボタン投票の個人票に配ります。記録の無い分は未配分として残し、別の人へ寄せません。このため個人の欄は参議院議員と閣僚が中心になり、衆議院議員の賛否は会派の欄に入ります（階層に入る 796 人のうち参議院 592・衆議院 71・院の欄が空の閣僚経験者など 133）。</p>
       <p>以前の「成立への寄与」（投票のゲームで1票の効き方を測る）による配分と、全議員へ参考の額を配る欄は、v2.1 でやめました（計算方法の版 method-spec-v3.0）。</p>
       <h3>3. 訂正と反論</h3>
       <p>法律の一覧（法律ランキング）では、同じ観測（同じ額の系列・同じ期間）を共有する法律は、確かさの高い順（同じなら id の昇順）で先頭の1本を代表の行にして並べ、残りは「ほか N 本が同じ観測」から題名で見られます。額は観測ごとに1つなので、足し合わせません。また、額が窓の開始前最後の年の日本の全産業の名目付加価値（OECD 国民経済計算 表6）1年分を超える法律には「桁外れ」の印と倍率を付けます。額は変えず、順位からも外さず、参考にとどめる印です。</p>

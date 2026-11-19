@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  assignTiers, buildExposureRanking, DEFAULT_ROLE_RATIO, EXPOSURE_DISCLAIMER, toPublicExposureRanking,
-  type ExposureGroup, type ExposureRanking, type Involvement, type Range,
+  assignTiers, buildExposureRanking, DEFAULT_ROLE_RATIO, EXPOSURE_DISCLAIMER, summarizeUnallocated, toPublicExposureRanking,
+  type ExposureGroup, type ExposureRanking, type Involvement, type Range, type Unallocated,
 } from './exposure-ranking';
 
 const yen = (median: number, spread = 0): Range => ({ low: median - spread, median, high: median + spread });
@@ -404,6 +404,25 @@ describe('公開用への変換（法律1本ぶんの額を出さない）', () 
     expect(none.totals.expected).toEqual(pub(five('多い人')).out.totals.expected);
     expect(none.unallocated.every(u => u.exposureYen !== null)).toBe(true);
     expect(none.hidden.people).toEqual({ count: 0, exposureYen: { low: 0, median: 0, high: 0 } });
+  });
+
+  it('未配分は群×役割の合計に束ね、本数を出さない。本数が下限に満たない群×役割は役割ごとの1行にまとめる（合計は変わらない）', () => {
+    const r = (median: number): Range => ({ low: median, median, high: median });
+    const rows: Unallocated[] = [
+      { groupId: 'g1', role: 'yes', house: 'lower', laws: 6, exposureYen: r(10), reason: '衆議院の賛否の記録が無い法律の枠' },
+      { groupId: 'g1', role: 'yes', house: 'upper', laws: 2, exposureYen: r(3), reason: '参議院の賛否の記録が無い法律の枠' },
+      { groupId: 'g2', role: 'yes', house: 'lower', laws: 1, exposureYen: r(7), reason: '衆議院の賛否の記録が無い法律の枠' },
+      { groupId: 'g3', role: 'yes', house: 'upper', laws: 2, exposureYen: r(5), reason: '参議院の賛否の記録が無い法律の枠' },
+      { groupId: 'g2', role: null, laws: 1, exposureYen: r(4), reason: 'この群の法律のうち関与の記録が無い法律の枠' },
+    ];
+    const s = summarizeUnallocated(rows, 5);
+    expect(s).toEqual([
+      { groupId: 'g1', role: 'yes', reasons: ['参議院の賛否の記録が無い法律の枠', '衆議院の賛否の記録が無い法律の枠'].sort(), exposureYen: r(13) },
+      { groupId: null, role: null, reasons: ['関与した法律が5本に満たない群をまとめた合計', 'この群の法律のうち関与の記録が無い法律の枠'], exposureYen: r(4) },
+      { groupId: null, role: 'yes', reasons: ['関与した法律が5本に満たない群をまとめた合計', ...['参議院の賛否の記録が無い法律の枠', '衆議院の賛否の記録が無い法律の枠'].sort()], exposureYen: r(12) },
+    ]);
+    expect(s.reduce((n, u) => n + u.exposureYen.median, 0)).toBe(rows.reduce((n, u) => n + u.exposureYen.median, 0));
+    expect(JSON.stringify(s)).not.toContain('laws');
   });
 
   it('入力を変えない。階層に入った行の額と順位は変わらない。法律の ID は出ない', () => {
