@@ -1,4 +1,5 @@
 import json
+import hashlib
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -10,6 +11,68 @@ from scripts import fetch_diet_minutes as collector
 
 
 class CollectPagesTests(unittest.TestCase):
+    def test_omitted_zero_records_preserves_http_bytes_and_resumes(self):
+        # 2023年両院協議会の実HTTP応答と同じbyte列。
+        payload = b'{"numberOfRecords":0,"numberOfReturn":0,"startRecord":1,"nextRecordPosition":null}'
+        for endpoint in ("meeting_list", "meeting", "speech"):
+            with self.subTest(endpoint=endpoint), tempfile.TemporaryDirectory() as temp:
+                output = Path(temp) / "run"
+                material = Path(temp) / "materials"
+                source = Path(temp) / "response.json"
+                source.write_bytes(payload)
+
+                def fetch_raw(url):
+                    observed = "2026-11-02T13:47:26+00:00"
+                    record, observed = collector._register_page(
+                        source, url, 1, output, material, observed
+                    )
+                    return dict(record_path=str(record), url=url, status=200,
+                                observed_at=observed, bytes=len(payload),
+                                sha256=hashlib.sha256(payload).hexdigest())
+
+                args = dict(endpoint=endpoint, session_from=1, session_to=999,
+                            output_dir=output, material_root=material,
+                            maximum_records=10, delay_seconds=3, max_pages=1)
+                first = collect_pages(**args, fetch_raw=fetch_raw)
+                self.assertEqual(first["status"], "query_exhausted")
+                self.assertEqual(first["records_reported"], 0)
+                self.assertEqual(first["records_saved"], 0)
+                self.assertEqual(first["readable_body_count"], 0)
+                self.assertEqual(first["raw_response_pages"], 1)
+                self.assertFalse(first["corpus_complete"])
+                self.assertEqual((output / "pages/000000001.json").read_bytes(), payload)
+                for remove_manifest in (False, True):
+                    if remove_manifest:
+                        (output / "manifest.json").unlink()
+                    resumed = collect_pages(
+                        **args, fetch_raw=lambda _: self.fail("再開時の再通信は禁止")
+                    )
+                    self.assertEqual(resumed["status"], "query_exhausted")
+                    self.assertEqual(resumed["readable_body_count"], 0)
+                    self.assertEqual(resumed["observed_at"], first["observed_at"])
+
+    def test_omitted_or_invalid_records_fail_closed(self):
+        zero = dict(numberOfRecords=0, numberOfReturn=0, startRecord=1,
+                    nextRecordPosition=None)
+        invalid = [dict(zero, **changes) for changes in (
+            {"numberOfRecords": 1}, {"numberOfRecords": False},
+            {"numberOfRecords": "0"}, {"numberOfReturn": False},
+            {"numberOfReturn": 1}, {"startRecord": 2},
+            {"startRecord": True}, {"nextRecordPosition": 2},
+        )]
+        for field in ("numberOfRecords", "numberOfReturn", "startRecord"):
+            invalid.extend(dict(zero, **{field: value}) for value in (None, [], {}))
+        invalid.extend({k: v for k, v in zero.items() if k != field} for field in zero)
+        for endpoint, key in collector.ENDPOINT_RECORD_KEYS.items():
+            for response in invalid + [dict(zero, **{key: value}) for value in (None, {}, "", 0)]:
+                with self.subTest(endpoint=endpoint, response=response):
+                    with self.assertRaises(ValueError):
+                        collector._validate_page(response, endpoint, 1, 10, None, set())
+            with self.assertRaises(ValueError):
+                collector._validate_page(zero, endpoint, 2, 10, None, set())
+            with self.assertRaises(ValueError):
+                collector._validate_page(zero, endpoint, 1, 10, 1, set())
+
     def test_each_page_keeps_response_observation_not_manifest_time(self):
         class Clock(datetime):
             ticks = iter(
