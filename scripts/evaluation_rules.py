@@ -70,23 +70,20 @@ def site_is_institutional(site: dict) -> bool:
     return site["到達点"] in INSTITUTIONAL_REACHES
 
 
-def sample2_failures(path: Path = SAMPLE2_VERDICTS, ledger: Path | None = None) -> dict[str, str]:
-    """抜き取り2回目で不合格の法律と、その食い違い（id → 食い違い）。表が無いときは空。
-    verdicts.csv は裁定のあとの記録で書き換えない。サイトの値が訂正されて、台帳（今のサイトの値で判定し直す）が
-    「抜き取り検証で合格」にした法律は外す。"""
+def sample2_failures(path: Path = SAMPLE2_VERDICTS) -> dict[str, str]:
+    """抜き取り2回目で今も合格していない法律と、その食い違い（id → 食い違い）。記録が無いときは空。
+    台帳と同じ関数（build_evaluation_ledger.sample2_states）で、今のサイトの値から判定し直す。
+    ledger.csv も verdicts.csv の判定欄も読まないので、公開ランキングが台帳より先に作られても、
+    記録のあとでサイトの値が変わっても、台帳と食い違わない。"""
     if not path.exists():
         return {}
-    with path.open(encoding="utf-8", newline="") as f:
-        rows = list(csv.DictReader(f))
-    bad = [r["id"] for r in rows if r["判定"] == VERDICT_FAIL and not r["食い違い"].strip()]
-    if bad:
-        raise ValueError(f"sample-v2/verdicts.csv の不合格に食い違いが無い：{bad}")
-    ledger = ledger or path.parents[1] / "ledger.csv"
-    passed: set[str] = set()
-    if ledger.exists():
-        with ledger.open(encoding="utf-8", newline="") as f:
-            passed = {r["id"] for r in csv.DictReader(f) if r["検証状態"] == "抜き取り検証で合格"}
-    return {r["id"]: r["食い違い"].strip() for r in rows if r["判定"] == VERDICT_FAIL and r["id"] not in passed}
+    try:
+        from scripts import build_evaluation_ledger as bel
+        from scripts.resample_verification import MEMO, STATE_PASS
+    except ModuleNotFoundError:
+        import build_evaluation_ledger as bel
+        from resample_verification import MEMO, STATE_PASS
+    return {i: memo.removeprefix(MEMO) for i, (state, memo) in bel.sample2_states().items() if state != STATE_PASS}
 
 
 # 台帳の到達点が、額を順位・議員配分に使わない（参考額）か、そもそも評価対象外（額が出ていれば順位に混ざる）のもの
