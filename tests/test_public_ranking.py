@@ -1,6 +1,7 @@
 import json
 import unittest
 
+from scripts import build_public_ranking as builder
 from scripts.build_public_ranking import APPROVAL_NOTE, OUTCOMES, OUTPUT, build
 from _data_gate import requires_data  # noqa: E402
 
@@ -138,6 +139,23 @@ class PublicRankingTests(unittest.TestCase):
             self.assertTrue(law["sources"])
             self.assertIn(law["side"], ("loss", "benefit"))
         self.assertNotIn("people", payload)
+
+    def test_direction_is_not_taken_from_the_industry_gap_sign(self):
+        """全体指標の行の side は産業の差の符号を写しただけ。向きは未確定と印で明示する（設計確定 v2.1）。段階を経た行とコロナの費用便益には付けない。"""
+        marked = 0
+        for law in self.payload["laws"]:
+            gap_only = law["group"].startswith(builder.MACRO_GROUP) and not law["group"].startswith(builder.COVID_BENEFIT_GROUP)
+            self.assertEqual(builder.MACRO_DIRECTION_NOTE in law["notes"], gap_only, law["id"])
+            marked += gap_only
+        self.assertGreater(marked, 0)
+
+    def test_macro_row_sign_is_marked_as_undetermined_direction(self):
+        row = {"id": "閣法-1-1", "題名": "試験法", "分野": "経済全体", "分野の由来": "AI 2系統", "産業": "_T", "施行日": "2001-04-01", "施行日の由来": "台帳",
+               "窓": "2001〜2010年", "比較国": "AUS・FRA", "計算式の要素": "OECD 表6 JPN 全産業（_T）LR"}
+        for median, low, high, side in ((100, 50, 200, "loss"), (-100, -200, -50, "benefit")):
+            law = builder._macro_law({**row, "中央値": str(median), "第1四分位": str(low), "第3四分位": str(high)}, ["https://example.org/"])
+            self.assertEqual((law["side"], law["amountMedianYen"]), (side, 100))
+            self.assertIn(builder.MACRO_DIRECTION_NOTE, law["notes"])
 
     def test_reference_amounts_come_after_confirmed_ones(self):
         flags = [law["certainty"] == "参考" for law in self.payload["laws"]]
