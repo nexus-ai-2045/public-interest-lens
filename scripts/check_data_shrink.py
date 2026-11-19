@@ -7,7 +7,7 @@
 減ったと判定するもの：
 - 消えたファイル・空になったファイル
 - CSV：基準が --min-rows 行以上あり、行数か、中身のあるセルの数が --max-drop を超えて減った
-  （行は残って中身だけ空になる取得の切れも拾う）
+  （空のセルだけの行は数えない。行は残って一部の中身だけ空になる取得の切れは、セルの数で拾う）
 - それ以外（JSON など）：基準が --min-bytes バイト以上あり、大きさが --max-drop-bytes を超えて減った
 
 ロジックを変えて意図して減らすときは、その変更の PR で派生データを作り直して取り込む（基準の側を新しくする）。
@@ -44,6 +44,7 @@ def csv_shape(data: bytes) -> tuple[int, int]:
     """見出しを除いた行数と、中身のあるセルの数。"""
     csv.field_size_limit(sys.maxsize)
     rows = list(csv.reader(io.StringIO(data.decode("utf-8-sig", errors="replace"), newline="")))[1:]
+    rows = [row for row in rows if any(cell.strip() for cell in row)]  # 空行・空のセルだけの行は行に数えない
     return len(rows), sum(1 for row in rows for cell in row if cell.strip())
 
 

@@ -27,6 +27,10 @@ class JudgeTests(unittest.TestCase):
         finding = guard.judge("data/a.csv", table(100), table(100, filled=False))
         self.assertIn("中身のあるセル 200 → 100", finding.reason)
 
+    def test_blank_rows_do_not_count_as_rows(self):
+        blanked = "id,値\n".encode("utf-8") + b"\n" * 60 + b",\n" * 40
+        self.assertEqual(guard.judge("data/a.csv", table(100), blanked).reason, "行数 100 → 0")
+
     def test_deleted_and_emptied_files_are_found(self):
         self.assertEqual(guard.judge("data/a.csv", table(3), None).reason, "ファイルが消えた")
         self.assertEqual(guard.judge("app/public/a.json", b"{}", b"\n").reason, "ファイルが空になった")
