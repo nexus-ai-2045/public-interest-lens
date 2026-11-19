@@ -79,7 +79,39 @@ class LabelsFileTest(unittest.TestCase):
             seen.add((r["id"], r["項目"]))
             item = "主な産業分野" if r["項目"] == "分野" else r["項目"]
             self.assertEqual(pt.canonical(item, r["直した値"]), r["直した値"])
-            self.assertTrue(r["指示文"].startswith(pt.PROMPT_VERSION))
+            # 組ごとの版（versions.json）と一致する。試走は v1
+            group = r["記録"].rstrip("/").rsplit("/", 1)[-1]
+            self.assertTrue(r["指示文"].startswith(pt.prompt_version(pt.set_prompt_version(group))), r["指示文"])
+
+
+class VersionTest(unittest.TestCase):
+    def test_pilot_was_read_with_v1_and_v2_adds_only_the_salary_line(self):
+        self.assertEqual(pt.set_prompt_version("pilot"), "v1")
+        v1 = pt.PROMPTS["v1"].read_text(encoding="utf-8").splitlines()
+        v2 = pt.PROMPTS["v2"].read_text(encoding="utf-8").splitlines()
+        added = [x for x in v2 if x not in v1]
+        self.assertTrue(any("人事院勧告に沿う俸給の定例改定" in x for x in added))
+        self.assertFalse(any("人事院勧告に沿う俸給の定例改定" in x for x in v1))
+
+    def test_decide_records_the_reader_version(self):
+        rows = pt.decide(target(), reader(), reader(), None, "v2")
+        self.assertTrue(all(r["指示文"].startswith(pt.prompt_version("v2")) for r in rows))
+
+
+class EstimateTest(unittest.TestCase):
+    def test_ruling_rate_is_weighted_by_stratum_share(self):
+        def t(i, reach, econ=""):
+            return target(id=i, 到達点=reach, サイト_台帳の経済に効くか=econ)
+        pilot = [t("a", "効果なし（定例）"), t("b", "参考額（x）")]
+        everyone = [t(str(i), "参考額（x）") for i in range(9)] + [t("z", "効果なし（定例）")]
+        r = pt.ruling_rate(pilot, {"a"}, everyone)
+        self.assertEqual(r["素の率"], 0.5)
+        self.assertEqual(r["層で重みづけた率"], 0.1)  # 定例 1/10 × 1.0 ＋ 参考額 9/10 × 0
+
+    def test_wilson_interval(self):
+        lo, hi = pt.wilson(3, 10)
+        self.assertAlmostEqual(lo, 0.108, places=3)
+        self.assertAlmostEqual(hi, 0.603, places=3)
 
 
 if __name__ == "__main__":
