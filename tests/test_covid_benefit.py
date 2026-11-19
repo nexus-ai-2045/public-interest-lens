@@ -5,6 +5,7 @@ import unittest
 
 from scripts import build_covid_benefit as cb
 from scripts import build_macro_amounts as macro
+from scripts import primary_source_corrections as psc
 
 
 def _read(path):
@@ -48,7 +49,12 @@ class CovidBenefitTest(unittest.TestCase):
 
     def test_macro_rows_follow_the_covid_benefit_output(self):
         rows = {r["id"]: r for r in _read(macro.OUT)}
+        # 一次資料の読み直しで「制度」と直した法律は、コロナ対応の経路より先に評価対象外になり macro-v1 に行が無い
+        corr = psc.load()
         for law_id, r in self.saved.items():
+            if psc.value(corr, law_id, "経済に効くか") == psc.INSTITUTIONAL:
+                self.assertNotIn(law_id, rows, law_id)
+                continue
             m = rows[law_id]
             self.assertEqual(m["結果"], r["結果"], law_id)
             if r["結果"] == "額":

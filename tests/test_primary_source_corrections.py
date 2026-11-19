@@ -10,9 +10,12 @@ import unittest
 from pathlib import Path
 
 from scripts import primary_source_corrections as corrections
+from scripts import resolve_error_candidates as reread
 
 ROOT = Path(__file__).resolve().parents[1]
 RV = ROOT / "data" / "derived" / "evaluation-ledger-v1" / "reverification-v1"
+REREAD = "data/derived/primary-source-corrections-v1/reread-v1/"
+K2_RECORD = "data/derived/error-type-check-v1/README.md（K2）"
 SITE_WORD = {"経済に効く": corrections.ECON, "制度のみ": corrections.INSTITUTIONAL}
 
 
@@ -31,8 +34,20 @@ class CorrectionsTest(unittest.TestCase):
 
     def test_every_value_comes_from_the_recorded_reading(self):
         self.assertTrue(self.corr)
+        ra, rb, rc, rr = reread.load_records()
         for i, items in self.corr.items():
             for item, row in items.items():
+                for k in ("理由", "引用", "出典URL", "判定者", "指示文", "記録"):
+                    self.assertTrue(row[k].strip(), f"{i} {item} {k}")
+                if row["記録"] == K2_RECORD:  # 規則 K2：税法の一部改正は実質改正
+                    self.assertEqual((item, row["直した値"]), ("類型", "実質改正"), i)
+                    continue
+                if row["記録"] == REREAD:  # 誤り候補の読み直し（2系統の一致、Sonnet との多数、Opus の裁定の順）
+                    v, how, _ = reread.decide(i, item, ra, rb, rc, rr)
+                    self.assertIsNotNone(v, f"{i} {item}：記録から値が決まらない")
+                    self.assertEqual(row["直した値"], SITE_WORD.get(v, v), f"{i} {item}")
+                    self.assertEqual(row["判定者"], reread.JUDGE[how], f"{i} {item}")
+                    continue
                 ruling = self.rulings.get(i, {}).get(item)
                 if ruling:
                     want = ruling["値"]
@@ -40,8 +55,12 @@ class CorrectionsTest(unittest.TestCase):
                     self.assertEqual(self.a[i][item], self.b[i][item], f"{i} {item}：2系統が割れていて裁定も無い")
                     want = self.a[i][item]
                 self.assertEqual(row["直した値"], SITE_WORD.get(want, want), f"{i} {item}")
-                for k in ("理由", "引用", "出典URL", "判定者", "指示文", "記録"):
-                    self.assertTrue(row[k].strip(), f"{i} {item} {k}")
+
+    def test_resolutions_are_current(self):
+        corr, conf, res = reread.build()
+        self.assertEqual((reread.OUT / "corrections.csv").read_text(encoding="utf-8"), reread.render(reread.CORR_HEADER, corr))
+        self.assertEqual((reread.OUT / "confirmed.csv").read_text(encoding="utf-8"), reread.render(reread.CONF_HEADER, conf))
+        self.assertEqual((reread.REC / "resolutions.csv").read_text(encoding="utf-8"), reread.render(reread.RES_HEADER, res))
 
     def test_corrected_values_reach_the_outcomes_and_the_ledger(self):
         outcomes = by_id(ROOT / "data" / "derived" / "all-laws-v1" / "outcomes.csv")

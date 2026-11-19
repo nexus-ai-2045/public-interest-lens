@@ -183,17 +183,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-169-5,額の下端,-6806236969634,-6806236969634,一致,OECD 表6 _T LR、比較国11か国
 閣法-169-5,額の中央値,82891011702385,82891011702385,一致,OECD 表6 _T LR、比較国11か国
 閣法-169-5,額の上端,194302193115322,194302193115322,一致,OECD 表6 _T LR、比較国11か国
-閣法-185-2,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3F9E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3F9E.htm,一致,
-閣法-185-2,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18520131213112.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18520131213112.htm,一致,
-閣法-185-2,題名,持続可能な社会保障制度の確立を図るための改革の推進に関する法律案,持続可能な社会保障制度の確立を図るための改革の推進に関する法律案,一致,
-閣法-185-2,施行日,2013-12-13,2013-12-13,一致,
-閣法-185-2,施行期日の種別（衆議院の附則）,2013-12-13,2013-12-13,一致,
-閣法-185-2,公布日との順序,2013-12-13,2013-12-13,一致,
-閣法-185-2,公布日,2013-12-13,2013-12-13,一致,施行日台帳と議案台帳
-閣法-185-2,名目付加価値（開始前最後の年）,502696000百万円,502696000百万円,一致,OECD 表6 JPN _T V 2012年
-閣法-185-2,額の下端,19652472597199,19652472597199,一致,OECD 表6 _T LR、比較国12か国
-閣法-185-2,額の中央値,77117997369958,77117997369958,一致,OECD 表6 _T LR、比較国12か国
-閣法-185-2,額の上端,127908303021332,127908303021332,一致,OECD 表6 _T LR、比較国12か国
 閣法-151-46,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/ED42.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/ED42.htm,一致,
 閣法-151-46,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15120010620054.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15120010620054.htm,一致,
 閣法-151-46,出典URL,https://laws.e-gov.go.jp/law/404AC0000000051,https://laws.e-gov.go.jp/law/404AC0000000051,一致,
@@ -468,6 +457,17 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-164-36,額の下端,8628810697904,8628810697904,一致,OECD 表6 R+S LR、比較国10か国
 衆法-164-36,額の中央値,22853222156618,22853222156618,一致,OECD 表6 R+S LR、比較国10か国
 衆法-164-36,額の上端,30135606959036,30135606959036,一致,OECD 表6 R+S LR、比較国10か国
+閣法-156-96,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17BB2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17BB2.htm,一致,
+閣法-156-96,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030620101.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030620101.htm,一致,
+閣法-156-96,題名,密集市街地における防災街区の整備の促進に関する法律等の一部を改正する法律案,密集市街地における防災街区の整備の促進に関する法律等の一部を改正する法律案,一致,
+閣法-156-96,施行日,2003-12-20,2003-12-20,一致,
+閣法-156-96,施行期日の種別（衆議院の附則）,2003-12-20,2003-12-20,一致,
+閣法-156-96,公布日との順序,2003-12-20,2003-06-20,一致,
+閣法-156-96,公布日,2003-06-20,2003-06-20,一致,施行日台帳と議案台帳
+閣法-156-96,名目付加価値（開始前最後の年）,34569900百万円,34569900百万円,一致,OECD 表6 JPN F V 2002年
+閣法-156-96,額の下端,1515311944939,1515311944939,一致,OECD 表6 F LR、比較国11か国
+閣法-156-96,額の中央値,21558863156657,21558863156657,一致,OECD 表6 F LR、比較国11か国
+閣法-156-96,額の上端,41861035519704,41861035519704,一致,OECD 表6 F LR、比較国11か国
 閣法-162-79,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/D56.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/D56.htm,一致,
 閣法-162-79,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16220050617061.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16220050617061.htm,一致,
 閣法-162-79,題名,地球温暖化対策の推進に関する法律の一部を改正する法律案,地球温暖化対策の推進に関する法律の一部を改正する法律案,一致,
@@ -823,17 +823,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-156-64,額の下端,-25714679606611,-25714679606611,一致,OECD 表6 G LR、比較国10か国
 閣法-156-64,額の中央値,8210625345992,8210625345992,一致,OECD 表6 G LR、比較国10か国
 閣法-156-64,額の上端,53601319667548,53601319667548,一致,OECD 表6 G LR、比較国10か国
-閣法-176-6,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2A1E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2A1E.htm,一致,
-閣法-176-6,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17620101203066.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17620101203066.htm,一致,
-閣法-176-6,題名,高度テレビジョン放送施設整備促進臨時措置法の一部を改正する法律案,高度テレビジョン放送施設整備促進臨時措置法の一部を改正する法律案,一致,
-閣法-176-6,施行日,2010-12-03,2010-12-03,一致,
-閣法-176-6,施行期日の種別（衆議院の附則）,2010-12-03,2010-12-03,一致,
-閣法-176-6,公布日との順序,2010-12-03,2010-12-03,一致,
-閣法-176-6,公布日,2010-12-03,2010-12-03,一致,施行日台帳と議案台帳
-閣法-176-6,名目付加価値（開始前最後の年）,25455200百万円,25455200百万円,一致,OECD 表6 JPN J V 2009年
-閣法-176-6,額の下端,-10135140798422,-10135140798422,一致,OECD 表6 J LR、比較国11か国
-閣法-176-6,額の中央値,8141156896633,8141156896633,一致,OECD 表6 J LR、比較国11か国
-閣法-176-6,額の上端,19118989705278,19118989705278,一致,OECD 表6 J LR、比較国11か国
 閣法-145-122,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/E882.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/E882.htm,一致,
 閣法-145-122,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h147023.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h147023.htm,一致,
 閣法-145-122,題名,私立学校教職員共済法等の一部を改正する法律案,私立学校教職員共済法等の一部を改正する法律案,一致,
@@ -867,6 +856,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-190-42,額の下端,4951901414241,4951901414241,一致,OECD 表6 M+N LR、比較国11か国
 閣法-190-42,額の中央値,7174033275648,7174033275648,一致,OECD 表6 M+N LR、比較国11か国
 閣法-190-42,額の上端,8609474619965,8609474619965,一致,OECD 表6 M+N LR、比較国11か国
+衆法-162-11,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/BCE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/BCE.htm,一致,
+衆法-162-11,出典URL,https://laws.e-gov.go.jp/law/417AC1000000031,https://laws.e-gov.go.jp/law/417AC1000000031,一致,
+衆法-162-11,題名,携帯音声通信事業者による契約者等の本人確認等及び携帯音声通信役務の不正な利用の防止に関する法律案,携帯音声通信事業者による契約者等の本人確認等及び携帯音声通信役務の不正な利用の防止に関する法律案,一致,
+衆法-162-11,施行日,2006-04-01,2006-04-01,一致,
+衆法-162-11,施行期日の原文,あり,あり,一致,
+衆法-162-11,公布日との順序,2006-04-01,2005-04-15,一致,
+衆法-162-11,公布日,2005-04-15,2005-04-15,一致,施行日台帳と議案台帳
+衆法-162-11,名目付加価値（開始前最後の年）,26195600百万円,26195600百万円,一致,OECD 表6 JPN J V 2005年
+衆法-162-11,額の下端,-9156760760879,-9156760760879,一致,OECD 表6 J LR、比較国11か国
+衆法-162-11,額の中央値,6734596120135,6734596120135,一致,OECD 表6 J LR、比較国11か国
+衆法-162-11,額の上端,33589278039264,33589278039264,一致,OECD 表6 J LR、比較国11か国
 閣法-163-9,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/F3E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/F3E.htm,一致,
 閣法-163-9,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060331021.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060331021.htm,一致,
 閣法-163-9,題名,独立行政法人情報通信研究機構法の一部を改正する法律案,独立行政法人情報通信研究機構法の一部を改正する法律案,一致,
@@ -979,17 +979,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-208-3,額の下端,-10510032494949,-10510032494949,一致,OECD 表6 _T LR、比較国11か国
 閣法-208-3,額の中央値,4964972405740,4964972405740,一致,OECD 表6 _T LR、比較国11か国
 閣法-208-3,額の上端,14664988933040,14664988933040,一致,OECD 表6 _T LR、比較国11か国
-衆法-183-42,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3D12.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3D12.htm,一致,
-衆法-183-42,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130628071.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130628071.htm,一致,
-衆法-183-42,題名,いじめ防止対策推進法案,いじめ防止対策推進法案,一致,
-衆法-183-42,施行日,2013-09-28,2013-09-28,一致,
-衆法-183-42,施行期日の種別（衆議院の附則）,2013-09-28,2013-09-28,一致,
-衆法-183-42,公布日との順序,2013-09-28,2013-06-28,一致,
-衆法-183-42,公布日,2013-06-28,2013-06-28,一致,施行日台帳と議案台帳
-衆法-183-42,名目付加価値（開始前最後の年）,20497500百万円,20497500百万円,一致,OECD 表6 JPN P V 2012年
-衆法-183-42,額の下端,1894512638070,1894512638070,一致,OECD 表6 P LR、比較国12か国
-衆法-183-42,額の中央値,4960557989071,4960557989071,一致,OECD 表6 P LR、比較国12か国
-衆法-183-42,額の上端,9038485871069,9038485871069,一致,OECD 表6 P LR、比較国12か国
 閣法-208-40,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD554E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD554E.htm,一致,
 閣法-208-40,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220518041.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220518041.htm,一致,
 閣法-208-40,出典URL,https://laws.e-gov.go.jp/law/323AC0000000103,https://laws.e-gov.go.jp/law/323AC0000000103,一致,
@@ -1263,6 +1252,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-196-5,額の下端,-343616960922,-343616960922,一致,OECD 表6 P LR、比較国12か国
 閣法-196-5,額の中央値,521094059634,521094059634,一致,OECD 表6 P LR、比較国12か国
 閣法-196-5,額の上端,756245314536,756245314536,一致,OECD 表6 P LR、比較国12か国
+閣法-159-74,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B806.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B806.htm,一致,
+閣法-159-74,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040609094.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040609094.htm,一致,
+閣法-159-74,題名,鉱山保安法及び経済産業省設置法の一部を改正する法律案,鉱山保安法及び経済産業省設置法の一部を改正する法律案,一致,
+閣法-159-74,施行日,2005-04-01,2005-04-01,一致,
+閣法-159-74,施行期日の種別（衆議院の附則）,2005-04-01,2005-04-01,一致,
+閣法-159-74,公布日との順序,2005-04-01,2004-06-09,一致,
+閣法-159-74,公布日,2004-06-09,2004-06-09,一致,施行日台帳と議案台帳
+閣法-159-74,名目付加価値（開始前最後の年）,165500百万円,165500百万円,一致,OECD 表6 JPN B V 2004年
+閣法-159-74,額の下端,356506278272,356506278272,一致,OECD 表6 B LR、比較国11か国
+閣法-159-74,額の中央値,459154120757,459154120757,一致,OECD 表6 B LR、比較国11か国
+閣法-159-74,額の上端,559294645230,559294645230,一致,OECD 表6 B LR、比較国11か国
 閣法-177-53,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2D9A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2D9A.htm,一致,
 閣法-177-53,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110722084.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110722084.htm,一致,
 閣法-177-53,出典URL,https://laws.e-gov.go.jp/law/325AC0000000289,https://laws.e-gov.go.jp/law/325AC0000000289,一致,
@@ -1496,17 +1496,6 @@ id,項目,公開値,一次資料の値,結果,備考
 参法-162-3,額の下端,-8014455882121,-8014455882121,一致,OECD 表6 Q LR、比較国11か国
 参法-162-3,額の中央値,576161969643,576161969643,一致,OECD 表6 Q LR、比較国11か国
 参法-162-3,額の上端,18974219728252,18974219728252,一致,OECD 表6 Q LR、比較国11か国
-参法-164-5,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/117E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/117E.htm,一致,
-参法-164-5,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060607052.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060607052.htm,一致,
-参法-164-5,題名,公職選挙法の一部を改正する法律案,公職選挙法の一部を改正する法律案,一致,
-参法-164-5,施行日,2006-06-07,2006-06-07,一致,
-参法-164-5,施行期日の種別（衆議院の附則）,2006-06-07,2006-06-07,一致,
-参法-164-5,公布日との順序,2006-06-07,2006-06-07,一致,
-参法-164-5,公布日,2006-06-07,2006-06-07,一致,施行日台帳と議案台帳
-参法-164-5,名目付加価値（開始前最後の年）,535742500百万円,535742500百万円,一致,OECD 表6 JPN _T V 2005年
-参法-164-5,額の下端,-102476582544701,-102476582544701,一致,OECD 表6 _T LR、比較国11か国
-参法-164-5,額の中央値,1560758330576,1560758330576,一致,OECD 表6 _T LR、比較国11か国
-参法-164-5,額の上端,95924635653340,95924635653340,一致,OECD 表6 _T LR、比較国11か国
 参法-165-1,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1336.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1336.htm,一致,
 参法-165-1,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16520061122103.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16520061122103.htm,一致,
 参法-165-1,出典URL,https://laws.e-gov.go.jp/law/418AC0100000103,https://laws.e-gov.go.jp/law/418AC0100000103,一致,
@@ -1651,15 +1640,6 @@ id,項目,公開値,一次資料の値,結果,備考
 参法-177-9,額の下端,-9450092892134,-9450092892134,一致,OECD 表6 D LR、比較国10か国
 参法-177-9,額の中央値,2443992355472,2443992355472,一致,OECD 表6 D LR、比較国10か国
 参法-177-9,額の上端,9090437251885,9090437251885,一致,OECD 表6 D LR、比較国10か国
-参法-180-11,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3572.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3572.htm,一致,
-参法-180-11,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18020120331010.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18020120331010.htm,一致,
-参法-180-11,出典URL,https://laws.e-gov.go.jp/law/419AC1000000134,https://laws.e-gov.go.jp/law/419AC1000000134,一致,
-参法-180-11,題名,鳥獣による農林水産業等に係る被害の防止のための特別措置に関する法律の一部を改正する法律案,鳥獣による農林水産業等に係る被害の防止のための特別措置に関する法律の一部を改正する法律案,一致,
-参法-180-11,施行日（推定）,2012-03-31,2012-03-31,一致,公布日を施行日とみなした推定
-参法-180-11,名目付加価値（開始前最後の年）,5542400百万円,5542400百万円,一致,OECD 表6 JPN A V 2011年
-参法-180-11,額の下端,3538155616876,3538155616876,一致,OECD 表6 A LR、比較国12か国
-参法-180-11,額の中央値,5569781575913,5569781575913,一致,OECD 表6 A LR、比較国12か国
-参法-180-11,額の上端,8691671281399,8691671281399,一致,OECD 表6 A LR、比較国12か国
 参法-180-21,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/365A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/365A.htm,一致,
 参法-180-21,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18020120627049.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18020120627049.htm,一致,
 参法-180-21,題名,劇場、音楽堂等の活性化に関する法律案,劇場、音楽堂等の活性化に関する法律案,一致,
@@ -1739,17 +1719,6 @@ id,項目,公開値,一次資料の値,結果,備考
 参法-185-9,額の下端,59522643534812,59522643534812,一致,OECD 表6 _T LR、比較国12か国
 参法-185-9,額の中央値,100271268059224,100271268059224,一致,OECD 表6 _T LR、比較国12か国
 参法-185-9,額の上端,130646208529316,130646208529316,一致,OECD 表6 _T LR、比較国12か国
-参法-186-4,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/433E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/433E.htm,一致,
-参法-186-4,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140402017.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140402017.htm,一致,
-参法-186-4,題名,雨水の利用の推進に関する法律案,雨水の利用の推進に関する法律案,一致,
-参法-186-4,施行日,2014-05-02,2014-05-02,一致,
-参法-186-4,施行期日の種別（衆議院の附則）,2014-05-02,2014-05-02,一致,
-参法-186-4,公布日との順序,2014-05-02,2014-04-02,一致,
-参法-186-4,公布日,2014-04-02,2014-04-02,一致,施行日台帳と議案台帳
-参法-186-4,名目付加価値（開始前最後の年）,511324200百万円,511324200百万円,一致,OECD 表6 JPN _T V 2013年
-参法-186-4,額の下端,59522643534812,59522643534812,一致,OECD 表6 _T LR、比較国12か国
-参法-186-4,額の中央値,100271268059224,100271268059224,一致,OECD 表6 _T LR、比較国12か国
-参法-186-4,額の上端,130646208529316,130646208529316,一致,OECD 表6 _T LR、比較国12か国
 参法-186-8,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/442E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/442E.htm,一致,
 参法-186-8,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140604056.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140604056.htm,一致,
 参法-186-8,題名,公共工事の品質確保の促進に関する法律の一部を改正する法律案,公共工事の品質確保の促進に関する法律の一部を改正する法律案,一致,
@@ -1828,28 +1797,6 @@ id,項目,公開値,一次資料の値,結果,備考
 参法-192-54,額の下端,16512584114617,16512584114617,一致,OECD 表6 F LR、比較国12か国
 参法-192-54,額の中央値,18505729590070,18505729590070,一致,OECD 表6 F LR、比較国12か国
 参法-192-54,額の上端,21079847759681,21079847759681,一致,OECD 表6 F LR、比較国12か国
-参法-196-16,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8C7A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8C7A.htm,一致,
-参法-196-16,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180627065.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180627065.htm,一致,
-参法-196-16,題名,公職選挙法の一部を改正する法律案,公職選挙法の一部を改正する法律案,一致,
-参法-196-16,施行日,2018-12-27,2018-12-27,一致,
-参法-196-16,施行期日の種別（衆議院の附則）,2018-12-27,2018-12-27,一致,
-参法-196-16,公布日との順序,2018-12-27,2018-06-27,一致,
-参法-196-16,公布日,2018-06-27,2018-06-27,一致,施行日台帳と議案台帳
-参法-196-16,名目付加価値（開始前最後の年）,563172600百万円,563172600百万円,一致,OECD 表6 JPN _T V 2017年
-参法-196-16,額の下端,-780293509826,-780293509826,一致,OECD 表6 _T LR、比較国12か国
-参法-196-16,額の中央値,10821156240084,10821156240084,一致,OECD 表6 _T LR、比較国12か国
-参法-196-16,額の上端,17048778414624,17048778414624,一致,OECD 表6 _T LR、比較国12か国
-参法-196-17,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8CB2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8CB2.htm,一致,
-参法-196-17,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180725075.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180725075.htm,一致,
-参法-196-17,題名,公職選挙法の一部を改正する法律案,公職選挙法の一部を改正する法律案,一致,
-参法-196-17,施行日,2018-10-25,2018-10-25,一致,
-参法-196-17,施行期日の種別（衆議院の附則）,2018-10-25,2018-10-25,一致,
-参法-196-17,公布日との順序,2018-10-25,2018-07-25,一致,
-参法-196-17,公布日,2018-07-25,2018-07-25,一致,施行日台帳と議案台帳
-参法-196-17,名目付加価値（開始前最後の年）,563172600百万円,563172600百万円,一致,OECD 表6 JPN _T V 2017年
-参法-196-17,額の下端,-780293509826,-780293509826,一致,OECD 表6 _T LR、比較国12か国
-参法-196-17,額の中央値,10821156240084,10821156240084,一致,OECD 表6 _T LR、比較国12か国
-参法-196-17,額の上端,17048778414624,17048778414624,一致,OECD 表6 _T LR、比較国12か国
 参法-196-7,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC89B6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC89B6.htm,一致,
 参法-196-7,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180613047.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180613047.htm,一致,
 参法-196-7,題名,障害者による文化芸術活動の推進に関する法律案,障害者による文化芸術活動の推進に関する法律案,一致,
@@ -1916,17 +1863,6 @@ id,項目,公開値,一次資料の値,結果,備考
 参法-208-7,額の下端,-278205823115,-278205823115,一致,OECD 表6 Q LR、比較国11か国
 参法-208-7,額の中央値,149378245059,149378245059,一致,OECD 表6 Q LR、比較国11か国
 参法-208-7,額の上端,477107015854,477107015854,一致,OECD 表6 Q LR、比較国11か国
-参法-208-8,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5916.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5916.htm,一致,
-参法-208-8,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220525050.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220525050.htm,一致,
-参法-208-8,題名,障害者による情報の取得及び利用並びに意思疎通に係る施策の推進に関する法律案,障害者による情報の取得及び利用並びに意思疎通に係る施策の推進に関する法律案,一致,
-参法-208-8,施行日,2022-05-25,2022-05-25,一致,
-参法-208-8,施行期日の種別（衆議院の附則）,2022-05-25,2022-05-25,一致,
-参法-208-8,公布日との順序,2022-05-25,2022-05-25,一致,
-参法-208-8,公布日,2022-05-25,2022-05-25,一致,施行日台帳と議案台帳
-参法-208-8,名目付加価値（開始前最後の年）,40636500百万円,40636500百万円,一致,OECD 表6 JPN Q V 2021年
-参法-208-8,額の下端,-4664498069480,-4664498069480,一致,OECD 表6 Q LR、比較国11か国
-参法-208-8,額の中央値,329773194738,329773194738,一致,OECD 表6 Q LR、比較国11か国
-参法-208-8,額の上端,1900076196535,1900076196535,一致,OECD 表6 Q LR、比較国11か国
 衆法-139-18,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5516.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5516.htm,一致,
 衆法-139-18,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142007.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142007.htm,一致,
 衆法-139-18,出典URL,https://laws.e-gov.go.jp/law/410AC1000000007,https://laws.e-gov.go.jp/law/410AC1000000007,一致,
@@ -2035,6 +1971,17 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-143-15,額の下端,50285076074074,50285076074074,一致,OECD 表6 K LR、比較国5か国
 衆法-143-15,額の中央値,65892072442027,65892072442027,一致,OECD 表6 K LR、比較国5か国
 衆法-143-15,額の上端,74394008359291,74394008359291,一致,OECD 表6 K LR、比較国5か国
+衆法-143-16,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5646.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5646.htm,一致,
+衆法-143-16,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h143118.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h143118.htm,一致,
+衆法-143-16,題名,金融システム改革のための関係法律の整備等に関する法律の一部を改正する法律案,金融システム改革のための関係法律の整備等に関する法律の一部を改正する法律案,一致,
+衆法-143-16,施行日,1998-10-23,1998-10-23,一致,
+衆法-143-16,施行期日の種別（衆議院の附則）,1998-10-23,1998-10-23,一致,
+衆法-143-16,公布日との順序,1998-10-23,1998-10-13,一致,
+衆法-143-16,公布日,1998-10-13,1998-10-13,一致,施行日台帳と議案台帳
+衆法-143-16,名目付加価値（開始前最後の年）,28980600百万円,28980600百万円,一致,OECD 表6 JPN K V 1997年
+衆法-143-16,額の下端,50285076074074,50285076074074,一致,OECD 表6 K LR、比較国5か国
+衆法-143-16,額の中央値,65892072442027,65892072442027,一致,OECD 表6 K LR、比較国5か国
+衆法-143-16,額の上端,74394008359291,74394008359291,一致,OECD 表6 K LR、比較国5か国
 衆法-143-17,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5642.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5642.htm,一致,
 衆法-143-17,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h143142.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h143142.htm,一致,
 衆法-143-17,題名,中小企業信用保険法の一部を改正する法律案,中小企業信用保険法の一部を改正する法律案,一致,
@@ -2646,15 +2593,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-154-3,額の下端,-834021466752,-834021466752,一致,OECD 表6 A LR、比較国11か国
 衆法-154-3,額の中央値,3192301621136,3192301621136,一致,OECD 表6 A LR、比較国11か国
 衆法-154-3,額の上端,7236484278431,7236484278431,一致,OECD 表6 A LR、比較国11か国
-衆法-154-30,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/145E2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/145E2.htm,一致,
-衆法-154-30,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15420020731101.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15420020731101.htm,一致,
-衆法-154-30,出典URL,https://laws.e-gov.go.jp/law/414AC1000000101,https://laws.e-gov.go.jp/law/414AC1000000101,一致,
-衆法-154-30,題名,入札談合等関与行為の排除及び防止に関する法律案,入札談合等関与行為の排除及び防止に関する法律案,一致,
-衆法-154-30,施行日（推定）,2002-07-31,2002-07-31,一致,公布日を施行日とみなした推定
-衆法-154-30,名目付加価値（開始前最後の年）,539098700百万円,539098700百万円,一致,OECD 表6 JPN _T V 2001年
-衆法-154-30,額の下端,451482232945524,451482232945524,一致,OECD 表6 _T LR、比較国11か国
-衆法-154-30,額の中央値,590225511107423,590225511107423,一致,OECD 表6 _T LR、比較国11か国
-衆法-154-30,額の上端,723441485766649,723441485766649,一致,OECD 表6 _T LR、比較国11か国
 衆法-154-31,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/145F6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/145F6.htm,一致,
 衆法-154-31,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15420020719090.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15420020719090.htm,一致,
 衆法-154-31,題名,離島振興法の一部を改正する法律案,離島振興法の一部を改正する法律案,一致,
@@ -2841,17 +2779,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-159-11,額の下端,21534811427081,21534811427081,一致,OECD 表6 Q LR、比較国11か国
 衆法-159-11,額の中央値,41966592417454,41966592417454,一致,OECD 表6 Q LR、比較国11か国
 衆法-159-11,額の上端,52826310188752,52826310188752,一致,OECD 表6 Q LR、比較国11か国
-衆法-159-14,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/B0A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/B0A.htm,一致,
-衆法-159-14,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16220050520043.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16220050520043.htm,一致,
-衆法-159-14,題名,国民の祝日に関する法律の一部を改正する法律案,国民の祝日に関する法律の一部を改正する法律案,一致,
-衆法-159-14,施行日,2007-01-01,2007-01-01,一致,
-衆法-159-14,施行期日の種別（衆議院の附則）,2007-01-01,2007-01-01,一致,
-衆法-159-14,公布日との順序,2007-01-01,2005-05-20,一致,
-衆法-159-14,公布日,2005-05-20,2005-05-20,一致,施行日台帳と議案台帳
-衆法-159-14,名目付加価値（開始前最後の年）,538356000百万円,538356000百万円,一致,OECD 表6 JPN _T V 2006年
-衆法-159-14,額の下端,-72857187038146,-72857187038146,一致,OECD 表6 _T LR、比較国11か国
-衆法-159-14,額の中央値,18330447473500,18330447473500,一致,OECD 表6 _T LR、比較国11か国
-衆法-159-14,額の上端,101562929827217,101562929827217,一致,OECD 表6 _T LR、比較国11か国
 衆法-159-17,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B942.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B942.htm,一致,
 衆法-159-17,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040416033.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040416033.htm,一致,
 衆法-159-17,題名,クリーニング業法の一部を改正する法律案,クリーニング業法の一部を改正する法律案,一致,
@@ -2885,28 +2812,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-159-2,額の下端,1260764725635,1260764725635,一致,OECD 表6 A LR、比較国11か国
 衆法-159-2,額の中央値,5493135728599,5493135728599,一致,OECD 表6 A LR、比較国11か国
 衆法-159-2,額の上端,10542213928113,10542213928113,一致,OECD 表6 A LR、比較国11か国
-衆法-159-37,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B9CE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B9CE.htm,一致,
-衆法-159-37,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040604080.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040604080.htm,一致,
-衆法-159-37,題名,障害者基本法の一部を改正する法律案,障害者基本法の一部を改正する法律案,一致,
-衆法-159-37,施行日,2004-06-04,2004-06-04,一致,
-衆法-159-37,施行期日の種別（衆議院の附則）,2004-06-04,2004-06-04,一致,
-衆法-159-37,公布日との順序,2004-06-04,2004-06-04,一致,
-衆法-159-37,公布日,2004-06-04,2004-06-04,一致,施行日台帳と議案台帳
-衆法-159-37,名目付加価値（開始前最後の年）,29059600百万円,29059600百万円,一致,OECD 表6 JPN Q V 2003年
-衆法-159-37,額の下端,21534811427081,21534811427081,一致,OECD 表6 Q LR、比較国11か国
-衆法-159-37,額の中央値,41966592417454,41966592417454,一致,OECD 表6 Q LR、比較国11か国
-衆法-159-37,額の上端,52826310188752,52826310188752,一致,OECD 表6 Q LR、比較国11か国
-衆法-159-38,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B9CA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B9CA.htm,一致,
-衆法-159-38,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040602070.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040602070.htm,一致,
-衆法-159-38,題名,消費者保護基本法の一部を改正する法律案,消費者保護基本法の一部を改正する法律案,一致,
-衆法-159-38,施行日,2004-06-02,2004-06-02,一致,
-衆法-159-38,施行期日の種別（衆議院の附則）,2004-06-02,2004-06-02,一致,
-衆法-159-38,公布日との順序,2004-06-02,2004-06-02,一致,
-衆法-159-38,公布日,2004-06-02,2004-06-02,一致,施行日台帳と議案台帳
-衆法-159-38,名目付加価値（開始前最後の年）,529383300百万円,529383300百万円,一致,OECD 表6 JPN _T V 2003年
-衆法-159-38,額の下端,-97539050892938,-97539050892938,一致,OECD 表6 _T LR、比較国11か国
-衆法-159-38,額の中央値,19925964970324,19925964970324,一致,OECD 表6 _T LR、比較国11か国
-衆法-159-38,額の上端,119750443589039,119750443589039,一致,OECD 表6 _T LR、比較国11か国
 衆法-159-44,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B9E2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B9E2.htm,一致,
 衆法-159-44,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040618125.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040618125.htm,一致,
 衆法-159-44,題名,特定船舶の入港の禁止に関する特別措置法案,特定船舶の入港の禁止に関する特別措置法案,一致,
@@ -2983,17 +2888,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-161-6,額の下端,-708932167057,-708932167057,一致,OECD 表6 R+S LR、比較国10か国
 衆法-161-6,額の中央値,12089660244921,12089660244921,一致,OECD 表6 R+S LR、比較国10か国
 衆法-161-6,額の上端,20066455041393,20066455041393,一致,OECD 表6 R+S LR、比較国10か国
-衆法-162-11,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/BCE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/BCE.htm,一致,
-衆法-162-11,出典URL,https://laws.e-gov.go.jp/law/417AC1000000031,https://laws.e-gov.go.jp/law/417AC1000000031,一致,
-衆法-162-11,題名,携帯音声通信事業者による契約者等の本人確認等及び携帯音声通信役務の不正な利用の防止に関する法律案,携帯音声通信事業者による契約者等の本人確認等及び携帯音声通信役務の不正な利用の防止に関する法律案,一致,
-衆法-162-11,施行日,2006-04-01,2006-04-01,一致,
-衆法-162-11,施行期日の原文,あり,あり,一致,
-衆法-162-11,公布日との順序,2006-04-01,2005-04-15,一致,
-衆法-162-11,公布日,2005-04-15,2005-04-15,一致,施行日台帳と議案台帳
-衆法-162-11,名目付加価値（開始前最後の年）,26195600百万円,26195600百万円,一致,OECD 表6 JPN J V 2005年
-衆法-162-11,額の下端,-9156760760879,-9156760760879,一致,OECD 表6 J LR、比較国11か国
-衆法-162-11,額の中央値,6734596120135,6734596120135,一致,OECD 表6 J LR、比較国11か国
-衆法-162-11,額の上端,33589278039264,33589278039264,一致,OECD 表6 J LR、比較国11か国
 衆法-162-13,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/D6E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/D6E.htm,一致,
 衆法-162-13,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16220050502039.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16220050502039.htm,一致,
 衆法-162-13,題名,臨床検査技師、衛生検査技師等に関する法律の一部を改正する法律案,臨床検査技師、衛生検査技師等に関する法律の一部を改正する法律案,一致,
@@ -3142,17 +3036,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-164-14,額の下端,41531543887810,41531543887810,一致,OECD 表6 Q LR、比較国11か国
 衆法-164-14,額の中央値,51889887587523,51889887587523,一致,OECD 表6 Q LR、比較国11か国
 衆法-164-14,額の上端,64368711089358,64368711089358,一致,OECD 表6 Q LR、比較国11か国
-衆法-164-20,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/12AA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/12AA.htm,一致,
-衆法-164-20,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16520061220113.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16520061220113.htm,一致,
-衆法-164-20,題名,政治資金規正法等の一部を改正する法律案,政治資金規正法等の一部を改正する法律案,一致,
-衆法-164-20,施行日,2006-12-25,2006-12-25,一致,
-衆法-164-20,施行期日の種別（衆議院の附則）,2006-12-25,2006-12-25,一致,
-衆法-164-20,公布日との順序,2006-12-25,2006-12-20,一致,
-衆法-164-20,公布日,2006-12-20,2006-12-20,一致,施行日台帳と議案台帳
-衆法-164-20,名目付加価値（開始前最後の年）,535742500百万円,535742500百万円,一致,OECD 表6 JPN _T V 2005年
-衆法-164-20,額の下端,-102476582544701,-102476582544701,一致,OECD 表6 _T LR、比較国11か国
-衆法-164-20,額の中央値,1560758330576,1560758330576,一致,OECD 表6 _T LR、比較国11か国
-衆法-164-20,額の上端,95924635653340,95924635653340,一致,OECD 表6 _T LR、比較国11か国
 衆法-164-25,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/11DE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/11DE.htm,一致,
 衆法-164-25,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060608060.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060608060.htm,一致,
 衆法-164-25,出典URL,https://laws.e-gov.go.jp/law/418AC1000000060,https://laws.e-gov.go.jp/law/418AC1000000060,一致,
@@ -3176,15 +3059,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-164-3,額の下端,-17222551398936,-17222551398936,一致,OECD 表6 Q LR、比較国11か国
 衆法-164-3,額の中央値,5552914673944,5552914673944,一致,OECD 表6 Q LR、比較国11か国
 衆法-164-3,額の上端,13084832291986,13084832291986,一致,OECD 表6 Q LR、比較国11か国
-衆法-164-33,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1226.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1226.htm,一致,
-衆法-164-33,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060623093.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060623093.htm,一致,
-衆法-164-33,出典URL,https://laws.e-gov.go.jp/law/325AC1000000100,https://laws.e-gov.go.jp/law/325AC1000000100,一致,
-衆法-164-33,題名,公職選挙法の一部を改正する法律案,公職選挙法の一部を改正する法律案,一致,
-衆法-164-33,施行日（推定）,2006-06-23,2006-06-23,一致,公布日を施行日とみなした推定
-衆法-164-33,名目付加価値（開始前最後の年）,535742500百万円,535742500百万円,一致,OECD 表6 JPN _T V 2005年
-衆法-164-33,額の下端,-102476582544701,-102476582544701,一致,OECD 表6 _T LR、比較国11か国
-衆法-164-33,額の中央値,1560758330576,1560758330576,一致,OECD 表6 _T LR、比較国11か国
-衆法-164-33,額の上端,95924635653340,95924635653340,一致,OECD 表6 _T LR、比較国11か国
 衆法-164-6,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/100E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/100E.htm,一致,
 衆法-164-6,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060216006.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060216006.htm,一致,
 衆法-164-6,題名,平成十七年度の水田農業構造改革交付金等についての所得税及び法人税の臨時特例に関する法律案,平成十七年度の水田農業構造改革交付金等についての所得税及び法人税の臨時特例に関する法律案,一致,
@@ -3586,15 +3460,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-171-46,額の下端,57032272705810,57032272705810,一致,OECD 表6 F LR、比較国11か国
 衆法-171-46,額の中央値,71739492812386,71739492812386,一致,OECD 表6 F LR、比較国11か国
 衆法-171-46,額の上端,101795305470929,101795305470929,一致,OECD 表6 F LR、比較国11か国
-衆法-173-10,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/24B2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/24B2.htm,一致,
-衆法-173-10,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17320091130094.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17320091130094.htm,一致,
-衆法-173-10,出典URL,https://laws.e-gov.go.jp/law/403AC1000000108,https://laws.e-gov.go.jp/law/403AC1000000108,一致,
-衆法-173-10,題名,国会職員の育児休業等に関する法律の一部を改正する法律案,国会職員の育児休業等に関する法律の一部を改正する法律案,一致,
-衆法-173-10,施行日（推定）,2009-11-30,2009-11-30,一致,公布日を施行日とみなした推定
-衆法-173-10,名目付加価値（開始前最後の年）,531130000百万円,531130000百万円,一致,OECD 表6 JPN _T V 2008年
-衆法-173-10,額の下端,6365628299404,6365628299404,一致,OECD 表6 _T LR、比較国11か国
-衆法-173-10,額の中央値,160223211663039,160223211663039,一致,OECD 表6 _T LR、比較国11か国
-衆法-173-10,額の上端,292271635236054,292271635236054,一致,OECD 表6 _T LR、比較国11か国
 衆法-174-13,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2762.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2762.htm,一致,
 衆法-174-13,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17420100428027.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17420100428027.htm,一致,
 衆法-174-13,題名,国民年金法等の一部を改正する法律案,国民年金法等の一部を改正する法律案,一致,
@@ -3706,6 +3571,17 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-176-2,額の下端,8713172199046,8713172199046,一致,OECD 表6 A LR、比較国11か国
 衆法-176-2,額の中央値,11234030420520,11234030420520,一致,OECD 表6 A LR、比較国11か国
 衆法-176-2,額の上端,14639893079471,14639893079471,一致,OECD 表6 A LR、比較国11か国
+衆法-176-7,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2ABA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2ABA.htm,一致,
+衆法-176-7,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17620101210071.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17620101210071.htm,一致,
+衆法-176-7,題名,障がい者制度改革推進本部等における検討を踏まえて障害保健福祉施策を見直すまでの間において障害者等の地域生活を支援するための関係法律の整備に関する法律案,障がい者制度改革推進本部等における検討を踏まえて障害保健福祉施策を見直すまでの間において障害者等の地域生活を支援するための関係法律の整備に関する法律案,一致,
+衆法-176-7,施行日,2012-04-01,2012-04-01,一致,
+衆法-176-7,施行期日の種別（衆議院の附則）,2012-04-01,2012-04-01,一致,
+衆法-176-7,公布日との順序,2012-04-01,2010-12-10,一致,
+衆法-176-7,公布日,2010-12-10,2010-12-10,一致,施行日台帳と議案台帳
+衆法-176-7,名目付加価値（開始前最後の年）,33343100百万円,33343100百万円,一致,OECD 表6 JPN Q V 2011年
+衆法-176-7,額の下端,33210835358430,33210835358430,一致,OECD 表6 Q LR、比較国12か国
+衆法-176-7,額の中央値,44121410415302,44121410415302,一致,OECD 表6 Q LR、比較国12か国
+衆法-176-7,額の上端,52652176822946,52652176822946,一致,OECD 表6 Q LR、比較国12か国
 衆法-177-1,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2D46.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2D46.htm,一致,
 衆法-177-1,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110401015.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110401015.htm,一致,
 衆法-177-1,題名,海外の美術品等の我が国における公開の促進に関する法律案,海外の美術品等の我が国における公開の促進に関する法律案,一致,
@@ -3849,17 +3725,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-180-12,額の下端,33210835358430,33210835358430,一致,OECD 表6 Q LR、比較国12か国
 衆法-180-12,額の中央値,44121410415302,44121410415302,一致,OECD 表6 Q LR、比較国12か国
 衆法-180-12,額の上端,52652176822946,52652176822946,一致,OECD 表6 Q LR、比較国12か国
-衆法-180-13,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/363A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/363A.htm,一致,
-衆法-180-13,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18020120622034.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18020120622034.htm,一致,
-衆法-180-13,題名,警察等が取り扱う死体の死因又は身元の調査等に関する法律案,警察等が取り扱う死体の死因又は身元の調査等に関する法律案,一致,
-衆法-180-13,施行日,2013-04-01,2013-04-01,一致,
-衆法-180-13,施行期日の種別（衆議院の附則）,2013-04-01,2013-04-01,一致,
-衆法-180-13,公布日との順序,2013-04-01,2012-06-22,一致,
-衆法-180-13,公布日,2012-06-22,2012-06-22,一致,施行日台帳と議案台帳
-衆法-180-13,名目付加価値（開始前最後の年）,502696000百万円,502696000百万円,一致,OECD 表6 JPN _T V 2012年
-衆法-180-13,額の下端,19652472597199,19652472597199,一致,OECD 表6 _T LR、比較国12か国
-衆法-180-13,額の中央値,77117997369958,77117997369958,一致,OECD 表6 _T LR、比較国12か国
-衆法-180-13,額の上端,127908303021332,127908303021332,一致,OECD 表6 _T LR、比較国12か国
 衆法-180-17,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/363E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/363E.htm,一致,
 衆法-180-17,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18020120622032.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18020120622032.htm,一致,
 衆法-180-17,題名,国立国会図書館法の一部を改正する法律案,国立国会図書館法の一部を改正する法律案,一致,
@@ -3968,17 +3833,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-183-24,額の下端,-930005004368,-930005004368,一致,OECD 表6 Q LR、比較国12か国
 衆法-183-24,額の中央値,3603832887795,3603832887795,一致,OECD 表6 Q LR、比較国12か国
 衆法-183-24,額の上端,11696221074223,11696221074223,一致,OECD 表6 Q LR、比較国12か国
-衆法-183-3,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3ACE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3ACE.htm,一致,
-衆法-183-3,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130426010.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130426010.htm,一致,
-衆法-183-3,題名,公職選挙法の一部を改正する法律案,公職選挙法の一部を改正する法律案,一致,
-衆法-183-3,施行日,2013-05-26,2013-05-26,一致,
-衆法-183-3,施行期日の種別（衆議院の附則）,2013-05-26,2013-05-26,一致,
-衆法-183-3,公布日との順序,2013-05-26,2013-04-26,一致,
-衆法-183-3,公布日,2013-04-26,2013-04-26,一致,施行日台帳と議案台帳
-衆法-183-3,名目付加価値（開始前最後の年）,502696000百万円,502696000百万円,一致,OECD 表6 JPN _T V 2012年
-衆法-183-3,額の下端,19652472597199,19652472597199,一致,OECD 表6 _T LR、比較国12か国
-衆法-183-3,額の中央値,77117997369958,77117997369958,一致,OECD 表6 _T LR、比較国12か国
-衆法-183-3,額の上端,127908303021332,127908303021332,一致,OECD 表6 _T LR、比較国12か国
 衆法-183-34,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3CBE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3CBE.htm,一致,
 衆法-183-34,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130626066.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130626066.htm,一致,
 衆法-183-34,題名,死刑再審無罪者に対し国民年金の給付等を行うための国民年金の保険料の納付の特例等に関する法律案,死刑再審無罪者に対し国民年金の給付等を行うための国民年金の保険料の納付の特例等に関する法律案,一致,
@@ -4001,17 +3855,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-183-4,額の下端,8475981696356,8475981696356,一致,OECD 表6 K LR、比較国12か国
 衆法-183-4,額の中央値,25454752678252,25454752678252,一致,OECD 表6 K LR、比較国12か国
 衆法-183-4,額の上端,31970712717989,31970712717989,一致,OECD 表6 K LR、比較国12か国
-衆法-183-41,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3F62.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3F62.htm,一致,
-衆法-183-41,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18520131211093.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18520131211093.htm,一致,
-衆法-183-41,題名,公職選挙法の一部を改正する法律案,公職選挙法の一部を改正する法律案,一致,
-衆法-183-41,施行日,2015-03-01,2015-03-01,一致,
-衆法-183-41,施行期日の種別（衆議院の附則）,2015-03-01,2015-03-01,一致,
-衆法-183-41,公布日との順序,2015-03-01,2013-12-11,一致,
-衆法-183-41,公布日,2013-12-11,2013-12-11,一致,施行日台帳と議案台帳
-衆法-183-41,名目付加価値（開始前最後の年）,524394400百万円,524394400百万円,一致,OECD 表6 JPN _T V 2014年
-衆法-183-41,額の下端,-25065540767466,-25065540767466,一致,OECD 表6 _T LR、比較国12か国
-衆法-183-41,額の中央値,6726511757281,6726511757281,一致,OECD 表6 _T LR、比較国12か国
-衆法-183-41,額の上端,40539175698670,40539175698670,一致,OECD 表6 _T LR、比較国12か国
 衆法-183-7,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3A2A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3A2A.htm,一致,
 衆法-183-7,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130510011.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130510011.htm,一致,
 衆法-183-7,題名,スポーツ振興投票の実施等に関する法律及び独立行政法人日本スポーツ振興センター法の一部を改正する法律案,スポーツ振興投票の実施等に関する法律及び独立行政法人日本スポーツ振興センター法の一部を改正する法律案,一致,
@@ -4197,17 +4040,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-186-45,額の下端,470776758201,470776758201,一致,OECD 表6 K LR、比較国12か国
 衆法-186-45,額の中央値,10959489663254,10959489663254,一致,OECD 表6 K LR、比較国12か国
 衆法-186-45,額の上端,20965712762371,20965712762371,一致,OECD 表6 K LR、比較国12か国
-衆法-186-9,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/441A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/441A.htm,一致,
-衆法-186-9,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140530043.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140530043.htm,一致,
-衆法-186-9,題名,国民の祝日に関する法律の一部を改正する法律案,国民の祝日に関する法律の一部を改正する法律案,一致,
-衆法-186-9,施行日,2016-01-01,2016-01-01,一致,
-衆法-186-9,施行期日の種別（衆議院の附則）,2016-01-01,2016-01-01,一致,
-衆法-186-9,公布日との順序,2016-01-01,2014-05-30,一致,
-衆法-186-9,公布日,2014-05-30,2014-05-30,一致,施行日台帳と議案台帳
-衆法-186-9,名目付加価値（開始前最後の年）,546381200百万円,546381200百万円,一致,OECD 表6 JPN _T V 2015年
-衆法-186-9,額の下端,23905955578112,23905955578112,一致,OECD 表6 _T LR、比較国12か国
-衆法-186-9,額の中央値,47000576501239,47000576501239,一致,OECD 表6 _T LR、比較国12か国
-衆法-186-9,額の上端,62840100223151,62840100223151,一致,OECD 表6 _T LR、比較国12か国
 衆法-187-10,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/46C6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/46C6.htm,一致,
 衆法-187-10,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141127121.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141127121.htm,一致,
 衆法-187-10,題名,ハンセン病問題の解決の促進に関する法律の一部を改正する法律案,ハンセン病問題の解決の促進に関する法律の一部を改正する法律案,一致,
@@ -4239,17 +4071,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-187-16,額の下端,4025128711128,4025128711128,一致,OECD 表6 A LR、比較国12か国
 衆法-187-16,額の中央値,5490557366943,5490557366943,一致,OECD 表6 A LR、比較国12か国
 衆法-187-16,額の上端,7544862363504,7544862363504,一致,OECD 表6 A LR、比較国12か国
-衆法-187-17,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/46F6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/46F6.htm,一致,
-衆法-187-17,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141127126.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141127126.htm,一致,
-衆法-187-17,題名,私事性的画像記録の提供等による被害の防止に関する法律案,私事性的画像記録の提供等による被害の防止に関する法律案,一致,
-衆法-187-17,施行日,2014-11-27,2014-11-27,一致,
-衆法-187-17,施行期日の種別（衆議院の附則）,2014-11-27,2014-11-27,一致,
-衆法-187-17,公布日との順序,2014-11-27,2014-11-27,一致,
-衆法-187-17,公布日,2014-11-27,2014-11-27,一致,施行日台帳と議案台帳
-衆法-187-17,名目付加価値（開始前最後の年）,511324200百万円,511324200百万円,一致,OECD 表6 JPN _T V 2013年
-衆法-187-17,額の下端,59522643534812,59522643534812,一致,OECD 表6 _T LR、比較国12か国
-衆法-187-17,額の中央値,100271268059224,100271268059224,一致,OECD 表6 _T LR、比較国12か国
-衆法-187-17,額の上端,130646208529316,130646208529316,一致,OECD 表6 _T LR、比較国12か国
 衆法-187-8,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/46CA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/46CA.htm,一致,
 衆法-187-8,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141127123.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141127123.htm,一致,
 衆法-187-8,題名,北朝鮮当局によって拉致された被害者等の支援に関する法律の一部を改正する法律案,北朝鮮当局によって拉致された被害者等の支援に関する法律の一部を改正する法律案,一致,
@@ -4326,15 +4147,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-189-38,額の下端,6166222860058,6166222860058,一致,OECD 表6 Q LR、比較国12か国
 衆法-189-38,額の中央値,9124363453500,9124363453500,一致,OECD 表6 Q LR、比較国12か国
 衆法-189-38,額の上端,11409247622845,11409247622845,一致,OECD 表6 Q LR、比較国12か国
-衆法-190-2,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DBF296.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DBF296.htm,一致,
-衆法-190-2,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19020160203008.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19020160203008.htm,一致,
-衆法-190-2,出典URL,https://laws.e-gov.go.jp/law/325AC1000000100,https://laws.e-gov.go.jp/law/325AC1000000100,一致,
-衆法-190-2,題名,公職選挙法の一部を改正する法律案,公職選挙法の一部を改正する法律案,一致,
-衆法-190-2,施行日（推定）,2016-02-03,2016-02-03,一致,公布日を施行日とみなした推定
-衆法-190-2,名目付加価値（開始前最後の年）,546381200百万円,546381200百万円,一致,OECD 表6 JPN _T V 2015年
-衆法-190-2,額の下端,23905955578112,23905955578112,一致,OECD 表6 _T LR、比較国12か国
-衆法-190-2,額の中央値,47000576501239,47000576501239,一致,OECD 表6 _T LR、比較国12か国
-衆法-190-2,額の上端,62840100223151,62840100223151,一致,OECD 表6 _T LR、比較国12か国
 衆法-190-21,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DBF84E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DBF84E.htm,一致,
 衆法-190-21,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19020160413027.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19020160413027.htm,一致,
 衆法-190-21,題名,成年後見の事務の円滑化を図るための民法及び家事事件手続法の一部を改正する法律案,成年後見の事務の円滑化を図るための民法及び家事事件手続法の一部を改正する法律案,一致,
@@ -4346,18 +4158,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-190-21,額の下端,23905955578112,23905955578112,一致,OECD 表6 _T LR、比較国12か国
 衆法-190-21,額の中央値,47000576501239,47000576501239,一致,OECD 表6 _T LR、比較国12か国
 衆法-190-21,額の上端,62840100223151,62840100223151,一致,OECD 表6 _T LR、比較国12か国
-衆法-190-24,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DBF866.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DBF866.htm,一致,
-衆法-190-24,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19020160413025.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19020160413025.htm,一致,
-衆法-190-24,出典URL,https://laws.e-gov.go.jp/law/325AC1000000100,https://laws.e-gov.go.jp/law/325AC1000000100,一致,
-衆法-190-24,題名,公職選挙法の一部を改正する法律案,公職選挙法の一部を改正する法律案,一致,
-衆法-190-24,施行日,2017-04-10,2017-04-10,一致,
-衆法-190-24,施行期日の原文,なし,なし,対象外,施行日は e-Gov の改正履歴の記録から取得（附則の原文は未取得）
-衆法-190-24,公布日との順序,2017-04-10,2016-04-13,一致,
-衆法-190-24,公布日,2016-04-13,2016-04-13,一致,施行日台帳と議案台帳
-衆法-190-24,名目付加価値（開始前最後の年）,554525000百万円,554525000百万円,一致,OECD 表6 JPN _T V 2016年
-衆法-190-24,額の下端,11887176650723,11887176650723,一致,OECD 表6 _T LR、比較国12か国
-衆法-190-24,額の中央値,25531518738450,25531518738450,一致,OECD 表6 _T LR、比較国12か国
-衆法-190-24,額の上端,37787940523142,37787940523142,一致,OECD 表6 _T LR、比較国12か国
 衆法-190-29,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DBF95A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DBF95A.htm,一致,
 衆法-190-29,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19020160520048.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19020160520048.htm,一致,
 衆法-190-29,題名,合法伐採木材等の流通及び利用の促進に関する法律案,合法伐採木材等の流通及び利用の促進に関する法律案,一致,
@@ -4445,18 +4245,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-190-49,額の下端,-734774407820,-734774407820,一致,OECD 表6 A LR、比較国12か国
 衆法-190-49,額の中央値,113069794736,113069794736,一致,OECD 表6 A LR、比較国12か国
 衆法-190-49,額の上端,944084499512,944084499512,一致,OECD 表6 A LR、比較国12か国
-衆法-192-10,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC1E8E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC1E8E.htm,一致,
-衆法-192-10,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19220161216113.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19220161216113.htm,一致,
-衆法-192-10,出典URL,https://laws.e-gov.go.jp/law/428AC1000000113,https://laws.e-gov.go.jp/law/428AC1000000113,一致,
-衆法-192-10,題名,自転車活用推進法案,自転車活用推進法案,一致,
-衆法-192-10,施行日,2017-05-01,2017-05-01,一致,
-衆法-192-10,施行期日の原文,あり,あり,一致,
-衆法-192-10,公布日との順序,2017-05-01,2016-12-16,一致,
-衆法-192-10,公布日,2016-12-16,2016-12-16,一致,施行日台帳と議案台帳
-衆法-192-10,名目付加価値（開始前最後の年）,554525000百万円,554525000百万円,一致,OECD 表6 JPN _T V 2016年
-衆法-192-10,額の下端,11887176650723,11887176650723,一致,OECD 表6 _T LR、比較国12か国
-衆法-192-10,額の中央値,25531518738450,25531518738450,一致,OECD 表6 _T LR、比較国12か国
-衆法-192-10,額の上端,37787940523142,37787940523142,一致,OECD 表6 _T LR、比較国12か国
 衆法-192-11,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC1E92.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC1E92.htm,一致,
 衆法-192-11,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19220161216106.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19220161216106.htm,一致,
 衆法-192-11,題名,道路運送法及び貨物自動車運送事業法の一部を改正する法律案,道路運送法及び貨物自動車運送事業法の一部を改正する法律案,一致,
@@ -4643,17 +4431,6 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-197-5,額の下端,-7798879228,-7798879228,一致,OECD 表6 R+S LR、比較国11か国
 衆法-197-5,額の中央値,271806605651,271806605651,一致,OECD 表6 R+S LR、比較国11か国
 衆法-197-5,額の上端,568532405194,568532405194,一致,OECD 表6 R+S LR、比較国11か国
-衆法-197-7,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCAA52.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCAA52.htm,一致,
-衆法-197-7,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214100.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214100.htm,一致,
-衆法-197-7,題名,ユニバーサル社会の実現に向けた諸施策の総合的かつ一体的な推進に関する法律案,ユニバーサル社会の実現に向けた諸施策の総合的かつ一体的な推進に関する法律案,一致,
-衆法-197-7,施行日,2018-12-14,2018-12-14,一致,
-衆法-197-7,施行期日の種別（衆議院の附則）,2018-12-14,2018-12-14,一致,
-衆法-197-7,公布日との順序,2018-12-14,2018-12-14,一致,
-衆法-197-7,公布日,2018-12-14,2018-12-14,一致,施行日台帳と議案台帳
-衆法-197-7,名目付加価値（開始前最後の年）,563172600百万円,563172600百万円,一致,OECD 表6 JPN _T V 2017年
-衆法-197-7,額の下端,-780293509826,-780293509826,一致,OECD 表6 _T LR、比較国12か国
-衆法-197-7,額の中央値,10821156240084,10821156240084,一致,OECD 表6 _T LR、比較国12か国
-衆法-197-7,額の上端,17048778414624,17048778414624,一致,OECD 表6 _T LR、比較国12か国
 衆法-197-8,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCAAAE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCAAAE.htm,一致,
 衆法-197-8,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214093.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214093.htm,一致,
 衆法-197-8,出典URL,https://laws.e-gov.go.jp/law/325AC1000000202,https://laws.e-gov.go.jp/law/325AC1000000202,一致,
@@ -4958,6 +4735,28 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-204-37,額の下端,-6303059579403,-6303059579403,一致,OECD 表6 M+N LR、比較国10か国
 衆法-204-37,額の中央値,931980122539,931980122539,一致,OECD 表6 M+N LR、比較国10か国
 衆法-204-37,額の上端,6066095817926,6066095817926,一致,OECD 表6 M+N LR、比較国10か国
+衆法-204-8,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD2182.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD2182.htm,一致,
+衆法-204-8,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210331018.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210331018.htm,一致,
+衆法-204-8,題名,有明海及び八代海等を再生するための特別措置に関する法律の一部を改正する法律案,有明海及び八代海等を再生するための特別措置に関する法律の一部を改正する法律案,一致,
+衆法-204-8,施行日,2021-04-01,2021-04-01,一致,
+衆法-204-8,施行期日の種別（衆議院の附則）,2021-04-01,2021-04-01,一致,
+衆法-204-8,公布日との順序,2021-04-01,2021-03-31,一致,
+衆法-204-8,公布日,2021-03-31,2021-03-31,一致,施行日台帳と議案台帳
+衆法-204-8,名目付加価値（開始前最後の年）,22035200百万円,22035200百万円,一致,OECD 表6 JPN K V 2020年
+衆法-204-8,額の下端,9082850987063,9082850987063,一致,OECD 表6 K LR、比較国11か国
+衆法-204-8,額の中央値,12273378304350,12273378304350,一致,OECD 表6 K LR、比較国11か国
+衆法-204-8,額の上端,15358741090927,15358741090927,一致,OECD 表6 K LR、比較国11か国
+衆法-208-12,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5762.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD5762.htm,一致,
+衆法-208-12,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220331008.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220331008.htm,一致,
+衆法-208-12,題名,豪雪地帯対策特別措置法の一部を改正する法律案,豪雪地帯対策特別措置法の一部を改正する法律案,一致,
+衆法-208-12,施行日,2022-03-31,2022-03-31,一致,
+衆法-208-12,施行期日の種別（衆議院の附則）,2022-03-31,2022-03-31,一致,
+衆法-208-12,公布日との順序,2022-03-31,2022-03-31,一致,
+衆法-208-12,公布日,2022-03-31,2022-03-31,一致,施行日台帳と議案台帳
+衆法-208-12,名目付加価値（開始前最後の年）,33472200百万円,33472200百万円,一致,OECD 表6 JPN F V 2021年
+衆法-208-12,額の下端,583816090972,583816090972,一致,OECD 表6 F LR、比較国11か国
+衆法-208-12,額の中央値,3998336652100,3998336652100,一致,OECD 表6 F LR、比較国11か国
+衆法-208-12,額の上端,6243588450526,6243588450526,一致,OECD 表6 F LR、比較国11か国
 衆法-208-37,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD59FE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD59FE.htm,一致,
 衆法-208-37,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220617072.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20820220617072.htm,一致,
 衆法-208-37,題名,石綿による健康被害の救済に関する法律の一部を改正する法律案,石綿による健康被害の救済に関する法律の一部を改正する法律案,一致,
@@ -5079,6 +4878,17 @@ id,項目,公開値,一次資料の値,結果,備考
 衆法-211-25,額の下端,-1238748861825,-1238748861825,一致,OECD 表6 K LR、比較国11か国
 衆法-211-25,額の中央値,458873418991,458873418991,一致,OECD 表6 K LR、比較国11か国
 衆法-211-25,額の上端,1432858236317,1432858236317,一致,OECD 表6 K LR、比較国11か国
+衆法-211-26,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8612.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8612.htm,一致,
+衆法-211-26,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230616064.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230616064.htm,一致,
+衆法-211-26,題名,令和五年三月予備費使用に係る低所得者世帯給付金に係る差押禁止等に関する法律案,令和五年三月予備費使用に係る低所得者世帯給付金に係る差押禁止等に関する法律案,一致,
+衆法-211-26,施行日,2023-06-16,2023-06-16,一致,
+衆法-211-26,施行期日の種別（衆議院の附則）,2023-06-16,2023-06-16,一致,
+衆法-211-26,公布日との順序,2023-06-16,2023-06-16,一致,
+衆法-211-26,公布日,2023-06-16,2023-06-16,一致,施行日台帳と議案台帳
+衆法-211-26,名目付加価値（開始前最後の年）,579200000百万円,579200000百万円,一致,OECD 表6 JPN _T V 2022年
+衆法-211-26,額の下端,-1749270730819,-1749270730819,一致,OECD 表6 _T LR、比較国11か国
+衆法-211-26,額の中央値,8701215242543,8701215242543,一致,OECD 表6 _T LR、比較国11か国
+衆法-211-26,額の上端,23104932343643,23104932343643,一致,OECD 表6 _T LR、比較国11か国
 衆法-212-10,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDAA0E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DDAA0E.htm,一致,
 衆法-212-10,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21220231220089.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21220231220089.htm,一致,
 衆法-212-10,題名,特定不法行為等に係る被害者の迅速かつ円滑な救済に資するための日本司法支援センターの業務の特例並びに宗教法人による財産の処分及び管理の特例に関する法律案,特定不法行為等に係る被害者の迅速かつ円滑な救済に資するための日本司法支援センターの業務の特例並びに宗教法人による財産の処分及び管理の特例に関する法律案,一致,
@@ -5187,17 +4997,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-142-106,額の下端,-1478114876718,-1478114876718,一致,OECD 表6 R+S LR、比較国4か国
 閣法-142-106,額の中央値,7272091965422,7272091965422,一致,OECD 表6 R+S LR、比較国4か国
 閣法-142-106,額の上端,18435457843769,18435457843769,一致,OECD 表6 R+S LR、比較国4か国
-閣法-142-109,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/AA6A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/AA6A.htm,一致,
-閣法-142-109,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145060.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145060.htm,一致,
-閣法-142-109,題名,周辺事態に際して我が国の平和及び安全を確保するための措置に関する法律案,周辺事態に際して我が国の平和及び安全を確保するための措置に関する法律案,一致,
-閣法-142-109,施行日,1999-08-28,1999-08-28,一致,
-閣法-142-109,施行期日の種別（衆議院の附則）,1999-08-28,1999-08-28,一致,
-閣法-142-109,公布日との順序,1999-08-28,1999-05-28,一致,
-閣法-142-109,公布日,1999-05-28,1999-05-28,一致,施行日台帳と議案台帳
-閣法-142-109,名目付加価値（開始前最後の年）,543436600百万円,543436600百万円,一致,OECD 表6 JPN _T V 1998年
-閣法-142-109,額の下端,63427278459408,63427278459408,一致,OECD 表6 _T LR、比較国5か国
-閣法-142-109,額の中央値,139420520566782,139420520566782,一致,OECD 表6 _T LR、比較国5か国
-閣法-142-109,額の上端,359633456345981,359633456345981,一致,OECD 表6 _T LR、比較国5か国
 閣法-142-11,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/535E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/535E.htm,一致,
 閣法-142-11,出典URL,https://laws.e-gov.go.jp/law/410AC0000000036,https://laws.e-gov.go.jp/law/410AC0000000036,一致,
 閣法-142-11,題名,中部国際空港の設置及び管理に関する法律案,中部国際空港の設置及び管理に関する法律案,一致,
@@ -5848,6 +5647,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-142-85,額の下端,-12920040298170,-12920040298170,一致,OECD 表6 Q LR、比較国5か国
 閣法-142-85,額の中央値,2628885461426,2628885461426,一致,OECD 表6 Q LR、比較国5か国
 閣法-142-85,額の上端,26495573843912,26495573843912,一致,OECD 表6 Q LR、比較国5か国
+閣法-142-86,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5232.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5232.htm,一致,
+閣法-142-86,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142107.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142107.htm,一致,
+閣法-142-86,題名,金融システム改革のための関係法律の整備等に関する法律案,金融システム改革のための関係法律の整備等に関する法律案,一致,
+閣法-142-86,施行日,1998-12-01,1998-12-01,一致,
+閣法-142-86,施行期日の種別（衆議院の附則）,1998-12-01,1998-12-01,一致,
+閣法-142-86,公布日との順序,1998-12-01,1998-06-15,一致,
+閣法-142-86,公布日,1998-06-15,1998-06-15,一致,施行日台帳と議案台帳
+閣法-142-86,名目付加価値（開始前最後の年）,28980600百万円,28980600百万円,一致,OECD 表6 JPN K V 1997年
+閣法-142-86,額の下端,50285076074074,50285076074074,一致,OECD 表6 K LR、比較国5か国
+閣法-142-86,額の中央値,65892072442027,65892072442027,一致,OECD 表6 K LR、比較国5か国
+閣法-142-86,額の上端,74394008359291,74394008359291,一致,OECD 表6 K LR、比較国5か国
 閣法-142-87,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/522E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/522E.htm,一致,
 閣法-142-87,出典URL,https://laws.e-gov.go.jp/law/410AC0000000105,https://laws.e-gov.go.jp/law/410AC0000000105,一致,
 閣法-142-87,題名,特定目的会社による特定資産の流動化に関する法律案,特定目的会社による特定資産の流動化に関する法律案,一致,
@@ -5893,26 +5703,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-142-92,額の下端,281049445451805,281049445451805,一致,OECD 表6 _T LR、比較国10か国
 閣法-142-92,額の中央値,473851748532133,473851748532133,一致,OECD 表6 _T LR、比較国10か国
 閣法-142-92,額の上端,586126753456723,586126753456723,一致,OECD 表6 _T LR、比較国10か国
-閣法-142-93,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/AA82.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/AA82.htm,一致,
-閣法-142-93,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145137.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145137.htm,一致,
-閣法-142-93,出典URL,https://laws.e-gov.go.jp/law/411AC0000000137,https://laws.e-gov.go.jp/law/411AC0000000137,一致,
-閣法-142-93,題名,犯罪捜査のための通信傍受に関する法律案,犯罪捜査のための通信傍受に関する法律案,一致,
-閣法-142-93,施行日（推定）,1999-08-18,1999-08-18,一致,公布日を施行日とみなした推定
-閣法-142-93,名目付加価値（開始前最後の年）,543436600百万円,543436600百万円,一致,OECD 表6 JPN _T V 1998年
-閣法-142-93,額の下端,63427278459408,63427278459408,一致,OECD 表6 _T LR、比較国5か国
-閣法-142-93,額の中央値,139420520566782,139420520566782,一致,OECD 表6 _T LR、比較国5か国
-閣法-142-93,額の上端,359633456345981,359633456345981,一致,OECD 表6 _T LR、比較国5か国
-閣法-142-94,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/AA7E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/AA7E.htm,一致,
-閣法-142-94,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145138.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145138.htm,一致,
-閣法-142-94,題名,刑事訴訟法の一部を改正する法律案,刑事訴訟法の一部を改正する法律案,一致,
-閣法-142-94,施行日,1999-09-07,1999-09-07,一致,
-閣法-142-94,施行期日の種別（衆議院の附則）,1999-09-07,1999-09-07,一致,
-閣法-142-94,公布日との順序,1999-09-07,1999-08-18,一致,
-閣法-142-94,公布日,1999-08-18,1999-08-18,一致,施行日台帳と議案台帳
-閣法-142-94,名目付加価値（開始前最後の年）,543436600百万円,543436600百万円,一致,OECD 表6 JPN _T V 1998年
-閣法-142-94,額の下端,63427278459408,63427278459408,一致,OECD 表6 _T LR、比較国5か国
-閣法-142-94,額の中央値,139420520566782,139420520566782,一致,OECD 表6 _T LR、比較国5か国
-閣法-142-94,額の上端,359633456345981,359633456345981,一致,OECD 表6 _T LR、比較国5か国
 閣法-142-95,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/520E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/520E.htm,一致,
 閣法-142-95,出典URL,https://laws.e-gov.go.jp/law/348AC0000000053,https://laws.e-gov.go.jp/law/348AC0000000053,一致,
 閣法-142-95,題名,農水産業協同組合貯金保険法の一部を改正する法律案,農水産業協同組合貯金保険法の一部を改正する法律案,一致,
@@ -5943,6 +5733,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-142-97,額の下端,166635829583386,166635829583386,一致,OECD 表6 C LR、比較国5か国
 閣法-142-97,額の中央値,253807308143002,253807308143002,一致,OECD 表6 C LR、比較国5か国
 閣法-142-97,額の上端,502173600733487,502173600733487,一致,OECD 表6 C LR、比較国5か国
+閣法-142-98,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5202.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/5202.htm,一致,
+閣法-142-98,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142058.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142058.htm,一致,
+閣法-142-98,題名,電気通信分野における規制の合理化のための関係法律の整備等に関する法律案,電気通信分野における規制の合理化のための関係法律の整備等に関する法律案,一致,
+閣法-142-98,施行日,1998-11-08,1998-11-08,一致,
+閣法-142-98,施行期日の種別（衆議院の附則）,1998-11-08,1998-11-08,一致,
+閣法-142-98,公布日との順序,1998-11-08,1998-05-08,一致,
+閣法-142-98,公布日,1998-05-08,1998-05-08,一致,施行日台帳と議案台帳
+閣法-142-98,名目付加価値（開始前最後の年）,21392800百万円,21392800百万円,一致,OECD 表6 JPN J V 1997年
+閣法-142-98,額の下端,154011394907039,154011394907039,一致,OECD 表6 J LR、比較国5か国
+閣法-142-98,額の中央値,201679448490004,201679448490004,一致,OECD 表6 J LR、比較国5か国
+閣法-142-98,額の上端,227377197345916,227377197345916,一致,OECD 表6 J LR、比較国5か国
 閣法-142-99,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/51FE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/51FE.htm,一致,
 閣法-142-99,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142100.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h142100.htm,一致,
 閣法-142-99,出典URL,https://laws.e-gov.go.jp/law/325AC0000000201,https://laws.e-gov.go.jp/law/325AC0000000201,一致,
@@ -6197,17 +5998,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-145-28,額の下端,63427278459408,63427278459408,一致,OECD 表6 _T LR、比較国5か国
 閣法-145-28,額の中央値,139420520566782,139420520566782,一致,OECD 表6 _T LR、比較国5か国
 閣法-145-28,額の上端,359633456345981,359633456345981,一致,OECD 表6 _T LR、比較国5か国
-閣法-145-29,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/A9E2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/A9E2.htm,一致,
-閣法-145-29,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145019.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145019.htm,一致,
-閣法-145-29,題名,中小企業総合事業団法案,中小企業総合事業団法案,一致,
-閣法-145-29,施行日,1999-07-01,1999-07-01,一致,
-閣法-145-29,施行期日の種別（衆議院の附則）,1999-07-01,1999-07-01,一致,
-閣法-145-29,公布日との順序,1999-07-01,1999-03-31,一致,
-閣法-145-29,公布日,1999-03-31,1999-03-31,一致,施行日台帳と議案台帳
-閣法-145-29,名目付加価値（開始前最後の年）,543436600百万円,543436600百万円,一致,OECD 表6 JPN _T V 1998年
-閣法-145-29,額の下端,63427278459408,63427278459408,一致,OECD 表6 _T LR、比較国5か国
-閣法-145-29,額の中央値,139420520566782,139420520566782,一致,OECD 表6 _T LR、比較国5か国
-閣法-145-29,額の上端,359633456345981,359633456345981,一致,OECD 表6 _T LR、比較国5か国
 閣法-145-30,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/A9DE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/A9DE.htm,一致,
 閣法-145-30,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145041.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145041.htm,一致,
 閣法-145-30,題名,特許法等の一部を改正する法律案,特許法等の一部を改正する法律案,一致,
@@ -6661,15 +6451,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-145-71,額の下端,281049445451805,281049445451805,一致,OECD 表6 _T LR、比較国10か国
 閣法-145-71,額の中央値,473851748532133,473851748532133,一致,OECD 表6 _T LR、比較国10か国
 閣法-145-71,額の上端,586126753456723,586126753456723,一致,OECD 表6 _T LR、比較国10か国
-閣法-145-72,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/A936.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/A936.htm,一致,
-閣法-145-72,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145062.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145062.htm,一致,
-閣法-145-72,出典URL,https://laws.e-gov.go.jp/law/411AC0000000062,https://laws.e-gov.go.jp/law/411AC0000000062,一致,
-閣法-145-72,題名,国立教育会館の解散に関する法律案,国立教育会館の解散に関する法律案,一致,
-閣法-145-72,施行日（推定）,1999-05-28,1999-05-28,一致,公布日を施行日とみなした推定
-閣法-145-72,名目付加価値（開始前最後の年）,543436600百万円,543436600百万円,一致,OECD 表6 JPN _T V 1998年
-閣法-145-72,額の下端,63427278459408,63427278459408,一致,OECD 表6 _T LR、比較国5か国
-閣法-145-72,額の中央値,139420520566782,139420520566782,一致,OECD 表6 _T LR、比較国5か国
-閣法-145-72,額の上端,359633456345981,359633456345981,一致,OECD 表6 _T LR、比較国5か国
 閣法-145-73,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/A932.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/A932.htm,一致,
 閣法-145-73,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145109.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h145109.htm,一致,
 閣法-145-73,題名,卸売市場法及び食品流通構造改善促進法の一部を改正する法律案,卸売市場法及び食品流通構造改善促進法の一部を改正する法律案,一致,
@@ -6941,6 +6722,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-147-12,額の下端,281049445451805,281049445451805,一致,OECD 表6 _T LR、比較国10か国
 閣法-147-12,額の中央値,473851748532133,473851748532133,一致,OECD 表6 _T LR、比較国10か国
 閣法-147-12,額の上端,586126753456723,586126753456723,一致,OECD 表6 _T LR、比較国10か国
+閣法-147-14,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/E846.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/E846.htm,一致,
+閣法-147-14,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h147007.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h147007.htm,一致,
+閣法-147-14,題名,特定市街化区域農地の固定資産税の課税の適正化に伴う宅地化促進臨時措置法の一部を改正する法律案,特定市街化区域農地の固定資産税の課税の適正化に伴う宅地化促進臨時措置法の一部を改正する法律案,一致,
+閣法-147-14,施行日,2000-04-01,2000-04-01,一致,
+閣法-147-14,施行期日の種別（衆議院の附則）,2000-04-01,2000-04-01,一致,
+閣法-147-14,公布日との順序,2000-04-01,2000-03-29,一致,
+閣法-147-14,公布日,2000-03-29,2000-03-29,一致,施行日台帳と議案台帳
+閣法-147-14,名目付加価値（開始前最後の年）,7770500百万円,7770500百万円,一致,OECD 表6 JPN A V 1999年
+閣法-147-14,額の下端,306737715677,306737715677,一致,OECD 表6 A LR、比較国10か国
+閣法-147-14,額の中央値,5411108109757,5411108109757,一致,OECD 表6 A LR、比較国10か国
+閣法-147-14,額の上端,8757504468976,8757504468976,一致,OECD 表6 A LR、比較国10か国
 閣法-147-15,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/E842.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/E842.htm,一致,
 閣法-147-15,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h147004.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h147004.htm,一致,
 閣法-147-15,題名,地方税法等の一部を改正する法律案,地方税法等の一部を改正する法律案,一致,
@@ -7018,17 +6810,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-147-24,額の下端,63776506680453,63776506680453,一致,OECD 表6 M+N LR、比較国9か国
 閣法-147-24,額の中央値,78130881799951,78130881799951,一致,OECD 表6 M+N LR、比較国9か国
 閣法-147-24,額の上端,97511129478875,97511129478875,一致,OECD 表6 M+N LR、比較国9か国
-閣法-147-25,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/E78E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/E78E.htm,一致,
-閣法-147-25,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h147043.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h147043.htm,一致,
-閣法-147-25,題名,中小企業指導法の一部を改正する法律案,中小企業指導法の一部を改正する法律案,一致,
-閣法-147-25,施行日,2000-07-19,2000-07-19,一致,
-閣法-147-25,施行期日の種別（衆議院の附則）,2000-07-19,2000-07-19,一致,
-閣法-147-25,公布日との順序,2000-07-19,2000-04-19,一致,
-閣法-147-25,公布日,2000-04-19,2000-04-19,一致,施行日台帳と議案台帳
-閣法-147-25,名目付加価値（開始前最後の年）,533823400百万円,533823400百万円,一致,OECD 表6 JPN _T V 1999年
-閣法-147-25,額の下端,281049445451805,281049445451805,一致,OECD 表6 _T LR、比較国10か国
-閣法-147-25,額の中央値,473851748532133,473851748532133,一致,OECD 表6 _T LR、比較国10か国
-閣法-147-25,額の上端,586126753456723,586126753456723,一致,OECD 表6 _T LR、比較国10か国
 閣法-147-26,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/E78A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/E78A.htm,一致,
 閣法-147-26,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h147033.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h147033.htm,一致,
 閣法-147-26,題名,港湾法の一部を改正する法律案,港湾法の一部を改正する法律案,一致,
@@ -7671,15 +7452,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-150-13,額の下端,61891099591378,61891099591378,一致,OECD 表6 M+N LR、比較国9か国
 閣法-150-13,額の中央値,75801533234144,75801533234144,一致,OECD 表6 M+N LR、比較国9か国
 閣法-150-13,額の上端,96998180680396,96998180680396,一致,OECD 表6 M+N LR、比較国9か国
-閣法-150-16,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/EBD2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/EBD2.htm,一致,
-閣法-150-16,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15020001206145.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15020001206145.htm,一致,
-閣法-150-16,出典URL,https://laws.e-gov.go.jp/law/412AC0000000145,https://laws.e-gov.go.jp/law/412AC0000000145,一致,
-閣法-150-16,題名,周辺事態に際して実施する船舶検査活動に関する法律案,周辺事態に際して実施する船舶検査活動に関する法律案,一致,
-閣法-150-16,施行日（推定）,2000-12-06,2000-12-06,一致,公布日を施行日とみなした推定
-閣法-150-16,名目付加価値（開始前最後の年）,533823400百万円,533823400百万円,一致,OECD 表6 JPN _T V 1999年
-閣法-150-16,額の下端,281049445451805,281049445451805,一致,OECD 表6 _T LR、比較国10か国
-閣法-150-16,額の中央値,473851748532133,473851748532133,一致,OECD 表6 _T LR、比較国10か国
-閣法-150-16,額の上端,586126753456723,586126753456723,一致,OECD 表6 _T LR、比較国10か国
+閣法-150-15,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/EB62.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/EB62.htm,一致,
+閣法-150-15,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15020001127126.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15020001127126.htm,一致,
+閣法-150-15,題名,書面の交付等に関する情報通信の技術の利用のための関係法律の整備に関する法律案,書面の交付等に関する情報通信の技術の利用のための関係法律の整備に関する法律案,一致,
+閣法-150-15,施行日,2001-04-01,2001-04-01,一致,
+閣法-150-15,施行期日の原文,なし,なし,対象外,施行日は e-Gov の改正履歴の記録から取得（附則の原文は未取得）
+閣法-150-15,公布日との順序,2001-04-01,2000-11-27,一致,
+閣法-150-15,公布日,2000-11-27,2000-11-27,一致,施行日台帳と議案台帳
+閣法-150-15,名目付加価値（開始前最後の年）,24782200百万円,24782200百万円,一致,OECD 表6 JPN J V 2000年
+閣法-150-15,額の下端,24708043494705,24708043494705,一致,OECD 表6 J LR、比較国10か国
+閣法-150-15,額の中央値,38777256840080,38777256840080,一致,OECD 表6 J LR、比較国10か国
+閣法-150-15,額の上端,86893479540908,86893479540908,一致,OECD 表6 J LR、比較国10か国
 閣法-150-19,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/EC02.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/EC02.htm,一致,
 閣法-150-19,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15020001201136.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15020001201136.htm,一致,
 閣法-150-19,出典URL,https://laws.e-gov.go.jp/law/325AC0000000264,https://laws.e-gov.go.jp/law/325AC0000000264,一致,
@@ -8577,28 +8360,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-153-6,額の下端,451482232945524,451482232945524,一致,OECD 表6 _T LR、比較国11か国
 閣法-153-6,額の中央値,590225511107423,590225511107423,一致,OECD 表6 _T LR、比較国11か国
 閣法-153-6,額の上端,723441485766649,723441485766649,一致,OECD 表6 _T LR、比較国11か国
-閣法-153-8,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/14142.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/14142.htm,一致,
-閣法-153-8,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15320011205138.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15320011205138.htm,一致,
-閣法-153-8,題名,刑法の一部を改正する法律案,刑法の一部を改正する法律案,一致,
-閣法-153-8,施行日,2001-12-25,2001-12-25,一致,
-閣法-153-8,施行期日の種別（衆議院の附則）,2001-12-25,2001-12-25,一致,
-閣法-153-8,公布日との順序,2001-12-25,2001-12-05,一致,
-閣法-153-8,公布日,2001-12-05,2001-12-05,一致,施行日台帳と議案台帳
-閣法-153-8,名目付加価値（開始前最後の年）,543161900百万円,543161900百万円,一致,OECD 表6 JPN _T V 2000年
-閣法-153-8,額の下端,375187492228878,375187492228878,一致,OECD 表6 _T LR、比較国10か国
-閣法-153-8,額の中央値,582131953824841,582131953824841,一致,OECD 表6 _T LR、比較国10か国
-閣法-153-8,額の上端,697614094674736,697614094674736,一致,OECD 表6 _T LR、比較国10か国
-閣法-153-9,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/14146.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/14146.htm,一致,
-閣法-153-9,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15320011205139.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15320011205139.htm,一致,
-閣法-153-9,題名,刑事訴訟法等の一部を改正する法律案,刑事訴訟法等の一部を改正する法律案,一致,
-閣法-153-9,施行日,2001-12-25,2001-12-25,一致,
-閣法-153-9,施行期日の種別（衆議院の附則）,2001-12-25,2001-12-25,一致,
-閣法-153-9,公布日との順序,2001-12-25,2001-12-05,一致,
-閣法-153-9,公布日,2001-12-05,2001-12-05,一致,施行日台帳と議案台帳
-閣法-153-9,名目付加価値（開始前最後の年）,543161900百万円,543161900百万円,一致,OECD 表6 JPN _T V 2000年
-閣法-153-9,額の下端,375187492228878,375187492228878,一致,OECD 表6 _T LR、比較国10か国
-閣法-153-9,額の中央値,582131953824841,582131953824841,一致,OECD 表6 _T LR、比較国10か国
-閣法-153-9,額の上端,697614094674736,697614094674736,一致,OECD 表6 _T LR、比較国10か国
 閣法-154-1,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1434A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1434A.htm,一致,
 閣法-154-1,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15420020208001.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15420020208001.htm,一致,
 閣法-154-1,題名,日本電信電話株式会社の株式の売払収入の活用による社会資本の整備の促進に関する特別措置法等の一部を改正する法律案,日本電信電話株式会社の株式の売払収入の活用による社会資本の整備の促進に関する特別措置法等の一部を改正する法律案,一致,
@@ -9191,17 +8952,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-154-86,額の下端,-1898769683415,-1898769683415,一致,OECD 表6 H LR、比較国11か国
 閣法-154-86,額の中央値,16047335057333,16047335057333,一致,OECD 表6 H LR、比較国11か国
 閣法-154-86,額の上端,27407900936108,27407900936108,一致,OECD 表6 H LR、比較国11か国
-閣法-154-88,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/179BA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/179BA.htm,一致,
-閣法-154-88,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030613079.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030613079.htm,一致,
-閣法-154-88,題名,武力攻撃事態における我が国の平和と独立並びに国及び国民の安全の確保に関する法律案,武力攻撃事態における我が国の平和と独立並びに国及び国民の安全の確保に関する法律案,一致,
-閣法-154-88,施行日,2003-06-13,2003-06-13,一致,
-閣法-154-88,施行期日の種別（衆議院の附則）,2003-06-13,2003-06-13,一致,
-閣法-154-88,公布日との順序,2003-06-13,2003-06-13,一致,
-閣法-154-88,公布日,2003-06-13,2003-06-13,一致,施行日台帳と議案台帳
-閣法-154-88,名目付加価値（開始前最後の年）,531840100百万円,531840100百万円,一致,OECD 表6 JPN _T V 2002年
-閣法-154-88,額の下端,161570999700508,161570999700508,一致,OECD 表6 _T LR、比較国11か国
-閣法-154-88,額の中央値,307176888176459,307176888176459,一致,OECD 表6 _T LR、比較国11か国
-閣法-154-88,額の上端,413631221114025,413631221114025,一致,OECD 表6 _T LR、比較国11か国
 閣法-154-9,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1439E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1439E.htm,一致,
 閣法-154-9,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15420020331016.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15420020331016.htm,一致,
 閣法-154-9,題名,関税定率法及び関税暫定措置法の一部を改正する法律案,関税定率法及び関税暫定措置法の一部を改正する法律案,一致,
@@ -9520,17 +9270,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-155-40,額の下端,10149725721192,10149725721192,一致,OECD 表6 A LR、比較国11か国
 閣法-155-40,額の中央値,14139994207528,14139994207528,一致,OECD 表6 A LR、比較国11か国
 閣法-155-40,額の上端,20309670361709,20309670361709,一致,OECD 表6 A LR、比較国11か国
-閣法-155-41,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17842.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17842.htm,一致,
-閣法-155-41,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15520021204130.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15520021204130.htm,一致,
-閣法-155-41,題名,独立行政法人緑資源機構法案,独立行政法人緑資源機構法案,一致,
-閣法-155-41,施行日,2003-04-01,2003-04-01,一致,
-閣法-155-41,施行期日の種別（衆議院の附則）,2003-04-01,2003-04-01,一致,
-閣法-155-41,公布日との順序,2003-04-01,2002-12-04,一致,
-閣法-155-41,公布日,2002-12-04,2002-12-04,一致,施行日台帳と議案台帳
-閣法-155-41,名目付加価値（開始前最後の年）,6786900百万円,6786900百万円,一致,OECD 表6 JPN A V 2002年
-閣法-155-41,額の下端,10149725721192,10149725721192,一致,OECD 表6 A LR、比較国11か国
-閣法-155-41,額の中央値,14139994207528,14139994207528,一致,OECD 表6 A LR、比較国11か国
-閣法-155-41,額の上端,20309670361709,20309670361709,一致,OECD 表6 A LR、比較国11か国
 閣法-155-42,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17846.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17846.htm,一致,
 閣法-155-42,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15520021204131.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15520021204131.htm,一致,
 閣法-155-42,題名,独立行政法人水産総合研究センター法の一部を改正する法律案,独立行政法人水産総合研究センター法の一部を改正する法律案,一致,
@@ -9753,6 +9492,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-155-71,額の下端,-16147333672519,-16147333672519,一致,OECD 表6 D LR、比較国10か国
 閣法-155-71,額の中央値,8101370559338,8101370559338,一致,OECD 表6 D LR、比較国10か国
 閣法-155-71,額の上端,24711771276628,24711771276628,一致,OECD 表6 D LR、比較国10か国
+閣法-156-10,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17A2E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17A2E.htm,一致,
+閣法-156-10,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030331014.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030331014.htm,一致,
+閣法-156-10,題名,水産加工業施設改良資金融通臨時措置法の一部を改正する法律案,水産加工業施設改良資金融通臨時措置法の一部を改正する法律案,一致,
+閣法-156-10,施行日,2003-03-31,2003-03-31,一致,
+閣法-156-10,施行期日の種別（衆議院の附則）,2003-03-31,2003-03-31,一致,
+閣法-156-10,公布日との順序,2003-03-31,2003-03-31,一致,
+閣法-156-10,公布日,2003-03-31,2003-03-31,一致,施行日台帳と議案台帳
+閣法-156-10,名目付加価値（開始前最後の年）,6786900百万円,6786900百万円,一致,OECD 表6 JPN A V 2002年
+閣法-156-10,額の下端,10149725721192,10149725721192,一致,OECD 表6 A LR、比較国11か国
+閣法-156-10,額の中央値,14139994207528,14139994207528,一致,OECD 表6 A LR、比較国11か国
+閣法-156-10,額の上端,20309670361709,20309670361709,一致,OECD 表6 A LR、比較国11か国
 閣法-156-101,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17BCA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17BCA.htm,一致,
 閣法-156-101,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030509040.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030509040.htm,一致,
 閣法-156-101,題名,法科大学院への裁判官及び検察官その他の一般職の国家公務員の派遣に関する法律案,法科大学院への裁判官及び検察官その他の一般職の国家公務員の派遣に関する法律案,一致,
@@ -9923,17 +9673,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-156-12,額の下端,-16147333672519,-16147333672519,一致,OECD 表6 D LR、比較国10か国
 閣法-156-12,額の中央値,8101370559338,8101370559338,一致,OECD 表6 D LR、比較国10か国
 閣法-156-12,額の上端,24711771276628,24711771276628,一致,OECD 表6 D LR、比較国10か国
-閣法-156-13,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17A36.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17A36.htm,一致,
-閣法-156-13,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030331020.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030331020.htm,一致,
-閣法-156-13,題名,社会資本整備重点計画法案,社会資本整備重点計画法案,一致,
-閣法-156-13,施行日,2003-04-01,2003-04-01,一致,
-閣法-156-13,施行期日の種別（衆議院の附則）,2003-04-01,2003-04-01,一致,
-閣法-156-13,公布日との順序,2003-04-01,2003-03-31,一致,
-閣法-156-13,公布日,2003-03-31,2003-03-31,一致,施行日台帳と議案台帳
-閣法-156-13,名目付加価値（開始前最後の年）,34569900百万円,34569900百万円,一致,OECD 表6 JPN F V 2002年
-閣法-156-13,額の下端,1515311944939,1515311944939,一致,OECD 表6 F LR、比較国11か国
-閣法-156-13,額の中央値,21558863156657,21558863156657,一致,OECD 表6 F LR、比較国11か国
-閣法-156-13,額の上端,41861035519704,41861035519704,一致,OECD 表6 F LR、比較国11か国
 閣法-156-15,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17A3E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17A3E.htm,一致,
 閣法-156-15,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030516041.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030516041.htm,一致,
 閣法-156-15,題名,港湾法等の一部を改正する法律案,港湾法等の一部を改正する法律案,一致,
@@ -10077,6 +9816,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-156-32,額の下端,10149725721192,10149725721192,一致,OECD 表6 A LR、比較国11か国
 閣法-156-32,額の中央値,14139994207528,14139994207528,一致,OECD 表6 A LR、比較国11か国
 閣法-156-32,額の上端,20309670361709,20309670361709,一致,OECD 表6 A LR、比較国11か国
+閣法-156-33,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17A8A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17A8A.htm,一致,
+閣法-156-33,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030611073.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030611073.htm,一致,
+閣法-156-33,題名,食品の安全性の確保のための農林水産省関係法律の整備に関する法律案,食品の安全性の確保のための農林水産省関係法律の整備に関する法律案,一致,
+閣法-156-33,施行日,2003-09-11,2003-09-11,一致,
+閣法-156-33,施行期日の種別（衆議院の附則）,2003-09-11,2003-09-11,一致,
+閣法-156-33,公布日との順序,2003-09-11,2003-06-11,一致,
+閣法-156-33,公布日,2003-06-11,2003-06-11,一致,施行日台帳と議案台帳
+閣法-156-33,名目付加価値（開始前最後の年）,109584600百万円,109584600百万円,一致,OECD 表6 JPN C V 2002年
+閣法-156-33,額の下端,201904058626920,201904058626920,一致,OECD 表6 C LR、比較国11か国
+閣法-156-33,額の中央値,250634127893279,250634127893279,一致,OECD 表6 C LR、比較国11か国
+閣法-156-33,額の上端,311779249270687,311779249270687,一致,OECD 表6 C LR、比較国11か国
 閣法-156-34,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17A8E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17A8E.htm,一致,
 閣法-156-34,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030611074.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030611074.htm,一致,
 閣法-156-34,題名,飼料の安全性の確保及び品質の改善に関する法律の一部を改正する法律案,飼料の安全性の確保及び品質の改善に関する法律の一部を改正する法律案,一致,
@@ -10398,17 +10148,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-156-83,額の下端,-16147333672519,-16147333672519,一致,OECD 表6 D LR、比較国10か国
 閣法-156-83,額の中央値,8101370559338,8101370559338,一致,OECD 表6 D LR、比較国10か国
 閣法-156-83,額の上端,24711771276628,24711771276628,一致,OECD 表6 D LR、比較国10か国
-閣法-156-86,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17B8A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17B8A.htm,一致,
-閣法-156-86,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030718124.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030718124.htm,一致,
-閣法-156-86,題名,成田国際空港株式会社法案,成田国際空港株式会社法案,一致,
-閣法-156-86,施行日,2003-07-18,2003-07-18,一致,
-閣法-156-86,施行期日の種別（衆議院の附則）,2003-07-18,2003-07-18,一致,
-閣法-156-86,公布日との順序,2003-07-18,2003-07-18,一致,
-閣法-156-86,公布日,2003-07-18,2003-07-18,一致,施行日台帳と議案台帳
-閣法-156-86,名目付加価値（開始前最後の年）,26121300百万円,26121300百万円,一致,OECD 表6 JPN H V 2002年
-閣法-156-86,額の下端,-1898769683415,-1898769683415,一致,OECD 表6 H LR、比較国11か国
-閣法-156-86,額の中央値,16047335057333,16047335057333,一致,OECD 表6 H LR、比較国11か国
-閣法-156-86,額の上端,27407900936108,27407900936108,一致,OECD 表6 H LR、比較国11か国
 閣法-156-87,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17B8E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17B8E.htm,一致,
 閣法-156-87,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030718123.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030718123.htm,一致,
 閣法-156-87,出典URL,https://laws.e-gov.go.jp/law/327AC0000000231,https://laws.e-gov.go.jp/law/327AC0000000231,一致,
@@ -10493,17 +10232,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-156-95,額の下端,28569646342310,28569646342310,一致,OECD 表6 F LR、比較国11か国
 閣法-156-95,額の中央値,48520736477408,48520736477408,一致,OECD 表6 F LR、比較国11か国
 閣法-156-95,額の上端,66378381190644,66378381190644,一致,OECD 表6 F LR、比較国11か国
-閣法-156-96,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17BB2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17BB2.htm,一致,
-閣法-156-96,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030620101.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030620101.htm,一致,
-閣法-156-96,題名,密集市街地における防災街区の整備の促進に関する法律等の一部を改正する法律案,密集市街地における防災街区の整備の促進に関する法律等の一部を改正する法律案,一致,
-閣法-156-96,施行日,2003-12-20,2003-12-20,一致,
-閣法-156-96,施行期日の種別（衆議院の附則）,2003-12-20,2003-12-20,一致,
-閣法-156-96,公布日との順序,2003-12-20,2003-06-20,一致,
-閣法-156-96,公布日,2003-06-20,2003-06-20,一致,施行日台帳と議案台帳
-閣法-156-96,名目付加価値（開始前最後の年）,34569900百万円,34569900百万円,一致,OECD 表6 JPN F V 2002年
-閣法-156-96,額の下端,1515311944939,1515311944939,一致,OECD 表6 F LR、比較国11か国
-閣法-156-96,額の中央値,21558863156657,21558863156657,一致,OECD 表6 F LR、比較国11か国
-閣法-156-96,額の上端,41861035519704,41861035519704,一致,OECD 表6 F LR、比較国11か国
 閣法-157-6,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B5AE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B5AE.htm,一致,
 閣法-157-6,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15720031016145.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15720031016145.htm,一致,
 閣法-157-6,題名,感染症の予防及び感染症の患者に対する医療に関する法律及び検疫法の一部を改正する法律案,感染症の予防及び感染症の患者に対する医療に関する法律及び検疫法の一部を改正する法律案,一致,
@@ -10526,17 +10254,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-159-100,額の下端,28569646342310,28569646342310,一致,OECD 表6 F LR、比較国11か国
 閣法-159-100,額の中央値,48520736477408,48520736477408,一致,OECD 表6 F LR、比較国11か国
 閣法-159-100,額の上端,66378381190644,66378381190644,一致,OECD 表6 F LR、比較国11か国
-閣法-159-102,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B876.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B876.htm,一致,
-閣法-159-102,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040618116.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040618116.htm,一致,
-閣法-159-102,題名,武力攻撃事態における外国軍用品等の海上輸送の規制に関する法律案,武力攻撃事態における外国軍用品等の海上輸送の規制に関する法律案,一致,
-閣法-159-102,施行日,2004-12-18,2004-12-18,一致,
-閣法-159-102,施行期日の種別（衆議院の附則）,2004-12-18,2004-12-18,一致,
-閣法-159-102,公布日との順序,2004-12-18,2004-06-18,一致,
-閣法-159-102,公布日,2004-06-18,2004-06-18,一致,施行日台帳と議案台帳
-閣法-159-102,名目付加価値（開始前最後の年）,529383300百万円,529383300百万円,一致,OECD 表6 JPN _T V 2003年
-閣法-159-102,額の下端,-97539050892938,-97539050892938,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-102,額の中央値,19925964970324,19925964970324,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-102,額の上端,119750443589039,119750443589039,一致,OECD 表6 _T LR、比較国11か国
 閣法-159-105,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B882.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B882.htm,一致,
 閣法-159-105,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040528060.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040528060.htm,一致,
 閣法-159-105,題名,構造改革特別区域法の一部を改正する法律案,構造改革特別区域法の一部を改正する法律案,一致,
@@ -10731,17 +10448,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-159-20,額の下端,-97539050892938,-97539050892938,一致,OECD 表6 _T LR、比較国11か国
 閣法-159-20,額の中央値,19925964970324,19925964970324,一致,OECD 表6 _T LR、比較国11か国
 閣法-159-20,額の上端,119750443589039,119750443589039,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-21,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B6DE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B6DE.htm,一致,
-閣法-159-21,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040401026.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040401026.htm,一致,
-閣法-159-21,題名,所得譲与税法案,所得譲与税法案,一致,
-閣法-159-21,施行日,2004-04-01,2004-04-01,一致,
-閣法-159-21,施行期日の種別（衆議院の附則）,2004-04-01,2004-04-01,一致,
-閣法-159-21,公布日との順序,2004-04-01,2004-04-01,一致,
-閣法-159-21,公布日,2004-04-01,2004-04-01,一致,施行日台帳と議案台帳
-閣法-159-21,名目付加価値（開始前最後の年）,529383300百万円,529383300百万円,一致,OECD 表6 JPN _T V 2003年
-閣法-159-21,額の下端,-97539050892938,-97539050892938,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-21,額の中央値,19925964970324,19925964970324,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-21,額の上端,119750443589039,119750443589039,一致,OECD 表6 _T LR、比較国11か国
 閣法-159-24,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B706.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B706.htm,一致,
 閣法-159-24,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040331021.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040331021.htm,一致,
 閣法-159-24,題名,児童福祉法等の一部を改正する法律案,児童福祉法等の一部を改正する法律案,一致,
@@ -11018,17 +10724,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-159-57,額の下端,1260764725635,1260764725635,一致,OECD 表6 A LR、比較国11か国
 閣法-159-57,額の中央値,5493135728599,5493135728599,一致,OECD 表6 A LR、比較国11か国
 閣法-159-57,額の上端,10542213928113,10542213928113,一致,OECD 表6 A LR、比較国11か国
-閣法-159-58,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B7B6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B7B6.htm,一致,
-閣法-159-58,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040428038.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040428038.htm,一致,
-閣法-159-58,題名,暴力団員による不当な行為の防止等に関する法律の一部を改正する法律案,暴力団員による不当な行為の防止等に関する法律の一部を改正する法律案,一致,
-閣法-159-58,施行日,2004-04-28,2004-04-28,一致,
-閣法-159-58,施行期日の種別（衆議院の附則）,2004-04-28,2004-04-28,一致,
-閣法-159-58,公布日との順序,2004-04-28,2004-04-28,一致,
-閣法-159-58,公布日,2004-04-28,2004-04-28,一致,施行日台帳と議案台帳
-閣法-159-58,名目付加価値（開始前最後の年）,529383300百万円,529383300百万円,一致,OECD 表6 JPN _T V 2003年
-閣法-159-58,額の下端,-97539050892938,-97539050892938,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-58,額の中央値,19925964970324,19925964970324,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-58,額の上端,119750443589039,119750443589039,一致,OECD 表6 _T LR、比較国11か国
 閣法-159-59,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B7EA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B7EA.htm,一致,
 閣法-159-59,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040512042.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040512042.htm,一致,
 閣法-159-59,題名,私立学校法の一部を改正する法律案,私立学校法の一部を改正する法律案,一致,
@@ -11060,17 +10755,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-159-60,額の下端,-1362507477399,-1362507477399,一致,OECD 表6 H LR、比較国11か国
 閣法-159-60,額の中央値,11951892077106,11951892077106,一致,OECD 表6 H LR、比較国11か国
 閣法-159-60,額の上端,29769780475811,29769780475811,一致,OECD 表6 H LR、比較国11か国
-閣法-159-63,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B796.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B796.htm,一致,
-閣法-159-63,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040618120.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040618120.htm,一致,
-閣法-159-63,題名,裁判所法等の一部を改正する法律案,裁判所法等の一部を改正する法律案,一致,
-閣法-159-63,施行日,2005-04-01,2005-04-01,一致,
-閣法-159-63,施行期日の種別（衆議院の附則）,2005-04-01,2005-04-01,一致,
-閣法-159-63,公布日との順序,2005-04-01,2004-06-18,一致,
-閣法-159-63,公布日,2004-06-18,2004-06-18,一致,施行日台帳と議案台帳
-閣法-159-63,名目付加価値（開始前最後の年）,533879900百万円,533879900百万円,一致,OECD 表6 JPN _T V 2004年
-閣法-159-63,額の下端,-29225812245718,-29225812245718,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-63,額の中央値,88770081709762,88770081709762,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-63,額の上端,153289648653272,153289648653272,一致,OECD 表6 _T LR、比較国11か国
 閣法-159-68,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B7AE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B7AE.htm,一致,
 閣法-159-68,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040528062.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040528062.htm,一致,
 閣法-159-68,出典URL,https://laws.e-gov.go.jp/law/323AC0000000131,https://laws.e-gov.go.jp/law/323AC0000000131,一致,
@@ -11330,26 +11014,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-159-97,額の下端,-17222551398936,-17222551398936,一致,OECD 表6 Q LR、比較国11か国
 閣法-159-97,額の中央値,5552914673944,5552914673944,一致,OECD 表6 Q LR、比較国11か国
 閣法-159-97,額の上端,13084832291986,13084832291986,一致,OECD 表6 Q LR、比較国11か国
-閣法-159-98,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B866.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B866.htm,一致,
-閣法-159-98,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040618112.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040618112.htm,一致,
-閣法-159-98,題名,武力攻撃事態等における国民の保護のための措置に関する法律案,武力攻撃事態等における国民の保護のための措置に関する法律案,一致,
-閣法-159-98,施行日,2004-09-18,2004-09-18,一致,
-閣法-159-98,施行期日の種別（衆議院の附則）,2004-09-18,2004-09-18,一致,
-閣法-159-98,公布日との順序,2004-09-18,2004-06-18,一致,
-閣法-159-98,公布日,2004-06-18,2004-06-18,一致,施行日台帳と議案台帳
-閣法-159-98,名目付加価値（開始前最後の年）,529383300百万円,529383300百万円,一致,OECD 表6 JPN _T V 2003年
-閣法-159-98,額の下端,-97539050892938,-97539050892938,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-98,額の中央値,19925964970324,19925964970324,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-98,額の上端,119750443589039,119750443589039,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-99,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B86A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1B86A.htm,一致,
-閣法-159-99,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040618113.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15920040618113.htm,一致,
-閣法-159-99,出典URL,https://laws.e-gov.go.jp/law/416AC0000000113,https://laws.e-gov.go.jp/law/416AC0000000113,一致,
-閣法-159-99,題名,武力攻撃事態等におけるアメリカ合衆国の軍隊の行動に伴い我が国が実施する措置に関する法律案,武力攻撃事態等におけるアメリカ合衆国の軍隊の行動に伴い我が国が実施する措置に関する法律案,一致,
-閣法-159-99,施行日（推定）,2004-06-18,2004-06-18,一致,公布日を施行日とみなした推定
-閣法-159-99,名目付加価値（開始前最後の年）,529383300百万円,529383300百万円,一致,OECD 表6 JPN _T V 2003年
-閣法-159-99,額の下端,-97539050892938,-97539050892938,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-99,額の中央値,19925964970324,19925964970324,一致,OECD 表6 _T LR、比較国11か国
-閣法-159-99,額の上端,119750443589039,119750443589039,一致,OECD 表6 _T LR、比較国11か国
 閣法-161-11,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/A6A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/A6A.htm,一致,
 閣法-161-11,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16120041203155.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16120041203155.htm,一致,
 閣法-161-11,題名,独立行政法人日本原子力研究開発機構法案,独立行政法人日本原子力研究開発機構法案,一致,
@@ -12210,17 +11874,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-164-21,額の下端,-102476582544701,-102476582544701,一致,OECD 表6 _T LR、比較国11か国
 閣法-164-21,額の中央値,1560758330576,1560758330576,一致,OECD 表6 _T LR、比較国11か国
 閣法-164-21,額の上端,95924635653340,95924635653340,一致,OECD 表6 _T LR、比較国11か国
-閣法-164-23,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/101E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/101E.htm,一致,
-閣法-164-23,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060524042.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060524042.htm,一致,
-閣法-164-23,題名,電気通信基盤充実臨時措置法の一部を改正する法律案,電気通信基盤充実臨時措置法の一部を改正する法律案,一致,
-閣法-164-23,施行日,2006-05-24,2006-05-24,一致,
-閣法-164-23,施行期日の種別（衆議院の附則）,2006-05-24,2006-05-24,一致,
-閣法-164-23,公布日との順序,2006-05-24,2006-05-24,一致,
-閣法-164-23,公布日,2006-05-24,2006-05-24,一致,施行日台帳と議案台帳
-閣法-164-23,名目付加価値（開始前最後の年）,26195600百万円,26195600百万円,一致,OECD 表6 JPN J V 2005年
-閣法-164-23,額の下端,-9156760760879,-9156760760879,一致,OECD 表6 J LR、比較国11か国
-閣法-164-23,額の中央値,6734596120135,6734596120135,一致,OECD 表6 J LR、比較国11か国
-閣法-164-23,額の上端,33589278039264,33589278039264,一致,OECD 表6 J LR、比較国11か国
 閣法-164-25,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1026.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1026.htm,一致,
 閣法-164-25,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060331012.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060331012.htm,一致,
 閣法-164-25,題名,通勤の範囲の改定等のための国家公務員災害補償法及び地方公務員災害補償法の一部を改正する法律案,通勤の範囲の改定等のための国家公務員災害補償法及び地方公務員災害補償法の一部を改正する法律案,一致,
@@ -12243,17 +11896,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-164-27,額の下端,-102476582544701,-102476582544701,一致,OECD 表6 _T LR、比較国11か国
 閣法-164-27,額の中央値,1560758330576,1560758330576,一致,OECD 表6 _T LR、比較国11か国
 閣法-164-27,額の上端,95924635653340,95924635653340,一致,OECD 表6 _T LR、比較国11か国
-閣法-164-28,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1032.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1032.htm,一致,
-閣法-164-28,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060517037.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060517037.htm,一致,
-閣法-164-28,題名,研究交流促進法及び特定放射光施設の共用の促進に関する法律の一部を改正する法律案,研究交流促進法及び特定放射光施設の共用の促進に関する法律の一部を改正する法律案,一致,
-閣法-164-28,施行日,2006-07-01,2006-07-01,一致,
-閣法-164-28,施行期日の種別（衆議院の附則）,2006-07-01,2006-07-01,一致,
-閣法-164-28,公布日との順序,2006-07-01,2006-05-17,一致,
-閣法-164-28,公布日,2006-05-17,2006-05-17,一致,施行日台帳と議案台帳
-閣法-164-28,名目付加価値（開始前最後の年）,30922100百万円,30922100百万円,一致,OECD 表6 JPN M+N V 2005年
-閣法-164-28,額の下端,17225367463583,17225367463583,一致,OECD 表6 M+N LR、比較国10か国
-閣法-164-28,額の中央値,39094740298602,39094740298602,一致,OECD 表6 M+N LR、比較国10か国
-閣法-164-28,額の上端,73273932764275,73273932764275,一致,OECD 表6 M+N LR、比較国10か国
 閣法-164-29,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1036.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1036.htm,一致,
 閣法-164-29,出典URL,https://laws.e-gov.go.jp/law/334CO0000000269,https://laws.e-gov.go.jp/law/334CO0000000269,一致,
 閣法-164-29,出典URL,https://laws.e-gov.go.jp/law/334M50000042001,https://laws.e-gov.go.jp/law/334M50000042001,一致,
@@ -12380,18 +12022,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-164-42,額の下端,-7121766583605,-7121766583605,一致,OECD 表6 H LR、比較国11か国
 閣法-164-42,額の中央値,5821271014071,5821271014071,一致,OECD 表6 H LR、比較国11か国
 閣法-164-42,額の上端,14178230413512,14178230413512,一致,OECD 表6 H LR、比較国11か国
-閣法-164-43,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1076.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1076.htm,一致,
-閣法-164-43,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060621078.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060621078.htm,一致,
-閣法-164-43,出典URL,https://laws.e-gov.go.jp/law/418AC0000000078,https://laws.e-gov.go.jp/law/418AC0000000078,一致,
-閣法-164-43,題名,法の適用に関する通則法案,法の適用に関する通則法案,一致,
-閣法-164-43,施行日,2007-01-01,2007-01-01,一致,
-閣法-164-43,施行期日の原文,あり,あり,一致,
-閣法-164-43,公布日との順序,2007-01-01,2006-06-21,一致,
-閣法-164-43,公布日,2006-06-21,2006-06-21,一致,施行日台帳と議案台帳
-閣法-164-43,名目付加価値（開始前最後の年）,538356000百万円,538356000百万円,一致,OECD 表6 JPN _T V 2006年
-閣法-164-43,額の下端,-72857187038146,-72857187038146,一致,OECD 表6 _T LR、比較国11か国
-閣法-164-43,額の中央値,18330447473500,18330447473500,一致,OECD 表6 _T LR、比較国11か国
-閣法-164-43,額の上端,101562929827217,101562929827217,一致,OECD 表6 _T LR、比較国11か国
 閣法-164-45,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/109A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/109A.htm,一致,
 閣法-164-45,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060621088.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060621088.htm,一致,
 閣法-164-45,題名,農業の担い手に対する経営安定のための交付金の交付に関する法律案,農業の担い手に対する経営安定のための交付金の交付に関する法律案,一致,
@@ -12479,18 +12109,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-164-54,額の下端,-72857187038146,-72857187038146,一致,OECD 表6 _T LR、比較国11か国
 閣法-164-54,額の中央値,18330447473500,18330447473500,一致,OECD 表6 _T LR、比較国11か国
 閣法-164-54,額の上端,101562929827217,101562929827217,一致,OECD 表6 _T LR、比較国11か国
-閣法-164-55,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/10CE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/10CE.htm,一致,
-閣法-164-55,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060615073.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060615073.htm,一致,
-閣法-164-55,出典URL,https://laws.e-gov.go.jp/law/418AC0000000073,https://laws.e-gov.go.jp/law/418AC0000000073,一致,
-閣法-164-55,題名,遺失物法案,遺失物法案,一致,
-閣法-164-55,施行日,2007-12-10,2007-12-10,一致,
-閣法-164-55,施行期日の原文,あり,あり,一致,
-閣法-164-55,公布日との順序,2007-12-10,2006-06-15,一致,
-閣法-164-55,公布日,2006-06-15,2006-06-15,一致,施行日台帳と議案台帳
-閣法-164-55,名目付加価値（開始前最後の年）,538356000百万円,538356000百万円,一致,OECD 表6 JPN _T V 2006年
-閣法-164-55,額の下端,-72857187038146,-72857187038146,一致,OECD 表6 _T LR、比較国11か国
-閣法-164-55,額の中央値,18330447473500,18330447473500,一致,OECD 表6 _T LR、比較国11か国
-閣法-164-55,額の上端,101562929827217,101562929827217,一致,OECD 表6 _T LR、比較国11か国
 閣法-164-56,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/10D2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/10D2.htm,一致,
 閣法-164-56,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060524043.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060524043.htm,一致,
 閣法-164-56,題名,出入国管理及び難民認定法の一部を改正する法律案,出入国管理及び難民認定法の一部を改正する法律案,一致,
@@ -12640,18 +12258,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-164-70,額の下端,11321076247884,11321076247884,一致,OECD 表6 A LR、比較国11か国
 閣法-164-70,額の中央値,13429737739860,13429737739860,一致,OECD 表6 A LR、比較国11か国
 閣法-164-70,額の上端,15391831851492,15391831851492,一致,OECD 表6 A LR、比較国11か国
-閣法-164-71,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1112.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1112.htm,一致,
-閣法-164-71,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060602048.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16420060602048.htm,一致,
-閣法-164-71,出典URL,https://laws.e-gov.go.jp/law/418AC0000000048,https://laws.e-gov.go.jp/law/418AC0000000048,一致,
-閣法-164-71,題名,一般社団法人及び一般財団法人に関する法律案,一般社団法人及び一般財団法人に関する法律案,一致,
-閣法-164-71,施行日,2008-12-01,2008-12-01,一致,
-閣法-164-71,施行期日の原文,あり,あり,一致,
-閣法-164-71,公布日との順序,2008-12-01,2006-06-02,一致,
-閣法-164-71,公布日,2006-06-02,2006-06-02,一致,施行日台帳と議案台帳
-閣法-164-71,名目付加価値（開始前最後の年）,542862400百万円,542862400百万円,一致,OECD 表6 JPN _T V 2007年
-閣法-164-71,額の下端,-6806236969634,-6806236969634,一致,OECD 表6 _T LR、比較国11か国
-閣法-164-71,額の中央値,82891011702385,82891011702385,一致,OECD 表6 _T LR、比較国11か国
-閣法-164-71,額の上端,194302193115322,194302193115322,一致,OECD 表6 _T LR、比較国11か国
 閣法-164-76,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/12EE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/12EE.htm,一致,
 閣法-164-76,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16520061208106.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16520061208106.htm,一致,
 閣法-164-76,出典URL,https://laws.e-gov.go.jp/law/410AC0000000114,https://laws.e-gov.go.jp/law/410AC0000000114,一致,
@@ -12910,50 +12516,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-166-29,額の下端,2707228746777,2707228746777,一致,OECD 表6 K LR、比較国11か国
 閣法-166-29,額の中央値,15634864120987,15634864120987,一致,OECD 表6 K LR、比較国11か国
 閣法-166-29,額の上端,36934181175386,36934181175386,一致,OECD 表6 K LR、比較国11か国
-閣法-166-30,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/151A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/151A.htm,一致,
-閣法-166-30,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070516042.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070516042.htm,一致,
-閣法-166-30,題名,国家公務員の育児休業等に関する法律の一部を改正する法律案,国家公務員の育児休業等に関する法律の一部を改正する法律案,一致,
-閣法-166-30,施行日,2007-08-16,2007-08-16,一致,
-閣法-166-30,施行期日の種別（衆議院の附則）,2007-08-16,2007-08-16,一致,
-閣法-166-30,公布日との順序,2007-08-16,2007-05-16,一致,
-閣法-166-30,公布日,2007-05-16,2007-05-16,一致,施行日台帳と議案台帳
-閣法-166-30,名目付加価値（開始前最後の年）,538356000百万円,538356000百万円,一致,OECD 表6 JPN _T V 2006年
-閣法-166-30,額の下端,-72857187038146,-72857187038146,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-30,額の中央値,18330447473500,18330447473500,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-30,額の上端,101562929827217,101562929827217,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-31,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/151E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/151E.htm,一致,
-閣法-166-31,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070516044.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070516044.htm,一致,
-閣法-166-31,題名,地方公務員の育児休業等に関する法律の一部を改正する法律案,地方公務員の育児休業等に関する法律の一部を改正する法律案,一致,
-閣法-166-31,施行日,2007-08-16,2007-08-16,一致,
-閣法-166-31,施行期日の種別（衆議院の附則）,2007-08-16,2007-08-16,一致,
-閣法-166-31,公布日との順序,2007-08-16,2007-05-16,一致,
-閣法-166-31,公布日,2007-05-16,2007-05-16,一致,施行日台帳と議案台帳
-閣法-166-31,名目付加価値（開始前最後の年）,538356000百万円,538356000百万円,一致,OECD 表6 JPN _T V 2006年
-閣法-166-31,額の下端,-72857187038146,-72857187038146,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-31,額の中央値,18330447473500,18330447473500,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-31,額の上端,101562929827217,101562929827217,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-32,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1522.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1522.htm,一致,
-閣法-166-32,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070516045.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070516045.htm,一致,
-閣法-166-32,題名,国家公務員の自己啓発等休業に関する法律案,国家公務員の自己啓発等休業に関する法律案,一致,
-閣法-166-32,施行日,2007-08-16,2007-08-16,一致,
-閣法-166-32,施行期日の種別（衆議院の附則）,2007-08-16,2007-08-16,一致,
-閣法-166-32,公布日との順序,2007-08-16,2007-05-16,一致,
-閣法-166-32,公布日,2007-05-16,2007-05-16,一致,施行日台帳と議案台帳
-閣法-166-32,名目付加価値（開始前最後の年）,538356000百万円,538356000百万円,一致,OECD 表6 JPN _T V 2006年
-閣法-166-32,額の下端,-72857187038146,-72857187038146,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-32,額の中央値,18330447473500,18330447473500,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-32,額の上端,101562929827217,101562929827217,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-33,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1526.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1526.htm,一致,
-閣法-166-33,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070516046.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070516046.htm,一致,
-閣法-166-33,題名,地方公務員法の一部を改正する法律案,地方公務員法の一部を改正する法律案,一致,
-閣法-166-33,施行日,2007-08-16,2007-08-16,一致,
-閣法-166-33,施行期日の種別（衆議院の附則）,2007-08-16,2007-08-16,一致,
-閣法-166-33,公布日との順序,2007-08-16,2007-05-16,一致,
-閣法-166-33,公布日,2007-05-16,2007-05-16,一致,施行日台帳と議案台帳
-閣法-166-33,名目付加価値（開始前最後の年）,538356000百万円,538356000百万円,一致,OECD 表6 JPN _T V 2006年
-閣法-166-33,額の下端,-72857187038146,-72857187038146,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-33,額の中央値,18330447473500,18330447473500,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-33,額の上端,101562929827217,101562929827217,一致,OECD 表6 _T LR、比較国11か国
 閣法-166-35,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/152E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/152E.htm,一致,
 閣法-166-35,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070613085.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070613085.htm,一致,
 閣法-166-35,題名,株式会社日本政策投資銀行法案,株式会社日本政策投資銀行法案,一致,
@@ -13796,15 +13358,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-169-56,公布日との順序,2008-08-11,2008-06-11,一致,
 閣法-169-56,公布日,2008-06-11,2008-06-11,一致,施行日台帳と議案台帳
 閣法-169-56,再計算,3138843375755,,対象外,OECD 表6 以外の指標は再計算が未対応
-閣法-169-57,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1C46.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1C46.htm,一致,
-閣法-169-57,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16920080502027.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16920080502027.htm,一致,
-閣法-169-57,出典URL,https://laws.e-gov.go.jp/law/414AC0000000123,https://laws.e-gov.go.jp/law/414AC0000000123,一致,
-閣法-169-57,題名,独立行政法人国民生活センター法の一部を改正する法律案,独立行政法人国民生活センター法の一部を改正する法律案,一致,
-閣法-169-57,施行日（推定）,2008-05-02,2008-05-02,一致,公布日を施行日とみなした推定
-閣法-169-57,名目付加価値（開始前最後の年）,542862400百万円,542862400百万円,一致,OECD 表6 JPN _T V 2007年
-閣法-169-57,額の下端,-6806236969634,-6806236969634,一致,OECD 表6 _T LR、比較国11か国
-閣法-169-57,額の中央値,82891011702385,82891011702385,一致,OECD 表6 _T LR、比較国11か国
-閣法-169-57,額の上端,194302193115322,194302193115322,一致,OECD 表6 _T LR、比較国11か国
 閣法-169-58,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1C4A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1C4A.htm,一致,
 閣法-169-58,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16920080502029.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16920080502029.htm,一致,
 閣法-169-58,題名,消費者契約法等の一部を改正する法律案,消費者契約法等の一部を改正する法律案,一致,
@@ -14703,15 +14256,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-174-9,額の下端,66077278489620,66077278489620,一致,OECD 表6 M+N LR、比較国10か国
 閣法-174-9,額の中央値,87102662516665,87102662516665,一致,OECD 表6 M+N LR、比較国10か国
 閣法-174-9,額の上端,105137981999278,105137981999278,一致,OECD 表6 M+N LR、比較国10か国
-閣法-176-12,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2A46.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2A46.htm,一致,
-閣法-176-12,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17620101210072.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17620101210072.htm,一致,
-閣法-176-12,出典URL,https://laws.e-gov.go.jp/law/422AC0000000072,https://laws.e-gov.go.jp/law/422AC0000000072,一致,
-閣法-176-12,題名,地域における多様な主体の連携による生物の多様性の保全のための活動の促進等に関する法律案,地域における多様な主体の連携による生物の多様性の保全のための活動の促進等に関する法律案,一致,
-閣法-176-12,施行日（推定）,2010-12-10,2010-12-10,一致,公布日を施行日とみなした推定
-閣法-176-12,名目付加価値（開始前最後の年）,497758700百万円,497758700百万円,一致,OECD 表6 JPN _T V 2009年
-閣法-176-12,額の下端,290250964306218,290250964306218,一致,OECD 表6 _T LR、比較国11か国
-閣法-176-12,額の中央値,437749999509560,437749999509560,一致,OECD 表6 _T LR、比較国11か国
-閣法-176-12,額の上端,614046114935962,614046114935962,一致,OECD 表6 _T LR、比較国11か国
 閣法-176-14,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2C3E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2C3E.htm,一致,
 閣法-176-14,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110404017.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110404017.htm,一致,
 閣法-176-14,題名,展覧会における美術品損害の補償に関する法律案,展覧会における美術品損害の補償に関する法律案,一致,
@@ -14734,16 +14278,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-176-7,額の下端,-3300581419963,-3300581419963,一致,OECD 表6 J LR、比較国11か国
 閣法-176-7,額の中央値,13929884364297,13929884364297,一致,OECD 表6 J LR、比較国11か国
 閣法-176-7,額の上端,21716636662648,21716636662648,一致,OECD 表6 J LR、比較国11か国
-閣法-176-8,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2C36.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2C36.htm,一致,
-閣法-176-8,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110502036.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110502036.htm,一致,
-閣法-176-8,出典URL,https://laws.e-gov.go.jp/law/408AC0000000109,https://laws.e-gov.go.jp/law/408AC0000000109,一致,
-閣法-176-8,出典URL,https://laws.e-gov.go.jp/law/401AC0000000091,https://laws.e-gov.go.jp/law/401AC0000000091,一致,
-閣法-176-8,題名,民事訴訟法及び民事保全法の一部を改正する法律案,民事訴訟法及び民事保全法の一部を改正する法律案,一致,
-閣法-176-8,施行日（推定）,2011-05-02,2011-05-02,一致,公布日を施行日とみなした推定
-閣法-176-8,名目付加価値（開始前最後の年）,508371400百万円,508371400百万円,一致,OECD 表6 JPN _T V 2010年
-閣法-176-8,額の下端,13551230850348,13551230850348,一致,OECD 表6 _T LR、比較国11か国
-閣法-176-8,額の中央値,93807921490302,93807921490302,一致,OECD 表6 _T LR、比較国11か国
-閣法-176-8,額の上端,228037609890920,228037609890920,一致,OECD 表6 _T LR、比較国11か国
 閣法-176-9,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2C1E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2C1E.htm,一致,
 閣法-176-9,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110427026.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110427026.htm,一致,
 閣法-176-9,題名,独立行政法人雇用・能力開発機構法を廃止する法律案,独立行政法人雇用・能力開発機構法を廃止する法律案,一致,
@@ -15101,17 +14635,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-177-58,額の下端,13551230850348,13551230850348,一致,OECD 表6 _T LR、比較国11か国
 閣法-177-58,額の中央値,93807921490302,93807921490302,一致,OECD 表6 _T LR、比較国11か国
 閣法-177-58,額の上端,228037609890920,228037609890920,一致,OECD 表6 _T LR、比較国11か国
-閣法-177-59,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2DFE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2DFE.htm,一致,
-閣法-177-59,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110805090.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110805090.htm,一致,
-閣法-177-59,題名,障害者基本法の一部を改正する法律案,障害者基本法の一部を改正する法律案,一致,
-閣法-177-59,施行日,2011-08-05,2011-08-05,一致,
-閣法-177-59,施行期日の種別（衆議院の附則）,2011-08-05,2011-08-05,一致,
-閣法-177-59,公布日との順序,2011-08-05,2011-08-05,一致,
-閣法-177-59,公布日,2011-08-05,2011-08-05,一致,施行日台帳と議案台帳
-閣法-177-59,名目付加価値（開始前最後の年）,33006700百万円,33006700百万円,一致,OECD 表6 JPN Q V 2010年
-閣法-177-59,額の下端,22977555437412,22977555437412,一致,OECD 表6 Q LR、比較国11か国
-閣法-177-59,額の中央値,35292155209083,35292155209083,一致,OECD 表6 Q LR、比較国11か国
-閣法-177-59,額の上端,46727944781217,46727944781217,一致,OECD 表6 Q LR、比較国11か国
 閣法-177-61,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2E02.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2E02.htm,一致,
 閣法-177-61,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110429033.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110429033.htm,一致,
 閣法-177-61,題名,東日本大震災による被害を受けた公共土木施設の災害復旧事業等に係る工事の国等による代行に関する法律案,東日本大震災による被害を受けた公共土木施設の災害復旧事業等に係る工事の国等による代行に関する法律案,一致,
@@ -15622,6 +15145,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-180-67,額の下端,54391657298466,54391657298466,一致,OECD 表6 K LR、比較国12か国
 閣法-180-67,額の中央値,65010727939283,65010727939283,一致,OECD 表6 K LR、比較国12か国
 閣法-180-67,額の上端,75599831119723,75599831119723,一致,OECD 表6 K LR、比較国12か国
+閣法-180-68,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3546.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3546.htm,一致,
+閣法-180-68,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18020120627051.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18020120627051.htm,一致,
+閣法-180-68,題名,地域社会における共生の実現に向けて新たな障害保健福祉施策を講ずるための関係法律の整備に関する法律案,地域社会における共生の実現に向けて新たな障害保健福祉施策を講ずるための関係法律の整備に関する法律案,一致,
+閣法-180-68,施行日,2013-04-01,2013-04-01,一致,
+閣法-180-68,施行期日の種別（衆議院の附則）,2013-04-01,2013-04-01,一致,
+閣法-180-68,公布日との順序,2013-04-01,2012-06-27,一致,
+閣法-180-68,公布日,2012-06-27,2012-06-27,一致,施行日台帳と議案台帳
+閣法-180-68,名目付加価値（開始前最後の年）,35308600百万円,35308600百万円,一致,OECD 表6 JPN Q V 2012年
+閣法-180-68,額の下端,419835812249,419835812249,一致,OECD 表6 Q LR、比較国12か国
+閣法-180-68,額の中央値,10513580444752,10513580444752,一致,OECD 表6 Q LR、比較国12か国
+閣法-180-68,額の上端,14049703635670,14049703635670,一致,OECD 表6 Q LR、比較国12か国
 閣法-180-71,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/357A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/357A.htm,一致,
 閣法-180-71,出典URL,https://laws.e-gov.go.jp/law/419AC0000000128,https://laws.e-gov.go.jp/law/419AC0000000128,一致,
 閣法-180-71,題名,労働契約法の一部を改正する法律案,労働契約法の一部を改正する法律案,一致,
@@ -15828,17 +15362,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-183-19,額の下端,19652472597199,19652472597199,一致,OECD 表6 _T LR、比較国12か国
 閣法-183-19,額の中央値,77117997369958,77117997369958,一致,OECD 表6 _T LR、比較国12か国
 閣法-183-19,額の上端,127908303021332,127908303021332,一致,OECD 表6 _T LR、比較国12か国
-閣法-183-20,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3AAA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3AAA.htm,一致,
-閣法-183-20,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130516015.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130516015.htm,一致,
-閣法-183-20,題名,駐留軍関係離職者等臨時措置法及び国際協定の締結等に伴う漁業離職者に関する臨時措置法の一部を改正する法律案,駐留軍関係離職者等臨時措置法及び国際協定の締結等に伴う漁業離職者に関する臨時措置法の一部を改正する法律案,一致,
-閣法-183-20,施行日,2013-05-16,2013-05-16,一致,
-閣法-183-20,施行期日の種別（衆議院の附則）,2013-05-16,2013-05-16,一致,
-閣法-183-20,公布日との順序,2013-05-16,2013-05-16,一致,
-閣法-183-20,公布日,2013-05-16,2013-05-16,一致,施行日台帳と議案台帳
-閣法-183-20,名目付加価値（開始前最後の年）,5744200百万円,5744200百万円,一致,OECD 表6 JPN A V 2012年
-閣法-183-20,額の下端,3038601983002,3038601983002,一致,OECD 表6 A LR、比較国12か国
-閣法-183-20,額の中央値,5615536707778,5615536707778,一致,OECD 表6 A LR、比較国12か国
-閣法-183-20,額の上端,8276696756872,8276696756872,一致,OECD 表6 A LR、比較国12か国
 閣法-183-21,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3AAE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3AAE.htm,一致,
 閣法-183-21,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130531024.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130531024.htm,一致,
 閣法-183-21,題名,森林の間伐等の実施の促進に関する特別措置法の一部を改正する法律案,森林の間伐等の実施の促進に関する特別措置法の一部を改正する法律案,一致,
@@ -15872,17 +15395,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-183-28,額の下端,19652472597199,19652472597199,一致,OECD 表6 _T LR、比較国12か国
 閣法-183-28,額の中央値,77117997369958,77117997369958,一致,OECD 表6 _T LR、比較国12か国
 閣法-183-28,額の上端,127908303021332,127908303021332,一致,OECD 表6 _T LR、比較国12か国
-閣法-183-30,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/4596.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/4596.htm,一致,
-閣法-183-30,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141121113.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141121113.htm,一致,
-閣法-183-30,題名,公衆等脅迫目的の犯罪行為のための資金の提供等の処罰に関する法律の一部を改正する法律案,公衆等脅迫目的の犯罪行為のための資金の提供等の処罰に関する法律の一部を改正する法律案,一致,
-閣法-183-30,施行日,2014-12-11,2014-12-11,一致,
-閣法-183-30,施行期日の種別（衆議院の附則）,2014-12-11,2014-12-11,一致,
-閣法-183-30,公布日との順序,2014-12-11,2014-11-21,一致,
-閣法-183-30,公布日,2014-11-21,2014-11-21,一致,施行日台帳と議案台帳
-閣法-183-30,名目付加価値（開始前最後の年）,511324200百万円,511324200百万円,一致,OECD 表6 JPN _T V 2013年
-閣法-183-30,額の下端,59522643534812,59522643534812,一致,OECD 表6 _T LR、比較国12か国
-閣法-183-30,額の中央値,100271268059224,100271268059224,一致,OECD 表6 _T LR、比較国12か国
-閣法-183-30,額の上端,130646208529316,130646208529316,一致,OECD 表6 _T LR、比較国12か国
 閣法-183-31,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3AE2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3AE2.htm,一致,
 閣法-183-31,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130621059.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130621059.htm,一致,
 閣法-183-31,題名,食品の製造過程の管理の高度化に関する臨時措置法の一部を改正する法律案,食品の製造過程の管理の高度化に関する臨時措置法の一部を改正する法律案,一致,
@@ -15938,15 +15450,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-183-35,額の下端,32129504588893,32129504588893,一致,OECD 表6 D LR、比較国11か国
 閣法-183-35,額の中央値,35001709001300,35001709001300,一致,OECD 表6 D LR、比較国11か国
 閣法-183-35,額の上端,38617165642636,38617165642636,一致,OECD 表6 D LR、比較国11か国
-閣法-183-37,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3B1A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3B1A.htm,一致,
-閣法-183-37,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130619049.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130619049.htm,一致,
-閣法-183-37,出典URL,https://laws.e-gov.go.jp/law/140AC0000000045,https://laws.e-gov.go.jp/law/140AC0000000045,一致,
-閣法-183-37,題名,刑法等の一部を改正する法律案,刑法等の一部を改正する法律案,一致,
-閣法-183-37,施行日（推定）,2013-06-19,2013-06-19,一致,公布日を施行日とみなした推定
-閣法-183-37,名目付加価値（開始前最後の年）,502696000百万円,502696000百万円,一致,OECD 表6 JPN _T V 2012年
-閣法-183-37,額の下端,19652472597199,19652472597199,一致,OECD 表6 _T LR、比較国12か国
-閣法-183-37,額の中央値,77117997369958,77117997369958,一致,OECD 表6 _T LR、比較国12か国
-閣法-183-37,額の上端,127908303021332,127908303021332,一致,OECD 表6 _T LR、比較国12か国
 閣法-183-39,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3B2E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3B2E.htm,一致,
 閣法-183-39,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130621053.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18320130621053.htm,一致,
 閣法-183-39,題名,総合特別区域法の一部を改正する法律案,総合特別区域法の一部を改正する法律案,一致,
@@ -16238,17 +15741,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-185-1,額の下端,6838952883437,6838952883437,一致,OECD 表6 D LR、比較国11か国
 閣法-185-1,額の中央値,8312114869809,8312114869809,一致,OECD 表6 D LR、比較国11か国
 閣法-185-1,額の上端,10999905823103,10999905823103,一致,OECD 表6 D LR、比較国11か国
-閣法-185-13,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3FE6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3FE6.htm,一致,
-閣法-185-13,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18520131122076.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18520131122076.htm,一致,
-閣法-185-13,題名,特別会計に関する法律等の一部を改正する等の法律案,特別会計に関する法律等の一部を改正する等の法律案,一致,
-閣法-185-13,施行日,2014-04-01,2014-04-01,一致,
-閣法-185-13,施行期日の種別（衆議院の附則）,2014-04-01,2014-04-01,一致,
-閣法-185-13,公布日との順序,2014-04-01,2013-11-22,一致,
-閣法-185-13,公布日,2013-11-22,2013-11-22,一致,施行日台帳と議案台帳
-閣法-185-13,名目付加価値（開始前最後の年）,511324200百万円,511324200百万円,一致,OECD 表6 JPN _T V 2013年
-閣法-185-13,額の下端,59522643534812,59522643534812,一致,OECD 表6 _T LR、比較国12か国
-閣法-185-13,額の中央値,100271268059224,100271268059224,一致,OECD 表6 _T LR、比較国12か国
-閣法-185-13,額の上端,130646208529316,130646208529316,一致,OECD 表6 _T LR、比較国12か国
 閣法-185-14,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3FEA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/3FEA.htm,一致,
 閣法-185-14,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18520131213101.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18520131213101.htm,一致,
 閣法-185-14,出典URL,https://laws.e-gov.go.jp/law/425AC0000000101,https://laws.e-gov.go.jp/law/425AC0000000101,一致,
@@ -16450,6 +15942,14 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-186-22,額の下端,-930005004368,-930005004368,一致,OECD 表6 Q LR、比較国12か国
 閣法-186-22,額の中央値,3603832887795,3603832887795,一致,OECD 表6 Q LR、比較国12か国
 閣法-186-22,額の上端,11696221074223,11696221074223,一致,OECD 表6 Q LR、比較国12か国
+閣法-186-23,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/427A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/427A.htm,一致,
+閣法-186-23,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140625083.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140625083.htm,一致,
+閣法-186-23,題名,地域における医療及び介護の総合的な確保を推進するための関係法律の整備等に関する法律案,地域における医療及び介護の総合的な確保を推進するための関係法律の整備等に関する法律案,一致,
+閣法-186-23,施行日（推定）,2014-06-25,2014-06-25,一致,公布日を施行日とみなした推定
+閣法-186-23,名目付加価値（開始前最後の年）,36254300百万円,36254300百万円,一致,OECD 表6 JPN Q V 2013年
+閣法-186-23,額の下端,-930005004368,-930005004368,一致,OECD 表6 Q LR、比較国12か国
+閣法-186-23,額の中央値,3603832887795,3603832887795,一致,OECD 表6 Q LR、比較国12か国
+閣法-186-23,額の上端,11696221074223,11696221074223,一致,OECD 表6 Q LR、比較国12か国
 閣法-186-24,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/4256.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/4256.htm,一致,
 閣法-186-24,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140530050.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140530050.htm,一致,
 閣法-186-24,題名,難病の患者に対する医療等に関する法律案,難病の患者に対する医療等に関する法律案,一致,
@@ -16575,15 +16075,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-186-34,額の下端,3498768968472,3498768968472,一致,OECD 表6 M+N LR、比較国11か国
 閣法-186-34,額の中央値,13125500573178,13125500573178,一致,OECD 表6 M+N LR、比較国11か国
 閣法-186-34,額の上端,20350381252422,20350381252422,一致,OECD 表6 M+N LR、比較国11か国
-閣法-186-36,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/42F6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/42F6.htm,一致,
-閣法-186-36,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140423025.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140423025.htm,一致,
-閣法-186-36,出典URL,https://laws.e-gov.go.jp/law/419AC0000000038,https://laws.e-gov.go.jp/law/419AC0000000038,一致,
-閣法-186-36,題名,放射線を発散させて人の生命等に危険を生じさせる行為等の処罰に関する法律の一部を改正する法律案,放射線を発散させて人の生命等に危険を生じさせる行為等の処罰に関する法律の一部を改正する法律案,一致,
-閣法-186-36,施行日（推定）,2014-04-23,2014-04-23,一致,公布日を施行日とみなした推定
-閣法-186-36,名目付加価値（開始前最後の年）,511324200百万円,511324200百万円,一致,OECD 表6 JPN _T V 2013年
-閣法-186-36,額の下端,59522643534812,59522643534812,一致,OECD 表6 _T LR、比較国12か国
-閣法-186-36,額の中央値,100271268059224,100271268059224,一致,OECD 表6 _T LR、比較国12か国
-閣法-186-36,額の上端,130646208529316,130646208529316,一致,OECD 表6 _T LR、比較国12か国
 閣法-186-37,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/430A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/430A.htm,一致,
 閣法-186-37,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140521040.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140521040.htm,一致,
 閣法-186-37,題名,原子力損害賠償支援機構法の一部を改正する法律案,原子力損害賠償支援機構法の一部を改正する法律案,一致,
@@ -16669,17 +16160,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-186-50,額の下端,-1061219473331,-1061219473331,一致,OECD 表6 A LR、比較国12か国
 閣法-186-50,額の中央値,777947511493,777947511493,一致,OECD 表6 A LR、比較国12か国
 閣法-186-50,額の上端,2447071501897,2447071501897,一致,OECD 表6 A LR、比較国12か国
-閣法-186-52,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/43B2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/43B2.htm,一致,
-閣法-186-52,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140627095.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140627095.htm,一致,
-閣法-186-52,題名,商工会及び商工会議所による小規模事業者の支援に関する法律の一部を改正する法律案,商工会及び商工会議所による小規模事業者の支援に関する法律の一部を改正する法律案,一致,
-閣法-186-52,施行日,2014-09-27,2014-09-27,一致,
-閣法-186-52,施行期日の種別（衆議院の附則）,2014-09-27,2014-09-27,一致,
-閣法-186-52,公布日との順序,2014-09-27,2014-06-27,一致,
-閣法-186-52,公布日,2014-06-27,2014-06-27,一致,施行日台帳と議案台帳
-閣法-186-52,名目付加価値（開始前最後の年）,511324200百万円,511324200百万円,一致,OECD 表6 JPN _T V 2013年
-閣法-186-52,額の下端,59522643534812,59522643534812,一致,OECD 表6 _T LR、比較国12か国
-閣法-186-52,額の中央値,100271268059224,100271268059224,一致,OECD 表6 _T LR、比較国12か国
-閣法-186-52,額の上端,130646208529316,130646208529316,一致,OECD 表6 _T LR、比較国12か国
 閣法-186-53,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/43DE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/43DE.htm,一致,
 閣法-186-53,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140611061.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18620140611061.htm,一致,
 閣法-186-53,題名,海岸法の一部を改正する法律案,海岸法の一部を改正する法律案,一致,
@@ -16893,17 +16373,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-186-81,額の下端,-1061219473331,-1061219473331,一致,OECD 表6 A LR、比較国12か国
 閣法-186-81,額の中央値,777947511493,777947511493,一致,OECD 表6 A LR、比較国12か国
 閣法-186-81,額の上端,2447071501897,2447071501897,一致,OECD 表6 A LR、比較国12か国
-閣法-187-1,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/4622.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/4622.htm,一致,
-閣法-187-1,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141128136.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141128136.htm,一致,
-閣法-187-1,題名,まち・ひと・しごと創生法案,まち・ひと・しごと創生法案,一致,
-閣法-187-1,施行日,2014-11-28,2014-11-28,一致,
-閣法-187-1,施行期日の種別（衆議院の附則）,2014-11-28,2014-11-28,一致,
-閣法-187-1,公布日との順序,2014-11-28,2014-11-28,一致,
-閣法-187-1,公布日,2014-11-28,2014-11-28,一致,施行日台帳と議案台帳
-閣法-187-1,名目付加価値（開始前最後の年）,511324200百万円,511324200百万円,一致,OECD 表6 JPN _T V 2013年
-閣法-187-1,額の下端,59522643534812,59522643534812,一致,OECD 表6 _T LR、比較国12か国
-閣法-187-1,額の中央値,100271268059224,100271268059224,一致,OECD 表6 _T LR、比較国12か国
-閣法-187-1,額の上端,130646208529316,130646208529316,一致,OECD 表6 _T LR、比較国12か国
 閣法-187-15,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/4656.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/4656.htm,一致,
 閣法-187-15,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141127117.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141127117.htm,一致,
 閣法-187-15,出典URL,https://laws.e-gov.go.jp/law/419AC0000000022,https://laws.e-gov.go.jp/law/419AC0000000022,一致,
@@ -16924,15 +16393,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-187-18,額の下端,59522643534812,59522643534812,一致,OECD 表6 _T LR、比較国12か国
 閣法-187-18,額の中央値,100271268059224,100271268059224,一致,OECD 表6 _T LR、比較国12か国
 閣法-187-18,額の上端,130646208529316,130646208529316,一致,OECD 表6 _T LR、比較国12か国
-閣法-187-19,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/466E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/466E.htm,一致,
-閣法-187-19,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141119109.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141119109.htm,一致,
-閣法-187-19,出典URL,https://laws.e-gov.go.jp/law/412AC0000000057,https://laws.e-gov.go.jp/law/412AC0000000057,一致,
-閣法-187-19,題名,土砂災害警戒区域等における土砂災害防止対策の推進に関する法律の一部を改正する法律案,土砂災害警戒区域等における土砂災害防止対策の推進に関する法律の一部を改正する法律案,一致,
-閣法-187-19,施行日（推定）,2014-11-19,2014-11-19,一致,公布日を施行日とみなした推定
-閣法-187-19,名目付加価値（開始前最後の年）,511324200百万円,511324200百万円,一致,OECD 表6 JPN _T V 2013年
-閣法-187-19,額の下端,59522643534812,59522643534812,一致,OECD 表6 _T LR、比較国12か国
-閣法-187-19,額の中央値,100271268059224,100271268059224,一致,OECD 表6 _T LR、比較国12か国
-閣法-187-19,額の上端,130646208529316,130646208529316,一致,OECD 表6 _T LR、比較国12か国
 閣法-187-2,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/4626.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/4626.htm,一致,
 閣法-187-2,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141128128.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18720141128128.htm,一致,
 閣法-187-2,出典URL,https://laws.e-gov.go.jp/law/417AC0000000024,https://laws.e-gov.go.jp/law/417AC0000000024,一致,
@@ -17021,17 +16481,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-189-15,額の下端,-2290313655406,-2290313655406,一致,OECD 表6 R+S LR、比較国11か国
 閣法-189-15,額の中央値,110256789399,110256789399,一致,OECD 表6 R+S LR、比較国11か国
 閣法-189-15,額の上端,2602247394806,2602247394806,一致,OECD 表6 R+S LR、比較国11か国
-閣法-189-16,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/482A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/482A.htm,一致,
-閣法-189-16,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18920150603034.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/18920150603034.htm,一致,
-閣法-189-16,題名,平成三十一年ラグビーワールドカップ大会特別措置法案,平成三十一年ラグビーワールドカップ大会特別措置法案,一致,
-閣法-189-16,施行日,2015-07-03,2015-07-03,一致,
-閣法-189-16,施行期日の種別（衆議院の附則）,2015-07-03,2015-07-03,一致,
-閣法-189-16,公布日との順序,2015-07-03,2015-06-03,一致,
-閣法-189-16,公布日,2015-06-03,2015-06-03,一致,施行日台帳と議案台帳
-閣法-189-16,名目付加価値（開始前最後の年）,24156500百万円,24156500百万円,一致,OECD 表6 JPN R+S V 2014年
-閣法-189-16,額の下端,-2290313655406,-2290313655406,一致,OECD 表6 R+S LR、比較国11か国
-閣法-189-16,額の中央値,110256789399,110256789399,一致,OECD 表6 R+S LR、比較国11か国
-閣法-189-16,額の上端,2602247394806,2602247394806,一致,OECD 表6 R+S LR、比較国11か国
 閣法-189-17,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/482E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/482E.htm,一致,
 閣法-189-17,出典URL,https://laws.e-gov.go.jp/law/419AC0000000074,https://laws.e-gov.go.jp/law/419AC0000000074,一致,
 閣法-189-17,出典URL,https://laws.e-gov.go.jp/law/325AC0000000264,https://laws.e-gov.go.jp/law/325AC0000000264,一致,
@@ -18204,17 +17653,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-193-38,額の下端,-747179085195,-747179085195,一致,OECD 表6 K LR、比較国12か国
 閣法-193-38,額の中央値,645493291326,645493291326,一致,OECD 表6 K LR、比較国12か国
 閣法-193-38,額の上端,1963013261427,1963013261427,一致,OECD 表6 K LR、比較国12か国
-閣法-193-39,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC3B56.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC3B56.htm,一致,
-閣法-193-39,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19320170602043.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19320170602043.htm,一致,
-閣法-193-39,題名,独立行政法人国民生活センター法等の一部を改正する法律案,独立行政法人国民生活センター法等の一部を改正する法律案,一致,
-閣法-193-39,施行日,2017-10-01,2017-10-01,一致,
-閣法-193-39,施行期日の種別（衆議院の附則）,2017-10-01,2017-10-01,一致,
-閣法-193-39,公布日との順序,2017-10-01,2017-06-02,一致,
-閣法-193-39,公布日,2017-06-02,2017-06-02,一致,施行日台帳と議案台帳
-閣法-193-39,名目付加価値（開始前最後の年）,554525000百万円,554525000百万円,一致,OECD 表6 JPN _T V 2016年
-閣法-193-39,額の下端,11887176650723,11887176650723,一致,OECD 表6 _T LR、比較国12か国
-閣法-193-39,額の中央値,25531518738450,25531518738450,一致,OECD 表6 _T LR、比較国12か国
-閣法-193-39,額の上端,37787940523142,37787940523142,一致,OECD 表6 _T LR、比較国12か国
 閣法-193-40,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC3B66.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC3B66.htm,一致,
 閣法-193-40,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19320170616060.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19320170616060.htm,一致,
 閣法-193-40,題名,畜産経営の安定に関する法律及び独立行政法人農畜産業振興機構法の一部を改正する法律案,畜産経営の安定に関する法律及び独立行政法人農畜産業振興機構法の一部を改正する法律案,一致,
@@ -18551,6 +17989,16 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-196-24,額の下端,1612405124610,1612405124610,一致,OECD 表6 F LR、比較国12か国
 閣法-196-24,額の中央値,3929046786868,3929046786868,一致,OECD 表6 F LR、比較国12か国
 閣法-196-24,額の上端,5048175024033,5048175024033,一致,OECD 表6 F LR、比較国12か国
+閣法-196-25,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC7E02.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC7E02.htm,一致,
+閣法-196-25,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180420017.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180420017.htm,一致,
+閣法-196-25,出典URL,https://laws.e-gov.go.jp/law/329AC0000000164,https://laws.e-gov.go.jp/law/329AC0000000164,一致,
+閣法-196-25,出典URL,https://laws.e-gov.go.jp/law/329AC0000000165,https://laws.e-gov.go.jp/law/329AC0000000165,一致,
+閣法-196-25,題名,防衛省設置法及び自衛隊法の一部を改正する法律案,防衛省設置法及び自衛隊法の一部を改正する法律案,一致,
+閣法-196-25,施行日（推定）,2018-04-20,2018-04-20,一致,公布日を施行日とみなした推定
+閣法-196-25,名目付加価値（開始前最後の年）,563172600百万円,563172600百万円,一致,OECD 表6 JPN _T V 2017年
+閣法-196-25,額の下端,-780293509826,-780293509826,一致,OECD 表6 _T LR、比較国12か国
+閣法-196-25,額の中央値,10821156240084,10821156240084,一致,OECD 表6 _T LR、比較国12か国
+閣法-196-25,額の上端,17048778414624,17048778414624,一致,OECD 表6 _T LR、比較国12か国
 閣法-196-29,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC7FFE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC7FFE.htm,一致,
 閣法-196-29,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180601039.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180601039.htm,一致,
 閣法-196-29,題名,学校教育法等の一部を改正する法律案,学校教育法等の一部を改正する法律案,一致,
@@ -18808,6 +18256,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-196-55,額の下端,-10510032494949,-10510032494949,一致,OECD 表6 _T LR、比較国11か国
 閣法-196-55,額の中央値,4964972405740,4964972405740,一致,OECD 表6 _T LR、比較国11か国
 閣法-196-55,額の上端,14664988933040,14664988933040,一致,OECD 表6 _T LR、比較国11か国
+閣法-196-56,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCB34E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCB34E.htm,一致,
+閣法-196-56,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19820190614037.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19820190614037.htm,一致,
+閣法-196-56,題名,成年被後見人等の権利の制限に係る措置の適正化等を図るための関係法律の整備に関する法律案,成年被後見人等の権利の制限に係る措置の適正化等を図るための関係法律の整備に関する法律案,一致,
+閣法-196-56,施行日,2019-09-14,2019-09-14,一致,
+閣法-196-56,施行期日の種別（衆議院の附則）,2019-09-14,2019-09-14,一致,
+閣法-196-56,公布日との順序,2019-09-14,2019-06-14,一致,
+閣法-196-56,公布日,2019-06-14,2019-06-14,一致,施行日台帳と議案台帳
+閣法-196-56,名目付加価値（開始前最後の年）,566749700百万円,566749700百万円,一致,OECD 表6 JPN _T V 2018年
+閣法-196-56,額の下端,3953067742905,3953067742905,一致,OECD 表6 _T LR、比較国12か国
+閣法-196-56,額の中央値,8562323775022,8562323775022,一致,OECD 表6 _T LR、比較国12か国
+閣法-196-56,額の上端,10618316838719,10618316838719,一致,OECD 表6 _T LR、比較国12か国
 閣法-196-58,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC87A2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC87A2.htm,一致,
 閣法-196-58,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180713072.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180713072.htm,一致,
 閣法-196-58,出典URL,https://laws.e-gov.go.jp/law/129AC0000000089,https://laws.e-gov.go.jp/law/129AC0000000089,一致,
@@ -18852,6 +18311,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-196-61,額の下端,-2686043969367,-2686043969367,一致,OECD 表6 C LR、比較国12か国
 閣法-196-61,額の中央値,1724707439575,1724707439575,一致,OECD 表6 C LR、比較国12か国
 閣法-196-61,額の上端,4209577143667,4209577143667,一致,OECD 表6 C LR、比較国12か国
+閣法-196-63,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8956.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8956.htm,一致,
+閣法-196-63,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180706071.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180706071.htm,一致,
+閣法-196-63,題名,働き方改革を推進するための関係法律の整備に関する法律案,働き方改革を推進するための関係法律の整備に関する法律案,一致,
+閣法-196-63,施行日,2019-04-01,2019-04-01,一致,
+閣法-196-63,施行期日の種別（衆議院の附則）,2019-04-01,2019-04-01,一致,
+閣法-196-63,公布日との順序,2019-04-01,2018-07-06,一致,
+閣法-196-63,公布日,2018-07-06,2018-07-06,一致,施行日台帳と議案台帳
+閣法-196-63,名目付加価値（開始前最後の年）,566749700百万円,566749700百万円,一致,OECD 表6 JPN _T V 2018年
+閣法-196-63,額の下端,3953067742905,3953067742905,一致,OECD 表6 _T LR、比較国12か国
+閣法-196-63,額の中央値,8562323775022,8562323775022,一致,OECD 表6 _T LR、比較国12か国
+閣法-196-63,額の上端,10618316838719,10618316838719,一致,OECD 表6 _T LR、比較国12か国
 閣法-196-65,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8A9A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC8A9A.htm,一致,
 閣法-196-65,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180615052.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180615052.htm,一致,
 閣法-196-65,題名,災害救助法の一部を改正する法律案,災害救助法の一部を改正する法律案,一致,
@@ -18883,17 +18353,19 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-196-8,額の下端,-780293509826,-780293509826,一致,OECD 表6 _T LR、比較国12か国
 閣法-196-8,額の中央値,10821156240084,10821156240084,一致,OECD 表6 _T LR、比較国12か国
 閣法-196-8,額の上端,17048778414624,17048778414624,一致,OECD 表6 _T LR、比較国12か国
-閣法-197-13,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCA186.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCA186.htm,一致,
-閣法-197-13,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214099.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214099.htm,一致,
-閣法-197-13,題名,天皇の即位の日及び即位礼正殿の儀の行われる日を休日とする法律案,天皇の即位の日及び即位礼正殿の儀の行われる日を休日とする法律案,一致,
-閣法-197-13,施行日,2018-12-14,2018-12-14,一致,
-閣法-197-13,施行期日の種別（衆議院の附則）,2018-12-14,2018-12-14,一致,
-閣法-197-13,公布日との順序,2018-12-14,2018-12-14,一致,
-閣法-197-13,公布日,2018-12-14,2018-12-14,一致,施行日台帳と議案台帳
-閣法-197-13,名目付加価値（開始前最後の年）,563172600百万円,563172600百万円,一致,OECD 表6 JPN _T V 2017年
-閣法-197-13,額の下端,-780293509826,-780293509826,一致,OECD 表6 _T LR、比較国12か国
-閣法-197-13,額の中央値,10821156240084,10821156240084,一致,OECD 表6 _T LR、比較国12か国
-閣法-197-13,額の上端,17048778414624,17048778414624,一致,OECD 表6 _T LR、比較国12か国
+閣法-197-1,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC9E2A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC9E2A.htm,一致,
+閣法-197-1,出典URL,https://laws.e-gov.go.jp/law/326CO0000000319,https://laws.e-gov.go.jp/law/326CO0000000319,一致,
+閣法-197-1,出典URL,https://laws.e-gov.go.jp/law/417AC1000000096,https://laws.e-gov.go.jp/law/417AC1000000096,一致,
+閣法-197-1,出典URL,https://laws.e-gov.go.jp/law/411AC0000000093,https://laws.e-gov.go.jp/law/411AC0000000093,一致,
+閣法-197-1,題名,出入国管理及び難民認定法及び法務省設置法の一部を改正する法律案,出入国管理及び難民認定法及び法務省設置法の一部を改正する法律案,一致,
+閣法-197-1,施行日,2019-04-01,2019-04-01,一致,
+閣法-197-1,施行期日の原文,あり,あり,一致,
+閣法-197-1,公布日との順序,2019-04-01,2018-12-14,一致,
+閣法-197-1,公布日,2018-12-14,2018-12-14,一致,施行日台帳と議案台帳
+閣法-197-1,名目付加価値（開始前最後の年）,566749700百万円,566749700百万円,一致,OECD 表6 JPN _T V 2018年
+閣法-197-1,額の下端,3953067742905,3953067742905,一致,OECD 表6 _T LR、比較国12か国
+閣法-197-1,額の中央値,8562323775022,8562323775022,一致,OECD 表6 _T LR、比較国12か国
+閣法-197-1,額の上端,10618316838719,10618316838719,一致,OECD 表6 _T LR、比較国12か国
 閣法-197-2,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC9E42.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC9E42.htm,一致,
 閣法-197-2,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181212090.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181212090.htm,一致,
 閣法-197-2,題名,原子力損害の賠償に関する法律の一部を改正する法律案,原子力損害の賠償に関する法律の一部を改正する法律案,一致,
@@ -19321,6 +18793,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-198-6,額の下端,118102866868,118102866868,一致,OECD 表6 A LR、比較国12か国
 閣法-198-6,額の中央値,265601909752,265601909752,一致,OECD 表6 A LR、比較国12か国
 閣法-198-6,額の上端,465652489313,465652489313,一致,OECD 表6 A LR、比較国12か国
+閣法-198-8,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCB5D6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCB5D6.htm,一致,
+閣法-198-8,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19820190330009.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19820190330009.htm,一致,
+閣法-198-8,題名,成田国際空港周辺整備のための国の財政上の特別措置に関する法律の一部を改正する法律案,成田国際空港周辺整備のための国の財政上の特別措置に関する法律の一部を改正する法律案,一致,
+閣法-198-8,施行日,2019-03-30,2019-03-30,一致,
+閣法-198-8,施行期日の種別（衆議院の附則）,2019-03-30,2019-03-30,一致,
+閣法-198-8,公布日との順序,2019-03-30,2019-03-30,一致,
+閣法-198-8,公布日,2019-03-30,2019-03-30,一致,施行日台帳と議案台帳
+閣法-198-8,名目付加価値（開始前最後の年）,30265000百万円,30265000百万円,一致,OECD 表6 JPN H V 2018年
+閣法-198-8,額の下端,-805674221025,-805674221025,一致,OECD 表6 H LR、比較国12か国
+閣法-198-8,額の中央値,75683518091,75683518091,一致,OECD 表6 H LR、比較国12か国
+閣法-198-8,額の上端,252452228326,252452228326,一致,OECD 表6 H LR、比較国12か国
 閣法-200-10,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE0CA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCE0CA.htm,一致,
 閣法-200-10,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20020191211070.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20020191211070.htm,一致,
 閣法-200-10,出典URL,https://laws.e-gov.go.jp/law/417AC0000000086,https://laws.e-gov.go.jp/law/417AC0000000086,一致,
@@ -20097,17 +19580,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-204-40,額の下端,1428326056416,1428326056416,一致,OECD 表6 A LR、比較国11か国
 閣法-204-40,額の中央値,2354540855677,2354540855677,一致,OECD 表6 A LR、比較国11か国
 閣法-204-40,額の上端,3115460513609,3115460513609,一致,OECD 表6 A LR、比較国11か国
-閣法-204-41,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1E52.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1E52.htm,一致,
-閣法-204-41,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210526045.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/20420210526045.htm,一致,
-閣法-204-41,題名,ストーカー行為等の規制等に関する法律の一部を改正する法律案,ストーカー行為等の規制等に関する法律の一部を改正する法律案,一致,
-閣法-204-41,施行日,2021-06-15,2021-06-15,一致,
-閣法-204-41,施行期日の種別（衆議院の附則）,2021-06-15,2021-06-15,一致,
-閣法-204-41,公布日との順序,2021-06-15,2021-05-26,一致,
-閣法-204-41,公布日,2021-05-26,2021-05-26,一致,施行日台帳と議案台帳
-閣法-204-41,名目付加価値（開始前最後の年）,552814300百万円,552814300百万円,一致,OECD 表6 JPN _T V 2020年
-閣法-204-41,額の下端,-29361706270847,-29361706270847,一致,OECD 表6 _T LR、比較国11か国
-閣法-204-41,額の中央値,8548402320038,8548402320038,一致,OECD 表6 _T LR、比較国11か国
-閣法-204-41,額の上端,41159467107783,41159467107783,一致,OECD 表6 _T LR、比較国11か国
 閣法-204-42,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1E66.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD1E66.htm,一致,
 閣法-204-42,出典URL,https://laws.e-gov.go.jp/law/403AC0000000076,https://laws.e-gov.go.jp/law/403AC0000000076,一致,
 閣法-204-42,出典URL,https://laws.e-gov.go.jp/law/349AC0000000116,https://laws.e-gov.go.jp/law/349AC0000000116,一致,
@@ -20800,49 +20272,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-211-26,額の下端,-360789389673,-360789389673,一致,OECD 表6 D LR、比較国10か国
 閣法-211-26,額の中央値,423792727874,423792727874,一致,OECD 表6 D LR、比較国10か国
 閣法-211-26,額の上端,1198327768274,1198327768274,一致,OECD 表6 D LR、比較国10か国
-閣法-211-30,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8012.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8012.htm,一致,
-閣法-211-30,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230428017.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230428017.htm,一致,
-閣法-211-30,出典URL,https://laws.e-gov.go.jp/law/416AC0000000151,https://laws.e-gov.go.jp/law/416AC0000000151,一致,
-閣法-211-30,題名,裁判外紛争解決手続の利用の促進に関する法律の一部を改正する法律案,裁判外紛争解決手続の利用の促進に関する法律の一部を改正する法律案,一致,
-閣法-211-30,施行日（推定）,2023-04-28,2023-04-28,一致,公布日を施行日とみなした推定
-閣法-211-30,名目付加価値（開始前最後の年）,579200000百万円,579200000百万円,一致,OECD 表6 JPN _T V 2022年
-閣法-211-30,額の下端,-1749270730819,-1749270730819,一致,OECD 表6 _T LR、比較国11か国
-閣法-211-30,額の中央値,8701215242543,8701215242543,一致,OECD 表6 _T LR、比較国11か国
-閣法-211-30,額の上端,23104932343643,23104932343643,一致,OECD 表6 _T LR、比較国11か国
-閣法-211-32,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD803A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD803A.htm,一致,
-閣法-211-32,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230512023.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230512023.htm,一致,
-閣法-211-32,出典URL,https://laws.e-gov.go.jp/law/430AC0000000050,https://laws.e-gov.go.jp/law/430AC0000000050,一致,
-閣法-211-32,出典URL,https://laws.e-gov.go.jp/law/415AC0000000043,https://laws.e-gov.go.jp/law/415AC0000000043,一致,
-閣法-211-32,題名,気候変動適応法及び独立行政法人環境再生保全機構法の一部を改正する法律案,気候変動適応法及び独立行政法人環境再生保全機構法の一部を改正する法律案,一致,
-閣法-211-32,施行日（推定）,2023-05-12,2023-05-12,一致,公布日を施行日とみなした推定
-閣法-211-32,名目付加価値（開始前最後の年）,579200000百万円,579200000百万円,一致,OECD 表6 JPN _T V 2022年
-閣法-211-32,額の下端,-1749270730819,-1749270730819,一致,OECD 表6 _T LR、比較国11か国
-閣法-211-32,額の中央値,8701215242543,8701215242543,一致,OECD 表6 _T LR、比較国11か国
-閣法-211-32,額の上端,23104932343643,23104932343643,一致,OECD 表6 _T LR、比較国11か国
-閣法-211-33,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD804E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD804E.htm,一致,
-閣法-211-33,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230512026.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230512026.htm,一致,
-閣法-211-33,出典URL,https://laws.e-gov.go.jp/law/505AC0000000026,https://laws.e-gov.go.jp/law/505AC0000000026,一致,
-閣法-211-33,題名,日本国の自衛隊とオーストラリア国防軍との間における相互のアクセス及び協力の円滑化に関する日本国とオーストラリアとの間の協定の実施に関する法律案,日本国の自衛隊とオーストラリア国防軍との間における相互のアクセス及び協力の円滑化に関する日本国とオーストラリアとの間の協定の実施に関する法律案,一致,
-閣法-211-33,施行日,2023-08-13,2023-08-13,一致,
-閣法-211-33,施行期日の原文,あり,あり,一致,
-閣法-211-33,公布日との順序,2023-08-13,2023-05-12,一致,
-閣法-211-33,公布日,2023-05-12,2023-05-12,一致,施行日台帳と議案台帳
-閣法-211-33,名目付加価値（開始前最後の年）,579200000百万円,579200000百万円,一致,OECD 表6 JPN _T V 2022年
-閣法-211-33,額の下端,-1749270730819,-1749270730819,一致,OECD 表6 _T LR、比較国11か国
-閣法-211-33,額の中央値,8701215242543,8701215242543,一致,OECD 表6 _T LR、比較国11か国
-閣法-211-33,額の上端,23104932343643,23104932343643,一致,OECD 表6 _T LR、比較国11か国
-閣法-211-34,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8062.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD8062.htm,一致,
-閣法-211-34,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230512027.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230512027.htm,一致,
-閣法-211-34,出典URL,https://laws.e-gov.go.jp/law/505AC0000000027,https://laws.e-gov.go.jp/law/505AC0000000027,一致,
-閣法-211-34,題名,日本国の自衛隊とグレートブリテン及び北アイルランド連合王国の軍隊との間における相互のアクセス及び協力の円滑化に関する日本国とグレートブリテン及び北アイルランド連合王国との間の協定の実施に関する法律案,日本国の自衛隊とグレートブリテン及び北アイルランド連合王国の軍隊との間における相互のアクセス及び協力の円滑化に関する日本国とグレートブリテン及び北アイルランド連合王国との間の協定の実施に関する法律案,一致,
-閣法-211-34,施行日,2023-10-15,2023-10-15,一致,
-閣法-211-34,施行期日の原文,あり,あり,一致,
-閣法-211-34,公布日との順序,2023-10-15,2023-05-12,一致,
-閣法-211-34,公布日,2023-05-12,2023-05-12,一致,施行日台帳と議案台帳
-閣法-211-34,名目付加価値（開始前最後の年）,579200000百万円,579200000百万円,一致,OECD 表6 JPN _T V 2022年
-閣法-211-34,額の下端,-1749270730819,-1749270730819,一致,OECD 表6 _T LR、比較国11か国
-閣法-211-34,額の中央値,8701215242543,8701215242543,一致,OECD 表6 _T LR、比較国11か国
-閣法-211-34,額の上端,23104932343643,23104932343643,一致,OECD 表6 _T LR、比較国11か国
 閣法-211-35,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD80EE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DD80EE.htm,一致,
 閣法-211-35,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230531038.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/21120230531038.htm,一致,
 閣法-211-35,題名,特定先端大型研究施設の共用の促進に関する法律の一部を改正する法律案,特定先端大型研究施設の共用の促進に関する法律の一部を改正する法律案,一致,
