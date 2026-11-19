@@ -1,4 +1,4 @@
-"""全ての成立法（3,415本）に結果が1つずつ付いていることと、結果の規則の形を確かめる（規則の妥当性ではなく、漏れ・重複・理由の空欄・系列の実在）。"""
+"""全ての成立法（3,426本）に結果が1つずつ付いていることと、結果の規則の形を確かめる（規則の妥当性ではなく、漏れ・重複・理由の空欄・系列の実在）。"""
 import csv
 import unittest
 from pathlib import Path
@@ -9,7 +9,7 @@ from scripts.evaluation_rules import DEMOTED_ROUTES
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTCOMES = ROOT / "data" / "derived" / "all-laws-v1" / "outcomes.csv"
-TOTAL = 3415
+TOTAL = 3426
 
 
 def read(path):

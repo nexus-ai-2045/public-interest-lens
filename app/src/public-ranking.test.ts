@@ -55,7 +55,7 @@ describe('公開ランキングの配布データ', () => {
     const value = parsePublicRanking(committed);
     expect(value.approval).toEqual({ approvedAt: '2026-10-17', scope: 'all-laws', note });
     expect(value.laws.length + value.others.length).toBe(value.counts.enacted);
-    expect(value.counts.enacted).toBe(3415);
+    expect(value.counts.enacted).toBe(3426);
     expect(new Set([...value.laws, ...value.others].map(item => item.id)).size).toBe(value.counts.enacted);
     for (const item of value.others) expect(Object.keys(item).sort()).toEqual(['id', 'outcome', 'reason', 'title']);
     expect(JSON.stringify(value.others)).not.toMatch(/Yen|中央値|四分位/);

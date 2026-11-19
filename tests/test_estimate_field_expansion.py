@@ -64,8 +64,8 @@ class EstimateTest(unittest.TestCase):
         cls.rows = est.estimate(cls.targets)
 
     def test_targets_are_the_substantive_laws_without_a_field(self):
-        self.assertEqual(len(self.targets), 1662)
-        self.assertEqual(len({t["id"] for t in self.targets}), 1662)
+        self.assertEqual(len(self.targets), 1663)
+        self.assertEqual(len({t["id"] for t in self.targets}), 1663)
 
     def test_every_law_gets_exactly_one_result_and_counts_add_up(self):
         self.assertEqual(len(self.rows), len(self.targets))
