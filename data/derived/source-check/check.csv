@@ -53,17 +53,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-151-31,額の下端,375187492228878,375187492228878,一致,OECD 表6 _T LR、比較国10か国
 閣法-151-31,額の中央値,582131953824841,582131953824841,一致,OECD 表6 _T LR、比較国10か国
 閣法-151-31,額の上端,697614094674736,697614094674736,一致,OECD 表6 _T LR、比較国10か国
-閣法-174-2,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/25D6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/25D6.htm,一致,
-閣法-174-2,出典URL,https://laws.e-gov.go.jp/law/349AC0000000116,https://laws.e-gov.go.jp/law/349AC0000000116,一致,
-閣法-174-2,題名,雇用保険法の一部を改正する法律案,雇用保険法の一部を改正する法律案,一致,
-閣法-174-2,施行日,2010-02-03,2010-02-03,一致,
-閣法-174-2,施行期日の原文,あり,あり,一致,
-閣法-174-2,公布日との順序,2010-02-03,2010-02-03,一致,
-閣法-174-2,公布日,2010-02-03,2010-02-03,一致,施行日台帳と議案台帳
-閣法-174-2,名目付加価値（開始前最後の年）,497758700百万円,497758700百万円,一致,OECD 表6 JPN _T V 2009年
-閣法-174-2,額の下端,290250964306218,290250964306218,一致,OECD 表6 _T LR、比較国11か国
-閣法-174-2,額の中央値,437749999509560,437749999509560,一致,OECD 表6 _T LR、比較国11か国
-閣法-174-2,額の上端,614046114935962,614046114935962,一致,OECD 表6 _T LR、比較国11か国
 閣法-156-73,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17B52.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/17B52.htm,一致,
 閣法-156-73,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030530059.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/15620030530059.htm,一致,
 閣法-156-73,出典URL,https://laws.e-gov.go.jp/law/415AC0000000059,https://laws.e-gov.go.jp/law/415AC0000000059,一致,
@@ -14122,6 +14111,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-174-17,額の下端,290250964306218,290250964306218,一致,OECD 表6 _T LR、比較国11か国
 閣法-174-17,額の中央値,437749999509560,437749999509560,一致,OECD 表6 _T LR、比較国11か国
 閣法-174-17,額の上端,614046114935962,614046114935962,一致,OECD 表6 _T LR、比較国11か国
+閣法-174-2,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/25D6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/25D6.htm,一致,
+閣法-174-2,出典URL,https://laws.e-gov.go.jp/law/349AC0000000116,https://laws.e-gov.go.jp/law/349AC0000000116,一致,
+閣法-174-2,題名,雇用保険法の一部を改正する法律案,雇用保険法の一部を改正する法律案,一致,
+閣法-174-2,施行日,2010-02-03,2010-02-03,一致,
+閣法-174-2,施行期日の原文,あり,あり,一致,
+閣法-174-2,公布日との順序,2010-02-03,2010-02-03,一致,
+閣法-174-2,公布日,2010-02-03,2010-02-03,一致,施行日台帳と議案台帳
+閣法-174-2,名目付加価値（開始前最後の年）,497758700百万円,497758700百万円,一致,OECD 表6 JPN _T V 2009年
+閣法-174-2,額の下端,290250964306218,290250964306218,一致,OECD 表6 _T LR、比較国11か国
+閣法-174-2,額の中央値,437749999509560,437749999509560,一致,OECD 表6 _T LR、比較国11か国
+閣法-174-2,額の上端,614046114935962,614046114935962,一致,OECD 表6 _T LR、比較国11か国
 閣法-174-23,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/264A.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/264A.htm,一致,
 閣法-174-23,出典URL,https://laws.e-gov.go.jp/law/419AC0000000057,https://laws.e-gov.go.jp/law/419AC0000000057,一致,
 閣法-174-23,題名,株式会社日本政策金融公庫法の一部を改正する法律案,株式会社日本政策金融公庫法の一部を改正する法律案,一致,

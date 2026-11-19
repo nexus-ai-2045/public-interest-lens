@@ -124,9 +124,9 @@ class CorrectionsTest(unittest.TestCase):
             v = items["分野"]["直した値"]
             self.assertEqual(outcomes[i]["分野"], "対応表なし" if v.startswith("経済全体") else v, i)
             self.assertNotEqual(outcomes[i]["結果"], "額あり", i)  # 額は振り分けの分野で計算してある
-            if i in macro:  # 産業の節が無い分野は全産業で測るので、分野の欄も経済全体（額と産業を食い違わせない）
+            if i in macro:  # 産業の節が無い分野は全産業（_T）で測る。分野の欄は直した分野のまま
                 from scripts.build_macro_amounts import INDUSTRY
-                want = (v, INDUSTRY[v]) if v in INDUSTRY else ("経済全体", "_T")
+                want = (v, INDUSTRY[v]) if v in INDUSTRY else ("経済全体" if v.startswith("経済全体") else v, "_T")
                 self.assertEqual((macro[i]["分野"], macro[i]["産業"], macro[i]["分野の由来"]), (*want, "一次資料の読み直し"), i)
 
     def test_undefined_item_is_rejected(self):
