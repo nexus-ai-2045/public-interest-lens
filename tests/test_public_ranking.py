@@ -1,3 +1,4 @@
+import csv
 import json
 import unittest
 
@@ -161,11 +162,11 @@ class PublicRankingTests(unittest.TestCase):
         flags = [law["certainty"] == "参考" for law in self.payload["laws"]]
         self.assertEqual(flags, sorted(flags))
         by_id = {law["id"]: law for law in self.payload["laws"]}
-        # 衆法-186-35 は抜き取りで不合格（確かさ高・題名が基本法）。額は消さず参考値に下げ、理由と根拠を付ける（降格の規則）
-        self.assertEqual(by_id["衆法-186-35"]["certainty"], "参考")
-        self.assertGreater(by_id["衆法-186-35"]["amountMedianYen"], 0)
-        self.assertTrue(by_id["衆法-186-35"]["demotedReason"])
-        self.assertTrue(by_id["衆法-186-35"]["demotedBasis"])
+        # 衆法-185-2 は抜き取りで不合格（範囲）。額は消さず参考値に下げ、理由と根拠を付ける（降格の規則）
+        self.assertEqual(by_id["衆法-185-2"]["certainty"], "参考")
+        self.assertGreater(by_id["衆法-185-2"]["amountMedianYen"], 0)
+        self.assertTrue(by_id["衆法-185-2"]["demotedReason"])
+        self.assertTrue(by_id["衆法-185-2"]["demotedBasis"])
         self.assertEqual(by_id["閣法-193-61"]["certainty"], "参考")
 
     def test_shared_observation_and_oversized_notes(self):
@@ -186,12 +187,19 @@ class PublicRankingTests(unittest.TestCase):
         # 閣法-189-27 は向きと額の符号が逆で法律の額を付けない（全法律の結果と同じ判断）。損失表の額は議員にも配らない
         self.assertNotIn("便益側の一部が未測定", by_id.get("閣法-189-27", {"notes": []})["notes"])
         self.assertIn("閣法-189-27", self.payload["generatedFrom"]["parameters"]["noAmount"])
-        self.assertFalse({"コロナ期と重なる", "便益側の一部が未測定"} & set(by_id["衆法-186-35"]["notes"]))
+        self.assertFalse({"コロナ期と重なる", "便益側の一部が未測定"} & set(by_id["閣法-193-61"]["notes"]))
+
+    def test_laws_judged_not_evaluated_have_no_amount(self):
+        # 全法律の結果が「評価対象外」とした法律は、降格の参考額としても laws に残さない（衆法-186-35：訂正表で制度・名称整備の型）
+        outcomes = {r["id"]: r["結果"] for r in csv.DictReader(builder.INPUTS["outcomes"].open(encoding="utf-8"))}
+        self.assertEqual([law["id"] for law in self.payload["laws"] if outcomes.get(law["id"]) == "評価対象外"], [])
+        other = next(item for item in self.payload["others"] if item["id"] == "衆法-186-35")
+        self.assertEqual(other["outcome"], OUTCOMES["excluded"])
 
     def test_source_held_law_moves_to_others(self):
-        payload = build(True, "2026-10-17", held_by_check={"衆法-186-35"})
-        self.assertNotIn("衆法-186-35", {law["id"] for law in payload["laws"]})
-        held = next(item for item in payload["others"] if item["id"] == "衆法-186-35")
+        payload = build(True, "2026-10-17", held_by_check={"衆法-185-2"})
+        self.assertNotIn("衆法-185-2", {law["id"] for law in payload["laws"]})
+        held = next(item for item in payload["others"] if item["id"] == "衆法-185-2")
         self.assertEqual(held["outcome"], OUTCOMES["source"])
 
 

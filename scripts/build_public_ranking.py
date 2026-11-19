@@ -516,11 +516,17 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
     covid_params = _rows("covidParams", captured)
     crowded = crowded_ids(loss.values())
     # 全法律の結果（outcomes.csv）が、向きと額の符号が逆・関与の出典なしで額を付けないとした法律。同じ判断を使う（論理検査 L1・L3）
-    demoted = {row["id"]: row["理由"] for row in _rows("outcomes", captured) if row["経路"] in DEMOTED_ROUTES}
+    outcomes = _rows("outcomes", captured)
+    demoted = {row["id"]: row["理由"] for row in outcomes if row["経路"] in DEMOTED_ROUTES}
+    # 全法律の結果が「評価対象外」とした法律は、どの経路の額が残っていても laws に出さない（訂正表で制度・名称整備と決まった法律など）。
+    excluded = {row["id"]: row["理由"] or row["経路"] or "評価対象外" for row in outcomes if row["結果"] == "評価対象外"}
     laws, others = [], []
     for law_id, census_row in enacted.items():
         row = publish.get(law_id)
         title = census_row["題名"]
+        if law_id in excluded:
+            others.append(_other(law_id, title, "excluded", excluded[law_id]))
+            continue
         # コロナ対応の法律は、市場の損失の額が付いていても使わず、費用便益（covid-benefit-v1）か規模つきの理由で出す（全法律の結果と同じ扱い）
         if not row or row["損失または便益"] == "保留" or law_id in covid_ids or law_id in crowded or law_id in demoted or (narrow_measure(title) and loss.get(law_id, {}).get("段階") == "段階1"):
             if approve_all and law_id in macro and law_id not in held_by_check:
