@@ -612,6 +612,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-207-2,額の下端,11255590120138,11255590120138,一致,OECD 表6 J LR、比較国11か国
 閣法-207-2,額の中央値,18469451943097,18469451943097,一致,OECD 表6 J LR、比較国11か国
 閣法-207-2,額の上端,24910301044346,24910301044346,一致,OECD 表6 J LR、比較国11か国
+閣法-166-23,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/14FE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/14FE.htm,一致,
+閣法-166-23,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070331027.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070331027.htm,一致,
+閣法-166-23,題名,国民年金法等の一部を改正する法律等の一部を改正する法律案,国民年金法等の一部を改正する法律等の一部を改正する法律案,一致,
+閣法-166-23,施行日,2007-04-01,2007-04-01,一致,
+閣法-166-23,施行期日の種別（衆議院の附則）,2007-04-01,2007-04-01,一致,
+閣法-166-23,公布日との順序,2007-04-01,2007-03-31,一致,
+閣法-166-23,公布日,2007-03-31,2007-03-31,一致,施行日台帳と議案台帳
+閣法-166-23,名目付加価値（開始前最後の年）,538356000百万円,538356000百万円,一致,OECD 表6 JPN _T V 2006年
+閣法-166-23,額の下端,-72857187038146,-72857187038146,一致,OECD 表6 _T LR、比較国11か国
+閣法-166-23,額の中央値,18330447473500,18330447473500,一致,OECD 表6 _T LR、比較国11か国
+閣法-166-23,額の上端,101562929827217,101562929827217,一致,OECD 表6 _T LR、比較国11か国
 閣法-166-58,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/15BA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/15BA.htm,一致,
 閣法-166-58,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070601069.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070601069.htm,一致,
 閣法-166-58,題名,競争の導入による公共サービスの改革に関する法律の一部を改正する法律案,競争の導入による公共サービスの改革に関する法律の一部を改正する法律案,一致,
@@ -12592,17 +12603,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-166-22,額の下端,-72857187038146,-72857187038146,一致,OECD 表6 _T LR、比較国11か国
 閣法-166-22,額の中央値,18330447473500,18330447473500,一致,OECD 表6 _T LR、比較国11か国
 閣法-166-22,額の上端,101562929827217,101562929827217,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-23,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/14FE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/14FE.htm,一致,
-閣法-166-23,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070331027.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070331027.htm,一致,
-閣法-166-23,題名,国民年金法等の一部を改正する法律等の一部を改正する法律案,国民年金法等の一部を改正する法律等の一部を改正する法律案,一致,
-閣法-166-23,施行日,2007-04-01,2007-04-01,一致,
-閣法-166-23,施行期日の種別（衆議院の附則）,2007-04-01,2007-04-01,一致,
-閣法-166-23,公布日との順序,2007-04-01,2007-03-31,一致,
-閣法-166-23,公布日,2007-03-31,2007-03-31,一致,施行日台帳と議案台帳
-閣法-166-23,名目付加価値（開始前最後の年）,538356000百万円,538356000百万円,一致,OECD 表6 JPN _T V 2006年
-閣法-166-23,額の下端,-72857187038146,-72857187038146,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-23,額の中央値,18330447473500,18330447473500,一致,OECD 表6 _T LR、比較国11か国
-閣法-166-23,額の上端,101562929827217,101562929827217,一致,OECD 表6 _T LR、比較国11か国
 閣法-166-24,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1506.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1506.htm,一致,
 閣法-166-24,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070331026.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/16620070331026.htm,一致,
 閣法-166-24,題名,児童手当法の一部を改正する法律案,児童手当法の一部を改正する法律案,一致,
