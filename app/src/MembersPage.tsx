@@ -4,6 +4,7 @@ import { toneTitle, useTone } from './site-tone';
 import { ExposureRankingPanel } from './ExposureRankingPanel';
 import type { PanelExposureRanking } from './exposure-ranking';
 import { parsePublicExposureRanking, panelExposureRanking } from './public-distribution';
+import { exposureGroupLabels } from './exposure-labels';
 import { SCORING_CONSTANTS } from './scoring-constants';
 const MethodFormulas = lazy(() => import('./MethodFormulas'));
 const BacktestPanel = lazy(() => import('./BacktestPanel'));
@@ -21,14 +22,17 @@ export function MembersPage() {
   // トップ（/）から来たら、URL を議員ページのものに揃える。
   if (window.location.pathname === '/') window.history.replaceState(window.history.state, '', `/members${window.location.search}${window.location.hash}`);
   useEffect(() => { document.title = `議員・実名｜${toneTitle(tone)}`; }, [tone]);
-  const [ranking, setRanking] = useState<PanelExposureRanking | null>(null);
+  const [view, setView] = useState<{ ranking: PanelExposureRanking; groups: ReturnType<typeof exposureGroupLabels>; readings: Record<string, string> } | null>(null);
   const [error, setError] = useState('');
   useEffect(() => {
     if (MEMBER_RANKING_HIDDEN) return;
     const controller = new AbortController();
     void fetch(distributionExposureUrl, { signal: controller.signal, cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.text(); })
-      .then(text => setRanking(panelExposureRanking(parsePublicExposureRanking(text))))
+      .then(text => {
+        const data = parsePublicExposureRanking(text);
+        setView({ ranking: panelExposureRanking(data), groups: exposureGroupLabels(data.groups ?? []), readings: data.personReadings ?? {} });
+      })
       .catch(e => { if (!controller.signal.aborted) setError(`議員のデータを読み込めませんでした（${e instanceof Error ? e.message : e}）`); });
     return () => controller.abort();
   }, []);
@@ -38,7 +42,7 @@ export function MembersPage() {
       {MEMBER_RANKING_HIDDEN && <p className="empty-state" role="note">議員・政党の順位と点は、計算方法の見直し中のため、いったん非表示にしています。法律ごとの損失と便益は<a href="/ranking">法律ランキング</a>で見られます。</p>}
       <p className="fine-note">記録や判定に誤りがあれば、<a href={correctionUrl} target="_blank" rel="noopener noreferrer">訂正・反論の窓口（GitHub の Issue）</a>から公開資料を添えて知らせてください。</p>
       {!MEMBER_RANKING_HIDDEN && error && <p className="state-banner" role="alert">{error}</p>}
-      {!MEMBER_RANKING_HIDDEN && ranking && <ExposureRankingPanel ranking={ranking} />}
+      {!MEMBER_RANKING_HIDDEN && view && <ExposureRankingPanel ranking={view.ranking} groups={view.groups} personReadings={view.readings} />}
     </main>
   </SiteShell>;
 }
@@ -60,7 +64,7 @@ export function MethodologyPage() {
       <p>識別できる単位は「産業×期間の群」までです（単独で識別できる法律は 1,982 本中 2 本）。そこで議員には、次の2つを分けて出します。足し合わせません。</p>
       <ol>
         <li><strong>因果の点</strong>：外部の証拠（他国の実測・官庁の見込みなど）で法律単位の額が取れ、確かさが「中」以上の法律だけを、役割ごとの固定比率（発議 0.4・賛成 0.2・反対 −0.2・閣議決定 0.2。取り決め）で人に配ります。関与した法律が5本以上で、上位3本の占有率が50%以下の人だけに点を出します。いまは該当する法律が0本なので、点のある議員は0人です。</li>
-        <li><strong>曝露ランキング（記述）</strong>：関与した法律が属する産業×年の群が、OECD の同じ産業・同じ年の中央値よりどれだけ伸び損ねたかを、同じ固定比率で配った額です。その人や法律が原因だという意味ではありません。順位は1位・2位ではなく、幅が重なる人を同じ階層にまとめ、階層の中は名前（人物ID）の文字の順に出します（いまは全員の幅が重なり階層は1つです）。「国賊」「国士」の札は付けません。関与した法律が{SCORING_CONSTANTS.minContributingLaws}本未満の人、上位3本の法律で額の{SCORING_CONSTANTS.topThreeShareCap * 100}%を超える人、関与の記録が無い人は、額を出さず理由を出します。</li>
+        <li><strong>曝露ランキング（記述）</strong>：関与した法律が属する産業×年の群が、OECD の同じ産業・同じ年の中央値よりどれだけ伸び損ねたかを、同じ固定比率で配った額です。その人や法律が原因だという意味ではありません。順位は1位・2位ではなく、幅が重なる人を同じ階層にまとめ、階層の中は人物台帳の読みの五十音順（読みの無い人はその後に名前の文字の順）に出します（いまは全員の幅が重なり階層は1つです）。「国賊」「国士」の札は付けません。関与した法律が{SCORING_CONSTANTS.minContributingLaws}本未満の人、上位3本の法律で額の{SCORING_CONSTANTS.topThreeShareCap * 100}%を超える人、関与の記録が無い人は、額を出さず理由を出します。</li>
       </ol>
       <p>閣法は首相1人に付けず、提出した回次の会期を通して在任した閣僚の全員に付けます（総理大臣が会期中に替わる回次は、交代より前に付託された閣法だけ）。賛成・反対の枠は院で半分ずつに分け、衆議院は会派単位の賛否、参議院は押しボタン投票の個人票に配ります。記録の無い分は未配分として残し、別の人へ寄せません。このため個人の欄は参議院議員と閣僚が中心になり、衆議院議員の賛否は会派の欄に入ります（階層に入る 796 人のうち参議院 592・衆議院 71・院の欄が空の閣僚経験者など 133）。</p>
       <p>以前の「成立への寄与」（投票のゲームで1票の効き方を測る）による配分と、全議員へ参考の額を配る欄は、v2.1 でやめました（計算方法の版 method-spec-v3.0）。</p>
