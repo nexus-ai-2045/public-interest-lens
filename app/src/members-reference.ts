@@ -8,7 +8,8 @@ import type { GenerationMetadata } from './generation-metadata';
  *    観測の額を N 本で等分してから配る（足し合わせで同じ差を N 回数えないため）。
  * 2. 配り方は確かな額と同じ Shapley 値（causal-allocation.ts）。提出者の組と衆議院の賛成会派が拒否権者、参議院の賛成票が多数決。
  *    提出者：閣法は提出した回次の会期の最初から最後まで在任した閣僚（総理大臣を含む）に均等に配る（内閣の提出。副長官・法制局長官は閣僚ではない）。
- *    総理大臣が会期中に替わる回次は、その法律の衆議院の付託日に在任した閣僚に配る（scripts/build_auto_involvements.py と同じ）。衆法・参法は議案の提出者の欄。「○○君外N名」で名前の一覧が無いときは、
+ *    総理大臣が会期中に替わる回次は、付託日が交代より前の法律だけ、その付託日に在任した閣僚に配る（提出は付託より前なので、前の内閣の提出と決まる）。
+ *    交代より後に付託された法律は、どちらの内閣の提出か決められないので配らない。衆法・参法は議案の提出者の欄。「○○君外N名」で名前の一覧が無いときは、
  *    代表者に 1/(N+1) を置き、残りは「名前不明の提出者」とする。委員会提出（○○委員長）は人に配らない。
  *    参議院：本会議の押しボタン投票の個人別の賛否（成立した日の、題名が一致する投票）。
  * 3. 参議院の個人別の賛否が見つからない法律は、提出者の組・衆議院の賛成会派・参議院の賛成会派の3者で 1/3 ずつとし、会派の分は人に配らない。
@@ -18,7 +19,7 @@ import type { GenerationMetadata } from './generation-metadata';
  *    （衆法・参法の提出者は議案の種別、参議院の賛成は投票記録）だけ人物IDに結び、それ以外は配らない。
  * 6. 向きが未確定の法律（公開ランキングの印 DIRECTION_UNDETERMINED つき。全体指標の行）は人に配らない（設計確定 v2.1：向きを産業の差の符号で決めない）。
  *    その行の side は日本の産業と比較国の差の符号を写しただけで、法律が損失・便益のどちらを生んだかの証拠ではない。
- *    関わった人には額を付けず、理由（何本を配っていないか）だけを付ける。
+ *    関わった人には額を付けず、理由と本数（withheldLaws）だけを付ける。同じ観測を共有する本数（決まり1の N）には数える（配らない分を残りの法律に寄せない）。
  */
 import { allocateLaw, PARTY_ID, UNIDENTIFIED_ID, type LawGame } from './causal-allocation';
 import { parseCsv } from './impact-batch';
@@ -47,6 +48,8 @@ export type ReferenceMember = {
   top: ReferenceLawShare[];
   /** 額が無い理由、または関わった法律のうち向きが未確定で配っていない本数（額がある人にも付く）。 */
   reason: string;
+  /** 提出者・参議院の賛成として関わったが、向きが未確定なので額を配っていない法律の本数。 */
+  withheldLaws: number;
 };
 export type PublicMembersReference = {
   schema: 'public-members-reference/v2';
@@ -57,8 +60,9 @@ export type PublicMembersReference = {
     /** 向きが未確定なので人に配らなかった法律の本数（laws には入らない）。 */
     lawsDirectionUndetermined: number };
 };
-/** 1人・1本・1役割ごとの配り先（公開ファイルには入れず、scripts/check_reference_members.py が全件を一次資料と照らす）。member は人物ID、name は出典の表記。 */
-export type ReferenceAttribution = { member: string; name: string; house: string; lawId: string; role: ReferenceRole; side: 'loss' | 'benefit'; median: number };
+/** 1人・1本・1役割ごとの配り先（公開ファイルには入れず、scripts/check_reference_members.py が全件を一次資料と照らす）。member は人物ID、name は出典の表記。
+ * 向きが未確定で配らなかった関わりも、side が undetermined・額0の行として入れる（理由に書く本数を、配り先と同じ方法で照らすため）。 */
+export type ReferenceAttribution = { member: string; name: string; house: string; lawId: string; role: ReferenceRole; side: 'loss' | 'benefit' | 'undetermined'; median: number };
 export type ReferenceInputs = {
   ranking: { laws: { id: string; title: string; side: string; certainty: string; notes?: string[]; group: string; window: string; amountLowYen: number; amountMedianYen: number; amountHighYen: number; demotedReason?: string }[]; sharedReference?: { laws: { id: string }[] };
     /** 公開ランキングの生成条件。parameters.noAmount は「向きと額の符号が逆」などで法律の額を付けない法律（ranking.json と同じ形）。 */
@@ -138,8 +142,10 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
   }
   // 閣法は内閣の提出。総理大臣1人に全部付けず（首相だけが突出する原因）、提出した回次の会期の最初から最後まで在任した閣僚（総理大臣を含む）に均等に配る
   // （設計確定 v2.1：閣法は首相1人に付けない）。途中で替わった閣僚は含めない。
-  // 総理大臣が会期中に替わる回次は、どの内閣の提出かを回次では決められないので、その法律の衆議院の付託日に在任した閣僚にする
-  // （提出から付託までは数日。scripts/build_auto_involvements.py の cabinets と同じ決まり）。継続審査で付託日が後の回次のものは配らない。
+  // 総理大臣が会期中に替わる回次は、どの内閣の提出かを回次では決められない。付託日の総理大臣が会期の最初の付託日と同じ法律だけ、
+  // その付託日に在任した閣僚にする（提出は付託より前なので、前の内閣の提出と決まる）。交代より後に付託された法律は、前の内閣が出して
+  // 付託が遅れたものと後の内閣が出したものが混ざり、付託日では決められないので配らない（第147回・第151回は閣法の約半分が交代後の付託）。
+  // 継続審査で付託日が後の回次のものも配らない。
   // 人物台帳に結べない人は分母に入れない（入れると、配られない分が黙って消える）。回次・付託日ごとに1回だけ計算する。
   let unresolved = 0;
   const cabinetCache = new Map<string, { names: string[]; dropped: number }>();
@@ -147,7 +153,7 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     const x = span.get(bill['提出回次']);
     const stable = !!x && !!pmOn(x.first) && pmOn(x.first) === pmOn(x.last);
     const referred = referredOn(bill);
-    const key = stable ? `回次:${bill['提出回次']}` : referred && pmOn(referred) ? `付託日:${referred}` : '';
+    const key = stable ? `回次:${bill['提出回次']}` : x && referred && pmOn(referred) && pmOn(referred) === pmOn(x.first) ? `付託日:${referred}` : '';
     if (!key) return { names: [], dropped: 0 };
     const hit = cabinetCache.get(key);
     if (hit) return hit;
@@ -168,12 +174,12 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
   const noAmountIds = new Set(input.ranking.generatedFrom?.parameters?.noAmount ?? []);
   const candidates = input.ranking.laws.filter(l => l.certainty === SANKO && !l.demotedReason && !sharedIds.has(l.id) && !noAmountIds.has(l.id) && !(l.notes ?? []).some(n => n.startsWith('コロナ期と')));
   // 向きが未確定の法律（全体指標の行）は人に配らない。side は産業と比較国の差の符号で、法律の効果の向きの証拠ではない（設計確定 v2.1）。
-  // 誰が関わったかは同じ手順で調べ、額の代わりに理由を付ける。
+  // 誰が関わったかは同じ手順で調べ、額の代わりに理由を付ける。同じ観測を共有する本数には数える（配らない分を残りの法律に寄せない）。
   const isUndetermined = (l: (typeof candidates)[number]) => (l.notes ?? []).some(n => n.startsWith(DIRECTION_UNDETERMINED));
   const laws = candidates.filter(l => !isUndetermined(l));
   const undetermined = candidates.filter(isUndetermined);
   const obs = new Map<string, number>();
-  for (const l of laws) obs.set(`${l.group}|${l.window}`, (obs.get(`${l.group}|${l.window}`) ?? 0) + 1);
+  for (const l of candidates) obs.set(`${l.group}|${l.window}`, (obs.get(`${l.group}|${l.window}`) ?? 0) + 1);
 
   // 必要な投票だけ個人別の賛否を読む。
   const games = new Map<string, { game: LawGame | null; proposers: { name: string; weight: number }[]; voteId: string }>();
@@ -221,11 +227,12 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
   const attributions: ReferenceAttribution[] = [];
   // 向きが未確定で配らなかった法律（人物IDごとの法律ID）。額には入れず、理由にだけ使う。
   const withheld = new Map<string, Set<string>>();
-  const hold = (name: string, memberHouse: string, lawId: string) => {
+  const hold = (name: string, memberHouse: string, lawId: string, role: ReferenceRole) => {
     const res = ledger.resolve(name, memberHouse);
     if (!res) return;
     names.set(res.id, res.person?.name ?? names.get(res.id) ?? name);
     withheld.set(res.id, (withheld.get(res.id) ?? new Set()).add(lawId));
+    attributions.push({ member: res.id, name, house: res.person?.house ?? memberHouse, lawId, role, side: 'undetermined', median: 0 });
   };
   // memberHouse は一次資料で所属院が決まるときだけ渡す（衆法・参法の提出者は議案の種別。閣法の閣僚は決まらないので渡さない）。
   const give = (name: string, memberHouse: string, law: (typeof laws)[number], role: ReferenceRole, amount: Range) => {
@@ -272,8 +279,8 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     const g = games.get(l.id);
     if (!g) continue;
     const yes = g.game && g.voteId && g.game.yes > 0 ? [...new Map((yesBy.get(g.voteId) ?? []).map(v => [v.id, v])).values()].slice(0, g.game.yes) : [];
-    for (const p of g.proposers) hold(p.name, proposerHouse(l.id), l.id);
-    for (const v of yes) if (v.resolved) hold(v.name, '参議院', l.id);
+    for (const p of g.proposers) hold(p.name, proposerHouse(l.id), l.id, 'proposer');
+    for (const v of yes) if (v.resolved) hold(v.name, '参議院', l.id, 'vote');
   }
 
   // 名簿の1行は台帳の1人（院と選挙区が同じ人）。本名で載る参議院議員も、台帳の別名で同じ人になる。
@@ -302,14 +309,14 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
         ? '参考の額の法律で、提出者としての記録がない（衆議院は起立採決で個人の賛否が残らず、会派に置いている）'
         : '参考の額の法律で、提出者・参議院の賛成としての記録がない';
     return { id, name, current: current.get(id) ?? null, lastSangiinParty: lastParty.get(id) ?? '', lastKnownCaucus: lastKnown.get(id) ?? null, loss: t.loss, credit: t.credit, net, laws: new Set(t.laws.map(x => x.lawId)).size,
-      top: [...t.laws].sort((a, b) => b.share - a.share).slice(0, 5), reason };
+      top: [...t.laws].sort((a, b) => b.share - a.share).slice(0, 5), reason, withheldLaws: held };
   }).sort((a, b) => a.net.median - b.net.median || a.id.localeCompare(b.id));
   return {
     schema: 'public-members-reference/v2',
     rules: ['reference-split-by-observation-v1', 'causal-shapley-v1', 'reference-party-fallback-v1'],
     members,
     counts: { members: members.length, current: members.filter(m => m.current).length, withAmount: members.filter(m => m.laws > 0).length, ledger: ledgerPeople.length, laws: laws.length,
-      lawsWithVotes: withVotes, lawsPartyOnly: partyOnly, observations: obs.size, unresolved, lawsDirectionUndetermined: undetermined.length },
+      lawsWithVotes: withVotes, lawsPartyOnly: partyOnly, observations: new Set(laws.map(l => `${l.group}|${l.window}`)).size, unresolved, lawsDirectionUndetermined: undetermined.length },
     attributions,
   };
 }

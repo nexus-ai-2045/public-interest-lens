@@ -5,9 +5,12 @@ app/src/members-reference.ts が配った全員・全法律の配り先（build_
 （top の5本だけでなく、合計と順位に入るすべての配り先が照合の対象になる）。
 - 法律が公開ランキングにあり、確かさが「参考」であること。
 - 向きが未確定の法律（公開ランキングの印 MACRO_DIRECTION_NOTE つき）を人に配っていないこと（設計確定 v2.1：向きを産業の差の符号で決めない）。
+  配らなかった関わり（side が undetermined・額0の行）も、提出者・参議院の賛成の事実を配り先と同じ方法で照らし、
+  人ごとの本数が公開ファイルの withheldLaws と理由の文に書いた本数に一致することを確かめる。
 - 提出者（proposer）：衆法・参法は成立法の一覧の「提出者」「提出者一覧」にその名前があること。
   閣法は内閣の提出なので、提出した回次の会期の最初から最後まで（継続審査でない閣法の衆議院の付託日の最初と最後）在任した閣僚であること。
-  総理大臣が会期中に替わる回次は、その法律の衆議院の付託日に在任した閣僚であること（scripts/build_auto_involvements.py と同じ決まり）。
+  総理大臣が会期中に替わる回次は、付託日が交代より前の法律に限り、その付託日に在任した閣僚であること
+  （提出は付託より前なので前の内閣の提出と決まる。交代より後に付託された法律は、どちらの内閣の提出か決められないので配らない）。
   氏名は名簿の脚注の印（*）と字体のゆれを寄せてから比べる。
 - 人物ID：配り先の人物IDが人物台帳（persons.csv）にあり、氏名が同じ人物の氏名と canonical で一致すること。同姓同名で分けた名前は
   配っていないこと（台帳は今の院しか持たず院を移った人がいるので、院では決めない）。
@@ -44,6 +47,7 @@ PERSONS = ROOT / "data/derived/person-ids/persons.csv"
 
 ERA = {"昭和": 1925, "平成": 1988, "令和": 2018}
 COMMITTEE = re.compile(r"(委員長|委員会|調査会長|審査会長)$")
+UNDETERMINED = "undetermined"  # 配り先の一覧の side。向きが未確定で配らなかった関わり（app/src/members-reference.ts）
 DIGITS = str.maketrans("０１２３４５６７８９", "0123456789")
 
 
@@ -100,13 +104,16 @@ def check(attributions_path: Path | None = None) -> list[str]:
 
     def cabinet_served(name: str, bill: dict[str, str]) -> bool:
         """閣法は内閣の提出。提出した回次の会期の最初と最後の付託日の両方に在任した閣僚（総理大臣を含む）か。
-        総理大臣が会期中に替わる回次は、どの内閣の提出かを回次では決められないので、その法律の付託日（継続審査でないもの）に在任した閣僚か。"""
+        総理大臣が会期中に替わる回次は、付託日（継続審査でないもの）の総理大臣が会期の最初の付託日と同じ法律に限り、その付託日に在任した閣僚か。
+        交代より後に付託された法律は、どちらの内閣の提出か付託日では決められないので、誰に配っても合わない。"""
         dates = referrals.get(bill["提出回次"], set())
         who = canonical(name)
         if dates and serving(min(dates), True) and serving(min(dates), True) == serving(max(dates), True):
             return who in serving(min(dates)) & serving(max(dates))
         referred = wareki(bill["付託日_衆"]) if bill["回次"] == bill["提出回次"] else ""
-        return bool(referred) and bool(serving(referred, True)) and who in serving(referred)
+        if not dates or not referred or not serving(referred, True) or serving(referred, True) != serving(min(dates), True):
+            return False
+        return who in serving(referred)
 
     votes_by_day: dict[str, list[dict[str, str]]] = {}
     for v in read_csv(VOTES_INDEX):
@@ -121,11 +128,23 @@ def check(attributions_path: Path | None = None) -> list[str]:
     for p in persons.values():
         by_canonical.setdefault(canonical(p["氏名"]), []).append(p)
     # 人ごとの合計が公開ファイルと一致するか（配り先の一覧が公開ファイルの合計をすべて説明していること）。
+    # 向きが未確定で配らなかった関わり（side が undetermined）は額に入らない。人ごとの本数を別に数える。
     totals: dict[tuple[str, str], float] = {}
+    withheld: dict[str, set[str]] = {}
     for a in attributions:
+        if a["side"] == UNDETERMINED:
+            withheld.setdefault(a["member"], set()).add(a["lawId"])
+            continue
         key = (a["member"], a["side"])
         totals[key] = totals.get(key, 0.0) + float(a["median"])
     published = {m["id"]: m for m in reference["members"]}
+    for m in reference["members"]:
+        count = len(withheld.get(m["id"], ()))
+        told = re.search(r"法律(\d+)本は、向きが未確定", m["reason"])
+        if m.get("withheldLaws") != count or (int(told.group(1)) if told else 0) != count:
+            errors.append(f"{m['id']}：向きが未確定で配らなかった法律の本数（withheldLaws・理由の文）が配り先の一覧と合わない")
+    for member in withheld.keys() - published.keys():
+        errors.append(f"{member}：向きが未確定で配らなかった関わりの人が公開ファイルに無い")
     for (member, side), total in totals.items():
         m = published.get(member)
         expected = m and (m["loss"] if side == "loss" else m["credit"])["median"]
@@ -149,8 +168,9 @@ def check(attributions_path: Path | None = None) -> list[str]:
         if not law or law.get("certainty") != "参考" or not bill:
             errors.append(f"{where}：公開ランキングの参考の法律、または成立法の一覧に無い")
             continue
-        if MACRO_DIRECTION_NOTE in law.get("notes", []):
-            errors.append(f"{where}：向きが未確定の法律を人に配っている")
+        marked = MACRO_DIRECTION_NOTE in law.get("notes", [])
+        if marked != (a["side"] == UNDETERMINED) or (marked and float(a["median"]) != 0):
+            errors.append(f"{where}：向きが未確定の法律を人に配っている、または向きの決まった法律を配っていない")
             continue
         person = persons.get(a["member"])
         if person is not None and canonical(person["氏名"]) != canonical(name):

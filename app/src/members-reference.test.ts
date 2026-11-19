@@ -79,7 +79,7 @@ describe('全議員の参考の額', () => {
     expect(out.attributions.reduce((s, a) => s + a.median, 0)).toBeCloseTo(pm.median * 2, 6);
   });
 
-  it('総理大臣が会期中に替わる回次の閣法は、その法律の付託日に在任した閣僚に配る', () => {
+  it('総理大臣が会期中に替わる回次の閣法は、交代より前に付託された法律だけ、付託日に在任した閣僚に配る', () => {
     const law = (id: string) => ({ id, title: id, side: 'loss', certainty: '参考', group: id, window: '2000〜2009年', amountLowYen: 90, amountMedianYen: 90, amountHighYen: 90 });
     const enacted = '回次,種別,提出回次,番号,題名,提出者,提出者一覧,付託日_衆,議決日_衆,議決日_参\n'
       + '171,閣法,171,1,甲法案,,,平成21年 1月 5日,,\n171,閣法,171,2,乙法案,,,平成21年 6月 5日,,\n';
@@ -90,10 +90,12 @@ describe('全議員の参考の額', () => {
       ranking: { laws: [law('閣法-171-1'), law('閣法-171-2')] }, enacted, votesIndex: '投票ID,回次,投票日,議案名,集計_賛成,集計_反対\n',
       ballots: [], sangiinMembers: '議員ID,回次,議員名,会派\n', cabinet, roster: '院,氏名,本名,読み,会派,選挙区\n',
     } as never);
-    // scripts/build_auto_involvements.py と同じ決まり。1月の法律は前の内閣、6月の法律は後の内閣。通して在任した財務三は両方。
+    // 1月に付託された法律は、提出がそれより前なので前の内閣の提出と決まる。6月（交代より後）に付託された法律は、
+    // 前の内閣が出して付託が遅れたのか後の内閣が出したのか付託日では決められないので、誰にも配らない。
     const of = (lawId: string) => out.attributions.filter(a => a.lawId === lawId).map(a => a.name).sort();
     expect(of('閣法-171-1')).toEqual(['法務四', '財務三', '首相一']);
-    expect(of('閣法-171-2')).toEqual(['法務五', '財務三', '首相二']);
+    expect(of('閣法-171-2')).toEqual([]);
+    expect(out.members.map(m => m.id).sort()).toEqual(['法務四', '財務三', '首相一']);
   });
 
   it('名簿が会期の途中から脚注の印（*）つきで書く閣僚も、同じ人として通して在任に数える', () => {
@@ -122,22 +124,29 @@ describe('全議員の参考の額', () => {
       cabinet: '区分,役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n衆議院,田中 四,,,無,東京1\n',
     });
     const by = new Map(out.members.map(m => [m.name, m]));
-    // 配るのは印の無い4本目だけ。同じ観測（group・window）でも、向きが未確定の3本は本数の分母に入れない。
-    expect(new Set(out.attributions.map(a => a.lawId))).toEqual(new Set(['衆法-150-4']));
+    // 額を配るのは印の無い4本目だけ。同じ観測（group・window）を共有する本数には向きが未確定の3本も数える（配らない分を4本目に寄せない）：90÷4本×1/3。
+    const given = out.attributions.filter(a => a.side !== 'undetermined');
+    expect(new Set(given.map(a => a.lawId))).toEqual(new Set(['衆法-150-4']));
     expect(out.counts).toMatchObject({ laws: 1, observations: 1, lawsDirectionUndetermined: 3, unresolved: 0 });
-    expect(by.get('山田太郎')).toMatchObject({ laws: 1, credit: { median: 0 } });
-    expect(by.get('山田太郎')!.loss.median).toBeCloseTo(30, 6);
+    expect(by.get('山田太郎')).toMatchObject({ laws: 1, credit: { median: 0 }, withheldLaws: 2 });
+    expect(by.get('山田太郎')!.loss.median).toBeCloseTo(7.5, 6);
     expect(by.get('山田太郎')!.reason).toContain('法律2本は、向きが未確定');
+    // 配らなかった関わりは、額0・向き未確定の行として照合用の一覧に残る（公開ファイルの額には入らない）。
+    const held = out.attributions.filter(a => a.side === 'undetermined');
+    expect(held.every(a => a.median === 0)).toBe(true);
+    expect(held.map(a => `${a.name}/${a.lawId}/${a.role}`).sort()).toEqual(['佐藤一/衆法-150-1/vote', '山田太郎/衆法-150-1/proposer', '山田太郎/衆法-150-2/proposer', '川上花子/衆法-150-3/proposer', '鈴木二/衆法-150-1/vote']);
+    expect(out.members.reduce((s, m) => s + m.loss.median + m.credit.median, 0)).toBeCloseTo(7.5, 6);
     // 額が無い人も、関わった記録があれば載せて理由を付ける（提出者・参議院の賛成）。反対した人と関わりの無い人には付けない。
     for (const name of ['川上花子', '佐藤一', '鈴木二']) {
-      expect(by.get(name)).toMatchObject({ laws: 0, loss: { median: 0 }, credit: { median: 0 }, top: [] });
+      expect(by.get(name)).toMatchObject({ laws: 0, loss: { median: 0 }, credit: { median: 0 }, top: [], withheldLaws: 1 });
       expect(by.get(name)!.reason).toContain('法律1本は、向きが未確定');
     }
     expect(by.get('高橋三')).toBeUndefined();
+    expect(by.get('田中四')).toMatchObject({ withheldLaws: 0 });
     expect(by.get('田中四')!.reason).not.toContain('向きが未確定');
   });
 
-  it('閣法は提出した回次の総理大臣に配り、継続審査で後の付託日になっても後任に付けない。会期中に替わった回次は付託日の総理大臣に配る', () => {
+  it('閣法は提出した回次の総理大臣に配り、継続審査で後の付託日になっても後任に付けない。会期中に替わった回次は、交代より前に付託された法律を付託日の総理大臣に配る', () => {
     const law = (id: string) => ({ id, title: id, side: 'loss', certainty: '参考', group: id, window: '2000〜2009年', amountLowYen: 90, amountMedianYen: 90, amountHighYen: 90 });
     const enacted = '回次,種別,提出回次,番号,題名,提出者,提出者一覧,付託日_衆,議決日_衆,議決日_参\n'
       + '169,閣法,169,1,甲法案,,,平成20年 2月 1日,,\n169,閣法,169,2,乙法案,,,平成20年 5月 1日,,\n'
@@ -150,7 +159,7 @@ describe('全議員の参考の額', () => {
     } as never);
     const by = new Map(out.members.map(m => [m.name, m]));
     expect(by.get('前首相')?.top.map(t => t.lawId)).toEqual(['閣法-169-3']);
-    // 第171回は会期中に替わるので、1月に付託された法律は付託日の総理大臣に。継続審査で次の回次に付託された法律（閣法-171-3）は、どの内閣の提出か決められないので配らない。
+    // 第171回は会期中に替わるので、交代より前の1月に付託された法律は付託日の総理大臣に。継続審査で次の回次に付託された法律（閣法-171-3）は、どの内閣の提出か決められないので配らない。
     expect(by.get('後首相')?.top.map(t => t.lawId)).toEqual(['閣法-171-1']);
     expect(by.get('次首相')).toBeUndefined();
   });

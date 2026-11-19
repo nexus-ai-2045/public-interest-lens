@@ -43,10 +43,8 @@ class CheckReferenceMembersTest(unittest.TestCase):
         # 合計に入るが top に出ない小さい配り先を、別人に差し替える。
         reference = crm.json.loads(crm.REFERENCE.read_text(encoding="utf-8"))
         tops = {(m["id"], t["lawId"], t["role"]) for m in reference["members"] for t in m["top"]}
-        # 配る法律が少ないと、どの配り先も top の5本に入る。そのときは top に出る配り先で確かめる（照合が全件を見ることは変わらない）。
         for role in ("proposer", "vote"):
-            mine = [r for r in rows if r["role"] == role]
-            r = next((r for r in mine if (r["member"], r["lawId"], r["role"]) not in tops), mine[0])
+            r = next(r for r in rows if r["role"] == role and (r["member"], r["lawId"], r["role"]) not in tops)
             r["name"] = "存在しない議員"
         bad = Path(self.tmp.name) / "bad.csv"
         _write(bad, rows)
@@ -61,6 +59,20 @@ class CheckReferenceMembersTest(unittest.TestCase):
         _write(bad, rows)
         self.assertTrue(any("合計が公開ファイルと合わない" in e or "配り先が無い" in e for e in crm.check(bad)))
 
+
+    def test_withheld_involvements_are_checked_and_never_carry_an_amount(self):
+        """向きが未確定で配らなかった関わりも事実を照らす。額を付けたら止まり、本数が公開ファイルと違っても止まる。"""
+        rows = _rows(self.attributions)
+        held = [r for r in rows if r["side"] == crm.UNDETERMINED]
+        self.assertTrue(held)
+        self.assertEqual({float(r["median"]) for r in held}, {0.0})
+        for name, change in (("amount", {"median": "1"}), ("side", {"side": "loss"})):
+            bad = Path(self.tmp.name) / f"bad_withheld_{name}.csv"
+            _write(bad, [{**r, **change} if r is held[0] else r for r in rows])
+            self.assertTrue(any("向きが未確定の法律を人に配っている" in e for e in crm.check(bad)), name)
+        bad = Path(self.tmp.name) / "bad_withheld_count.csv"
+        _write(bad, [r for r in rows if r is not held[0]])
+        self.assertTrue(any("本数（withheldLaws・理由の文）" in e for e in crm.check(bad)))
 
     def test_person_id_must_match_source_name(self):
         rows = _rows(self.attributions)
