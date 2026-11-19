@@ -7,11 +7,15 @@
  * - 閣法の提出（decide）は使わず、提出した回次の閣僚（cabinet-members.ts）全員に cabinet と proposer の両方を置く
  *   （閣法は全閣僚へ：閣議決定0.2＋発議0.4。2026-11-19 確定）。involvements に記録があるかどうかに依らない。
  * - chair・amend・question は役割の取り決めに無いので使わない。
+ * - 委員会提出（提出者が「○○委員長」など）の衆法・参法は人の提出ではないので、proposer を置かない（全議員の表と同じ決まり）。
+ * - 法律が1本だけの群には関与を置かない。群の差がそのままその法律の額になり、群の差を法律へ配ることになるため（設計確定 v2.1）。枠は未配分に積まれる。
+ * - 閣僚の1人でも人物台帳に結べない閣法は、cabinet と proposer を置かない（結べた人だけに置くと、結べない人の枠がほかの閣僚へ寄るため）。枠は未配分に積まれる。
  * - 会派（party）への配りは今回作らない。衆議院は会派単位の賛否で、参議院は個人票なので、賛成の枠を会派と人でどう分けるかが未決のため。
  *   parties は空のまま。衆議院の賛成は、記録のある個人（involvements の vote）にだけ置く。
  */
 import type { ExposureGroup, Involvement, ExposureRole } from './exposure-ranking';
 import { cabinetBySession, normName } from './cabinet-members';
+import { COMMITTEE, parseProposer } from './members-reference';
 import { parseCsv } from './impact-batch';
 import { PersonLedger } from './person-id';
 
@@ -29,9 +33,12 @@ export type ExposureCounts = {
   /** 群に属する閣法の数と、うち閣僚が決まらない回次（総理大臣が会期中に替わる等）の閣法・閣僚の全員が台帳に結べない閣法の数。 */
   cabinetLaws: number;
   cabinetLawsUndetermined: number;
-  cabinetLawsNoResolvable: number;
-  /** 台帳に結べず分母に入れなかった閣僚の延べ数（閣法ごと）。 */
+  /** 閣僚の1人以上が台帳に結べず、cabinet と proposer を置かなかった閣法の数。 */
+  cabinetLawsUnresolved: number;
+  /** 台帳に結べなかった閣僚の延べ数（閣法ごと）。 */
   cabinetUnresolvedMinisters: number;
+  /** 法律が1本だけの群の数（関与を置かない）。 */
+  singleLawGroups: number;
   /** 置いた関与の行数（重複を除いたあと）。 */
   yesRows: number;
   noRows: number;
@@ -46,6 +53,10 @@ export type ExposureCounts = {
     notCounted: number;
     /** 閣法の decide（閣僚で置き換える）。 */
     cabinetDecide: number;
+    /** 委員会提出の衆法・参法の decide。 */
+    committeeProposer: number;
+    /** 法律が1本だけの群の法律の行（算入=はい のもの）。 */
+    singleLawGroup: number;
     chair: number; amend: number; question: number; otherAction: number;
     noPersonId: number;
     /** 同じ（法律・役割・人）の重複。 */
@@ -94,10 +105,17 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
 
   const counts: ExposureCounts = {
     groups: groups.length, laws: lawGroup.size, lawsWithAnyInvolvement: 0,
-    cabinetLaws: 0, cabinetLawsUndetermined: 0, cabinetLawsNoResolvable: 0, cabinetUnresolvedMinisters: 0,
+    cabinetLaws: 0, cabinetLawsUndetermined: 0, cabinetLawsUnresolved: 0, cabinetUnresolvedMinisters: 0, singleLawGroups: 0,
     yesRows: 0, noRows: 0, proposerRows: 0, cabinetRows: 0,
-    skipped: { notInGroup: 0, notCounted: 0, cabinetDecide: 0, chair: 0, amend: 0, question: 0, otherAction: 0, noPersonId: 0, duplicates: 0 },
+    skipped: { notInGroup: 0, notCounted: 0, cabinetDecide: 0, committeeProposer: 0, singleLawGroup: 0, chair: 0, amend: 0, question: 0, otherAction: 0, noPersonId: 0, duplicates: 0 },
   };
+  // 法律が1本だけの群：群の差がその法律の額になるので、関与を置かない。
+  const single = new Set(groups.filter(g => g.lawCount === 1).map(g => g.id));
+  counts.singleLawGroups = single.size;
+  const inSingle = (lawId: string) => single.has(lawGroup.get(lawId)!);
+  // 委員会提出の法律（提出者の欄が「○○委員長」など）。
+  const enactedRows = parseCsv(src.enacted);
+  const committeeLaws = new Set(enactedRows.filter(r => COMMITTEE.test(parseProposer(r['提出者'] ?? '').lead)).map(r => `${r['種別']}-${r['提出回次']}-${r['番号']}`));
   const involvements: Involvement[] = [];
   const seen = new Set<string>();
   const withInvolvement = new Set<string>();
@@ -115,6 +133,7 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
       const lawId = r['法律ID'];
       if (!lawGroup.has(lawId)) { if (r['算入'] === 'はい') counts.skipped.notInGroup++; continue; }
       if (r['算入'] !== 'はい') { counts.skipped.notCounted++; continue; }
+      if (inSingle(lawId)) { counts.skipped.singleLawGroup++; continue; }
       const action = r['行動'];
       if (action === 'decide' && lawId.startsWith('閣法')) { counts.skipped.cabinetDecide++; continue; }
       const role: ExposureRole | null = action === 'vote' ? 'yes' : action === 'decide' ? 'proposer' : null;
@@ -125,6 +144,7 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
         else counts.skipped.otherAction++;
         continue;
       }
+      if (role === 'proposer' && committeeLaws.has(lawId)) { counts.skipped.committeeProposer++; continue; }
       if (!r['人物ID']) { counts.skipped.noPersonId++; continue; }
       if (place(lawId, role, r['人物ID'])) { if (role === 'yes') counts.yesRows++; else counts.proposerRows++; }
     }
@@ -133,13 +153,14 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
     const lawId = r['法律ID'];
     if (!lawGroup.has(lawId)) { if (r['算入'] === 'はい') counts.skipped.notInGroup++; continue; }
     if (r['算入'] !== 'はい') { counts.skipped.notCounted++; continue; }
+    if (inSingle(lawId)) { counts.skipped.singleLawGroup++; continue; }
     if (!r['人物ID']) { counts.skipped.noPersonId++; continue; }
     if (place(lawId, 'no', r['人物ID'])) counts.noRows++;
   }
 
   // 閣法：群に属する閣法すべてに、提出した回次の閣僚全員へ cabinet と proposer を置く。
   const ledger = new PersonLedger(src.persons, src.roster);
-  const cabinetOf = cabinetBySession(parseCsv(src.enacted), parseCsv(src.cabinet));
+  const cabinetOf = cabinetBySession(enactedRows, parseCsv(src.cabinet));
   const cabinetLawIds = [...lawGroup.keys()].filter(id => id.startsWith('閣法')).sort();
   for (const lawId of cabinetLawIds) {
     counts.cabinetLaws++;
@@ -147,9 +168,11 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
     if (!m) throw new Error(`法律 ID の形が不正：${lawId}`);
     const all = cabinetOf(m[2]);
     if (all.length === 0) { counts.cabinetLawsUndetermined++; continue; }
-    const ids = [...new Set(all.map(n => ledger.resolve(normName(n), '')?.id).filter((x): x is string => !!x))];
-    counts.cabinetUnresolvedMinisters += all.filter(n => !ledger.resolve(normName(n), '')).length;
-    if (ids.length === 0) { counts.cabinetLawsNoResolvable++; continue; }
+    const resolved = all.map(n => ledger.resolve(normName(n), '')?.id ?? '');
+    const missing = resolved.filter(x => !x).length;
+    if (missing > 0) { counts.cabinetUnresolvedMinisters += missing; counts.cabinetLawsUnresolved++; continue; }
+    if (inSingle(lawId)) continue;
+    const ids = [...new Set(resolved)];
     for (const id of ids) {
       if (place(lawId, 'cabinet', id)) counts.cabinetRows++;
       place(lawId, 'proposer', id);

@@ -66,7 +66,7 @@ export type ReferenceInputs = {
 
 const SANKO = '参考';
 /** 委員会・調査会・審査会の提出（人の提出ではない）。 */
-const COMMITTEE = /(委員長|委員会|調査会長|審査会長)$/;
+export const COMMITTEE = /(委員長|委員会|調査会長|審査会長)$/;
 export { normName };
 const KANJI_NUM: Record<string, number> = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
 /** 「十二」「二十三」などの漢数字（99まで）。 */
