@@ -244,7 +244,7 @@ class CompletionTest(unittest.TestCase):
         cov = {"ledger": 2, "ranked": 1, "unrankedWithAmount": 0, "noInvolvement": 1, "outsideLedger": 1}
         people = [{"actorId": "P1", "tier": 1, "unrankedReason": ""}, {"actorId": "P2", "tier": None, "unrankedReason": "関与の記録が無い"},
                   {"actorId": "当時だけの閣僚", "tier": 1, "unrankedReason": ""}]
-        out = "app/public/distribution/exposure-ranking.json"
+        out = "data/derived/exposure-v1/exposure-ranking.json"
         status = self.status(laws | persons | {out: json.dumps({"people": people, "coverage": cov})})
         self.assertEqual(status[1]["state"], "達成")
         self.assertIn("人物台帳 2 人中、曝露ランキングに載る 2 人（点あり 1、点なし＋理由 1、載っていない 0、2回以上 0）", status[1]["now"])

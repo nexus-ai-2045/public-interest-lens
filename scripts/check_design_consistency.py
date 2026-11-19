@@ -374,7 +374,7 @@ def _amount(row: dict[str, str]) -> bool:
     return bool(row["額（円）"] or row["国の収支（億円）"])
 
 
-EXPOSURE = Path("app/public/distribution/exposure-ranking.json")
+EXPOSURE = Path("data/derived/exposure-v1/exposure-ranking.json")
 
 
 def _members_on_ledger(root: Path, d: Path) -> tuple[bool, str]:
