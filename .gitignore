@@ -42,6 +42,8 @@ app/public/distribution/ranking.json
 # 賛否・全議員の表・グラフ用の集計（設計決定0022。scripts/generate_artifacts.py が入力から作る）
 app/public/distribution/votes.json
 app/public/distribution/members-reference.json
+# 曝露ランキング（案B）の集計結果。scripts/build_exposure_ranking.mjs が作る（画面表示は別の変更。ビルドには乗せない）
+data/derived/exposure-v1/exposure-ranking.json
 app/public/distribution/charts.json
 app/public/distribution/laws.json
 app/public/distribution/laws-detail/

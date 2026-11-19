@@ -6,13 +6,14 @@
  * その人や法律が伸び損ねを起こしたという因果の推定ではない（設計確定 v2.1 の L1・L3）。
  *
  * 決まり：
- * 1. 群の額は、群に属する法律の本数 n で等分した「1本ぶんの枠」に分け、枠の中を役割の比率で分ける。
+ * 1. 群の額は、群に属する法律の本数 n（lawCount。関与の記録が無い法律も数える）で等分した「1本ぶんの枠」に分け、枠の中を役割の比率で分ける。
  *    枠は配るための数え方で、法律単位の額としては出さない（出力の型に法律の ID も法律ごとの額も無い）。
  * 2. 役割の比率は取り決め（つまみ①）。反対は逆向き（符号を反転）で配る。
  * 3. 1本・1役割の中は、渡された重みの割合で配る（閣議決定は閣僚に均等、のような重みは呼ぶ側が決める）。
  *    重みの合計で割るので、1本・1役割の枠は必ず配り切る。
  * 4. 配り先は人か会派のどちらか一方。個人の記録が無い賛否は会派に置き、同じ枠を人と会派へ二重に配らない。
  * 5. ある法律で関与の記録が無い役割の枠は「未配分」に理由つきで積む（黙って消さない、ほかの役割へ寄せない）。
+ *    関与の記録が1つも無い法律のぶん（lawCount − 記録のある法律数）は、全役割ぶんの枠を role: null で未配分に積む。
  * 6. 幅（low・median・high）は端どうしを足す。群どうしの相関を仮定しない広めの幅になる。反対は端が入れ替わるので、
  *    検算の合計（totals.expected）も役割ごとに幅を作ってから足す。
  * 7. 階層は、額の中央値の大きい順に並べ、幅が階層の先頭の人と重なる間は同じ階層とする。
@@ -20,7 +21,8 @@
  * 8. 関与した法律が下限（minLaws）に満たない人・会派は階層に入れず、額と本数だけを出す。
  */
 
-export type Range = { low: number; median: number; high: number };
+import type { GroupDiff, Range } from './scoring-types';
+export type { Range };
 export type ExposureRole = 'proposer' | 'yes' | 'no' | 'cabinet';
 export const EXPOSURE_ROLES: readonly ExposureRole[] = ['proposer', 'yes', 'no', 'cabinet'];
 export type RoleRatio = Readonly<Record<ExposureRole, number>>;
@@ -29,8 +31,8 @@ export const DEFAULT_ROLE_RATIO: RoleRatio = Object.freeze({ proposer: 0.4, yes:
 /** 反対だけ逆向き。 */
 const SIGN: Readonly<Record<ExposureRole, 1 | -1>> = { proposer: 1, yes: 1, no: -1, cabinet: 1 };
 
-/** 産業×期間の群と、その伸び損ね額（正が伸び損ね、負は中央値より伸びた）。 */
-export type ExposureGroup = { id: string; industry: string; period: string; shortfallYen: Range };
+/** 産業×期間の群の差（diff は正が伸び損ね、負は比較より伸びた）と、群に属する法律の本数（関与の記録が無い法律も含む）。 */
+export type ExposureGroup = GroupDiff & { id: string; lawCount: number };
 export type ActorKind = 'person' | 'party';
 /** 1つの関与：誰が、どの群のどの法律に、どの役割で関わったか。weight は同じ法律・同じ役割の中での重み（正の数）。 */
 export type Involvement = { actorKind: ActorKind; actorId: string; groupId: string; lawId: string; role: ExposureRole; weight: number };
@@ -106,7 +108,8 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
   const groupById = new Map<string, ExposureGroup>();
   for (const g of groups) {
     if (groupById.has(g.id)) throw new Error(`群の ID が重複：${g.id}`);
-    const s = g.shortfallYen;
+    const s = g.diff;
+    if (!Number.isInteger(g.lawCount) || g.lawCount < 1) throw new Error(`群の法律の本数が正の整数でない：${g.id} ${g.lawCount}`);
     if (![s.low, s.median, s.high].every(Number.isFinite) || s.low > s.median || s.median > s.high) throw new Error(`群の額の幅が不正：${g.id}`);
     groupById.set(g.id, g);
   }
@@ -147,19 +150,20 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
   const allRoles = (s: Range): Range => EXPOSURE_ROLES.reduce((acc, r) => add(acc, scale(s, SIGN[r] * params.roleRatio[r])), zero());
   let expected = zero();
   for (const g of groups) {
-    expected = add(expected, allRoles(g.shortfallYen));
-    const laws = tree.get(g.id);
-    if (!laws) {
-      unallocated.push({ groupId: g.id, role: null, laws: 0, exposureYen: allRoles(g.shortfallYen), reason: 'この群に関与の記録がある法律が無い' });
-      continue;
+    expected = add(expected, allRoles(g.diff));
+    const laws = tree.get(g.id) ?? new Map<string, Map<ExposureRole, Involvement[]>>();
+    if (g.lawCount < laws.size) throw new Error(`群の法律の本数が関与の記録がある法律の本数より小さい：${g.id} ${g.lawCount}<${laws.size}`);
+    const perLaw = 1 / g.lawCount;
+    const noRecord = g.lawCount - laws.size;
+    if (noRecord > 0) {
+      unallocated.push({ groupId: g.id, role: null, laws: noRecord, exposureYen: scale(allRoles(g.diff), perLaw * noRecord), reason: 'この群の法律のうち関与の記録が無い法律の枠' });
     }
-    const perLaw = 1 / laws.size;
     const missing = new Map<ExposureRole, number>();
     for (const roles of laws.values()) {
       for (const role of EXPOSURE_ROLES) {
         const list = roles.get(role);
         if (!list) { missing.set(role, (missing.get(role) ?? 0) + 1); continue; }
-        const slot = scale(g.shortfallYen, perLaw * SIGN[role] * params.roleRatio[role]);
+        const slot = scale(g.diff, perLaw * SIGN[role] * params.roleRatio[role]);
         const totalWeight = list.reduce((s, x) => s + x.weight, 0);
         if (!Number.isFinite(totalWeight)) throw new Error(`重みの合計が有限でない：${g.id}`);
         for (const inv of list) give(inv, scale(slot, inv.weight / totalWeight));
@@ -167,7 +171,7 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
     }
     for (const [role, n] of missing) {
       if (params.roleRatio[role] === 0) continue;
-      unallocated.push({ groupId: g.id, role, laws: n, exposureYen: scale(g.shortfallYen, perLaw * n * SIGN[role] * params.roleRatio[role]), reason: 'この役割の関与の記録が無い法律の枠' });
+      unallocated.push({ groupId: g.id, role, laws: n, exposureYen: scale(g.diff, perLaw * n * SIGN[role] * params.roleRatio[role]), reason: 'この役割の関与の記録が無い法律の枠' });
     }
   }
 

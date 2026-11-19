@@ -5,7 +5,8 @@ import {
 } from './exposure-ranking';
 
 const yen = (median: number, spread = 0): Range => ({ low: median - spread, median, high: median + spread });
-const group = (id: string, median: number, spread = 0): ExposureGroup => ({ id, industry: id, period: '2000-2005', shortfallYen: yen(median, spread) });
+const group = (id: string, median: number, spread = 0, lawCount = 1): ExposureGroup =>
+  ({ kind: 'group-diff', id, group: id, window: '2000〜2005年', diff: yen(median, spread), benchmark: 'テスト用の比較', lawCount });
 const inv = (actorId: string, lawId: string, role: Involvement['role'], weight = 1, groupId = 'g1', actorKind: Involvement['actorKind'] = 'person'): Involvement =>
   ({ actorKind, actorId, groupId, lawId, role, weight });
 const P = { roleRatio: DEFAULT_ROLE_RATIO, minLaws: 1 };
@@ -42,7 +43,7 @@ describe('曝露ランキングの集計器', () => {
   });
 
   it('群の額は法律の本数で等分した枠に分ける', () => {
-    const out = buildExposureRanking([group('g1', 1000)], [
+    const out = buildExposureRanking([group('g1', 1000, 0, 2)], [
       inv('甲', 'L1', 'proposer'), inv('乙', 'L2', 'proposer'), inv('甲', 'L2', 'proposer'),
     ], P);
     // 甲：L1 の発議 200 ＋ L2 の発議の半分 100。乙：100。
@@ -53,7 +54,7 @@ describe('曝露ランキングの集計器', () => {
   });
 
   it('関与の記録が無い役割の枠は未配分に積み、ほかの役割へ寄せない', () => {
-    const out = buildExposureRanking([group('g1', 1000), group('g2', 500)], [inv('甲', 'L1', 'proposer')], P);
+    const out = buildExposureRanking([group('g1', 1000), group('g2', 500, 0, 3)], [inv('甲', 'L1', 'proposer')], P);
     expect(person(out, '甲').exposureYen.median).toBeCloseTo(400);
     const byRole = Object.fromEntries(out.unallocated.filter(u => u.groupId === 'g1').map(u => [u.role, u.exposureYen.median]));
     expect(byRole.yes).toBeCloseTo(200);
@@ -61,6 +62,8 @@ describe('曝露ランキングの集計器', () => {
     expect(byRole.cabinet).toBeCloseTo(200);
     const g2 = out.unallocated.find(u => u.groupId === 'g2')!;
     expect(g2.role).toBeNull();
+    expect(g2.laws).toBe(3);
+    expect(g2.reason).toBe('この群の法律のうち関与の記録が無い法律の枠');
     expect(g2.exposureYen.median).toBeCloseTo(300);
     conserved(out);
   });
@@ -81,7 +84,7 @@ describe('曝露ランキングの集計器', () => {
   });
 
   it('出力に法律の ID も法律ごとの額も無い（群の差を法律へ配る経路が無い）', () => {
-    const out = buildExposureRanking([group('g1', 1000)], [inv('甲', '法律-秘-001', 'proposer'), inv('甲', '法律-秘-002', 'yes')], P);
+    const out = buildExposureRanking([group('g1', 1000, 0, 2)], [inv('甲', '法律-秘-001', 'proposer'), inv('甲', '法律-秘-002', 'yes')], P);
     const text = JSON.stringify(out);
     expect(text).not.toContain('法律-秘');
     expect(text).not.toContain('lawId');
@@ -116,7 +119,7 @@ describe('曝露ランキングの集計器', () => {
 
   it('法律の本数が下限に満たない人は階層に入れず、額と本数は出す', () => {
     const invs = [1, 2, 3, 4, 5].map(i => inv('多い人', `L${i}`, 'proposer')).concat([inv('少ない人', 'L1', 'yes')]);
-    const out = buildExposureRanking([group('g1', 1000)], invs, { roleRatio: DEFAULT_ROLE_RATIO, minLaws: 5 });
+    const out = buildExposureRanking([group('g1', 1000, 0, 5)], invs, { roleRatio: DEFAULT_ROLE_RATIO, minLaws: 5 });
     expect(person(out, '多い人').tier).toBe(1);
     const few = person(out, '少ない人');
     expect(few.tier).toBeNull();
@@ -132,7 +135,7 @@ describe('曝露ランキングの集計器', () => {
   });
 
   it('入力の順序を変えても結果は同じ', () => {
-    const groups = [group('g1', 1000, 100), group('g2', 700, 50)];
+    const groups = [group('g1', 1000, 100), group('g2', 700, 50, 2)];
     const invs = [inv('甲', 'L1', 'proposer'), inv('乙', 'L1', 'yes'), inv('丙', 'L2', 'no', 1, 'g2'), inv('甲', 'L3', 'cabinet', 1, 'g2'), inv('乙', 'L3', 'cabinet', 1, 'g2')];
     const a = buildExposureRanking(groups, invs, P);
     const b = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
@@ -150,7 +153,26 @@ describe('曝露ランキングの集計器', () => {
     expect(() => buildExposureRanking(g, [{ ...inv('甲', 'L1', 'yes'), actorKind: 'grp' as never }], P)).toThrow('種類');
     expect(() => buildExposureRanking(g, [inv('甲', 'L1', 'yes', 1e308), inv('乙', 'L1', 'yes', 1e308)], P)).toThrow('有限');
     expect(() => buildExposureRanking([...g, ...g], [], P)).toThrow('重複');
-    expect(() => buildExposureRanking([{ ...g[0], shortfallYen: { low: 2, median: 1, high: 3 } }], [], P)).toThrow('幅');
+    expect(() => buildExposureRanking([{ ...g[0], diff: { low: 2, median: 1, high: 3 } }], [], P)).toThrow('幅');
+  });
+
+  it('lawCount：記録の無い法律の枠は全役割ぶんが未配分に積まれ、検算が合う', () => {
+    const out = buildExposureRanking([group('g1', 1000, 100, 4)], [inv('甲', 'L1', 'proposer'), inv('乙', 'L2', 'yes')], P);
+    // 4本のうち記録があるのは2本。記録の無い2本ぶんは全役割（0.4＋0.2−0.2＋0.2＝0.6）の半分。
+    const none = out.unallocated.find(u => u.role === null)!;
+    expect(none.laws).toBe(2);
+    expect(none.exposureYen.median).toBeCloseTo(1000 * 0.6 * 2 / 4);
+    expect(person(out, '甲').exposureYen.median).toBeCloseTo(1000 * 0.4 / 4);
+    close(out.totals.expected, { low: 500, median: 600, high: 700 }); // 反対は端が入れ替わる
+    conserved(out);
+  });
+
+  it('lawCount が正の整数でない、または記録のある法律の本数より小さいと止める', () => {
+    const invs = [inv('甲', 'L1', 'proposer'), inv('甲', 'L2', 'proposer')];
+    expect(() => buildExposureRanking([group('g1', 1000, 0, 1)], invs, P)).toThrow('より小さい');
+    expect(() => buildExposureRanking([group('g1', 1000, 0, 0)], [], P)).toThrow('正の整数');
+    expect(() => buildExposureRanking([group('g1', 1000, 0, 1.5)], [], P)).toThrow('正の整数');
+    expect(() => buildExposureRanking([group('g1', 1000, 0, 2)], invs, P)).not.toThrow();
   });
 
   it('既定の比率は書き換えられない', () => {

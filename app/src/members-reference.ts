@@ -19,6 +19,7 @@ import type { GenerationMetadata } from './generation-metadata';
 import { allocateLaw, PARTY_ID, UNIDENTIFIED_ID, type LawGame } from './causal-allocation';
 import { parseCsv } from './impact-batch';
 import { warekiDate } from './members-build';
+import { cabinetBySession, normName } from './cabinet-members';
 import { affiliationOf } from './caucus-label';
 import { canonical, PersonLedger } from './person-id';
 
@@ -66,7 +67,7 @@ export type ReferenceInputs = {
 const SANKO = '参考';
 /** 委員会・調査会・審査会の提出（人の提出ではない）。 */
 const COMMITTEE = /(委員長|委員会|調査会長|審査会長)$/;
-export const normName = (s: string): string => s.replace(/[\s　]/g, '').replace(/君$/, '');
+export { normName };
 const KANJI_NUM: Record<string, number> = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
 /** 「十二」「二十三」などの漢数字（99まで）。 */
 export function kanjiNumber(s: string): number {
@@ -110,44 +111,17 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     const prev = idName.get(r['議員ID']);
     if (!prev || Number(r['回次']) >= prev.session) idName.set(r['議員ID'], { name: normName(r['議員名']), party: r['会派'], session: Number(r['回次']) });
   }
-  // 閣僚＝国務大臣（総理大臣・各大臣・官房長官・担当大臣）。区分が「閣僚」の行には内閣官房副長官・総理府総務副長官・内閣法制局長官も入るが、閣僚ではないので除く。
-  const NOT_MINISTER = /副長官|法制局長官/;
-  const ministers = parseCsv(input.cabinet).filter(r => r['区分'] === '閣僚' && r['就任日_西暦'] && !NOT_MINISTER.test(r['役職']));
-  const servingOn = (date: string, rows: Record<string, string>[]) => rows.filter(r => r['就任日_西暦'] <= date && (!r['退任日_西暦'] || date < r['退任日_西暦']));
-  const pms = ministers.filter(r => r['役職'] === '内閣総理大臣');
-  const pmOn = (date: string) => servingOn(date, pms).map(r => normName(r['氏名']))[0] ?? '';
-  // 閣法の提出者は提出した時の内閣総理大臣。提出日の列が無いので、提出した回次の会期中の衆議院の付託日（継続審査でない閣法のもの）の
-  // 最初と最後で同じ総理大臣ならその人にする。会期中に総理大臣が替わった回次は、提出時の総理大臣を決められないので配らない。
-  const span = new Map<string, { first: string; last: string }>();
-  for (const r of enacted.values()) {
-    const d = r['種別'] === '閣法' && r['回次'] === r['提出回次'] ? warekiDate(r['付託日_衆']) : '';
-    if (!d) continue;
-    const x = span.get(r['提出回次']);
-    span.set(r['提出回次'], { first: !x || d < x.first ? d : x.first, last: !x || d > x.last ? d : x.last });
-  }
-  const submitterPm = (session: string) => {
-    const x = span.get(session);
-    if (!x) return '';
-    const a = pmOn(x.first);
-    return a && a === pmOn(x.last) ? a : '';
-  };
-  // 閣法は内閣の提出。総理大臣1人に全部付けず（首相だけが突出する原因）、提出した回次の会期の最初から最後まで在任した閣僚（総理大臣を含む）に均等に配る
-  // （設計確定 v2.1：閣法は首相1人に付けない）。総理大臣が会期中に替わる回次は、どの内閣の提出か決められないので配らない。途中で替わった閣僚は含めない。
+  // 閣法の提出者（提出した回次の会期の最初から最後まで在任した閣僚）の割り出しは cabinet-members.ts。
   // 人物台帳に結べない人は分母に入れない（入れると、配られない分が黙って消える）。回次ごとに1回だけ計算する。
+  const cabinetNames = cabinetBySession([...enacted.values()], parseCsv(input.cabinet));
   let unresolved = 0;
-  const cabinetCache = new Map<string, string[]>();
-  const cabinetDropped = new Map<string, number>();
-  const cabinetOf = (session: string): string[] => {
+  const cabinetCache = new Map<string, { names: string[]; dropped: number }>();
+  const cabinetOf = (session: string) => {
     const hit = cabinetCache.get(session);
     if (hit) return hit;
-    const x = span.get(session);
-    let out: string[] = [];
-    if (x && submitterPm(session)) {
-      const last = new Set(servingOn(x.last, ministers).map(r => normName(r['氏名'])));
-      const all = [...new Set(servingOn(x.first, ministers).map(r => normName(r['氏名'])).filter(n => last.has(n)))];
-      out = all.filter(n => ledger.resolve(n, ''));
-      cabinetDropped.set(session, all.length - out.length);
-    }
+    const all = cabinetNames(session);
+    const names = all.filter(n => ledger.resolve(n, ''));
+    const out = { names, dropped: all.length - names.length };
     cabinetCache.set(session, out);
     return out;
   };
@@ -172,8 +146,8 @@ export function buildReferenceMembers(input: ReferenceInputs): PublicMembersRefe
     const vote = day ? pickVote(b['題名'], byDay.get(day) ?? []) : null;
     let proposers: { name: string; weight: number }[] = [];
     if (l.id.startsWith('閣法')) {
-      const cabinet = cabinetOf(b['提出回次']);
-      unresolved += cabinetDropped.get(b['提出回次']) ?? 0;
+      const { names: cabinet, dropped } = cabinetOf(b['提出回次']);
+      unresolved += dropped;
       proposers = cabinet.map(name => ({ name, weight: 1 / cabinet.length }));
     } else if (COMMITTEE.test(parseProposer(b['提出者']).lead)) {
       // 委員会提出（「建設委員長」など）は人の提出ではないので、提出者一覧に委員長の名前があっても人には配らない。
