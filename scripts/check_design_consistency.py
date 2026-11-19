@@ -374,8 +374,38 @@ def _amount(row: dict[str, str]) -> bool:
     return bool(row["額（円）"] or row["国の収支（億円）"])
 
 
-def _ledger_condition(d: Path) -> dict:
-    """1. 全法律が「額あり」か「額なし＋到達点（理由）」で台帳に載っている。議員の側は台帳が無いので測れない。"""
+EXPOSURE = Path("data/derived/exposure-v1/exposure-ranking.json")
+
+
+def _members_on_ledger(root: Path, d: Path) -> tuple[bool, str]:
+    """議員の側：人物台帳（persons.csv）の全員が、曝露ランキングの公開用出力に「点あり」か「点なし＋理由」で1回ずつ載っている。
+    (全員そろったか, 説明) を返す。出力が無ければ測れない（generate_artifacts.py が作る）。"""
+    persons, exposure = d / "person-ids" / "persons.csv", root / EXPOSURE
+    if not persons.is_file():
+        return False, "議員：人物台帳が無く、測れない"
+    rows = read_csv(persons)
+    blank = sum(1 for r in rows if not (r.get("人物ID") or "").strip())
+    ledger = {r["人物ID"] for r in rows if (r.get("人物ID") or "").strip()}
+    blank_note = f"。人物IDの空の行 {blank:,}（台帳の誤り）" if blank else ""
+    if not exposure.is_file():
+        return False, f"議員：曝露ランキングの出力（{EXPOSURE}）が無く、測れない（台帳 {len(ledger):,} 人{blank_note}）"
+    data = json.loads(exposure.read_text(encoding="utf-8"))
+    seen = Counter(p["actorId"] for p in data["people"] if p["actorId"] in ledger)
+    ranked = sum(1 for p in data["people"] if p["actorId"] in ledger and p["tier"] is not None)
+    reasoned = sum(1 for p in data["people"] if p["actorId"] in ledger and p["tier"] is None and str(p.get("unrankedReason") or "").strip())
+    twice = sum(1 for n in seen.values() if n > 1)
+    missing = len(ledger - set(seen))
+    cov = data.get("coverage") or {}
+    cov_ok = cov.get("ledger") == len(ledger) and cov.get("ranked", -1) + cov.get("unrankedWithAmount", -1) + cov.get("noInvolvement", -1) == len(ledger)
+    listed = ranked + reasoned
+    ok = not blank and not twice and not missing and listed == len(ledger) and cov_ok
+    text = (f"議員：人物台帳 {len(ledger):,} 人中、曝露ランキングに載る {listed:,} 人（点あり {ranked:,}、点なし＋理由 {reasoned:,}、"
+            f"載っていない {missing:,}、2回以上 {twice:,}）{blank_note}" + ("" if cov_ok else "。出力の coverage が台帳と合わない"))
+    return ok, text
+
+
+def _ledger_condition(d: Path, root: Path = ROOT) -> dict:
+    """1. 全法律が「額あり」か「額なし＋到達点（理由）」で台帳に載っている。議員は人物台帳の全員が曝露ランキングに1回ずつ載っている。"""
     ledger_path, outcomes_path = d / "evaluation-ledger-v1" / "ledger.csv", d / "all-laws-v1" / "outcomes.csv"
     if not (ledger_path.is_file() and outcomes_path.is_file()):
         raise NotMeasured("台帳か全法律の一覧が無い")
@@ -388,13 +418,12 @@ def _ledger_condition(d: Path) -> dict:
     with_reason = sum(1 for r in ledger if not _amount(r) and r["到達点"])
     neither = len(ledger) - with_amount - with_reason
     missing = len(target - listed)
-    persons = d / "person-ids" / "persons.csv"
-    people = f"（人物台帳は {sum(1 for r in read_csv(persons) if r['人物ID']):,} 人。人物IDが空の行は数えない）" if persons.is_file() else ""
     laws_ok = not missing and not neither and len(listed) == len(ledger)
+    members_ok, members = _members_on_ledger(root, d)
     return {
-        "state": "一部達成" if laws_ok else "未達",
-        "now": f"法律：対象 {len(target):,} 本中、台帳に {len(target & listed):,} 本（額あり {with_amount:,}、額なし＋到達点 {with_reason:,}、どちらでもない {neither:,}、台帳に無い {missing:,}）。議員：1人ごとの「額あり／額なし＋理由」の台帳が無く、測れない{people}",
-        "how": "data/derived/evaluation-ledger-v1/ledger.csv を all-laws-v1/outcomes.csv と照合",
+        "state": "達成" if laws_ok and members_ok else "一部達成" if laws_ok or members_ok else "未達",
+        "now": f"法律：対象 {len(target):,} 本中、台帳に {len(target & listed):,} 本（額あり {with_amount:,}、額なし＋到達点 {with_reason:,}、どちらでもない {neither:,}、台帳に無い {missing:,}）。{members}",
+        "how": f"data/derived/evaluation-ledger-v1/ledger.csv を all-laws-v1/outcomes.csv と、data/derived/person-ids/persons.csv を {EXPOSURE} と照合",
     }
 
 
@@ -453,7 +482,7 @@ def completion_status(root: Path, logic_counts=None) -> list[dict]:
     """
     d = root / "data" / "derived"
     conditions = [
-        ("評価台帳の全件（法律と議員）", "python3 scripts/build_evaluation_ledger.py build", lambda: _ledger_condition(d)),
+        ("評価台帳の全件（法律と議員）", "python3 scripts/build_evaluation_ledger.py build", lambda: _ledger_condition(d, root)),
         ("ロジック検査の違反0", "python3 scripts/check_evaluation_logic.py", lambda: _logic_condition(root, logic_counts)),
         ("抜き取り検証（不合格0が目標）", "python3 scripts/build_evaluation_ledger.py sample", lambda: _sampling_condition(d)),
         ("公開前検査（出典・議員ページ・個人名義）", "python3 scripts/release_check.py", lambda: _release_condition(root)),
