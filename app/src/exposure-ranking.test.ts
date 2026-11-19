@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  assignTiers, buildExposureRanking, DEFAULT_ROLE_RATIO, EXPOSURE_DISCLAIMER, summarizeUnallocated, toPublicExposureRanking,
+  assignTiers, buildExposureRanking, DEFAULT_ROLE_RATIO, dominatedByOne, HIDDEN_DOMINANCE_REST_MIN, EXPOSURE_DISCLAIMER, summarizeUnallocated, toPublicExposureRanking,
   type ExposureGroup, type ExposureRanking, type Involvement, type Range, type Unallocated,
 } from './exposure-ranking';
 
@@ -359,15 +359,14 @@ describe('公開用への変換（法律1本ぶんの額を出さない）', () 
     expect(ok.cells[0].laws).toBe(5);
   });
 
-  it('額を出さない人・会派の合計を件数つきで出す。出せるのは2つ以上のとき', () => {
-    const invs = [...five('多い人'), inv('少甲', 'L1', 'proposer'), inv('少乙', 'L2', 'proposer'), inv('少丙', 'L1', 'cabinet', 1, 'g1', 'person'), lower('会派少', 'L1', 'yes')];
+  it('額を出さない人・会派の合計を件数つきで出す。出せるのは、額が0でない行が人と会派のどちらでも1つだけではないとき', () => {
+    const invs = [...five('多い人'), inv('少甲', 'L1', 'proposer'), inv('少乙', 'L2', 'proposer'), inv('少丙', 'L1', 'cabinet', 1, 'g1', 'person'), lower('会派少甲', 'L1', 'yes'), lower('会派少乙', 'L2', 'no')];
     const { out, pub: p } = pub(invs);
     expect(p.hidden.people.count).toBe(3);
-    expect(p.hidden.parties.count).toBe(1);
-    // 会派が1つだけ・人が3つ：合わせて4つなので合計は出る。
-    const hiddenPeople = out.people.filter(x => x.tier === null).reduce((s, x) => s + x.exposureYen.median, 0);
-    expect(p.hidden.people.exposureYen!.median).toBeCloseTo(hiddenPeople);
-    expect(p.hidden.parties.exposureYen!.median).toBeCloseTo(out.parties[0].exposureYen.median);
+    expect(p.hidden.parties.count).toBe(2);
+    const hiddenSum = (rows: typeof out.people) => rows.filter(x => x.tier === null).reduce((s, x) => s + x.exposureYen.median, 0);
+    expect(p.hidden.people.exposureYen!.median).toBeCloseTo(hiddenSum(out.people));
+    expect(p.hidden.parties.exposureYen!.median).toBeCloseTo(hiddenSum(out.parties));
     expect(p.totals.people).toEqual(out.totals.people);
     expect(p.totals.parties).toEqual(out.totals.parties);
     // 検算は公開用でも合う：人＋会派＋未配分＝期待値。
@@ -435,5 +434,157 @@ describe('公開用への変換（法律1本ぶんの額を出さない）', () 
     expect(p.people.map(x => [x.actorId, x.tier])).toEqual(out.people.map(x => [x.actorId, x.tier]));
     expect(JSON.stringify(p)).not.toMatch(/L[0-9]/);
     for (const x of p.people) if (x.tier === null) { expect(x.exposureYen).toBeNull(); for (const c of x.cells) expect(c.exposureYen).toBeNull(); }
+  });
+});
+
+describe('公開用の伏せ方：どの1人・1会派の額も、公開する数の足し引きで作れない（性質テスト）', () => {
+  /** 決まった種から作る疑似乱数（テストを毎回同じにする）。 */
+  const rng = (seed: number) => () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+  const ZERO_ROW = (id: string) => ({ actorKind: 'person' as const, actorId: id, exposureYen: { low: 0, median: 0, high: 0 }, laws: 0, groups: 0, topThreeShare: 0, cells: [], tier: null, unrankedReason: '群に属する法律への関与の記録が無い' });
+
+  /**
+   * 公開する数を「どの行・どの枠を足したものか」の式（0/1 の係数の並び）に直す。
+   * 変数は、人・会派の1行ずつと、公開用の未配分の1行ずつ（未配分の内訳はこの行の単位でしか足されない）。
+   * 期待値（全部の和）は、群の差と本数を公開しているので、totals を伏せても誰でも作れる。関与なし（laws 0）の行は0円と分かる。
+   */
+  function publishedForms(ranking: ExposureRanking, p: ReturnType<typeof toPublicExposureRanking>) {
+    const actors = [...ranking.people.map(r => ['人', r] as const), ...ranking.parties.map(r => ['会派', r] as const)];
+    const n = actors.length + p.unallocated.length;
+    const form = (pick: (i: number) => boolean) => Array.from({ length: n }, (_, i) => (pick(i) ? 1 : 0));
+    const isPerson = (i: number) => i < ranking.people.length;
+    const isParty = (i: number) => i >= ranking.people.length && i < actors.length;
+    const hidden = (i: number) => i < actors.length && actors[i][1].tier === null;
+    const forms: number[][] = [form(() => true)];
+    actors.forEach(([, r], k) => { if (r.tier !== null || r.laws === 0) forms.push(form(i => i === k)); });
+    if (p.hidden.people.exposureYen !== null) forms.push(form(i => isPerson(i) && hidden(i)));
+    if (p.hidden.parties.exposureYen !== null) forms.push(form(i => isParty(i) && hidden(i)));
+    if (p.totals.people !== null) forms.push(form(isPerson));
+    if (p.totals.parties !== null) forms.push(form(isParty));
+    if (p.totals.unallocated !== null) forms.push(form(i => i >= actors.length));
+    p.unallocated.forEach((u, k) => { if (u.exposureYen !== null) forms.push(form(i => i === actors.length + k)); });
+    return { actors, n, forms };
+  }
+  /** 行列の階数（ガウスの消去法。係数は 0・±1 から始まる小さな整数なので誤差は出ない）。 */
+  function rank(rows: readonly number[][]): number {
+    const m = rows.map(r => [...r]);
+    let r = 0;
+    for (let c = 0; r < m.length && c < (m[0]?.length ?? 0); c++) {
+      const piv = m.findIndex((row, i) => i >= r && Math.abs(row[c]) > 1e-9);
+      if (piv < 0) continue;
+      [m[r], m[piv]] = [m[piv], m[r]];
+      for (let i = 0; i < m.length; i++) if (i !== r && Math.abs(m[i][c]) > 1e-9) { const f = m[i][c] / m[r][c]; m[i] = m[i].map((v, j) => v - f * m[r][j]); }
+      r++;
+    }
+    return r;
+  }
+  /** その1行の額が、公開する数の足し引き（どんな係数でも）で作れるか：その行だけの式が、公開する式の張る空間に入るか。 */
+  const derivable = (forms: readonly number[][], n: number, k: number) => {
+    const unit = Array.from({ length: n }, (_, i) => (i === k ? 1 : 0));
+    return rank([...forms, unit]) === rank(forms);
+  };
+
+  it('乱数で作った300通りで、額を出さない人・会派の額はどれも作れない（0円の関与なしの行が混ざっても）', () => {
+    let checked = 0;
+    let withheldCases = 0;
+    let shownCases = 0;
+    for (let seed = 1; seed <= 300; seed++) {
+      const r = rng(seed);
+      const groups = [group('g1', 1000 + r() * 997, 50 + r() * 50, 6 + Math.floor(r() * 4)), group('g2', -300 - r() * 211, 20 + r() * 30, 5 + Math.floor(r() * 4))];
+      const invs: Involvement[] = [];
+      const nPeople = 2 + Math.floor(r() * 5);
+      for (let a = 0; a < nPeople; a++) {
+        const n = 1 + Math.floor(r() * 6);
+        for (let k = 0; k < n; k++) {
+          const g = r() < 0.6 ? 'g1' : 'g2';
+          const role = (['proposer', 'yes', 'no', 'cabinet'] as const)[Math.floor(r() * 4)];
+          invs.push(inv(`人${a}`, `${g}-L${1 + Math.floor(r() * 5)}`, role, 0.5 + r(), g));
+        }
+      }
+      const nParties = Math.floor(r() * 3);
+      for (let q = 0; q < nParties; q++) {
+        const n = 1 + Math.floor(r() * 5);
+        for (let k = 0; k < n; k++) { const g = r() < 0.5 ? 'g1' : 'g2'; invs.push(lower(`会派${q}`, `${g}-L${1 + Math.floor(r() * 5)}`, r() < 0.7 ? 'yes' : 'no', g)); }
+      }
+      const out = buildExposureRanking(groups, invs, { roleRatio: DEFAULT_ROLE_RATIO, minLaws: 3, topThreeShareCap: 0.9 });
+      // 人物台帳の全員を載せたときのように、0円・関与なしの行を足すことがある。
+      const zeros = r() < 0.5 ? Array.from({ length: 1 + Math.floor(r() * 3) }, (_, i) => ZERO_ROW(`関与なし${i}`)) : [];
+      const ranking = { ...out, people: [...out.people, ...zeros] };
+      const p = toPublicExposureRanking(ranking, 3);
+      if (p.totals.expected === null) withheldCases++; else shownCases++;
+      // 伏せる場面には、伏せた1つを隠す未配分の枠が必ずある（公開前の検査でも落とす）。
+      if (p.totals.expected === null) expect(p.unallocated.length, `seed ${seed}`).toBeGreaterThan(0);
+      const { actors, n, forms } = publishedForms(ranking, p);
+      actors.forEach(([, row], k) => {
+        if (row.tier !== null || row.laws === 0) return;
+        checked++;
+        expect(derivable(forms, n, k), `seed ${seed} ${row.actorId}`).toBe(false);
+      });
+    }
+    // 伏せる場面と伏せない場面の両方を通ったこと。
+    expect(checked).toBeGreaterThan(100);
+    expect(withheldCases).toBeGreaterThan(10);
+    expect(shownCases).toBeGreaterThan(10);
+  });
+
+  it('伏せ方を外すと、この検査は漏れを見つける（検査が空振りしていない）', () => {
+    const out = buildExposureRanking([group('g1', 1000, 100, 9)], [...[1, 2, 3, 4, 5].map(i => inv('多い人', `L${i}`, 'proposer')), inv('一本の人', 'L1', 'cabinet')], { roleRatio: DEFAULT_ROLE_RATIO, minLaws: 3, topThreeShareCap: 1 });
+    const ranking = { ...out, people: [...out.people, ZERO_ROW('関与なし0')] };
+    const p = toPublicExposureRanking(ranking, 3);
+    const k = ranking.people.findIndex(r => r.actorId === '一本の人');
+    // 伏せた形では作れない。
+    const safe = publishedForms(ranking, p);
+    expect(derivable(safe.forms, safe.n, k)).toBe(false);
+    // 人の合計だけ出したら（以前の伏せ方：件数が2つ以上なら出す）、0円の行を引いてその1人の額が作れる。
+    const leaky = { ...p, hidden: { ...p.hidden, people: { count: 2, exposureYen: out.totals.people } } };
+    const bad = publishedForms(ranking, leaky);
+    expect(derivable(bad.forms, bad.n, k)).toBe(true);
+    // 未配分の内訳の額だけ出しても、期待値 − 未配分 − 出ている額 で作れる。
+    const leaky2 = { ...p, unallocated: p.unallocated.map(u => ({ ...u, exposureYen: { low: 0, median: 0, high: 0 } })) };
+    const bad2 = publishedForms(ranking, leaky2);
+    expect(derivable(bad2.forms, bad2.n, k)).toBe(true);
+  });
+
+  it('額が0でない「額を出さない人」が1人だけなら、0円の関与なしの行が何件あっても、その合計と totals と未配分の額を伏せる', () => {
+    const out = buildExposureRanking([group('g1', 1000, 100, 9)], [...[1, 2, 3, 4, 5].map(i => inv('多い人', `L${i}`, 'proposer')), inv('一本の人', 'L1', 'cabinet')], { roleRatio: DEFAULT_ROLE_RATIO, minLaws: 3, topThreeShareCap: 1 });
+    const ranking = { ...out, people: [...out.people, ZERO_ROW('関与なし0'), ZERO_ROW('関与なし1')] };
+    const p = toPublicExposureRanking(ranking, 3);
+    expect(p.hidden.people.count).toBe(3);
+    expect(p.hidden.people.exposureYen).toBeNull();
+    expect(Object.values(p.totals).every(v => v === null)).toBe(true);
+    expect(p.unallocated.every(u => u.exposureYen === null)).toBe(true);
+  });
+
+  it('2番目以下の行がごく小さい（誤差だけ残った行・1円の行）ときも、合計がほぼ1人の額になるので伏せる', () => {
+    const out = buildExposureRanking([group('g1', 1000, 100, 9)], [...[1, 2, 3, 4, 5].map(i => inv('多い人', `L${i}`, 'proposer')), inv('一本の人', 'L1', 'cabinet')], { roleRatio: DEFAULT_ROLE_RATIO, minLaws: 3, topThreeShareCap: 1 });
+    const tiny = (id: string, yen: number) => ({ ...ZERO_ROW(id), laws: 2, exposureYen: { low: yen, median: yen, high: yen }, unrankedReason: '関与した法律が下限に満たない' });
+    for (const yen of [3e-9, 1, -1]) {
+      const p = toPublicExposureRanking({ ...out, people: [...out.people, tiny('ほぼ0円', yen)] }, 3);
+      expect(p.hidden.people.exposureYen, `${yen}`).toBeNull();
+      expect(p.totals.expected).toBeNull();
+    }
+    // 2番目以下の和が一番大きい行の1割以上あれば、合計は出す。
+    const big = person(out, '一本の人').exposureYen.high;
+    const p = toPublicExposureRanking({ ...out, people: [...out.people, tiny('二人目', big * HIDDEN_DOMINANCE_REST_MIN * 1.01)] }, 3);
+    expect(p.hidden.people.exposureYen).not.toBeNull();
+  });
+
+  it('dominatedByOne：行が無い・全部0円なら伏せない。1行だけ、または残りの和が1割未満なら伏せる', () => {
+    const row = (m: number) => ({ exposureYen: { low: m, median: m, high: m } });
+    expect(dominatedByOne([])).toBe(false);
+    expect(dominatedByOne([row(0), row(0)])).toBe(false);
+    expect(dominatedByOne([row(-5)])).toBe(true);
+    expect(dominatedByOne([row(100), row(0), row(9.99)])).toBe(true);
+    expect(dominatedByOne([row(100), row(-5), row(5)])).toBe(false);
+    expect(dominatedByOne([row(100), row(10)])).toBe(false);
+  });
+
+  it('額を出さない会派が1つだけなら、人の側が2人以上でも、人と会派の合計と totals を伏せる', () => {
+    const invs = [...[1, 2, 3, 4, 5].map(i => inv('多い人', `L${i}`, 'proposer')), inv('少甲', 'L1', 'cabinet'), inv('少乙', 'L2', 'cabinet'), lower('会派少', 'L1', 'yes')];
+    const p = toPublicExposureRanking(buildExposureRanking([group('g1', 1000, 100, 9)], invs, { roleRatio: DEFAULT_ROLE_RATIO, minLaws: 3, topThreeShareCap: 1 }), 3);
+    expect(p.hidden.parties.exposureYen).toBeNull();
+    expect(p.hidden.people.exposureYen).toBeNull();
+    expect(p.hidden.people.count).toBe(2);
+    expect(p.totals.parties).toBeNull();
+    expect(p.totals.expected).toBeNull();
   });
 });

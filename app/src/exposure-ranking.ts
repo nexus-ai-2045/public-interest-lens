@@ -28,9 +28,11 @@
  * 12. 配り先の無い関与（actorKind: 'none'。同姓同名で人物台帳に結べない票）は、重みだけ枠に入れ、その分を未配分に積む（ほかの人へ寄せない）。
  * 13. 公開用（toPublicExposureRanking）：階層に入らない行は額（exposureYen と cells の額）を出さず、本数・群の数・理由だけを残す。
  *     階層に入った行も、内訳に本数が下限（minLaws）に満たない群×役割が1つでもあれば内訳の額を全部伏せる（1つだけ伏せても合計との引き算で読めるため）。
- *     額を出さない人・会派の分の合計は出す（複数の合算で、個人の額ではない。丸めはしない）。ただし額を出さない人・会派が合わせて1つだけのときは、
- *     その合計も totals の全部（expected・unallocated を含む）も未配分の内訳の額も伏せる（null。expected − unallocated − 出ている額 でその1つの額が読めるため）。
- *     未配分は群×役割の合計に束ね、「N本ぶんの枠」の本数は出さない。本数が下限に満たない群×役割は役割ごとの1行にまとめる（summarizeUnallocated）。
+ *     額を出さない人・会派の分の合計は出す（複数の合算で、個人の額ではない。丸めはしない）。ただし人か会派のどちらかで1つの行が合計のほとんど（2番目以下の和が1割未満。HIDDEN_DOMINANCE_REST_MIN）のときは、
+ *     人と会派の両方の合計も totals の全部（expected・unallocated を含む）も未配分の内訳の額も伏せる（null。expected − unallocated − 出ている額 でその1つの額が読めるため）。
+ *     期待値は公開する群の差からいつでも作れるので、伏せた1つを隠すのは未配分（額を伏せた枠）だけ。未配分が無いのに伏せる場面は公開前の検査で落とす（build_exposure_ranking.mjs）。
+ *     未配分は群×役割の合計に束ね、「N本ぶんの枠」の本数は出さない。本数が下限に満たない群×役割は1行にまとめ、まとめるのが1件だけなら額も伏せる（summarizeUnallocated）。
+ *     どの1人・1会派の額も、公開する数のどんな足し引きでも作れない（その1行の式が公開する数の式の張る空間に入らない）ことを性質テストで固定する（exposure-ranking.test.ts）。
  */
 
 import type { GroupDiff, Range } from './scoring-types';
@@ -290,7 +292,7 @@ export type PublicExposureRow = Omit<ExposureRow, 'exposureYen' | 'cells'> & {
   exposureYen: Range | null;
   cells: PublicExposureCell[];
 };
-/** 額を出さない人（または会派）の合計。count は件数。額を出さない行が全体で1つだけのときは exposureYen を伏せて null にする。 */
+/** 額を出さない人（または会派）の合計。count は件数（0円の行を含む）。人か会派のどちらかで1つの行が合計のほとんどのとき（dominatedByOne）は、両方の exposureYen を伏せて null にする。 */
 export type HiddenTotal = { count: number; exposureYen: Range | null };
 /**
  * 未配分の見せる単位：群（産業×年）×役割の合計（院と理由は束ねる）。本数（「N本ぶんの枠」）は出さない。
@@ -333,9 +335,9 @@ export type PublicExposureRanking = Omit<ExposureRanking, 'people' | 'parties' |
   parties: PublicExposureRow[];
   /** 額を出さない人・会派（階層に入らない行）の合計。 */
   hidden: { people: HiddenTotal; parties: HiddenTotal };
-  /** 未配分の内訳（群×役割の合計。summarizeUnallocated）。額を出さない行が合わせて1つだけのときは額を null にする。 */
+  /** 未配分の内訳（群×役割の合計。summarizeUnallocated）。hidden を伏せたときは額を null にする。 */
   unallocated: PublicUnallocated[];
-  /** 全員ぶんの合計。額を出さない行が合わせて1つだけのときは、どの合計からでも引き算で読めるので全部 null。 */
+  /** 全員ぶんの合計。hidden を伏せたときは、どの合計からでも引き算で読めるので全部 null。 */
   totals: { people: Range | null; parties: Range | null; unallocated: Range | null; expected: Range | null };
 };
 
@@ -344,6 +346,21 @@ export type PanelExposureRanking = Omit<ExposureRanking, 'unallocated'> & { unal
 export const toPanelExposureRanking = (ranking: ExposureRanking): PanelExposureRanking =>
   ({ ...ranking, unallocated: summarizeUnallocated(ranking.unallocated, ranking.params.minLaws) });
 
+/**
+ * 額を出さない行の合計を出すのに要る、2番目以下の行の厚み（取り決め）。行の大きさ＝low・median・high の絶対値の最大。
+ * 一番大きい行を除いた残りの大きさの和が、一番大きい行の大きさのこの割合に満たないときは、合計が一番大きい行の額とほぼ同じになるので伏せる。
+ * 0円の行（関与なし）や、賛否が打ち消し合って誤差だけ残った行・1円の行は、合計を薄めないので数えないのと同じになる。
+ */
+export const HIDDEN_DOMINANCE_REST_MIN = 0.1;
+const magnitude = (r: { exposureYen: Range }): number => Math.max(Math.abs(r.exposureYen.low), Math.abs(r.exposureYen.median), Math.abs(r.exposureYen.high));
+/** その行の集まりの合計が、1つの行の額とほぼ同じになるか（HIDDEN_DOMINANCE_REST_MIN）。行が無い・全部0円なら false。 */
+export function dominatedByOne(rows: readonly { exposureYen: Range }[]): boolean {
+  const sizes = rows.map(magnitude);
+  const top = Math.max(0, ...sizes);
+  if (top === 0) return false;
+  return sizes.reduce((s, x) => s + x, 0) - top < HIDDEN_DOMINANCE_REST_MIN * top;
+}
+
 /** 内訳の額を出してよいか：本数が下限に満たない内訳が1つも無いこと。 */
 const cellsShowable = (cells: readonly ExposureCell[], minLaws: number): boolean => cells.every(c => c.laws >= minLaws);
 
@@ -351,8 +368,10 @@ const cellsShowable = (cells: readonly ExposureCell[], minLaws: number): boolean
  * 集計結果を公開用に変える（純関数。入力は変えない）。
  * - 階層に入らない行（tier null）：exposureYen と cells の額を出さない（laws・groups・unrankedReason・cells の本数と役割は残す）。
  * - 階層に入った行：内訳に本数が minLaws 未満のものが1つでもあれば、内訳の額を全部出さない。
- * - 額を出さない人・会派の合計を hidden に件数つきで足す。額を出さない行が人・会派を合わせて1つだけのときは、
- *   hidden の額、totals の全部（expected・unallocated を含む）、未配分の内訳の額を null にする（expected − unallocated − 出ている額 で読めるため）。
+ * - 額を出さない人・会派の合計を hidden に件数つきで足す。人か会派のどちらかで、額を出さない行の合計がほぼ1つの行の額になるとき（dominatedByOne）は、
+ *   人と会派の両方の hidden の額、totals の全部（expected・unallocated を含む）、未配分の内訳の額を null にする
+ *   （hidden がそのまま1つの額になる。totals.people − 出ている人の額、expected − unallocated − 出ている額 − もう一方の hidden でも読めるため）。
+ *   件数は0円の行（関与なし）も含めて出すが、伏せるかどうかは件数ではなく行の大きさで決める（0円の行は合計を薄めないため）。
  * - 未配分は群×役割の合計に束ね、本数を出さない。本数が minLaws に満たない群×役割は役割ごとの1行にまとめる（summarizeUnallocated）。
  */
 export function toPublicExposureRanking(ranking: ExposureRanking, minLaws: number): PublicExposureRanking {
@@ -369,7 +388,9 @@ export function toPublicExposureRanking(ranking: ExposureRanking, minLaws: numbe
   const sumOf = (rows: readonly ExposureRow[]): Range => rows.reduce((s, r) => add(s, r.exposureYen), zero());
   const hp = hiddenRows(ranking.people);
   const pp = hiddenRows(ranking.parties);
-  const withheld = hp.length + pp.length === 1;
+  // 件数ではなく大きさで決める（関与なしの0円の行は何件あっても合計を薄めない）。どちらかの種類で1つの行が合計のほとんどなら、
+  // 両方の合計・totals・未配分の額を伏せる（片方だけ出すと、群の差から作れる期待値との引き算の手がかりが増える）。
+  const withheld = dominatedByOne(hp) || dominatedByOne(pp);
   return {
     ...ranking,
     people: ranking.people.map(toRow),
