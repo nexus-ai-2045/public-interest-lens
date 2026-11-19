@@ -6845,6 +6845,17 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-146-64,額の下端,3634737773053,3634737773053,一致,OECD 表6 K LR、比較国5か国
 閣法-146-64,額の中央値,16380351082145,16380351082145,一致,OECD 表6 K LR、比較国5か国
 閣法-146-64,額の上端,42374068536570,42374068536570,一致,OECD 表6 K LR、比較国5か国
+閣法-146-65,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/ACE6.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/ACE6.htm,一致,
+閣法-146-65,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h146141.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h146141.htm,一致,
+閣法-146-65,題名,一般職の職員の給与に関する法律等の一部を改正する法律案,一般職の職員の給与に関する法律等の一部を改正する法律案,一致,
+閣法-146-65,施行日,1999-11-25,1999-11-25,一致,
+閣法-146-65,施行期日の種別（衆議院の附則）,1999-11-25,1999-11-25,一致,
+閣法-146-65,公布日との順序,1999-11-25,1999-11-25,一致,
+閣法-146-65,公布日,1999-11-25,1999-11-25,一致,施行日台帳と議案台帳
+閣法-146-65,名目付加価値（開始前最後の年）,543436600百万円,543436600百万円,一致,OECD 表6 JPN _T V 1998年
+閣法-146-65,額の下端,63427278459408,63427278459408,一致,OECD 表6 _T LR、比較国5か国
+閣法-146-65,額の中央値,139420520566782,139420520566782,一致,OECD 表6 _T LR、比較国5か国
+閣法-146-65,額の上端,359633456345981,359633456345981,一致,OECD 表6 _T LR、比較国5か国
 閣法-146-70,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/ACD2.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/ACD2.htm,一致,
 閣法-146-70,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h146156.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/h146156.htm,一致,
 閣法-146-70,出典URL,https://laws.e-gov.go.jp/law/411AC0000000156,https://laws.e-gov.go.jp/law/411AC0000000156,一致,
@@ -14479,17 +14490,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-177-24,額の下端,13551230850348,13551230850348,一致,OECD 表6 _T LR、比較国11か国
 閣法-177-24,額の中央値,93807921490302,93807921490302,一致,OECD 表6 _T LR、比較国11か国
 閣法-177-24,額の上端,228037609890920,228037609890920,一致,OECD 表6 _T LR、比較国11か国
-閣法-177-25,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2CBA.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2CBA.htm,一致,
-閣法-177-25,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110525048.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110525048.htm,一致,
-閣法-177-25,題名,産業活力の再生及び産業活動の革新に関する特別措置法の一部を改正する法律案,産業活力の再生及び産業活動の革新に関する特別措置法の一部を改正する法律案,一致,
-閣法-177-25,施行日,2011-08-25,2011-08-25,一致,
-閣法-177-25,施行期日の種別（衆議院の附則）,2011-08-25,2011-08-25,一致,
-閣法-177-25,公布日との順序,2011-08-25,2011-05-25,一致,
-閣法-177-25,公布日,2011-05-25,2011-05-25,一致,施行日台帳と議案台帳
-閣法-177-25,名目付加価値（開始前最後の年）,22914000百万円,22914000百万円,一致,OECD 表6 JPN K V 2010年
-閣法-177-25,額の下端,57995694865100,57995694865100,一致,OECD 表6 K LR、比較国11か国
-閣法-177-25,額の中央値,71236616547164,71236616547164,一致,OECD 表6 K LR、比較国11か国
-閣法-177-25,額の上端,84979039725237,84979039725237,一致,OECD 表6 K LR、比較国11か国
 閣法-177-27,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2CCE.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/2CCE.htm,一致,
 閣法-177-27,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110629081.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/17720110629081.htm,一致,
 閣法-177-27,題名,総合特別区域法案,総合特別区域法案,一致,

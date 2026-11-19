@@ -139,3 +139,22 @@ class CorrectionsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LayeredTest(unittest.TestCase):
+    """訂正表を上、振り分けの当て直し（labels.csv）を下に重ねる。"""
+
+    def test_corrections_win_over_labels_and_layer_is_recorded(self):
+        head = "id,項目,直した値,直す前の値,理由,引用,出典URL,判定者,指示文,記録\n"
+        with tempfile.TemporaryDirectory() as d:
+            c, lab = Path(d) / "c.csv", Path(d) / "l.csv"
+            c.write_text(head + "閣法-1-1,分野,建設,,r,q,u,w,p,x\n", encoding="utf-8")
+            lab.write_text(head + "閣法-1-1,分野,金融,,r,q,u,w,p,x\n閣法-1-1,類型,新規,,r,q,u,w,p,x\n閣法-2-2,経済に効くか,制度,,r,q,u,w,p,x\n", encoding="utf-8")
+            got = corrections.load_layered(c, lab)
+        self.assertEqual(corrections.value(got, "閣法-1-1", "分野"), "建設")
+        self.assertEqual(corrections.value(got, "閣法-1-1", "類型"), "新規")
+        self.assertEqual(corrections.method(got, "閣法-1-1", "分野"), corrections.METHOD)
+        self.assertEqual(corrections.method(got, "閣法-2-2", "経済に効くか"), "一次資料の当て直し")
+
+    def test_real_labels_load_under_the_same_rules(self):
+        corrections.load(corrections.LABELS)  # 当て直しの行も訂正表と同じ検査（項目・値の定義）を通る

@@ -279,7 +279,8 @@ def _law(row: dict[str, str], loss_row: dict[str, str], sources: list[str], enfo
 
 # macro.csv の「分野の由来」→ 指標の欄に出す文言。由来を足したら、ここにも足す（知らない由来は分かる文で止める）。
 FIELD_ORIGINS = {"振り分け": "振り分けの分野", "AI 2系統": "AI 2系統の分野", "対応表なし": "対応表なしのため全産業", "同じ題名にそろえた": "同じ法律の改正の分野にそろえた",
-                 COVID_ORIGIN: "", "AI 3段の再判定": "AI 3段の再判定による産業", "一次資料の読み直し": "一次資料の読み直しで直した分野"}
+                 COVID_ORIGIN: "", "AI 3段の再判定": "AI 3段の再判定による産業", "一次資料の読み直し": "一次資料の読み直しで直した分野",
+                 "一次資料の当て直し": "一次資料の当て直し（議案本文と会議録）で決めた分野"}
 
 
 def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
