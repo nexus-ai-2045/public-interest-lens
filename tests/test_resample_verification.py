@@ -16,6 +16,7 @@ from scripts.resample_verification import (
     judge,
     ledger_state,
     load_record,
+    overriding,
 )
 
 L = Path(__file__).resolve().parents[1] / "data" / "derived" / "evaluation-ledger-v1"
@@ -32,6 +33,13 @@ READ = {"類型": "実質改正", "経済に効くか": "経済に効く", "主�
 
 
 class JudgeRules(unittest.TestCase):
+    def test_single_ruling_does_not_override_agreement(self):
+        # 2系統が一致した値を、1つの裁定だけで覆さない（設計決定0007）。独立の確認があれば採る
+        flip = {"経済に効くか": "制度のみ" if READ["経済に効くか"] != "制度のみ" else "経済に効く"}
+        self.assertEqual(overriding(READ, dict(READ), flip), ["経済に効くか"])
+        self.assertEqual(judge(SITE, READ, dict(READ), flip)[0], "割れ")
+        self.assertNotEqual(judge(SITE, READ, dict(READ), flip, ("経済に効くか",))[0], "割れ")
+
     def test_agree_and_match_passes(self):
         self.assertEqual(judge(SITE, READ, dict(READ))[0], "合格")
 
@@ -80,9 +88,11 @@ class SampleRecord(unittest.TestCase):
         self.assertEqual({r["id"] for r in verdicts}, {r["id"] for r in rows(V2 / "sample.csv")})
         for r in verdicts:
             site = {k: r[f"サイト_{k}"] for k in ("類型", "分類", "到達点", "分野")}
-            v, _, _ = judge(site, a[r["id"]], b[r["id"]], rulings.get(r["id"], {}).get("値"))
+            ru = rulings.get(r["id"], {})
+            v, _, _ = judge(site, a[r["id"]], b[r["id"]], ru.get("値"), ru.get("確認", ()))
             self.assertEqual(v, r["判定"], r["id"])
-            self.assertNotEqual(r["判定"], "割れ", f"{r['id']} は裁定が無い")
+            if r["判定"] == "割れ":  # 割れが残るのは、裁定が2系統の一致を覆して独立の確認を待つ法律だけ
+                self.assertTrue(overriding(a[r["id"]], b[r["id"]], ru.get("値"), ru.get("確認", ())), f"{r['id']} は裁定が無い")
 
     def test_every_failure_is_resolved(self):
         failed = {r["id"] for r in rows(V2 / "verdicts.csv") if r["判定"] == "不合格"}
@@ -108,12 +118,11 @@ class LedgerIntegration(unittest.TestCase):
             self.assertTrue(r["検証メモ"].startswith(MEMO), i)
 
     def test_individual_amount_failures_are_demoted_in_ledger_and_ranking(self):
-        # #229 の暫定表（interim-holds.csv）の3本は、訂正表（primary-source-corrections-v1）で値が直り、標本2を今のサイトの値で
-        # 判定し直すと合格になる（衆法-189-20 は制度、閣法-193-61・閣法-196-2 は分野）。公開ランキングでも参考に下げる理由から外れる
+        # #229 の暫定表（interim-holds.csv）の3本は、標本2の判定から台帳と公開ランキングの両方で参考に下げる
         failed = build_public_ranking.verification_failed()
         for i in ("衆法-189-20", "閣法-193-61", "閣法-196-2"):
-            self.assertEqual(self.ledger[i]["検証状態"], "抜き取り検証で合格", i)
-            self.assertFalse(failed.get(i, "").startswith(SAMPLE2_REASON_PREFIX), i)
+            self.assertEqual(self.ledger[i]["検証状態"], "参考に下げた", i)
+            self.assertTrue(failed[i].startswith(SAMPLE2_REASON_PREFIX), i)
         self.assertFalse((L / "interim-holds.csv").exists())
 
     def test_ranking_and_ledger_agree_on_sample2(self):
@@ -132,7 +141,8 @@ class LedgerIntegration(unittest.TestCase):
         for r in rows(V2 / "resolutions.csv"):
             self.assertEqual(r["決着"].startswith("訂正候補"), r["id"] in cand, r["id"])
         kept = {i for i, r in self.ledger.items() if r["検証状態"] == "抜き取り検証で不合格" and i in self.rec}
-        self.assertLessEqual(kept, cand)
+        held = {r["id"] for r in rows(V2 / "resolutions.csv") if r["決着"].startswith("独立の確認待ち")}
+        self.assertLessEqual(kept, cand | held)
 
 
 class FetchAndRecord(unittest.TestCase):

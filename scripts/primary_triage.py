@@ -56,6 +56,15 @@ NOT_MEASURED = ("評価対象外",)
 ITEMS = ("類型", "経済に効くか", "主な産業分野")
 LINES = {"A": "系統A：議案本文（理由と条文）を先に読み、会議録で補う。", "B": "系統B：会議録（提案理由の説明・委員長報告）を先に読み、議案本文で補う。"}
 CORR_HEADER = ["id", "項目", "直した値", "直す前の値", "理由", "引用", "出典URL", "判定者", "指示文", "記録"]
+# 本法まで読む法律：議案本文の先頭（6千字）だけでは決められないと分かった法律。本文の全体を取り、読み手に条文まで読ませ、
+# 経済に効くかは2系統が一致しても Sonnet が裁定する。{id: 理由}
+DEEP_READ = {
+    "閣法-211-46": "抜き取り2回目で経済に効くかが判定不能。制度かどうかは本法（番号法など）の改正条文まで読まないと決められない（PR #226 で確定できず）",
+}
+DEEP_REASON = "本法まで読む（資料の議案本文の全体から、改める本法の条文を読んで決める）"
+DEEP_NOTE = ("\n## この法律の注意（本法まで読む）\n\n{why}。資料の議案本文は全体を載せてある（先頭だけではない）。"
+             "経済に効くかは、理由の節や会議録で決めず、改める本法の条文（事業者・家計の負担、給付、規制、手数料など）まで読んで決める。"
+             "読み切れなければ判定不能とする。\n")
 # 試走の層：到達点ごとの本数（合計 10）。参考額は経済に効くかが空（一度も聞いていない）の法律を厚くする（連鎖の誤りの主因）
 PILOT_STRATA = {
     ("参考額", "空"): 4, ("参考額", "判定済み"): 1, ("効果なし（定例）", ""): 2, ("保留", ""): 1, ("測定できない", ""): 1, ("額", ""): 1,
@@ -112,10 +121,31 @@ def target_row(r: dict) -> dict:
             "サイト_台帳の分野": r["分野"], "サイト_台帳の類型": r["類型"]}
 
 
-def cmd_targets(_: argparse.Namespace) -> int:
-    rows = measured(read_csv(LEDGER / "ledger.csv"))
+def read_ids(path: Path) -> list[dict]:
+    """id 列のある CSV（抜き取りの標本など）。id 以外の列は照合の表にそのまま写す。"""
+    rows = read_csv(path)
+    if not rows or "id" not in rows[0]:
+        raise ValueError(f"{path}：id 列が無い")
+    return rows
+
+
+def cmd_targets(a: argparse.Namespace) -> int:
+    """測る側を全件。--extra で、測る側でない法律（評価対象外など）も足せる（抜き取りの標本を照らし合わせるため）。"""
+    ledger = read_csv(LEDGER / "ledger.csv")
+    rows = measured(ledger)
+    if a.extra:
+        have = {r["id"] for r in rows}
+        by_id = {r["id"]: r for r in ledger}
+        want = [x["id"] for x in read_ids(Path(a.extra))]
+        missing = [i for i in want if i not in by_id]
+        if missing:
+            print("台帳に無い id：", missing)
+            return 1
+        added = [by_id[i] for i in dict.fromkeys(want) if i not in have]
+        rows += added
+        print(f"測る側でない法律を {len(added)} 本足した", [r["id"] for r in added])
     write_csv(set_dir("all") / "targets.csv", TARGET_HEADER, [target_row(r) for r in rows])
-    print(f"測る側 {len(rows)} 本", Counter(reach_group(r["到達点"]) for r in rows))
+    print(f"対象 {len(rows)} 本", Counter(reach_group(r["到達点"]) for r in rows))
     return 0
 
 
@@ -175,12 +205,12 @@ def cmd_fetch(a: argparse.Namespace) -> int:
     stats = Counter()
     for r in read_csv(set_dir(a.set) / "targets.csv"):
         path = SOURCES / f"{r['id']}.txt"
-        if path.exists() and fetched_ok(path.read_text(encoding="utf-8")):
+        if path.exists() and fetched_ok(path.read_text(encoding="utf-8")) and (r["id"] not in DEEP_READ or "【本文の全体】" in path.read_text(encoding="utf-8")):
             stats["既にある"] += 1
             continue
         session = r["id"].split("-")[1]
         title = r["題名"].removesuffix("案")
-        honbun = _run_fetch(["honbun", r["id"]])
+        honbun = _run_fetch(["honbun", r["id"]] + (["full"] if r["id"] in DEEP_READ else []))
         kokkai = _run_fetch(["kokkai", f"{title} 提案", session])
         if "該当 0 件" in kokkai or kokkai.startswith("取得できない"):
             kokkai += "\n" + _run_fetch(["kokkai", title, session])
@@ -211,6 +241,8 @@ def cmd_prompts(a: argparse.Namespace) -> int:
             out = LOCAL / a.set / f"line{line}" / f"{r['id']}.json"
             text = (body.replace("{id}", r["id"]).replace("{title}", r["題名"]).replace("{source}", str((SOURCES / f"{r['id']}.txt").relative_to(ROOT)))
                     .replace("{order}", order).replace("{line}", line).replace("{out}", str(out.relative_to(ROOT))))
+            if r["id"] in DEEP_READ:
+                text += DEEP_NOTE.format(why=DEEP_READ[r["id"]])
             p = LOCAL / "prompts" / f"line{line}" / f"{r['id']}.md"
             p.parent.mkdir(parents=True, exist_ok=True)
             out.parent.mkdir(parents=True, exist_ok=True)
@@ -246,12 +278,14 @@ def canonical(item: str, v: str) -> str:
     return v
 
 
-def needs_ruling(site: dict, a: dict, b: dict) -> dict[str, str]:
-    """{項目: 裁定に回す理由}。空なら2系統の一致をそのまま採用する。"""
-    out: dict[str, str] = {}
+def needs_ruling(site: dict, a: dict, b: dict, deep: bool = False) -> dict[str, str]:
+    """{項目: 裁定に回す理由}。空なら2系統の一致をそのまま採用する。deep（本法まで読む法律）は経済に効くかを必ず裁定に回す。"""
+    out: dict[str, str] = {"経済に効くか": DEEP_REASON} if deep else {}
     low = "低" in (a.get("確信"), b.get("確信"))
     for item in ITEMS:
         va, vb = norm(item, a.get(item, "")), norm(item, b.get(item, ""))
+        if item in out:
+            continue
         if UNDECIDED in (va, vb) or not va or not vb:
             out[item] = "判定不能"
         elif va != vb:
@@ -284,7 +318,7 @@ def cmd_queue(a: argparse.Namespace) -> int:
     queue = []
     for t in targets:
         i = t["id"]
-        why = needs_ruling(site_of(t), A[i], B[i])
+        why = needs_ruling(site_of(t), A[i], B[i], i in DEEP_READ)
         if not why:
             continue
         case = LOCAL / a.set / "adjudicate" / f"{i}.json"
@@ -309,7 +343,7 @@ def cmd_queue(a: argparse.Namespace) -> int:
 def decide(t: dict, a: dict, b: dict, ruling: dict | None, reader_version: str = "v1") -> list[dict]:
     """1本の決着。項目ごとに (値, 判定者, 理由, 引用)。判定不能も行に残す（経済に効くかは判定不能として扱う。類型・分野は行を置かない）。"""
     site = site_of(t)
-    why = needs_ruling(site, a, b)
+    why = needs_ruling(site, a, b, t["id"] in DEEP_READ)
     ruled = {r["項目"]: r for r in (ruling or {}).get("裁定", [])}
     url = ";".join(dict.fromkeys((a.get("出典URL") or []) + (b.get("出典URL") or [])))
     rows = []
@@ -368,6 +402,47 @@ def cmd_apply(a: argparse.Namespace) -> int:
     write_csv(LABELS, CORR_HEADER, rows)
     changed = sum(1 for r in new if differs_from_site(site_of(next(t for t in targets if t["id"] == r["id"])), r))
     print(f"{len(targets)} 本 → 行 {len(new)}（サイトの主張と違う値 {changed}）", Counter((r["項目"], r["直した値"]) for r in new).most_common(8))
+    return 0
+
+
+COMPARE_HEADER = ["id", "当て直しの対象", "項目", "当て直しの値", "判定者", "系統A", "系統B", "裁定", "裁定の理由", "サイトの値", "理由", "引用", "出典URL"]
+
+
+def compare_rows(ids: list[dict], targets: list[dict], A: dict, B: dict, rulings: dict, labels: list[dict]) -> list[dict]:
+    """抜き取りの標本（ids）と当て直しの結果を1本×3項目で並べる。標本の列は「標本_」を付けて右に写す。
+    当て直しの対象に無い法律や、まだ読んでいない法律も行に残す（照合できないことを見せる）。"""
+    tmap = {t["id"]: t for t in targets}
+    lab = {(r["id"], r["項目"]): r for r in labels}
+    out = []
+    for x in ids:
+        i = x["id"]
+        extra = {f"標本_{k}": v for k, v in x.items() if k != "id"}
+        t = tmap.get(i)
+        state = "対象外（targets --extra で足す）" if t is None else ("未実行" if i not in A or i not in B else "実行済み")
+        ruled = {r["項目"]: r for r in (rulings.get(i) or {}).get("裁定", [])}
+        site = site_of(t) if t else {}
+        for item in ITEMS:
+            name = "分野" if item == "主な産業分野" else item
+            row = lab.get((i, name), {})
+            r = ruled.get(item, {})
+            out.append({"id": i, "当て直しの対象": state, "項目": item, "当て直しの値": row.get("直した値", ""), "判定者": row.get("判定者", ""),
+                        "系統A": (A.get(i) or {}).get(item, ""), "系統B": (B.get(i) or {}).get(item, ""), "裁定": r.get("値", ""),
+                        "裁定の理由": r.get("理由", ""), "サイトの値": site.get(item, ""), "理由": row.get("理由", ""),
+                        "引用": row.get("引用", ""), "出典URL": row.get("出典URL", ""), **extra})
+    return out
+
+
+def cmd_compare(a: argparse.Namespace) -> int:
+    """抜き取りの標本の id 一覧（--ids CSV）について、当て直しの結果（2系統・裁定・labels.csv）を並べた表を書く。"""
+    d = set_dir(a.set)
+    ids = read_ids(Path(a.ids))
+    rp = d / "rulings.json"
+    rows = compare_rows(ids, read_csv(d / "targets.csv"), _load_line(d, "A"), _load_line(d, "B"),
+                        json.loads(rp.read_text(encoding="utf-8")) if rp.exists() else {}, read_csv(LABELS) if LABELS.exists() else [])
+    extra = [k for k in rows[0] if k not in COMPARE_HEADER] if rows else []
+    out = Path(a.out) if a.out else d / f"compare-{Path(a.ids).stem}.csv"
+    write_csv(out, COMPARE_HEADER + extra, rows)
+    print(f"{len(ids)} 本 → {out}", Counter(r["当て直しの対象"] for r in rows[::len(ITEMS)]))
     return 0
 
 
@@ -466,7 +541,14 @@ def cmd_estimate(_: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("targets").set_defaults(fn=cmd_targets)
+    st = sub.add_parser("targets")
+    st.add_argument("--extra", help="測る側でなくても足す法律の id 一覧（id 列のある CSV）")
+    st.set_defaults(fn=cmd_targets)
+    sc = sub.add_parser("compare")
+    sc.add_argument("--set", default="all")
+    sc.add_argument("--ids", required=True, help="照らし合わせる法律の id 一覧（id 列のある CSV。ほかの列は「標本_」付きで写す）")
+    sc.add_argument("--out", help="出力先（既定 {組}/compare-{ids のファイル名}.csv）")
+    sc.set_defaults(fn=cmd_compare)
     sp = sub.add_parser("pilot")
     sp.add_argument("--n", type=int, default=10)
     sp.set_defaults(fn=cmd_pilot)

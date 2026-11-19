@@ -42,6 +42,7 @@ from scripts.evaluation_rules import (
     STATE_DEMOTED,
     STATE_FAILED,
     VERDICT_FAIL,
+    amount_demoted,
     is_demoted,
     narrow_whole_economy,
 )
@@ -59,7 +60,6 @@ RESOLVED_PASS = "合格に訂正"  # scripts/resolve_sample_failures.py が書�
 RESOLVED_DEMOTED = "参考に下げた"
 REDO_PASS_MEMO = "読み直しで合格に訂正："
 REDO_DEMOTED_MEMO = "読み直しで決着："
-NO_AMOUNT_DEMOTED_REACH = "評価対象外"  # 自動の降格の規則に入っているが、額が無い到達点
 REDO_STALE_MEMO = "読み直しの決着の後にサイトの値が変わった（読み直しをやり直す）："
 
 
@@ -155,11 +155,6 @@ def sense_checks(rows_macro: dict[str, dict], title_of: dict[str, str]) -> dict[
                   "robust": "四分位が0をまたぐ（向きが定まらない）" if crosses else "四分位が同じ向き",
                   "narrow_flag": narrow_whole_economy(title_of.get(i, ""), m["産業"], m["分野"])}
     return out
-
-
-def amount_demoted(verdict: str, reach: str, certainty: str) -> bool:
-    """不合格で、額のある到達点（参考額・個別の額）を自動で参考に下げる法律か。評価対象外は額が無いので含めない。"""
-    return is_demoted(verdict, reach, certainty) and reach != NO_AMOUNT_DEMOTED_REACH
 
 
 def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "", resolved: dict | None = None, key: str = "") -> tuple[str, str]:

@@ -90,6 +90,15 @@ def sample2_failures(path: Path = SAMPLE2_VERDICTS) -> dict[str, str]:
 DEMOTE_REACH_PREFIXES = ("参考額", "評価対象外", "額（個別")
 
 
+NO_AMOUNT_DEMOTED_REACH = "評価対象外"  # is_demoted の到達点に入っているが、額が無い到達点
+
+
+def amount_demoted(verdict: str, reach: str, certainty: str = "") -> bool:
+    """台帳で、不合格の額を自動で参考に下げるか（参考額・個別の額）。評価対象外は額が無いので下げず、不合格のまま数える。
+    標本1（build_evaluation_ledger）と標本2（resample_verification）が同じ規則を使う。"""
+    return is_demoted(verdict, reach, certainty) and reach != NO_AMOUNT_DEMOTED_REACH
+
+
 def is_demoted(verdict: str, reach: str = "", certainty: str = "", in_ranking: bool = False) -> bool:
     """不合格（sample-verdicts の判定）で、額を参考値として残す扱いにする法律か。
 
