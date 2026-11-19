@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 from typing import ClassVar
 
+from scripts import primary_source_corrections as corrections
 from scripts.build_evaluation_ledger import (
     RESOLVED_DEMOTED,
     RESOLVED_PASS,
@@ -19,7 +20,6 @@ from scripts.resolve_sample_failures import (
     HEADER,
     RV,
     SAMPLED_AT,
-    reading_allowed,
     resolve,
     targets,
 )
@@ -61,37 +61,46 @@ class ResolveRuleTest(unittest.TestCase):
         r = resolve(site(), line("実質改正", "制度のみ"), line("実質改正", "経済に効く"), ruling, "制度のみ。評価対象は誤り")
         self.assertEqual(r["決着"], RESOLVED_PASS)
 
-    def test_excluded_law_without_site_econ_record_is_demoted(self):
+    def test_triage_out_but_measured_is_read_as_economic(self):
+        """振り分けの「評価対象外」は市場の対応表なしの区分。到達点が測る側（測定できない）なら、サイトは経済に効く扱い。"""
         s = site(分類="評価対象外", 到達点="測定できない", 経済に効くか="判定不能（Sonnet）")
         r = resolve(s, line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "分類：サイト対象外／独立判定経済に効く")
-        self.assertEqual(r["決着"], RESOLVED_DEMOTED)
+        self.assertEqual(r["決着"], RESOLVED_PASS)
+        self.assertIn("照合の読み替え", r["原因の区分"])
 
+    def test_economic_law_treated_as_no_effect_is_demoted(self):
+        for reach in ("効果なし（定例）", "評価対象外"):
+            s = site(分類="評価対象外", 到達点=reach, 経済に効くか="経済に効く（一致）")
+            r = resolve(s, line("定型改正", "経済に効く"), line("定型改正", "経済に効く"), None, "")
+            self.assertEqual(r["決着"], RESOLVED_DEMOTED, reach)
+            self.assertIn("制度だけと扱った", r["原因の区分"])
 
     def test_site_econ_record_against_institutional_reading_is_an_error(self):
         """読み直しが制度のみなら、サイトが自分で「経済に効く」と記録した対象外の法律もサイトの誤り（どちらの向きでも同じ読み方）。"""
         s = site(分類="評価対象外", 到達点="保留", 経済に効くか="経済に効く（一致）")
-        r = resolve(s, line("実質改正", "制度のみ"), line("実質改正", "制度のみ"), None, "", reading_ok=True)
+        r = resolve(s, line("実質改正", "制度のみ"), line("実質改正", "制度のみ"), None, "")
+        self.assertEqual(r["決着"], RESOLVED_DEMOTED)
+
+    def test_site_institutional_record_against_economic_reading_is_an_error(self):
+        s = site(分類="評価対象外", 到達点="保留", 経済に効くか="制度（一致）")
+        r = resolve(s, line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "")
         self.assertEqual(r["決着"], RESOLVED_DEMOTED)
 
     def test_empty_site_kind_is_an_error(self):
         r = resolve(site(類型=""), line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "")
         self.assertEqual(r["決着"], RESOLVED_DEMOTED)
 
-    def test_state_budget_reach_is_not_read_as_holding(self):
+    def test_state_budget_reach_is_read_as_economic(self):
+        """国の収支の別欄に額を出している法律は、サイトが経済に効くと扱っている（順位・配分に使わないのは額の物差しの別）。"""
         s = site(分類="評価対象外", 到達点="国の収支の額（GDP とは別欄）", 経済に効くか="経済に効く（一致）")
-        r = resolve(s, line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "", reading_ok=True)
-        self.assertEqual(r["決着"], RESOLVED_DEMOTED)
+        r = resolve(s, line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "分類：サイト対象外／独立判定経済に効く")
+        self.assertEqual(r["決着"], RESOLVED_PASS)
 
-    def test_reading_ruling_applies_only_to_named_laws(self):
-        rulings = {"照合の読み方": {"裁定": "合格に訂正してよい", "3本それぞれの扱い": {"a": "合格に訂正。理由", "b": "不合格のまま"}}}
-        self.assertEqual(reading_allowed(rulings), {"a"})
-        self.assertEqual(reading_allowed({"照合の読み方": {"裁定": "不合格のままにすべき", "3本それぞれの扱い": {"a": "合格に訂正"}}}), set())
-
-    def test_excluded_law_with_site_econ_record_passes_only_with_a_ruling(self):
+    def test_excluded_law_with_site_econ_record_passes_without_a_named_ruling(self):
         s = site(分類="評価対象外", 到達点="保留", 経済に効くか="経済に効く（一致）")
-        args = (s, line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "分類：サイト対象外／独立判定経済に効く")
-        self.assertEqual(resolve(*args)["決着"], RESOLVED_DEMOTED)
-        self.assertEqual(resolve(*args, reading_ok=True)["決着"], RESOLVED_PASS)
+        r = resolve(s, line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "分類：サイト対象外／独立判定経済に効く")
+        self.assertEqual(r["決着"], RESOLVED_PASS)
+        self.assertIn("市場の対応表に無い", r["理由"])
 
 
 class ResolutionDataTest(unittest.TestCase):
@@ -101,7 +110,9 @@ class ResolutionDataTest(unittest.TestCase):
         self.res = rows("sample-resolutions.csv")
 
     def test_every_remaining_failure_has_exactly_one_resolution(self):
-        self.assertEqual(sorted(r["id"] for r in self.res), targets(self.ledger, self.verdicts))
+        reread = ({x["id"] for x in json.loads((RV / "lineA.json").read_text(encoding="utf-8"))}
+                  & {x["id"] for x in json.loads((RV / "lineB.json").read_text(encoding="utf-8"))})
+        self.assertEqual(sorted(r["id"] for r in self.res), targets(self.ledger, self.verdicts, reread))
 
     def test_rows_carry_reason_reference_and_sources(self):
         for r in self.res:
@@ -117,11 +128,11 @@ class ResolutionDataTest(unittest.TestCase):
         b = {x["id"]: x for x in json.loads((RV / "lineB.json").read_text(encoding="utf-8"))}
         rulings = json.loads((RV / "rulings.json").read_text(encoding="utf-8"))
         memo = {v["id"]: v["食い違い"] for v in self.verdicts}
-        allowed = reading_allowed(rulings)
         sampled = {r["id"]: r["到達点"] for r in rows(SAMPLED_AT.relative_to(L).as_posix())}
+        corr = corrections.load()
         for r in self.res:
             i = r["id"]
-            self.assertEqual(r, resolve(self.ledger[i], a[i], b[i], rulings.get(i), memo[i], i in allowed, sampled.get(i, "")), i)
+            self.assertEqual(r, resolve(self.ledger[i], a[i], b[i], rulings.get(i), memo[i], sampled.get(i, ""), corr.get(i)), i)
 
     def test_resolutions_were_made_against_todays_site_values(self):
         for r in self.res:
@@ -154,6 +165,16 @@ class LedgerStateTest(unittest.TestCase):
         res = {"x": {"決着": RESOLVED_PASS, "理由": "わけ", "判定時のサイトの値": "k"}}
         self.assertEqual(verify_state("x", "", self.V, "参考額（産業の付加価値の差）", "参考", res)[0], STATE_DEMOTED)
 
+
+    def test_resolution_decides_a_no_amount_out_of_scope_law(self):
+        """評価対象外（額が無い）は自動の降格の規則に入っているが、読み直しの決着があればそれを使う（サイトの値を直して対象外にした法律）。"""
+        res = {"x": {"決着": RESOLVED_PASS, "理由": "わけ", "判定時のサイトの値": "k"}}
+        self.assertEqual(verify_state("x", "", self.V, "評価対象外", "", res, "k")[0], "抜き取り検証で合格")
+        self.assertEqual(verify_state("x", "", self.V, "評価対象外", "", {}, "k")[0], STATE_DEMOTED)
+
+    def test_stale_resolution_falls_back_to_the_automatic_demotion(self):
+        res = {"x": {"決着": RESOLVED_PASS, "理由": "わけ", "判定時のサイトの値": "古い値"}}
+        self.assertEqual(verify_state("x", "", self.V, "評価対象外", "", res, "新しい値")[0], STATE_DEMOTED)
 
     def test_stale_resolution_is_not_used(self):
         """決着の後にサイトの値が変わったら、決着を使わず不合格に戻す。"""

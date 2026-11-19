@@ -35,6 +35,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from scripts import primary_source_corrections as corrections
 from scripts.evaluation_rules import (
     STATE_DEMOTED,
     STATE_FAILED,
@@ -55,6 +56,7 @@ RESOLVED_PASS = "合格に訂正"  # scripts/resolve_sample_failures.py が書�
 RESOLVED_DEMOTED = "参考に下げた"
 REDO_PASS_MEMO = "読み直しで合格に訂正："
 REDO_DEMOTED_MEMO = "読み直しで決着："
+NO_AMOUNT_DEMOTED_REACH = "評価対象外"  # 自動の降格の規則に入っているが、額が無い到達点
 REDO_STALE_MEMO = "読み直しの決着の後にサイトの値が変わった（読み直しをやり直す）："
 
 
@@ -87,6 +89,7 @@ def load():
         "sample": by_id(read(LEDGER_DIR / "sample-verdicts.csv")),
         "resolved": by_id(read(LEDGER_DIR / "sample-resolutions.csv")),  # 不合格のまま残った法律の読み直しと決着
         "cols": by_id(read(D / "three-columns-v1" / "columns.csv")),  # 額の物差し三欄（設計決定0024）
+        "corr": corrections.load(D / "primary-source-corrections-v1" / "corrections.csv"),  # 一次資料で直した類型・経済に効くか
     }
 
 
@@ -150,22 +153,35 @@ def sense_checks(rows_macro: dict[str, dict], title_of: dict[str, str]) -> dict[
     return out
 
 
+def amount_demoted(verdict: str, reach: str, certainty: str) -> bool:
+    """不合格で、額のある到達点（参考額・個別の額）を自動で参考に下げる法律か。評価対象外は額が無いので含めない。"""
+    return is_demoted(verdict, reach, certainty) and reach != NO_AMOUNT_DEMOTED_REACH
+
+
 def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "", resolved: dict | None = None, key: str = "") -> tuple[str, str]:
     s = sample.get(id_)
     if s:
         if s["判定"] == "合格":
             return "抜き取り検証で合格", s.get("食い違い", "")
-        # 不合格のうち額を参考値に下げたものは「参考に下げた」。額の無い法律は自動では下げず、不合格のまま残す（隠さない）
-        if is_demoted(s["判定"], reach_, certainty):
+        demoted = is_demoted(s["判定"], reach_, certainty)
+        # 額のある法律（参考額・個別の額）の自動の降格は、読み直しの決着より先に当てる（決着で額の扱いを戻さない）
+        if amount_demoted(s["判定"], reach_, certainty):
             return STATE_DEMOTED, s.get("食い違い", "")
-        # 不合格のまま残った法律は、一次資料の読み直しで1本ずつ決着させたものだけ状態を変える（sample-resolutions.csv）
+        # 一次資料の読み直しで1本ずつ決着させた法律は、その決着を使う（sample-resolutions.csv）。
+        # 額の無い評価対象外は、サイトの値を直して評価対象外になった法律もここで決着させる。
+        # 決着の後にサイトの値が変わっていれば使わず、不合格に戻す（読み直しをやり直す）
         r = (resolved or {}).get(id_)
-        if r and r.get("判定時のサイトの値") != key:
+        if r and r.get("判定時のサイトの値") != key and not demoted:
             return STATE_FAILED, f"{REDO_STALE_MEMO}{s.get('食い違い', '')}"
+        if r and r.get("判定時のサイトの値") != key:  # 古い決着は使わず、自動の降格に戻す
+            return STATE_DEMOTED, s.get("食い違い", "")
         if r and r["決着"] == RESOLVED_PASS:
             return "抜き取り検証で合格", f"{REDO_PASS_MEMO}{r['理由']}"
         if r and r["決着"] == RESOLVED_DEMOTED:
             return STATE_DEMOTED, f"{REDO_DEMOTED_MEMO}{r['理由']}"
+        # 読み直していない不合格のうち、額を参考値に下げたものは「参考に下げた」。額の無い法律は自動では下げず、不合格のまま残す（隠さない）
+        if demoted:
+            return STATE_DEMOTED, s.get("食い違い", "")
         return STATE_FAILED, s.get("食い違い", "")
     if "第3" in cls_how or "Sonnet" in cls_how or "Opus" in cls_how or cls_how.startswith("2系統の食い違い"):
         return "分類を第3判定で決着", ""
@@ -193,6 +209,11 @@ def build_rows(src) -> list[dict]:
         ov = src["ov"].get(i)
         certainty = o["確かさ"] or (m["結果"] and "参考" if m and m["結果"] == "額" else "")
         econ = f"{e['区分']}（{e['決め方']}）" if e else ""
+        fixed_econ = corrections.value(src.get("corr", {}), i, "経済に効くか")
+        if fixed_econ:  # 一次資料の読み直しで直した値（AI の区分の記録は書き換えない）
+            econ = f"{fixed_econ}（{corrections.METHOD}）"
+            if fixed_econ == corrections.INSTITUTIONAL:
+                cls, how = "評価対象外", f"{corrections.METHOD}（制度）"
         key = site_key({"類型": o["種類"] or "", "分類": cls, "到達点": reach_, "経済に効くか": econ})
         state, memo = verify_state(i, how, src["sample"], reach_, certainty, src.get("resolved"), key)
         col = src["cols"].get(i, {})
