@@ -19,6 +19,13 @@
  * 7. 階層は、額の中央値の大きい順に並べ、幅が階層の先頭の人と重なる間は同じ階層とする。
  *    群の額の幅をそのまま使った記述の階層で、統計的な同時信頼集合ではない。
  * 8. 関与した法律が下限（minLaws）に満たない人・会派は階層に入れず、額と本数だけを出す。
+ * 9. 上位3本の占有率（topThreeShare＝寄与の大きい上位3本の |寄与| の和 ÷ 全法律の |寄与| の和）が上限（topThreeShareCap）を超える人・会派も
+ *    階層に入れない（1本で決まる人）。法律ごとの寄与は集計の中だけで持ち、出力には比率だけを出す。minLaws の理由と両方当たるときは minLaws を優先する。
+ * 10. 賛成・反対の枠は、院で半分ずつ（HOUSE_SPLIT。取り決め）に分け、それぞれの半分をその院の関与の重みの割合で配る。
+ *     片方の院の記録が無い法律・役割は、その半分を未配分に積む（もう片方の院へ寄せない）。発議・閣議決定は院を見ない。
+ * 11. 役割は別々の行動なので、同じ人が同じ法律で複数の役割を持てば足す（閣僚は閣議0.2＋発議0.4、賛成票があれば＋賛成の枠）。
+ *     「二重に配らない」は、同じ（法律・役割・院）の枠を人と会派の両方へ配らないこと。
+ * 12. 配り先の無い関与（actorKind: 'none'。同姓同名で人物台帳に結べない票）は、重みだけ枠に入れ、その分を未配分に積む（ほかの人へ寄せない）。
  */
 
 import type { GroupDiff, Range } from './scoring-types';
@@ -33,10 +40,21 @@ const SIGN: Readonly<Record<ExposureRole, 1 | -1>> = { proposer: 1, yes: 1, no: 
 
 /** 産業×期間の群の差（diff は正が伸び損ね、負は比較より伸びた）と、群に属する法律の本数（関与の記録が無い法律も含む）。 */
 export type ExposureGroup = GroupDiff & { id: string; lawCount: number };
-export type ActorKind = 'person' | 'party';
-/** 1つの関与：誰が、どの群のどの法律に、どの役割で関わったか。weight は同じ法律・同じ役割の中での重み（正の数）。 */
-export type Involvement = { actorKind: ActorKind; actorId: string; groupId: string; lawId: string; role: ExposureRole; weight: number };
-export type ExposureParams = { roleRatio: RoleRatio; /** 階層に入れるのに要る、関与した法律の本数の下限。 */ minLaws: number };
+/** none は配り先の無い関与（重みだけを枠に入れ、その分は未配分に積む）。 */
+export type ActorKind = 'person' | 'party' | 'none';
+export type House = 'lower' | 'upper';
+/** 賛成・反対の枠を院で分ける割合（取り決め）。衆議院にこの割合、参議院に残りを置く。 */
+export const HOUSE_SPLIT = 0.5;
+/**
+ * 1つの関与：誰が、どの群のどの法律に、どの役割で関わったか。weight は同じ法律・同じ役割（賛成・反対は同じ院）の中での重み（正の数）。
+ * house は賛成・反対（yes・no）では必須。発議・閣議決定では見ない。
+ */
+export type Involvement = { actorKind: ActorKind; actorId: string; groupId: string; lawId: string; role: ExposureRole; weight: number; house?: House };
+export type ExposureParams = {
+  roleRatio: RoleRatio;
+  /** 階層に入れるのに要る、関与した法律の本数の下限。 */ minLaws: number;
+  /** 上位3本の占有率の上限（超えると階層に入れない。ちょうど上限は入る）。 */ topThreeShareCap: number;
+};
 
 export type ExposureCell = { groupId: string; role: ExposureRole; laws: number; exposureYen: Range };
 export type ExposureRow = {
@@ -46,13 +64,15 @@ export type ExposureRow = {
   /** 関与した法律の本数（重複なし）と群の数。 */
   laws: number;
   groups: number;
+  /** 上位3本の占有率（0〜1。比率だけで、法律の ID も額も出さない）。 */
+  topThreeShare: number;
   /** 群×役割ごとの内訳。法律ごとの額は持たない。 */
   cells: ExposureCell[];
   /** 階層（1が最も曝露が大きい）。下限に満たないときは null で、unrankedReason に理由。 */
   tier: number | null;
   unrankedReason: string;
 };
-export type Unallocated = { groupId: string; role: ExposureRole | null; laws: number; exposureYen: Range; reason: string };
+export type Unallocated = { groupId: string; role: ExposureRole | null; /** 賛成・反対の院ごとの枠のとき。 */ house?: House; laws: number; exposureYen: Range; reason: string };
 export type ExposureRanking = {
   schema: 'exposure-ranking/v1';
   /** 因果の推定ではなく記述。 */
@@ -87,6 +107,7 @@ function checkParams(p: ExposureParams): void {
   }
   if (Math.abs(sum - 1) > EPS) throw new Error(`役割の比率の合計が1でない：${sum}`);
   if (!Number.isInteger(p.minLaws) || p.minLaws < 1) throw new Error(`法律の本数の下限が不正：${p.minLaws}`);
+  if (!Number.isFinite(p.topThreeShareCap) || p.topThreeShareCap <= 0 || p.topThreeShareCap > 1) throw new Error(`上位3本の占有率の上限が不正：${p.topThreeShareCap}`);
 }
 
 /**
@@ -113,30 +134,37 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
     if (![s.low, s.median, s.high].every(Number.isFinite) || s.low > s.median || s.median > s.high) throw new Error(`群の額の幅が不正：${g.id}`);
     groupById.set(g.id, g);
   }
-  // 群 → 法律 → 役割 → 関与。
-  const tree = new Map<string, Map<string, Map<ExposureRole, Involvement[]>>>();
+  // 群 → 法律 → 枠（役割。賛成・反対は院つき）→ 関与。
+  const slotKey = (role: ExposureRole, house?: House) => (role === 'yes' || role === 'no' ? `${role}:${house}` : role);
+  const slotsOf = (role: ExposureRole): { house?: House; share: number }[] =>
+    role === 'yes' || role === 'no' ? [{ house: 'lower', share: HOUSE_SPLIT }, { house: 'upper', share: 1 - HOUSE_SPLIT }] : [{ share: 1 }];
+  const tree = new Map<string, Map<string, Map<string, Involvement[]>>>();
   for (const inv of involvements) {
     if (!groupById.has(inv.groupId)) throw new Error(`関与の群が群の一覧に無い：${inv.groupId}`);
     if (!EXPOSURE_ROLES.includes(inv.role)) throw new Error(`役割が不正：${inv.role}`);
-    if (inv.actorKind !== 'person' && inv.actorKind !== 'party') throw new Error(`配り先の種類が不正：${inv.actorKind}`);
+    if (inv.actorKind !== 'person' && inv.actorKind !== 'party' && inv.actorKind !== 'none') throw new Error(`配り先の種類が不正：${inv.actorKind}`);
     if (!Number.isFinite(inv.weight) || inv.weight <= 0) throw new Error(`重みが不正：${inv.actorId} ${inv.lawId} ${inv.weight}`);
-    if (!inv.actorId || !inv.lawId) throw new Error('関与に配り先か法律の ID が無い');
-    const laws = tree.get(inv.groupId) ?? new Map<string, Map<ExposureRole, Involvement[]>>();
-    const roles = laws.get(inv.lawId) ?? new Map<ExposureRole, Involvement[]>();
-    const list = roles.get(inv.role) ?? [];
+    if (!inv.lawId || (inv.actorKind !== 'none' && !inv.actorId)) throw new Error('関与に配り先か法律の ID が無い');
+    if ((inv.role === 'yes' || inv.role === 'no') && inv.house !== 'lower' && inv.house !== 'upper') throw new Error(`賛成・反対の関与に院が無い：${inv.actorId} ${inv.lawId}`);
+    const laws = tree.get(inv.groupId) ?? new Map<string, Map<string, Involvement[]>>();
+    const slots = laws.get(inv.lawId) ?? new Map<string, Involvement[]>();
+    const key = slotKey(inv.role, inv.house);
+    const list = slots.get(key) ?? [];
     list.push(inv);
-    roles.set(inv.role, list);
-    laws.set(inv.lawId, roles);
+    slots.set(key, list);
+    laws.set(inv.lawId, slots);
     tree.set(inv.groupId, laws);
   }
 
-  type Acc = { kind: ActorKind; id: string; total: Range; laws: Set<string>; cells: Map<string, { groupId: string; role: ExposureRole; laws: Set<string>; exposure: Range }> };
+  type Acc = { kind: ActorKind; id: string; total: Range; laws: Set<string>; byLaw: Map<string, number>; cells: Map<string, { groupId: string; role: ExposureRole; laws: Set<string>; exposure: Range }> };
   const actors = new Map<string, Acc>();
   const give = (inv: Involvement, amount: Range) => {
     const key = `${inv.actorKind}\u0000${inv.actorId}`;
-    const a = actors.get(key) ?? { kind: inv.actorKind, id: inv.actorId, total: zero(), laws: new Set<string>(), cells: new Map() };
+    const a = actors.get(key) ?? { kind: inv.actorKind, id: inv.actorId, total: zero(), laws: new Set<string>(), byLaw: new Map<string, number>(), cells: new Map() };
     a.total = add(a.total, amount);
     a.laws.add(inv.lawId);
+    // 法律ごとの寄与（全群・全役割の median の和）。上位3本の占有率を出すためだけに持ち、出力しない。
+    a.byLaw.set(inv.lawId, (a.byLaw.get(inv.lawId) ?? 0) + amount.median);
     const cellKey = `${inv.groupId}\u0000${inv.role}`;
     const c = a.cells.get(cellKey) ?? { groupId: inv.groupId, role: inv.role, laws: new Set<string>(), exposure: zero() };
     c.laws.add(inv.lawId);
@@ -146,35 +174,53 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
   };
 
   const unallocated: Unallocated[] = [];
+  // 役割・院ごとの未配分（同じ群・役割・院・理由は1行にまとめる。laws は重ならない本数）。
+  const pending = new Map<string, { groupId: string; role: ExposureRole; house?: House; reason: string; laws: Set<string>; exposureYen: Range }>();
+  const pend = (groupId: string, role: ExposureRole, house: House | undefined, reason: string, lawId: string, amount: Range) => {
+    const key = `${groupId}\u0000${role}\u0000${house ?? ''}\u0000${reason}`;
+    const e = pending.get(key) ?? { groupId, role, house, reason, laws: new Set<string>(), exposureYen: zero() };
+    e.laws.add(lawId);
+    e.exposureYen = add(e.exposureYen, amount);
+    pending.set(key, e);
+  };
+  const MISSING_REASON = { lower: '衆議院の賛否の記録が無い法律の枠', upper: '参議院の賛否の記録が無い法律の枠' } as const;
   // 群の額を全役割へ配り切ったときの合計。反対は端が入れ替わるので、役割ごとに幅を作ってから足す（先に比率を足し引きすると幅が合わない）。
   const allRoles = (s: Range): Range => EXPOSURE_ROLES.reduce((acc, r) => add(acc, scale(s, SIGN[r] * params.roleRatio[r])), zero());
   let expected = zero();
   for (const g of groups) {
     expected = add(expected, allRoles(g.diff));
-    const laws = tree.get(g.id) ?? new Map<string, Map<ExposureRole, Involvement[]>>();
+    const laws = tree.get(g.id) ?? new Map<string, Map<string, Involvement[]>>();
     if (g.lawCount < laws.size) throw new Error(`群の法律の本数が関与の記録がある法律の本数より小さい：${g.id} ${g.lawCount}<${laws.size}`);
     const perLaw = 1 / g.lawCount;
     const noRecord = g.lawCount - laws.size;
     if (noRecord > 0) {
       unallocated.push({ groupId: g.id, role: null, laws: noRecord, exposureYen: scale(allRoles(g.diff), perLaw * noRecord), reason: 'この群の法律のうち関与の記録が無い法律の枠' });
     }
-    const missing = new Map<ExposureRole, number>();
-    for (const roles of laws.values()) {
+    for (const [lawId, slots] of laws) {
       for (const role of EXPOSURE_ROLES) {
-        const list = roles.get(role);
-        if (!list) { missing.set(role, (missing.get(role) ?? 0) + 1); continue; }
-        const slot = scale(g.diff, perLaw * SIGN[role] * params.roleRatio[role]);
-        const totalWeight = list.reduce((s, x) => s + x.weight, 0);
-        if (!Number.isFinite(totalWeight)) throw new Error(`重みの合計が有限でない：${g.id}`);
-        for (const inv of list) give(inv, scale(slot, inv.weight / totalWeight));
+        if (params.roleRatio[role] === 0) continue;
+        for (const { house, share } of slotsOf(role)) {
+          const slot = scale(g.diff, perLaw * SIGN[role] * params.roleRatio[role] * share);
+          const list = slots.get(slotKey(role, house));
+          if (!list) { pend(g.id, role, house, house ? MISSING_REASON[house] : 'この役割の関与の記録が無い法律の枠', lawId, slot); continue; }
+          const totalWeight = list.reduce((x, y) => x + y.weight, 0);
+          if (!Number.isFinite(totalWeight)) throw new Error(`重みの合計が有限でない：${g.id}`);
+          for (const inv of list) {
+            const amount = scale(slot, inv.weight / totalWeight);
+            if (inv.actorKind === 'none') pend(g.id, role, house, '同姓同名で人物台帳に結べない票', lawId, amount);
+            else give(inv, amount);
+          }
+        }
       }
     }
-    for (const [role, n] of missing) {
-      if (params.roleRatio[role] === 0) continue;
-      unallocated.push({ groupId: g.id, role, laws: n, exposureYen: scale(g.diff, perLaw * n * SIGN[role] * params.roleRatio[role]), reason: 'この役割の関与の記録が無い法律の枠' });
-    }
   }
+  for (const e of pending.values()) unallocated.push({ groupId: e.groupId, role: e.role, ...(e.house ? { house: e.house } : {}), laws: e.laws.size, exposureYen: e.exposureYen, reason: e.reason });
 
+  const topThree = (byLaw: Map<string, number>): number => {
+    const abs = [...byLaw.values()].map(Math.abs).sort((x, y) => y - x);
+    const all = abs.reduce((x, y) => x + y, 0);
+    return all > 0 ? (abs[0] + (abs[1] ?? 0) + (abs[2] ?? 0)) / all : 0;
+  };
   const toRows = (kind: ActorKind): ExposureRow[] => {
     const rows = [...actors.values()].filter(a => a.kind === kind).map(a => ({
       actorKind: a.kind,
@@ -182,14 +228,22 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
       exposureYen: a.total,
       laws: a.laws.size,
       groups: new Set([...a.cells.values()].map(c => c.groupId)).size,
+      topThreeShare: topThree(a.byLaw),
       cells: [...a.cells.values()]
         .map(c => ({ groupId: c.groupId, role: c.role, laws: c.laws.size, exposureYen: c.exposure }))
         .sort((x, y) => x.groupId.localeCompare(y.groupId) || EXPOSURE_ROLES.indexOf(x.role) - EXPOSURE_ROLES.indexOf(y.role)),
     }));
-    const ranked = assignTiers(rows.filter(r => r.laws >= params.minLaws)).map(r => ({ ...r, unrankedReason: '' }));
-    const unranked = rows.filter(r => r.laws < params.minLaws)
+    const few = (r: { laws: number }) => r.laws < params.minLaws;
+    const concentrated = (r: { laws: number; topThreeShare: number }) => !few(r) && r.topThreeShare > params.topThreeShareCap;
+    const ranked = assignTiers(rows.filter(r => !few(r) && !concentrated(r))).map(r => ({ ...r, unrankedReason: '' }));
+    const unranked = rows.filter(r => few(r) || concentrated(r))
       .sort((a, b) => b.exposureYen.median - a.exposureYen.median || a.actorId.localeCompare(b.actorId))
-      .map(r => ({ ...r, tier: null, unrankedReason: `関与した法律が${params.minLaws}本に満たない（${r.laws}本）` }));
+      .map(r => ({
+        ...r, tier: null,
+        unrankedReason: few(r)
+          ? `関与した法律が${params.minLaws}本に満たない（${r.laws}本）`
+          : `上位3本の占有率が${Math.round(params.topThreeShareCap * 100)}%を超える（${Math.round(r.topThreeShare * 100)}%）`,
+      }));
     return [...ranked, ...unranked];
   };
   const people = toRows('person');
@@ -199,7 +253,7 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
     schema: 'exposure-ranking/v1',
     claim: 'descriptive',
     disclaimer: EXPOSURE_DISCLAIMER,
-    params: { roleRatio: { ...params.roleRatio }, minLaws: params.minLaws },
+    params: { roleRatio: { ...params.roleRatio }, minLaws: params.minLaws, topThreeShareCap: params.topThreeShareCap },
     people,
     parties,
     unallocated,
