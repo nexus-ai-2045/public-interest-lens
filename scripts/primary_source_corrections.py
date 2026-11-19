@@ -37,6 +37,8 @@ def load(path: Path = PATH) -> dict[str, dict[str, dict[str, str]]]:
                 raise ValueError(f"{path.name}: 項目「{r['項目']}」は {ITEMS} のどれでもない（{r['id']}）")
             if r["項目"] == "経済に効くか" and r["直した値"] not in (ECON, INSTITUTIONAL):
                 raise ValueError(f"{path.name}: 経済に効くかの値「{r['直した値']}」が定義に無い（{r['id']}）")
+            if r["項目"] in out.get(r["id"], {}):
+                raise ValueError(f"{path.name}: {r['id']} の「{r['項目']}」の行が2つある")
             out.setdefault(r["id"], {})[r["項目"]] = r
     return out
 

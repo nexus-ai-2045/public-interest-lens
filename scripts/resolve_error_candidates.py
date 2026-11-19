@@ -66,9 +66,18 @@ def collect() -> int:
     REC.mkdir(parents=True, exist_ok=True)
     for line in ("A", "B", "C"):
         rows = [json.loads(p.read_text(encoding="utf-8")) for p in sorted((RAW / line).glob("*.json"))]
+        old = REC / f"line{line}.json"
+        n_old = len(json.loads(old.read_text(encoding="utf-8"))) if old.exists() else 0
+        if len(rows) < n_old:  # 生の記録（.local、Git に入れない）が無い環境で、記録を空で上書きしない
+            print(f"止める：{RAW / line} の記録 {len(rows)} 件が、置いてある記録 {n_old} 件より少ない", file=sys.stderr)
+            return 1
         (REC / f"line{line}.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         print(f"系統{line}：{len(rows)}件")
     rulings: dict[str, dict] = {}
+    old_rulings = json.loads((REC / "rulings.json").read_text(encoding="utf-8")) if (REC / "rulings.json").exists() else {}
+    if len(list((RAW / "R").glob("*.json"))) < sum(len(v) for v in old_rulings.values()):
+        print(f"止める：{RAW / 'R'} の裁定が置いてある裁定より少ない", file=sys.stderr)
+        return 1
     for p in sorted((RAW / "R").glob("*.json")):
         r = json.loads(p.read_text(encoding="utf-8"))
         i, item = p.stem.split("__")
@@ -109,6 +118,8 @@ def evidence(rec: dict, item: str, how: str) -> tuple[str, str, str]:
     if how == "裁定":
         return rec["理由"], rec["引用"], rec["出典URL"]
     quotes, urls = rec.get("引用") or [""], rec.get("出典URL") or [""]
+    if item == "経済に効くか":  # 改正文の書き出し（「次のように改正する」）は経済の根拠にならないので、ほかの引用があればそちらを使う
+        quotes = [q for q in quotes if "次のように改正" not in q] or quotes
     return rec[FIELD[item][1]], quotes[0], urls[0]
 
 
@@ -137,7 +148,10 @@ def build() -> tuple[list[dict], list[dict], list[dict]]:
         title = site_at[i]["題名"]
         site_kind = site_at[i]["サイトの類型"]
         site_econ = site_at[i]["サイトの経済に効くか"]
-        if "K2" in ts and (i, "類型") not in have:
+        if "K2" in ts and (i, "類型") in have:
+            res.append({"id": i, "型": "K2", "項目": "類型", "サイトの値": site_kind, "系統A": "", "系統B": "", "Sonnet": "",
+                        "Opus 裁定": "", "決めた値": "", "決め方": "既に直してある（#208）", "決着": "直した"})
+        elif "K2" in ts:
             new_corr.append({"id": i, "項目": "類型", "直した値": "実質改正", "直す前の値": site_kind,
                              "理由": f"税法（{title}）の一部改正。読み直しの指示文の類型の定義では、税法の年度ごとの改正は実質改正",
                              "引用": K2_QUOTE, "出典URL": honbun(i),
@@ -152,6 +166,10 @@ def build() -> tuple[list[dict], list[dict], list[dict]]:
             row = {"id": i, "型": code, "項目": item, "サイトの値": site or "（空）",
                    "系統A": a.get(i, {}).get(key, ""), "系統B": b.get(i, {}).get(key, ""),
                    "Sonnet": c.get(i, {}).get(key, ""), "Opus 裁定": rulings.get(i, {}).get(item, {}).get("値", "")}
+            if item == "類型" and "K2" in ts:  # 類型は規則 K2 が決める（1つの項目に行を2つ置かない）。読みは記録として残す
+                v, how, _ = decide(i, item, a, b, c, rulings)
+                res.append({**row, "決めた値": "実質改正", "決め方": f"規則 K2（読み直しは{v or '決まらず'}、{how}）", "決着": "直した"})
+                continue
             if (i, item) in have:
                 res.append({**row, "決めた値": "", "決め方": "既に直してある（#208）", "決着": "直した"})
                 continue

@@ -19,19 +19,19 @@
 4. 決着：`python3 scripts/resolve_error_candidates.py`（AI は呼ばない。規則はスクリプトの冒頭）。出力は `../corrections.csv`（直した値。行ごとに理由・原文の引用・出典 URL・判定者・指示文の版）、`../confirmed.csv`（読み直してサイトの値が正しかった項目）、`resolutions.csv`（候補の全項目の決着）。`tests/test_primary_source_corrections.py` が、表の値が記録から決まる値と同じことを確かめる。
 5. 反映の順：`resolve_error_candidates.py` → `build_all_laws_outcomes.py` → `build_macro_amounts.py`（PYTHONPATH=.）→ `build_three_columns.py` → `build_evaluation_ledger.py build` → `resolve_sample_failures.py` → `build_evaluation_ledger.py build` → `report_verification.py` → `check_error_types.py` → `build_industry_year_gap.py` → `rebuild_public.py` → `generate_artifacts.py`。
 
-## 結果（定義：候補 582 本、項目は類型 391・経済に効くか 255）
+## 結果（定義：候補 582 本、項目は類型 391・経済に効くか 255、行は corrections.csv に 595・confirmed.csv に 47）
 
 | 項目 | 決め方 | 直した | 誤りなし | 決められない |
 |---|---|---|---|---|
-| 類型 | 規則 K2 | 88 | | |
-| 類型 | Haiku 2系統の一致 | 240 | 47 | |
+| 類型 | 規則 K2 | 88（うち K3 にも当たる1本、閣法-171-65 は読み直しも実質改正で一致） | | |
+| 類型 | Haiku 2系統の一致 | 239 | 47 | |
 | 類型 | Sonnet との多数 | 15 | | |
 | 類型 | Opus の裁定 | 1 | | |
 | 経済に効くか | Haiku 2系統の一致 | 228 | | |
 | 経済に効くか | Sonnet との多数 | 24 | | |
 | 経済に効くか | 決められない（4つとも判定不能） | | | 3 |
 
-- 直した値：類型は実質改正 227・新規 60・定型改正 38・組織手続 19。経済に効くかは経済に効く 149・制度 103。
+- 直した値：類型は（K2 の 88 を除き）実質改正 226・新規 60・定型改正 38・組織手続 19。経済に効くかは経済に効く 149・制度 103。
 - 決められない3本：衆法-139-18（市民活動促進法、Opus も判定不能。C3 の候補に残る）、閣法-164-23・閣法-183-20（連鎖。類型は定型改正と決まり、時限法の延長なので RT8 で効果なし（定例）になった）。
 - 検査の候補（3,426 本中）：K1 0・K2 0・K3 0・C1 0・C2 0・C3 1（衆法-139-18）。R1 はサイトの誤りではないので対象外。
 
