@@ -12,7 +12,7 @@ import { isCovidBenefitGroup } from './public-distribution';
 import { useTone } from './site-tone';
 
 const PAGE = 60;
-const SIDE_OPTIONS: [CatalogQuery['side'], string][] = [['all', 'すべて'], ['confirmed', '確かな額'], ['amount', '額が出た（参考を含む）'], ['shared', '共有額の参考'], ['loss', '国賊側'], ['benefit', '国士側'], ['none', '額なし']];
+const SIDE_OPTIONS: [CatalogQuery['side'], string][] = [['all', 'すべて'], ['confirmed', '確かな額'], ['amount', '額が出た（参考を含む）'], ['shared', '共有額の参考'], ['loss', '国賊側'], ['benefit', '国士側'], ['undetermined', '向き未確定'], ['none', '額なし']];
 const SORT_OPTIONS: [CatalogQuery['sort'], string][] = [['amount', '額の大きい順'], ['loss', '損失の大きい順'], ['benefit', '便益の大きい順'], ['progress', '計算が進んだ順'], ['newest', '新しい順'], ['oldest', '古い順']];
 
 /** 詳細は束（提出回次ごと）を、初めてその束の行を開いた時に1回だけ読む。 */
@@ -75,7 +75,7 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
   const queryRef = useRef(query);
   queryRef.current = query;
   const filteredAll = useMemo(() => filterCatalog(all, query), [all, query]);
-  const refRevealed = showRef || query.text.trim() !== '' || query.side === 'amount' || query.side === 'loss' || query.side === 'benefit';
+  const refRevealed = showRef || query.text.trim() !== '' || query.side === 'amount' || query.side === 'loss' || query.side === 'benefit' || query.side === 'undetermined';
   const wholeRevealed = showWhole || query.text.trim() !== '' || query.side === 'shared';
   const opened = (item: CatalogItem) => revealed.has(item.id) || open === item.id;
   const afterRef = useMemo(() => refRevealed ? filteredAll : filteredAll.filter(item => item.step !== 'amounted' || opened(item)), [filteredAll, refRevealed, revealed, open]);
@@ -161,7 +161,7 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
       </div>
     </div>
     <p className="laws-count" role="status">{shown.length.toLocaleString('ja-JP')}件（確かな額{confirmed.toLocaleString('ja-JP')}・参考の額{(amounted - confirmed).toLocaleString('ja-JP')}・共有額の参考{sharedShown.toLocaleString('ja-JP')}・額なし{(shown.length - amounted - sharedShown).toLocaleString('ja-JP')}）{JSON.stringify(query) !== JSON.stringify(DEFAULT_QUERY) && <button type="button" onClick={() => update(DEFAULT_QUERY)}>絞り込みを外す</button>} <ShareButton title="法律と政策の一覧｜法律ランキング" text={`法律と政策の一覧（${shown.length.toLocaleString('ja-JP')}件）`} url={`${window.location.origin}/ranking${writeQuery(query, true)}#list`} label="この一覧を共有" /></p>
-    {(foldedRef > 0 || showRef) && !(query.text.trim() !== '' || query.side === 'amount' || query.side === 'loss' || query.side === 'benefit') && <p className="laws-fold" role="status">
+    {(foldedRef > 0 || showRef) && !(query.text.trim() !== '' || query.side === 'amount' || query.side === 'loss' || query.side === 'benefit' || query.side === 'undetermined') && <p className="laws-fold" role="status">
       <Layers size={15} aria-hidden="true" />
       <span>{showRef ? '参考の額も並べています。参考の額は産業や経済全体の差から見積もった値で、その法律だけの効果とは言えません（確かさ低。合計・議員には足しません）。' : `参考の額が付いた法律${foldedRef.toLocaleString('ja-JP')}本は畳んでいます。産業や経済全体の差から見積もった値で、その法律だけの効果とは言えず、合計・議員には足しません。`}</span>
       <button type="button" aria-pressed={showRef} onClick={() => { setShowRef(value => !value); setLimit(PAGE); }}>{showRef ? '畳む' : '参考の額も表示'}</button>
@@ -346,6 +346,6 @@ function CatalogDetailPanel({ item }: { item: CatalogItem }) {
     <ul className="laws-sources">{detail.sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} <ArrowUpRight size={13} /></a></li>)}</ul>
     <p className="laws-deeper">さらに詳しく：<a href="/methodology">計算方法</a>{item.href && <> ・ <a href={item.href}>この政策のページ</a></>} ・ <a href="https://github.com/nexus-ai-2045/public-interest-lens/tree/main/data/derived" target="_blank" rel="noopener noreferrer">計算に使った表 <ArrowUpRight size={13} /></a></p>
     <p className="correction-row"><a className="correction-link" href={correctionIssueUrl(target)} target="_blank" rel="noopener noreferrer">反論・訂正</a><span>この行の額・判定・出典への反論や訂正を GitHub の Issue で送る（対象と出典は入った状態で開きます）</span><a href={correctionListUrl(item.title)} target="_blank" rel="noopener noreferrer">寄せられた反論・訂正を見る</a>{CORRECTION_EMAIL && <a href={correctionMailUrl(target, CORRECTION_EMAIL)}>GitHub を使わずメールで送る</a>}</p>
-    <ShareButton title={`${lawNameText(item.title, item.what)}｜法律ランキング`} text={item.amount ? `${lawNameText(item.title, item.what)}：${item.side === 'loss' ? '損失' : '便益'}の推計 ${formatYen(item.amount.median)}（幅 ${formatYen(item.amount.low)}〜${formatYen(item.amount.high)}）` : `${lawNameText(item.title, item.what)}：${item.summary}`} url={`${window.location.origin}/ranking#${encodeURIComponent(item.id)}`} />
+    <ShareButton title={`${lawNameText(item.title, item.what)}｜法律ランキング`} text={item.amount ? `${lawNameText(item.title, item.what)}：${item.side === 'loss' ? '損失の推計' : item.side === 'benefit' ? '便益の推計' : '差の大きさの参考値（向き未確定）'} ${formatYen(item.amount.median)}（幅 ${formatYen(item.amount.low)}〜${formatYen(item.amount.high)}）` : `${lawNameText(item.title, item.what)}：${item.summary}`} url={`${window.location.origin}/ranking#${encodeURIComponent(item.id)}`} />
   </div>;
 }

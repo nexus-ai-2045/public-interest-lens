@@ -1,4 +1,4 @@
-/* /numbers（数字で見る）。色は国賊（損失）と国士（便益）の2色だけ。どちらも文字の印（凡例・吹き出し・表）でも読める。
+/* /numbers（数字で見る）。色は国賊（損失）と国士（便益）の2色と、向き未確定（参考）の灰色。どれも文字の印（凡例・吹き出し・表）でも読める。
  * 2色は dataviz の検査（色覚の差・明るさ・背景との対比）を明るい背景 #fff と暗い背景 #151515 で通した値。 */
 .numbers-page{--c-loss:#e8495a;--c-benefit:#13a094;--c-seg1:#8a96a3;--c-seg2:#c7ced6}
 .numbers-page[data-theme=light]{--c-loss:#d2394b;--c-benefit:#0f9a8f;--c-seg1:#65717f;--c-seg2:#b8c2cc}
@@ -15,7 +15,7 @@
 .nc-base{stroke:var(--muted);stroke-width:1}
 .nc-axis{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
 .nc-bar{stroke:var(--bg);stroke-width:2;paint-order:stroke}
-.nc-bar.loss{fill:var(--c-loss)}.nc-bar.benefit{fill:var(--c-benefit)}
+.nc-bar.loss{fill:var(--c-loss)}.nc-bar.benefit{fill:var(--c-benefit)}.nc-bar.undetermined{fill:var(--c-seg1)}
 .nc-hit{fill:transparent;cursor:pointer;outline:none}
 .nc-hit:focus-visible{stroke:var(--accent);stroke-width:2}
 /* 入場：棒が基線から伸びる。国賊（下向き）は沈み、国士（上向き）は浮く。 */
@@ -24,9 +24,10 @@
 .nc-svg.is-in .nc-bar{transform:scaleY(1)}
 .nc-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 8px;font-size:13px;color:var(--ink)}
 .nc-key{display:inline-flex;align-items:center;gap:6px}.nc-key i{width:14px;height:10px;border-radius:3px;display:inline-block}
-.nc-key.loss i{background:var(--c-loss)}.nc-key.benefit i{background:var(--c-benefit)}
+.nc-key.loss i{background:var(--c-loss)}.nc-key.benefit i{background:var(--c-benefit)}.nc-key.undetermined i{background:var(--c-seg1)}
+.nc-undetermined-note{margin:4px 0 8px;padding:8px 12px;border-left:3px solid var(--c-seg1);background:var(--quiet);font-size:13px;line-height:1.6;max-width:70ch}
 .nc-tip{position:absolute;z-index:5;transform:translate(-50%,calc(-100% - 10px));pointer-events:none;max-width:280px;padding:6px 10px;border-radius:6px;background:var(--ink);color:var(--bg);font-size:12px;line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.nc-switch{display:inline-flex;gap:0;margin:0 0 6px}.nc-switch button{border-radius:0;font-size:13px;padding:8px 12px;min-height:40px}
+.nc-switch{display:inline-flex;flex-wrap:wrap;gap:0;margin:0 0 6px}.nc-switch button{border-radius:0;font-size:13px;padding:8px 12px;min-height:40px}
 .nc-switch button:first-child{border-radius:7px 0 0 7px}.nc-switch button:last-child{border-radius:0 7px 7px 0}
 .nc-switch button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
 .nc-certainty,.nc-party{width:100%;border-collapse:collapse;font-size:14px;margin-top:12px}

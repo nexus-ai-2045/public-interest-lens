@@ -226,7 +226,7 @@ class CompletionTest(unittest.TestCase):
         self.assertEqual(status[2]["state"], "未達")
         self.assertIn("計 2 本", status[2]["now"])
         self.assertEqual(status[3]["state"], "達成")  # 不合格は参考に下げてあり、不合格のままは0
-        self.assertIn("参考に下げた 1 本、不合格のまま 0 本", status[3]["now"])
+        self.assertIn("参考に下げた 1 本、読み直しで合格に訂正 0 本、不合格のまま 0 本", status[3]["now"])
         self.assertEqual(status[4]["state"], "未達")
         self.assertIn("CI と同じ検査", status[4]["now"])
 

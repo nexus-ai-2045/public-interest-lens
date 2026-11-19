@@ -1,4 +1,4 @@
-import type { ExposureRanking, PublicExposureRanking } from './exposure-ranking';
+import type { PanelExposureRanking, PublicExposureRanking } from './exposure-ranking';
 import { validGenerationMetadata, type GenerationMetadata } from './generation-metadata';
 /** コロナ対応の費用便益（covid-benefit-v1）の観測グループ。比較国を持たない。 */
 export const COVID_BENEFIT_GROUP = '全体指標-コロナ費用便益';
@@ -189,6 +189,8 @@ export function parsePublicExposureRanking(text: string): PublicExposureDistribu
   for (const row of [...data.people, ...data.parties]) {
     if ((row.tier === null) !== (row.exposureYen === null)) throw new Error('曝露ランキングの額の伏せ方が不正です');
   }
+  // 未配分は群×役割の合計（reasons の配列つき）。古い形（laws・reason）のファイルは受け取らない。
+  if (!data.unallocated.every(u => Array.isArray(u.reasons) && !('laws' in u))) throw new Error('曝露ランキングの未配分の形式が違います（古いデータ）');
   return data;
 }
 
@@ -198,14 +200,14 @@ const ZERO = { low: 0, median: 0, high: 0 };
  * （階層に入らない行の額と、本数が下限に満たない内訳を含む行の内訳の額。画面はどちらも出さない）。
  * 合計まで伏せた状態（額を出さない行が1つだけ）は、画面の検算が嘘になるので受け取らない。
  */
-export function panelExposureRanking(data: PublicExposureRanking): ExposureRanking {
+export function panelExposureRanking(data: PublicExposureRanking): PanelExposureRanking {
   const { totals } = data;
-  if (!totals.people || !totals.parties || !totals.unallocated || !totals.expected || data.unallocated.some(u => u.exposureYen === null)) throw new Error('合計を伏せた曝露ランキングは画面に出せません');
+  if (!totals.people || !totals.parties || !totals.unallocated || !totals.expected) throw new Error('合計を伏せた曝露ランキングは画面に出せません');
   const row = (r: PublicExposureRanking['people'][number]) => ({ ...r, exposureYen: r.exposureYen ?? ZERO, cells: r.cells.map(c => ({ ...c, exposureYen: c.exposureYen ?? ZERO })) });
   return {
     schema: data.schema, claim: data.claim, disclaimer: data.disclaimer, params: data.params,
     people: data.people.map(row), parties: data.parties.map(row),
-    unallocated: data.unallocated.map(u => ({ ...u, exposureYen: u.exposureYen ?? ZERO })),
+    unallocated: data.unallocated,
     totals: { people: totals.people, parties: totals.parties, unallocated: totals.unallocated, expected: totals.expected },
   };
 }

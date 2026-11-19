@@ -15,9 +15,17 @@ import hashlib
 import json
 import re
 from collections import defaultdict
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.build_public_ranking import direction_undetermined  # noqa: E402
+
+# 向き未確定の額（産業と比較国の差の符号しか無い）の表し方。side は国賊側・国士側に分けず undetermined にする（リリース前レビュー指摘1・4）。
+UNDETERMINED = "undetermined"
 DERIVED = ROOT / "data" / "derived"
 ACQUIRED = ROOT / "data" / "acquired"
 DIST = ROOT / "app" / "public" / "distribution"
@@ -28,7 +36,7 @@ NAMES_OUTPUT = DIST / "law-names.json"
 # 一覧の1行に要る項目。残り（因果の鎖・一次資料など）は開いた時に laws-detail/<束>.json から読む。
 # laws.json で1本1行に並べる一覧（dump_one_per_line）。
 LINE_KEYS = ("laws", "policies")
-INDEX_KEYS = ("id", "kind", "title", "year", "field", "side", "amount", "certainty", "marks", "step", "what", "whatWithheld", "summary", "href", "observation", "scale", "shared", "refReason", "refBasis")
+INDEX_KEYS = ("id", "kind", "title", "year", "field", "side", "gapSide", "amount", "certainty", "marks", "step", "what", "whatWithheld", "summary", "href", "observation", "scale", "shared", "refReason", "refBasis")
 
 INPUTS = {
     "enacted": ACQUIRED / "bill-census-full" / "enacted.csv",
@@ -240,11 +248,16 @@ SHARED_MARKS = ["共有額の参考（法律ごとに分けていない）", "�
 SHARED_RATIO_FLOOR = 0.1  # 共有額が日本の付加価値1年分のこの割合以上なら、画面に「1年分の○%」を添える
 
 
-def shared_fields(group: dict, value_added: dict[int, float]) -> dict:
+def amount_word(side: str) -> str:
+    """額の呼び名。向き未確定は損失とも便益とも呼ばず「差の大きさ（向き未確定）」にする。"""
+    return {"loss": "損失", "benefit": "便益", UNDETERMINED: "差の大きさ（向き未確定）"}[side]
+
+
+def shared_fields(group: dict, value_added: dict[int, float], undetermined: bool = False) -> dict:
     """共有額の参考値の欄。1本ごとの額は持たず、共有された額（総枠 X）の一部（0〜X）として見せる材料だけ。
-    ratio は X ÷ 窓の開始前最後の年の日本の付加価値（年が無い・値が無いときは付けない）。"""
+    ratio は X ÷ 窓の開始前最後の年の日本の付加価値（年が無い・値が無いときは付けない）。向き未確定なら side は undetermined。"""
     out = {"key": group["key"], "size": group["size"], "median": group["medianYen"], "low": group["lowYen"], "high": group["highYen"],
-           "side": group["side"], "whole": group["industry"] == "_T"}
+           "side": UNDETERMINED if undetermined else group["side"], "whole": group["industry"] == "_T"}
     year = start_year(group["window"])
     base = value_added.get(year - 1) if year else None
     if base:
@@ -337,7 +350,7 @@ def build() -> dict:
             item["sources"].append({"label": "国会の議案情報（審議の経過）", "url": census["経過URL"]})
         if law:
             item.update({
-                "side": law["side"],
+                "side": UNDETERMINED if direction_undetermined(law["notes"]) else law["side"],
                 "amount": {"median": law["amountMedianYen"], "low": law["amountLowYen"], "high": law["amountHighYen"]},
                 "certainty": law["certainty"],
                 "marks": [CERTAINTY[law["certainty"]]] + (["下限（未測定の便益を0として数えた）"] if law["lowerBound"] else []) + law["notes"],
@@ -352,10 +365,15 @@ def build() -> dict:
                 "benefitStatus": law["benefitStatus"],
             })
             item.update(ref_fields(law))
+            if item["side"] == UNDETERMINED:
+                # 差の符号の記録（法律の向きではない）。画面は読まない。バックテスト（scripts/backtest.py）が「計算の向き」として読む
+                item["gapSide"] = law["side"]
+            if item["side"] == UNDETERMINED and item["step"] == "published":
+                raise ValueError(f"向き未確定の額が確かな額になっています: {law_id}")
             if law["amountLowYen"] < 0 < law["amountHighYen"]:
                 item["marks"].append("向きが定まらない（幅が0をまたぐ）")
             kind = "参考値" if law["certainty"] == "参考" or "refReason" in item else "推計"
-            item["summary"] = ("損失" if law["side"] == "loss" else "便益") + f"の{kind}（{law['window']}・{law['indicator']}）"
+            item["summary"] = amount_word(item["side"]) + f"の{kind}（{law['window']}・{law['indicator']}）"
             known = {source["url"] for source in item["sources"]}
             item["sources"] += [link for link in source_links(law["sources"]) if link["url"] not in known]
             if law_id in covid_benefit:
@@ -363,7 +381,7 @@ def build() -> dict:
         elif other and law_id in shared_laws:
             # 共有額の参考：1本ごとの額は持たない（amount は None のまま）。順位・合計に入れない。降格（検証で不合格）とは別の印
             ref, group = shared_laws[law_id], shared_groups[shared_laws[law_id]["key"]]
-            shared = shared_fields(group, value_added)
+            shared = shared_fields(group, value_added, direction_undetermined(ref["notes"]))
             item["step"] = OUTCOME_STEP.get(other["outcome"], "enacted")
             item["field"] = ref["field"].replace("（既存の規則で）", "").strip() or item["field"]
             item["shared"] = shared
@@ -399,7 +417,7 @@ def build() -> dict:
         if not item["sources"]:
             item["sources"].append({"label": "衆議院 成立した法律の一覧", "url": census["出典URL"]})
         if law:
-            result = ("損失" if law["side"] == "loss" else "便益") + f"の{'参考値' if law['certainty'] == '参考' else '推計'} {yen(law['amountMedianYen'])}（幅 {yen(law['amountLowYen'])}〜{yen(law['amountHighYen'])}、{CERTAINTY[law['certainty']]}）"
+            result = amount_word(item["side"]) + f"の{'参考値' if law['certainty'] == '参考' else '推計'} {yen(law['amountMedianYen'])}（幅 {yen(law['amountLowYen'])}〜{yen(law['amountHighYen'])}、{CERTAINTY[law['certainty']]}）"
         else:
             result = item["summary"]
         item["overview"] = overview(census, speeches.get(law_id), written.get(law_id), result, ambiguous(law_id))

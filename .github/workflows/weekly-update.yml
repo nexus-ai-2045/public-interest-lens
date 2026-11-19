@@ -58,13 +58,14 @@ jobs:
           python-version: '3.12'
       - run: npm ci
         working-directory: app
-      # 取得の段が使う道具。無いと段が失敗する：pdftotext（poppler-utils。国策の本文・数値目標の系列）、
-      # openpyxl・xlrd（財務省・総務省などの Excel）。
+      # 取得の段が使う道具。無いと段が失敗する。Python の部品の正本は scripts/requirements-fetch.txt
+      # （tests/test_fetch_requirements.py が取りこぼしを落とす）。コマンド：pdftotext（poppler-utils）と、
+      # 埋め込みの無い日本語フォントの PDF を読むための poppler-data。
       - name: 取得に使う道具を入れる
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends poppler-utils
-          python3 -m pip install --disable-pip-version-check openpyxl==3.1.5 xlrd==2.0.1
+          sudo apt-get install -y --no-install-recommends poppler-utils poppler-data
+          python3 -m pip install --disable-pip-version-check -r scripts/requirements-fetch.txt
           pdftotext -v
       # 公開用の名義を設定し、書き込みの前に identity guard の config を通す。不合格ならここで止まり、何も書かない。
       - name: 公開用の名義を設定して identity guard の config を通す

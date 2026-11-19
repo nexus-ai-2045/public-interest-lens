@@ -5,6 +5,7 @@ import json
 import unittest
 
 from scripts import build_laws_catalog as catalog
+from scripts.build_public_ranking import direction_undetermined
 from _data_gate import requires_data  # noqa: E402
 
 
@@ -32,7 +33,8 @@ class BuildLawsCatalogTest(unittest.TestCase):
         for law in self.ranking["laws"]:
             item = self.laws[law["id"]]
             self.assertEqual(item["amount"], {"median": law["amountMedianYen"], "low": law["amountLowYen"], "high": law["amountHighYen"]})
-            self.assertEqual(item["side"], law["side"])
+            # 向き未確定（全体指標の差の符号だけ）の額は国賊側・国士側に分けない（リリース前レビュー指摘1・4）
+            self.assertEqual(item["side"], "undetermined" if direction_undetermined(law["notes"]) else law["side"])
             self.assertIn(catalog.CERTAINTY[law["certainty"]], item["marks"])
 
     def test_laws_without_amount_carry_the_public_reason(self):

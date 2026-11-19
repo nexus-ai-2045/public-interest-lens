@@ -30,6 +30,7 @@
  *     階層に入った行も、内訳に本数が下限（minLaws）に満たない群×役割が1つでもあれば内訳の額を全部伏せる（1つだけ伏せても合計との引き算で読めるため）。
  *     額を出さない人・会派の分の合計は出す（複数の合算で、個人の額ではない。丸めはしない）。ただし額を出さない人・会派が合わせて1つだけのときは、
  *     その合計も totals の全部（expected・unallocated を含む）も未配分の内訳の額も伏せる（null。expected − unallocated − 出ている額 でその1つの額が読めるため）。
+ *     未配分は群×役割の合計に束ね、「N本ぶんの枠」の本数は出さない。本数が下限に満たない群×役割は役割ごとの1行にまとめる（summarizeUnallocated）。
  */
 
 import type { GroupDiff, Range } from './scoring-types';
@@ -255,7 +256,8 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
     const concentrated = (r: { laws: number; topThreeShare: number }) => !few(r) && r.topThreeShare > params.topThreeShareCap + SHARE_EPS;
     const ranked = assignTiers(rows.filter(r => !few(r) && !concentrated(r))).map(r => ({ ...r, unrankedReason: '' }));
     const unranked = rows.filter(r => few(r) || concentrated(r))
-      .sort((a, b) => b.exposureYen.median - a.exposureYen.median || a.actorId.localeCompare(b.actorId))
+      // 額を出さない行は額の順に並べない（並びから伏せた額の大小が読めるため）。ID の順。
+      .sort((a, b) => a.actorId.localeCompare(b.actorId))
       .map(r => ({
         ...r, tier: null,
         unrankedReason: few(r)
@@ -290,17 +292,57 @@ export type PublicExposureRow = Omit<ExposureRow, 'exposureYen' | 'cells'> & {
 };
 /** 額を出さない人（または会派）の合計。count は件数。額を出さない行が全体で1つだけのときは exposureYen を伏せて null にする。 */
 export type HiddenTotal = { count: number; exposureYen: Range | null };
-export type PublicUnallocated = Omit<Unallocated, 'exposureYen'> & { exposureYen: Range | null };
+/**
+ * 未配分の見せる単位：群（産業×年）×役割の合計（院と理由は束ねる）。本数（「N本ぶんの枠」）は出さない。
+ * 本数が少ない（下限 minLaws 未満と数えた）群×役割は、群も役割も分けずに1行（groupId: null・role: null）へまとめる（1本ぶんの枠の額を行として出さないため）。
+ * まとめる群×役割が1つだけのときは、そのまとめ行の額も出さない（exposureYen: null。1つの群×役割の額そのものになるため）。
+ */
+export type UnallocatedSummary = { groupId: string | null; role: ExposureRole | null; reasons: string[]; exposureYen: Range | null };
+export type PublicUnallocated = UnallocatedSummary;
+
+/**
+ * 未配分を群×役割の合計に束ねる（純関数）。合計の額は束ねる前と同じ。
+ * 群×役割の本数は、束ねる前の行（院・理由ごと）の本数の最大で見る。和集合は最大以上なので、下限を満たすと判定した行は必ず満たす（逆は少なめに見て役割ごとの1行へ回す）。
+ */
+export function summarizeUnallocated(rows: readonly Unallocated[], minLaws: number): UnallocatedSummary[] {
+  type Acc = { groupId: string; role: ExposureRole | null; laws: number; reasons: Set<string>; exposureYen: Range };
+  const byCell = new Map<string, Acc>();
+  for (const u of rows) {
+    const key = `${u.groupId}\u0000${u.role ?? ''}`;
+    const a = byCell.get(key) ?? { groupId: u.groupId, role: u.role, laws: 0, reasons: new Set<string>(), exposureYen: zero() };
+    a.laws = Math.max(a.laws, u.laws);
+    a.reasons.add(u.reason);
+    a.exposureYen = add(a.exposureYen, u.exposureYen);
+    byCell.set(key, a);
+  }
+  const shown: UnallocatedSummary[] = [];
+  const few = { cells: 0, reasons: new Set<string>(), exposureYen: zero() };
+  for (const a of byCell.values()) {
+    if (a.laws >= minLaws) { shown.push({ groupId: a.groupId, role: a.role, reasons: [...a.reasons].sort(), exposureYen: a.exposureYen }); continue; }
+    few.cells++;
+    a.reasons.forEach(r => few.reasons.add(r));
+    few.exposureYen = add(few.exposureYen, a.exposureYen);
+  }
+  const order = (r: ExposureRole | null) => (r === null ? -1 : EXPOSURE_ROLES.indexOf(r));
+  shown.sort((x, y) => (x.groupId ?? '').localeCompare(y.groupId ?? '') || order(x.role) - order(y.role));
+  if (few.cells === 0) return shown;
+  return [...shown, { groupId: null, role: null, reasons: [`本数の少ない群×役割（${few.cells}件）をまとめた合計`, ...[...few.reasons].sort()], exposureYen: few.cells > 1 ? few.exposureYen : null }];
+}
 export type PublicExposureRanking = Omit<ExposureRanking, 'people' | 'parties' | 'totals' | 'unallocated'> & {
   people: PublicExposureRow[];
   parties: PublicExposureRow[];
   /** 額を出さない人・会派（階層に入らない行）の合計。 */
   hidden: { people: HiddenTotal; parties: HiddenTotal };
-  /** 未配分の内訳。額を出さない行が合わせて1つだけのときは額を null にする。 */
+  /** 未配分の内訳（群×役割の合計。summarizeUnallocated）。額を出さない行が合わせて1つだけのときは額を null にする。 */
   unallocated: PublicUnallocated[];
   /** 全員ぶんの合計。額を出さない行が合わせて1つだけのときは、どの合計からでも引き算で読めるので全部 null。 */
   totals: { people: Range | null; parties: Range | null; unallocated: Range | null; expected: Range | null };
 };
+
+/** 画面部品（ExposureRankingPanel）の入力：未配分だけ群×役割の合計（summarizeUnallocated）にしたもの。 */
+export type PanelExposureRanking = Omit<ExposureRanking, 'unallocated'> & { unallocated: UnallocatedSummary[] };
+export const toPanelExposureRanking = (ranking: ExposureRanking): PanelExposureRanking =>
+  ({ ...ranking, unallocated: summarizeUnallocated(ranking.unallocated, ranking.params.minLaws) });
 
 /** 内訳の額を出してよいか：本数が下限に満たない内訳が1つも無いこと。 */
 const cellsShowable = (cells: readonly ExposureCell[], minLaws: number): boolean => cells.every(c => c.laws >= minLaws);
@@ -311,6 +353,7 @@ const cellsShowable = (cells: readonly ExposureCell[], minLaws: number): boolean
  * - 階層に入った行：内訳に本数が minLaws 未満のものが1つでもあれば、内訳の額を全部出さない。
  * - 額を出さない人・会派の合計を hidden に件数つきで足す。額を出さない行が人・会派を合わせて1つだけのときは、
  *   hidden の額、totals の全部（expected・unallocated を含む）、未配分の内訳の額を null にする（expected − unallocated − 出ている額 で読めるため）。
+ * - 未配分は群×役割の合計に束ね、本数を出さない。本数が minLaws に満たない群×役割は役割ごとの1行にまとめる（summarizeUnallocated）。
  */
 export function toPublicExposureRanking(ranking: ExposureRanking, minLaws: number): PublicExposureRanking {
   const toRow = (r: ExposureRow): PublicExposureRow => {
@@ -335,7 +378,7 @@ export function toPublicExposureRanking(ranking: ExposureRanking, minLaws: numbe
       people: { count: hp.length, exposureYen: withheld ? null : sumOf(hp) },
       parties: { count: pp.length, exposureYen: withheld ? null : sumOf(pp) },
     },
-    unallocated: ranking.unallocated.map(u => ({ ...u, exposureYen: withheld ? null : u.exposureYen })),
+    unallocated: summarizeUnallocated(ranking.unallocated, minLaws).map(u => ({ ...u, exposureYen: withheld ? null : u.exposureYen })),
     totals: {
       people: withheld ? null : ranking.totals.people,
       parties: withheld ? null : ranking.totals.parties,

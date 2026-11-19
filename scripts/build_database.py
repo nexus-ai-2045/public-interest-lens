@@ -17,11 +17,16 @@ import hashlib
 import json
 import re
 import sqlite3
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.build_public_ranking import direction_undetermined  # noqa: E402
 DIST = ROOT / "app" / "public" / "distribution"
 ACQ = ROOT / "data" / "acquired"
 DERIVED = ROOT / "data" / "derived"
@@ -603,33 +608,53 @@ CHART_INPUTS = {DIST / "ranking.json", DIST / "laws.json",
 # ---- グラフ用の集計（公開サイトの /numbers） ----
 
 def charts(con: sqlite3.Connection, spec_version: str) -> dict:
+    """/numbers のグラフ用の集計（public-charts/v2）。
+
+    向きの区分は3つ：loss（国賊側）・benefit（国士側）・undetermined（向き未確定）。向き未確定の額は側に分けず、
+    印つきの1つの参考として数える（設計 v2.1・0027：向きを産業の差の符号で決めない。リリース前レビュー指摘1）。"""
     q = lambda sql, *a: con.execute(sql, a).fetchall()  # noqa: E731
+    notes: dict[str, list[str]] = defaultdict(list)
+    for law_id, note in q("SELECT law_id, note FROM law_notes"):
+        notes[law_id].append(note)
+
+    def direction(law_id: str, side: str, certainty: str) -> str:
+        if not direction_undetermined(notes[law_id]):
+            return side
+        if certainty != "参考":
+            raise ValueError(f"向き未確定の額が確かな額になっています: {law_id}")
+        return "undetermined"
+
     # 同じ観測（群・窓・額が同じ）を共有する法律は、観測の額を本数で割らず、観測ごとに1回だけ代表の1本で数える（設計 v2.1）。
     # 代表は公開ランキングと同じく確かさの高い順、同じなら id の昇順の先頭。
-    rows = q("SELECT l.observation_id, l.law_id, l.side, l.certainty, l.median, l.enforced_on FROM laws l WHERE l.outcome='額' AND l.observation_id IS NOT NULL")
+    rows = [(obs, law, direction(law, side, certainty), certainty, median, enforced) for obs, law, side, certainty, median, enforced in q(
+        "SELECT l.observation_id, l.law_id, l.side, l.certainty, l.median, l.enforced_on FROM laws l WHERE l.outcome='額' AND l.observation_id IS NOT NULL")]
     order = {"高": 1, "中": 2, "低": 3}
     representative: dict[str, tuple] = {}
     for row in sorted(rows, key=lambda r: (order.get(r[3], 4), r[1])):
         representative.setdefault(row[0], row)
     # 額の分布：桁（10^k 円）ごとの本数。観測1つにつき代表の1本だけ数える。
-    dist = defaultdict(lambda: {"loss": 0, "benefit": 0})
-    for _obs, _law, side, _certainty, median, _enforced in representative.values():
+    dist = defaultdict(lambda: {"loss": 0, "benefit": 0, "undetermined": 0})
+    for _obs, _law, way, _certainty, median, _enforced in representative.values():
         if median and median > 0:
-            dist[len(str(int(median))) - 1][side] += 1
+            dist[len(str(int(median))) - 1][way] += 1
     histogram = [{"exp": k, **dist[k]} for k in range(min(dist), max(dist) + 1)] if dist else []
-    by_certainty = [{"certainty": c, "loss": lo, "benefit": be, "laws": n} for c, lo, be, n in q(
-        "SELECT certainty, SUM(side='loss'), SUM(side='benefit'), COUNT(*) FROM laws WHERE outcome='額' GROUP BY certainty ORDER BY CASE certainty WHEN '高' THEN 1 WHEN '中' THEN 2 WHEN '低' THEN 3 ELSE 4 END")]
+    certainties = defaultdict(lambda: {"loss": 0, "benefit": 0, "undetermined": 0})
+    for law_id, side, certainty in q("SELECT law_id, side, certainty FROM laws WHERE outcome='額'"):
+        certainties[certainty][direction(law_id, side, certainty)] += 1
+    by_certainty = [{"certainty": c, **certainties[c], "laws": sum(certainties[c].values())}
+                    for c in sorted(certainties, key=lambda c: order.get(c, 4))]
     # 時系列：施行年ごとの本数（額のある法律の全部）と、額の合計。額は観測ごとに1回、代表の1本の施行年に数える（本数で割らない）。
-    years = defaultdict(lambda: {"laws": 0, "confirmedLoss": 0, "confirmedBenefit": 0, "referenceLoss": 0, "referenceBenefit": 0})
-    for _obs, _law, _side, _certainty, _median, enforced in rows:
+    # 向き未確定は参考だけにある（確かな額にならない）ので、referenceUndetermined の1欄だけ持つ。
+    years = defaultdict(lambda: {"laws": 0, "confirmedLoss": 0, "confirmedBenefit": 0, "referenceLoss": 0, "referenceBenefit": 0, "referenceUndetermined": 0})
+    for _obs, _law, _way, _certainty, _median, enforced in rows:
         if enforced:
             years[int(enforced[:4])]["laws"] += 1
-    for _obs, _law, side, certainty, median, enforced in representative.values():
+    for _obs, _law, way, certainty, median, enforced in representative.values():
         if enforced:
-            key = ("confirmed" if certainty != "参考" else "reference") + ("Loss" if side == "loss" else "Benefit")
+            key = ("confirmed" if certainty != "参考" else "reference") + way[0].upper() + way[1:]
             years[int(enforced[:4])][key] += median or 0
     timeline = [{"year": y, **years[y]} for y in sorted(years)]
-    return {"schema": "public-charts/v1", "spec": spec_version, "histogram": histogram, "byCertainty": by_certainty, "timeline": timeline}
+    return {"schema": "public-charts/v2", "spec": spec_version, "histogram": histogram, "byCertainty": by_certainty, "timeline": timeline}
 
 
 def build(out: Path, write_charts: bool) -> dict:

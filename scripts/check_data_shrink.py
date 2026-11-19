@@ -8,6 +8,8 @@
 - 消えたファイル・空になったファイル
 - CSV：基準が --min-rows 行以上あり、行数か、中身のあるセルの数が --max-drop を超えて減った
   （空のセルだけの行は数えない。行は残って一部の中身だけ空になる取得の切れは、セルの数で拾う）
+- CSV の列：基準で中身のあるセルが --min-rows 以上ある列が、消えたか、中身が --max-drop を超えて減った
+  （列が多い表では1列が丸ごと空になっても全体のセル数は 10% も減らない。証拠URL の列が空になる切れを拾う）
 - それ以外（JSON など）：基準が --min-bytes バイト以上あり、大きさが --max-drop-bytes を超えて減った
 
 ロジックを変えて意図して減らすときは、その変更の PR で派生データを作り直して取り込む（基準の側を新しくする）。
@@ -48,6 +50,20 @@ def csv_shape(data: bytes) -> tuple[int, int]:
     return len(rows), sum(1 for row in rows for cell in row if cell.strip())
 
 
+def csv_columns(data: bytes) -> dict[str, int]:
+    """列名 → 中身のあるセルの数。見出しの無い列や同じ名前の列は、最初の1つだけ数える。"""
+    csv.field_size_limit(sys.maxsize)
+    rows = list(csv.reader(io.StringIO(data.decode("utf-8-sig", errors="replace"), newline="")))
+    if not rows:
+        return {}
+    header, body = rows[0], rows[1:]
+    out: dict[str, int] = {}
+    for index, name in enumerate(header):
+        if name and name not in out:
+            out[name] = sum(1 for row in body if index < len(row) and row[index].strip())
+    return out
+
+
 def _dropped(before: int, after: int, max_drop: float) -> bool:
     return after < before * (1 - max_drop)
 
@@ -68,6 +84,14 @@ def judge(path: str, before: bytes, after: bytes | None, *, max_drop: float = MA
             return Finding(path, f"行数 {rows_before:,} → {rows_after:,}")
         if _dropped(cells_before, cells_after, max_drop):
             return Finding(path, f"中身のあるセル {cells_before:,} → {cells_after:,}（行数は {rows_before:,} → {rows_after:,}）")
+        columns_after = csv_columns(after)
+        for name, filled_before in csv_columns(before).items():
+            if filled_before < min_rows:
+                continue
+            if name not in columns_after:
+                return Finding(path, f"列「{name}」が消えた（中身のあるセル {filled_before:,}）")
+            if _dropped(filled_before, columns_after[name], max_drop):
+                return Finding(path, f"列「{name}」の中身のあるセル {filled_before:,} → {columns_after[name]:,}")
         return None
     if len(before) >= min_bytes and _dropped(len(before), len(after), max_drop_bytes):
         return Finding(path, f"大きさ {len(before):,} → {len(after):,} バイト")

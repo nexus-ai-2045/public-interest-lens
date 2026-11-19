@@ -12,6 +12,8 @@ tests/test_primary_source_corrections.py が確かめる。
                 経済に効く：題名の型（整備法など）・経済の区分の制度・定例の規則・種類による対象外に当てない
                 （続けなければ止まる補助や特例がある期限の延長など）。その先はふつうの順で決める
                 （市場の経路、マクロ指標の代理で保留、どれにも当たらなければ測定できない）。
+                判定不能：一次資料の読み直し（Haiku 2系統・Sonnet・Opus）でも決められなかった。定例の規則（RT8）だけに当てない
+                （期限の延長で、続けなければ止まるお金があるかが分からないまま効果なし（定例）に確定させない）。台帳には判定不能と出る。
 """
 from __future__ import annotations
 
@@ -23,6 +25,7 @@ PATH = ROOT / "data" / "derived" / "primary-source-corrections-v1" / "correction
 ITEMS = ("類型", "経済に効くか")
 ECON = "経済に効く"
 INSTITUTIONAL = "制度"
+UNDECIDED = "判定不能"
 METHOD = "一次資料の読み直し"
 
 
@@ -35,8 +38,10 @@ def load(path: Path = PATH) -> dict[str, dict[str, dict[str, str]]]:
         for r in csv.DictReader(f):
             if r["項目"] not in ITEMS:
                 raise ValueError(f"{path.name}: 項目「{r['項目']}」は {ITEMS} のどれでもない（{r['id']}）")
-            if r["項目"] == "経済に効くか" and r["直した値"] not in (ECON, INSTITUTIONAL):
+            if r["項目"] == "経済に効くか" and r["直した値"] not in (ECON, INSTITUTIONAL, UNDECIDED):
                 raise ValueError(f"{path.name}: 経済に効くかの値「{r['直した値']}」が定義に無い（{r['id']}）")
+            if r["項目"] in out.get(r["id"], {}):
+                raise ValueError(f"{path.name}: {r['id']} の「{r['項目']}」の行が2つある")
             out.setdefault(r["id"], {})[r["項目"]] = r
     return out
 

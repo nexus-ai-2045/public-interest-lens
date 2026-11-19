@@ -454,9 +454,12 @@ def _sampling_condition(d: Path) -> dict:
     state = Counter(r["検証状態"] for r in read_csv(base / "ledger.csv") if r["id"] in sample)
     still_failed, demoted = state["抜き取り検証で不合格"], state["参考に下げた"]
     unjudged = len(sample) - len(verdict_of)
+    # 不合格の判定のうち、台帳で「参考に下げた」でも「不合格のまま」でもないもの＝一次資料の読み直しで合格に訂正した法律
+    ledger_state = {r["id"]: r["検証状態"] for r in read_csv(base / "ledger.csv") if r["id"] in sample}
+    reread = sum(1 for i, v in verdict_of.items() if v == "不合格" and ledger_state.get(i) not in ("参考に下げた", "抜き取り検証で不合格"))
     return {
         "state": "達成" if unjudged == 0 and still_failed == 0 else "未達",
-        "now": f"抜き取り {len(sample):,} 本中、判定済み {len(verdict_of):,} 本（合格 {tally['合格']:,}、不合格 {tally['不合格']:,}）、判定なし {unjudged:,} 本。不合格のうち参考に下げた {demoted:,} 本、不合格のまま {still_failed:,} 本",
+        "now": f"抜き取り {len(sample):,} 本中、判定済み {len(verdict_of):,} 本（合格 {tally['合格']:,}、不合格 {tally['不合格']:,}）、判定なし {unjudged:,} 本。不合格のうち参考に下げた {demoted:,} 本、読み直しで合格に訂正 {reread:,} 本、不合格のまま {still_failed:,} 本",
         "how": "sample.csv・sample-verdicts.csv と台帳の検証状態。やり直しの有無は判定の中身からは分からない",
     }
 
