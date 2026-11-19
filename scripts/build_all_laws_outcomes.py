@@ -34,6 +34,7 @@ try:
     from scripts.evaluation_rules import (
         ROUTE_NO_CHAIN,
         ROUTE_SIGN_CONFLICT,
+        ROUTE_SOURCE_FIELD,
         involved_law_ids,
         sign_conflict,
     )
@@ -42,6 +43,7 @@ except ImportError:  # python3 scripts/build_all_laws_outcomes.py（scripts/ が
     from evaluation_rules import (
         ROUTE_NO_CHAIN,
         ROUTE_SIGN_CONFLICT,
+        ROUTE_SOURCE_FIELD,
         involved_law_ids,
         sign_conflict,
     )
@@ -245,6 +247,21 @@ def crowded_ids(loss_rows) -> set[str]:
 
 
 def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dict[str, str]:
+    """1本の結果。一次資料で直した分野（primary-source-corrections-v1）があれば、分野をその値にする。
+    個別の額は振り分けの分野の産業で計算してあるので、分野が変わった法律には、直した分野で計算し直すまで額を付けない。"""
+    out = decide_by_triage(law, t, date, st)
+    field = corrections.value(getattr(st, "corrections", {}), t["id"], "分野")
+    if not field:
+        return out
+    shown = NO_FIELD if field.startswith("経済全体") else field
+    if out["結果"] == "額あり" and out["分野"] != shown:
+        out.update(結果="保留", 経路=ROUTE_SOURCE_FIELD, 損失または便益の額="", 単位="", 確かさ="", 公開可否="公開不可",
+                   理由=f"一次資料の読み直しで、主な産業は「{field}」と分かった（振り分けは「{out['分野']}」）。額は振り分けの分野の産業で計算してあるので、直した分野で計算し直すまで付けない")
+    out["分野"] = shown
+    return out
+
+
+def decide_by_triage(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dict[str, str]:
     """1本の結果。law は enacted の行、t は triage の行、date は施行日（無ければ空）。"""
     title = law["題名"]
     ag = st.agreement.get(t["id"]) if date else None

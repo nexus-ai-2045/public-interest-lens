@@ -31,6 +31,17 @@ class CorrectionsTest(unittest.TestCase):
         cls.a = {x["id"]: x for x in json.loads((RV / "lineA.json").read_text(encoding="utf-8"))}
         cls.b = {x["id"]: x for x in json.loads((RV / "lineB.json").read_text(encoding="utf-8"))}
         cls.rulings = json.loads((RV / "rulings.json").read_text(encoding="utf-8"))
+        with (reread.SAMPLE / "correction-candidates.csv").open(encoding="utf-8", newline="") as f:
+            cls.sample = {(r["id"], r["項目"]): r for r in csv.DictReader(f)}
+        cls.sample_rulings = json.loads(reread.SAMPLE_RULINGS.read_text(encoding="utf-8"))
+        with reread.SAMPLE_CASCADE.open(encoding="utf-8", newline="") as f:
+            cls.cascade = {(r["id"], r["項目"]) for r in csv.DictReader(f)}
+        cls.sample_lines = [x for n in ("lineA.json", "lineB.json") for x in json.loads((reread.SAMPLE / n).read_text(encoding="utf-8"))]
+
+    def test_every_sample_candidate_is_in_the_table(self):
+        """抜き取り検証2回目の訂正候補は、すべて訂正表か確かめた表に入る（取りこぼさない）。"""
+        for i, item in self.sample:
+            self.assertIn(item, self.corr.get(i, {}), f"{i} {item}")
 
     def test_every_value_comes_from_the_recorded_reading(self):
         self.assertTrue(self.corr)
@@ -42,11 +53,24 @@ class CorrectionsTest(unittest.TestCase):
                 if row["記録"] == K2_RECORD:  # 規則 K2：税法の一部改正は実質改正
                     self.assertEqual((item, row["直した値"]), ("類型", "実質改正"), i)
                     continue
+                if row["記録"] == reread.SAMPLE_RECORD:  # 抜き取り検証2回目の訂正候補（制度は読めていない条文に懸かれば判定不能）
+                    if (i, item) not in self.sample:  # 連鎖：2系統が一致した値
+                        self.assertIn((i, item), self.cascade, f"{i} {item}")
+                        a, b = (x for x in self.sample_lines if x["id"] == i)
+                        self.assertEqual(row["直した値"], a[reread.SAMPLE_KEY[item]], f"{i} {item}")
+                        self.assertEqual(a[reread.SAMPLE_KEY[item]], b[reread.SAMPLE_KEY[item]], f"{i} {item}")
+                        continue
+                    want = self.sample[(i, item)]["直した値"]
+                    self.assertIn(row["直した値"], (want, corrections.UNDECIDED) if want == "制度" else (want,), f"{i} {item}")
+                    continue
+                if row["記録"] == f"{REREAD}・{reread.SAMPLE_RECORD}":  # 2つの読み直しが割れた：Opus の裁定
+                    self.assertEqual(row["直した値"], self.sample_rulings[i][item]["値"], f"{i} {item}")
+                    continue
                 if row["記録"] == REREAD:  # 誤り候補の読み直し（2系統の一致、Sonnet との多数、Opus の裁定の順）
                     v, how, _ = reread.decide(i, item, ra, rb, rc, rr)
                     v = v or corrections.UNDECIDED  # 決められない項目は判定不能のまま後段へ渡す
                     self.assertEqual(row["直した値"], SITE_WORD.get(v, v), f"{i} {item}")
-                    self.assertEqual(row["判定者"], reread.JUDGE[how], f"{i} {item}")
+                    self.assertTrue(row["判定者"].startswith(reread.JUDGE[how]), f"{i} {item}")
                     # 本法を読めていないと書いた読みで、制度（経済に効かない）と確定しない（Codex の指摘）
                     if item == "経済に効くか" and row["直した値"] == "制度":
                         for d in (ra, rb, rc):  # 制度と読んだどの記録も、読めていない条文に懸かっていない
@@ -85,10 +109,22 @@ class CorrectionsTest(unittest.TestCase):
                 else:
                     self.assertNotIn(outcomes[i]["結果"], ("評価対象外", "効果なし（定例）"), i)
 
+    def test_corrected_fields_reach_the_outcomes_and_macro(self):
+        outcomes = by_id(ROOT / "data" / "derived" / "all-laws-v1" / "outcomes.csv")
+        macro = by_id(ROOT / "data" / "derived" / "macro-v1" / "macro.csv")
+        for i, items in self.corr.items():
+            if "分野" not in items:
+                continue
+            v = items["分野"]["直した値"]
+            self.assertEqual(outcomes[i]["分野"], "対応表なし" if v.startswith("経済全体") else v, i)
+            self.assertNotEqual(outcomes[i]["結果"], "額あり", i)  # 額は振り分けの分野で計算してある
+            if i in macro:
+                self.assertEqual((macro[i]["分野"], macro[i]["分野の由来"]), ("経済全体" if v.startswith("経済全体") else v, "一次資料の読み直し"), i)
+
     def test_undefined_item_is_rejected(self):
         with tempfile.TemporaryDirectory() as d:
             bad = Path(d) / "bad.csv"
-            bad.write_text("id,項目,直した値\nx,分野,金融\n", encoding="utf-8")
+            bad.write_text("id,項目,直した値\nx,範囲,産業の一部\n", encoding="utf-8")
             with self.assertRaises(ValueError):
                 corrections.load(bad)
 

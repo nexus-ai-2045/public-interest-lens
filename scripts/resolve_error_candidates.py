@@ -68,6 +68,16 @@ def unread(rec: dict) -> bool:
     cut = any(CUT_BODY.search(u) and "会議録" not in u[:6] for u in rec.get("読めなかった資料") or [])
     return bool(HEDGE.search(why)) and cut
 FIELD = {"類型": ("類型", "類型の理由"), "経済に効くか": ("経済に効くか", "経済の理由")}
+# 抜き取り検証の2回目（evaluation-ledger-v1/sample-v2、#223）が訂正候補に回した項目。決め方（2系統→Sonnet の裁定→Opus）は
+# scripts/resample_verification.py の resolve にあり、ここでは繰り返さない。ここで足すのは：読み直しの行と重なる項目の突き合わせ、
+# 制度と決めた項目への unread() の当てはめ、割れたときの Opus の裁定（SAMPLE_RULINGS）
+SAMPLE = DERIVED / "evaluation-ledger-v1" / "sample-v2"
+SAMPLE_RECORD = "data/derived/evaluation-ledger-v1/sample-v2/"
+SAMPLE_RULINGS = OUT / "sample-v2-rulings.json"  # 読み直し（reread-v1）と抜き取り検証2回目で値が割れた項目の Opus の裁定
+SAMPLE_KEY = {"類型": "類型", "経済に効くか": "経済に効くか", "分野": "主な産業分野"}
+SAMPLE_JUDGE = "抜き取り検証2回目（sample-v2）でも同じ値"
+# 訂正で到達点が変わり、抜き取り検証2回目の記録で新しく照合した項目（2系統が一致した値を使う）
+SAMPLE_CASCADE = OUT / "sample-v2-cascade.csv"
 
 
 def read_csv(path: Path) -> list[dict]:
@@ -157,7 +167,7 @@ def evidence(rec: dict, item: str, how: str) -> tuple[str, str, str]:
 
 def build() -> tuple[list[dict], list[dict], list[dict]]:
     # 既にある行は #208 の行だけ（このスクリプトが書いた行は毎回作り直す）
-    existing = [r for r in read_csv(OUT / "corrections.csv") if r["記録"] not in (RECORD, K2_RECORD)]
+    existing = [r for r in read_csv(OUT / "corrections.csv") if r["記録"] not in (RECORD, K2_RECORD, SAMPLE_RECORD, f"{RECORD}・{SAMPLE_RECORD}")]
     have = {(r["id"], r["項目"]) for r in existing}
     # 読み直しを始めた時点の候補とサイトの値（直した後に作り直すと候補もサイトの値も変わるので、写しを使う）
     cands = read_csv(FROZEN)
@@ -225,7 +235,69 @@ def build() -> tuple[list[dict], list[dict], list[dict]]:
                              "理由": reason, "引用": quote, "出典URL": url, "判定者": JUDGE[how],
                              "指示文": PROMPT, "記録": RECORD})
             res.append({**row, "決めた値": v, "決め方": how, "決着": "直した"})
-    return existing + new_corr, conf, res
+    rows = existing + new_corr
+    sample_rows, overruled = merge_sample(rows, conf, res)
+    return sample_rows, [r for r in conf if (r["id"], r["項目"]) not in overruled], res
+
+
+def merge_sample(rows: list[dict], conf: list[dict], res: list[dict]) -> tuple[list[dict], set]:
+    """抜き取り検証2回目の訂正候補を足す。読み直しの行と同じ値ならその行の判定者に書き足し、割れたら Opus の裁定で決める。"""
+    cands = read_csv(SAMPLE / "correction-candidates.csv") if (SAMPLE / "correction-candidates.csv").exists() else []
+    if not cands:
+        return rows, set()
+    lines = {}
+    for name in ("lineA.json", "lineB.json"):
+        for x in json.loads((SAMPLE / name).read_text(encoding="utf-8")):
+            lines.setdefault(x["id"], []).append(x)
+    rulings = json.loads(SAMPLE_RULINGS.read_text(encoding="utf-8")) if SAMPLE_RULINGS.exists() else {}
+    for c in read_csv(SAMPLE_CASCADE) if SAMPLE_CASCADE.exists() else []:
+        key = SAMPLE_KEY[c["項目"]]
+        a, b = (lines.get(c["id"]) or [{}, {}])[:2]
+        if not ok(a.get(key)) or a.get(key) != b.get(key):
+            raise SystemExit(f"{c['id']} {c['項目']}：連鎖の項目は2系統が一致していなければならない")
+        cands.append({"id": c["id"], "項目": c["項目"], "直した値": a[key], "直す前の値": c["直す前の値"],
+                      "理由": c["理由"], "引用": a["引用"][0], "出典URL": ";".join(dict.fromkeys(a["出典URL"] + b["出典URL"])),
+                      "判定者": "抜き取り検証2回目の Haiku 2系統（系統A 議案本文から・系統B 会議録から）が一致（連鎖）",
+                      "指示文": "sample-v2/prompt-v2.md（版 v2）", "記録": SAMPLE_RECORD})
+    index = {(r["id"], r["項目"]): r for r in rows}
+    confirmed = {(r["id"], r["項目"]): r for r in conf}
+    out, overruled = list(rows), set()
+    for cand in cands:
+        k, v = (cand["id"], cand["項目"]), cand["直した値"]
+        prev = index.get(k)
+        if prev is None and k in confirmed:  # 読み直しではサイトの値が正しかった項目
+            prev = {"直した値": confirmed[k]["確かめた値"]}
+        if prev is not None and prev["直した値"] != v:  # 2つの読み直しが割れた：Opus の裁定
+            r = rulings.get(cand["id"], {}).get(cand["項目"])
+            if not r:
+                raise SystemExit(f"{k}：読み直し（{prev['直した値']}）と抜き取り検証2回目（{v}）が割れていて、{SAMPLE_RULINGS.name} に裁定が無い")
+            row = {**(index.get(k) or cand), "直した値": r["値"], "理由": r["理由"], "引用": r["引用"], "出典URL": r["出典URL"],
+                   "判定者": "読み直しと抜き取り検証2回目が割れ、Opus が一次資料で裁定", "記録": f"{RECORD}・{SAMPLE_RECORD}"}
+            if k in index:
+                out[out.index(index[k])] = row
+            else:
+                out.append(row)
+                overruled.add(k)
+            res.append({"id": k[0], "型": "抜き取り2回目", "項目": k[1], "サイトの値": cand["直す前の値"], "系統A": "", "系統B": "",
+                        "Sonnet": v, "Opus 裁定": r["値"], "決めた値": r["値"], "決め方": "裁定（読み直しと割れた）", "決着": "直した"})
+            continue
+        if prev is not None:  # 同じ値：独立な2回目の読みとして判定者に書き足す
+            if k in index:
+                out[out.index(index[k])] = {**index[k], "判定者": f"{index[k]['判定者']}／{SAMPLE_JUDGE}"}
+            continue
+        if k[1] == "経済に効くか" and v == "制度":
+            key = SAMPLE_KEY[k[1]]
+            readers = [x for x in lines.get(k[0], []) if SITE_WORD.get(x.get(key, ""), x.get(key)) == "制度"]
+            if any(unread(x) for x in readers):
+                v = "判定不能"
+        row = {**cand, "直した値": v}
+        if v == "判定不能":
+            row["判定者"] = f"{cand['判定者']}。ただし制度と読んだ記録の判断が読めていない条文に懸かる（{JUDGE['本法未読']}）"
+        out.append(row)
+        res.append({"id": k[0], "型": "抜き取り2回目", "項目": k[1], "サイトの値": cand["直す前の値"], "系統A": "", "系統B": "",
+                    "Sonnet": cand["直した値"], "Opus 裁定": "", "決めた値": v, "決め方": "抜き取り検証2回目の決着" + ("（本法未読）" if v == "判定不能" else ""),
+                    "決着": "決められない" if v == "判定不能" else "直した"})
+    return out, overruled
 
 
 def render(header: list[str], rows: list[dict]) -> str:
