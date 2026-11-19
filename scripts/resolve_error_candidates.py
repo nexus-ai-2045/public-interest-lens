@@ -22,6 +22,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -48,10 +49,22 @@ JUDGE = {
     "多数": "Haiku 2系統が割れ、Sonnet（系統C 議案本文の条文・附則と会議録）が片方と一致（3つのうち2つ）",
     "裁定": "Haiku 2系統と Sonnet で決まらず、Opus が一次資料で裁定",
     "決められない": "Haiku 2系統・Sonnet・Opus のどれも一次資料から決められない（判定不能のまま残す）",
-    "本法未読": "読み手は制度としたが、経済の理由に本法や附則を読めていないと書いている。改正法だけでは補助や特例の有無が分からないので、制度とは確定しない（判定不能のまま残す。Codex の指摘）",
+    "本法未読": "読み手は制度としたが、本法や条文・附則を読めていないと書き、その判断を読めた範囲に限っている。改正法だけでは補助や特例の有無が分からないので、制度とは確定しない（判定不能のまま残す。Codex の指摘）",
 }
-# 制度（経済に効かない）と決めた読みのうち、制度と読んだどれかの記録が経済の理由に本法・附則を読めていないと書いたもの。期限の延長などは、延ばす本法の中身で経済に効くかが決まる
-UNREAD_BASE = ("未読", "取得できず")  # 「読めなかった資料」の欄は見ない（会議録が見つからない・本文の後半が切れたなどはほぼ毎回あり、経済の判断に効くかは理由に書かれる）
+# 制度（経済に効かない）と決めた読みを確定しない条件（Codex の指摘）。期限の延長や大きな法律は、読めなかった本法・条文・附則で経済に効くかが変わりうる
+UNREAD_BASE = ("未読", "取得できず")  # 経済の理由に、本法や附則を読めていないと書いた
+HEDGE = re.compile(r"読めず|読めた範囲|読めた条文|読めた本文|読めた第|確認できな|未確認|未精読")  # 経済の理由を読めた範囲に限った
+CUT_BODY = re.compile(r"附則|条文|第[一二三四五六七八九十百〇0-9]+条|後半|以降|先頭")  # 「読めなかった資料」に条文の欠けがある
+
+
+def unread(rec: dict) -> bool:
+    """この記録の経済の判断が、読めていない条文に懸かっている。
+    「読めなかった資料」の欄だけでは決めない（会議録が見つからない・理由の節が無いなどはほぼ毎回あり、経済の判断に効かない）。"""
+    why = rec.get("経済の理由") or rec.get("理由", "")
+    if any(w in why for w in UNREAD_BASE):
+        return True
+    cut = any(CUT_BODY.search(u) and "会議録" not in u[:6] for u in rec.get("読めなかった資料") or [])
+    return bool(HEDGE.search(why)) and cut
 FIELD = {"類型": ("類型", "類型の理由"), "経済に効くか": ("経済に効くか", "経済の理由")}
 
 
@@ -122,11 +135,10 @@ def decide(i: str, item: str, a: dict, b: dict, c: dict, rulings: dict) -> tuple
     """(値, 決め方, 根拠に使う記録)。値が None なら決められない。"""
     v, how, rec = vote(i, item, a, b, c, rulings)
     if item == "経済に効くか" and SITE_WORD.get(v or "", v) == "制度":
-        # 制度と読んだ記録すべての理由を見る（2系統が一致しても、片方だけが未読を書くことがある）
-        key, why = FIELD[item]
-        reasons = [rec.get("理由") or rec.get(why, "")]
-        reasons += [d.get(i, {}).get(why, "") for d in (a, b, c) if ok(d.get(i, {}).get(key)) == v]
-        if any(w in reason for reason in reasons for w in UNREAD_BASE):
+        # 制度と読んだ記録すべてを見る（2系統が一致しても、片方だけが未読を書くことがある）
+        key = FIELD[item][0]
+        recs = [rec] + [d[i] for d in (a, b, c) if i in d and ok(d[i].get(key)) == v]
+        if any(unread(r) for r in recs):
             return None, "本法未読", rec
     return v, how, rec
 

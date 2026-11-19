@@ -49,10 +49,10 @@ class CorrectionsTest(unittest.TestCase):
                     self.assertEqual(row["判定者"], reread.JUDGE[how], f"{i} {item}")
                     # 本法を読めていないと書いた読みで、制度（経済に効かない）と確定しない（Codex の指摘）
                     if item == "経済に効くか" and row["直した値"] == "制度":
-                        for d in (ra, rb, rc):  # 制度と読んだどの記録の理由にも未読が無い
+                        for d in (ra, rb, rc):  # 制度と読んだどの記録も、読めていない条文に懸かっていない
                             r = d.get(i, {})
                             if SITE_WORD.get(r.get("経済に効くか", ""), "") == "制度":
-                                self.assertFalse(any(w in r.get("経済の理由", "") for w in reread.UNREAD_BASE), i)
+                                self.assertFalse(reread.unread(r), i)
                     continue
                 ruling = self.rulings.get(i, {}).get(item)
                 if ruling:
