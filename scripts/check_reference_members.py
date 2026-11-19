@@ -140,8 +140,8 @@ def check(attributions_path: Path | None = None) -> list[str]:
     published = {m["id"]: m for m in reference["members"]}
     for m in reference["members"]:
         count = len(withheld.get(m["id"], ()))
-        told = re.search(r"法律(\d+)本は、向きが未確定", m["reason"])
-        if m.get("withheldLaws") != count or (int(told.group(1)) if told else 0) != count:
+        told = re.search(r"法律(\d+)本は、向きが未確定", m.get("reason", ""))
+        if m.get("withheldLaws", 0) != count or (int(told.group(1)) if told else 0) != count:
             errors.append(f"{m['id']}：向きが未確定で配らなかった法律の本数（withheldLaws・理由の文）が配り先の一覧と合わない")
     for member in withheld.keys() - published.keys():
         errors.append(f"{member}：向きが未確定で配らなかった関わりの人が公開ファイルに無い")

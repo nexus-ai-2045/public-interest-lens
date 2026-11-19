@@ -48,8 +48,8 @@ export type ReferenceMember = {
   top: ReferenceLawShare[];
   /** 額が無い理由、または関わった法律のうち向きが未確定で配っていない本数（額がある人にも付く）。 */
   reason: string;
-  /** 提出者・参議院の賛成として関わったが、向きが未確定なので額を配っていない法律の本数。 */
-  withheldLaws: number;
+  /** 提出者・参議院の賛成として関わったが、向きが未確定なので額を配っていない法律の本数（この欄ができる前のデータには無い）。 */
+  withheldLaws?: number;
 };
 export type PublicMembersReference = {
   schema: 'public-members-reference/v2';
