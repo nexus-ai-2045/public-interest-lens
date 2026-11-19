@@ -184,7 +184,7 @@ export type PublicExposureDistribution = PublicExposureRanking & {
   generatedFrom: GenerationMetadata;
   /** 群（産業×年）の一覧。表示名は exposure-labels.ts で付ける。 */
   groups?: { id: string; group: string; window: string }[];
-  /** 人物ID → 読み（人物台帳 persons.csv の「読み」。読みのある人だけ）。並びにだけ使う。 */
+  /** 人物ID → 読み（人物台帳 persons.csv の「読み」、空なら会議録の発言者の読み readings-kokkai.csv。読みの分かる人だけ）。並びにだけ使う。 */
   personReadings?: Record<string, string>;
 };
 export function parsePublicExposureRanking(text: string): PublicExposureDistribution {
