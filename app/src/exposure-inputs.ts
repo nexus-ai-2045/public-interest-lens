@@ -100,8 +100,9 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
   const gap = new Map<string, { diff: { low: number; median: number; high: number }; countries: string; nominal: string }>();
   for (const r of parseCsv(src.industryYear)) {
     const num = (k: string) => {
-      const v = Number(r[k]);
-      if (r[k] === '' || !Number.isFinite(v)) throw new Error(`額が数でない：${r['産業']} ${r['年']} ${k}`);
+      const raw = (r[k] ?? '').trim();
+      const v = Number(raw);
+      if (raw === '' || !Number.isFinite(v)) throw new Error(`額が数でない：${r['産業']} ${r['年']} ${k}`);
       return v;
     };
     const diff = { low: num('low'), median: num('median'), high: num('high') };
@@ -218,8 +219,12 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
     for (const b of voteId ? ballotsOf.get(voteId) ?? [] : []) {
       const role: ExposureRole = b.yes ? 'yes' : 'no';
       const who = idName.get(b.id);
-      const res = who ? ledger.resolve(who.name, '参議院') : null;
-      const placed = res ? place(lawId, role, 'person', res.id, res.id, 'upper') : place(lawId, role, 'none', '', `未特定:${b.id}`, 'upper');
+      const found = who ? ledger.resolve(who.name, '参議院') : null;
+      // 人物ID が空（氏名が空など）の解決は人に置かず、配り先なし（理由つき）へ回す。
+      const res = found && found.id ? found : null;
+      const placed = res
+        ? place(lawId, role, 'person', res.id, res.id, 'upper')
+        : place(lawId, role, 'none', '', `未特定:${b.id}`, 'upper', { noneReason: found ? '氏名から人物IDが決まらない票（氏名が空など）' : undefined });
       if (!placed) continue;
       if (role === 'yes') counts.yesRows++; else counts.noRows++;
       if (!res) counts.unresolvedVoteRows++;
@@ -253,7 +258,8 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
     }
     let any = false;
     for (const { name, weight } of named) {
-      const res = ledger.resolve(name, house);
+      const found = ledger.resolve(name, house);
+      const res = found && found.id ? found : null;
       const placed = res ? place(lawId, 'proposer', 'person', res.id, res.id, undefined, { weight }) : place(lawId, 'proposer', 'none', '', `未特定:${name}`, undefined, { weight, noneReason: unresolvedReason });
       if (!placed) continue;
       any = true;

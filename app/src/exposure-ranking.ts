@@ -26,6 +26,10 @@
  * 11. 役割は別々の行動なので、同じ人が同じ法律で複数の役割を持てば足す（閣僚は閣議0.2＋発議0.4、賛成票があれば＋賛成の枠）。
  *     「二重に配らない」は、同じ（法律・役割・院）の枠を人と会派の両方へ配らないこと。
  * 12. 配り先の無い関与（actorKind: 'none'。同姓同名で人物台帳に結べない票）は、重みだけ枠に入れ、その分を未配分に積む（ほかの人へ寄せない）。
+ * 13. 公開用（toPublicExposureRanking）：階層に入らない行は額（exposureYen と cells の額）を出さず、本数・群の数・理由だけを残す。
+ *     階層に入った行も、内訳に本数が下限（minLaws）に満たない群×役割が1つでもあれば内訳の額を全部伏せる（1つだけ伏せても合計との引き算で読めるため）。
+ *     額を出さない人・会派の分の合計は出す（複数の合算で、個人の額ではない。丸めはしない）。ただし額を出さない人・会派が合わせて1つだけのときは、
+ *     その合計も totals の people・parties も伏せる（null。残りとの引き算でその1つの額が読めるため）。検算に要る expected と unallocated は残す。
  */
 
 import type { GroupDiff, Range } from './scoring-types';
@@ -100,6 +104,8 @@ const scale = (r: Range, x: number): Range => (x >= 0
   : { low: r.high * x, median: r.median * x, high: r.low * x });
 
 const EPS = 1e-9;
+/** 占有率の比較の許容誤差。ちょうど上限の人が浮動小数点の丸めで弾かれないようにする。 */
+const SHARE_EPS = 1e-12;
 
 function checkParams(p: ExposureParams): void {
   let sum = 0;
@@ -246,7 +252,7 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
         .sort((x, y) => x.groupId.localeCompare(y.groupId) || EXPOSURE_ROLES.indexOf(x.role) - EXPOSURE_ROLES.indexOf(y.role)),
     }));
     const few = (r: { laws: number }) => r.laws < params.minLaws;
-    const concentrated = (r: { laws: number; topThreeShare: number }) => !few(r) && r.topThreeShare > params.topThreeShareCap;
+    const concentrated = (r: { laws: number; topThreeShare: number }) => !few(r) && r.topThreeShare > params.topThreeShareCap + SHARE_EPS;
     const ranked = assignTiers(rows.filter(r => !few(r) && !concentrated(r))).map(r => ({ ...r, unrankedReason: '' }));
     const unranked = rows.filter(r => few(r) || concentrated(r))
       .sort((a, b) => b.exposureYen.median - a.exposureYen.median || a.actorId.localeCompare(b.actorId))
@@ -270,5 +276,67 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
     parties,
     unallocated,
     totals: { people: sum(people), parties: sum(parties), unallocated: sum(unallocated), expected },
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// 公開用：書き出す JSON はこの形にする。法律1本ぶんの額（関与した法律が1本の人の額、本数の少ない内訳の額）を出さない。
+// ---------------------------------------------------------------------------------------------
+export type PublicExposureCell = { groupId: string; role: ExposureRole; laws: number; /** 額を出さないときは null。 */ exposureYen: Range | null };
+export type PublicExposureRow = Omit<ExposureRow, 'exposureYen' | 'cells'> & {
+  /** 階層に入らない行は null（本数・群の数・理由だけを出す）。 */
+  exposureYen: Range | null;
+  cells: PublicExposureCell[];
+};
+/** 額を出さない人（または会派）の合計。count は件数。額を出さない行が全体で1つだけのときは exposureYen を伏せて null にする。 */
+export type HiddenTotal = { count: number; exposureYen: Range | null };
+export type PublicExposureRanking = Omit<ExposureRanking, 'people' | 'parties' | 'totals'> & {
+  people: PublicExposureRow[];
+  parties: PublicExposureRow[];
+  /** 額を出さない人・会派（階層に入らない行）の合計。 */
+  hidden: { people: HiddenTotal; parties: HiddenTotal };
+  /** people・parties は全員ぶんの合計。額を出さない行が合わせて1つだけのときは、引き算で読めるので null。 */
+  totals: { people: Range | null; parties: Range | null; unallocated: Range; expected: Range };
+};
+
+/** 内訳の額を出してよいか：本数が下限に満たない内訳が1つも無いこと。 */
+const cellsShowable = (cells: readonly ExposureCell[], minLaws: number): boolean => cells.every(c => c.laws >= minLaws);
+
+/**
+ * 集計結果を公開用に変える（純関数。入力は変えない）。
+ * - 階層に入らない行（tier null）：exposureYen と cells の額を出さない（laws・groups・unrankedReason・cells の本数と役割は残す）。
+ * - 階層に入った行：内訳に本数が minLaws 未満のものが1つでもあれば、内訳の額を全部出さない。
+ * - 額を出さない人・会派の合計を hidden に件数つきで足す。額を出さない行が人・会派を合わせて1つだけのときは、
+ *   hidden の額も totals.people・totals.parties も null にする。
+ */
+export function toPublicExposureRanking(ranking: ExposureRanking, minLaws: number): PublicExposureRanking {
+  const toRow = (r: ExposureRow): PublicExposureRow => {
+    const ranked = r.tier !== null;
+    const show = ranked && cellsShowable(r.cells, minLaws);
+    return {
+      ...r,
+      exposureYen: ranked ? r.exposureYen : null,
+      cells: r.cells.map(c => ({ groupId: c.groupId, role: c.role, laws: c.laws, exposureYen: show ? c.exposureYen : null })),
+    };
+  };
+  const hiddenRows = (rows: readonly ExposureRow[]) => rows.filter(r => r.tier === null);
+  const sumOf = (rows: readonly ExposureRow[]): Range => rows.reduce((s, r) => add(s, r.exposureYen), zero());
+  const hp = hiddenRows(ranking.people);
+  const pp = hiddenRows(ranking.parties);
+  const withheld = hp.length + pp.length === 1;
+  return {
+    ...ranking,
+    people: ranking.people.map(toRow),
+    parties: ranking.parties.map(toRow),
+    hidden: {
+      people: { count: hp.length, exposureYen: withheld ? null : sumOf(hp) },
+      parties: { count: pp.length, exposureYen: withheld ? null : sumOf(pp) },
+    },
+    totals: {
+      people: withheld ? null : ranking.totals.people,
+      parties: withheld ? null : ranking.totals.parties,
+      unallocated: ranking.totals.unallocated,
+      expected: ranking.totals.expected,
+    },
   };
 }

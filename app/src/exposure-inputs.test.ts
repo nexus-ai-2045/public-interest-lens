@@ -170,6 +170,32 @@ describe('曝露ランキングの入力（関与）', () => {
     expect(out.counts).toMatchObject({ votesLaws: 2, votesMatched: 1, votesNotFound: 1, yesRows: 3, noRows: 1, unresolvedVoteRows: 1 });
   });
 
+  it('参議院の個人票で氏名が空なら、人物IDが空の人には置かず、理由つきの配り先なしにする（persons.csv の全列空の行があっても）', () => {
+    const blankLedger = csv(['人物ID', '氏名', '読み', '院', '選挙区', '別表記'], [{}, ...parseCsv(persons)]);
+    const out = run({
+      persons: blankLedger,
+      sangiinMembers: csv(MEMBER_HEAD, [...parseCsv(sangiinMembers), { 議員ID: '6', 回次: '1', 議員名: '', 会派: 'X' }]),
+      ballots: [csv(BALLOT_HEAD, [...parseCsv(ballots[0]), { 投票ID: 'v1', 議員ID: '6', 賛否: 'Y' }])],
+    });
+    const all = [...out.industry.involvements, ...out.wholeEconomy.involvements];
+    expect(all.filter(x => x.actorKind === 'person' && !x.actorId)).toEqual([]);
+    const blank = out.industry.involvements.filter(x => x.lawId === '衆法-1-1' && x.groupId === 'A|1998' && x.house === 'upper' && x.noneReason?.includes('氏名が空'));
+    expect(blank).toHaveLength(1);
+    expect(blank[0]).toMatchObject({ actorKind: 'none', role: 'yes', actorId: '' });
+    expect(out.counts.unresolvedVoteRows).toBe(2); // 同姓同名の1票＋氏名が空の1票
+    const r = rankOf(out.industry);
+    expect(r.unallocated.some(u => u.reason.includes('氏名が空'))).toBe(true);
+    expect(r.people.every(p => p.actorId !== '')).toBe(true);
+    expect(withLedgerPeople(r, blankLedger).ranking.people.every(p => p.actorId !== '')).toBe(true);
+  });
+
+  it('額の読みは前後の空白を除く。空白だけなら空として止める', () => {
+    const padded = base({ industryYear: csv(IY_HEAD, [{ ...iy('A', 1998), low: ' 50 ', median: ' 100\t', high: ' 300 ' }, iy('A', 1999), iy('B', 1998), iy('B', 1999), iy('B', 2000), iy('C', 1998), iy('C', 1999), iy('C', 2000)]) });
+    expect(buildExposureInputs(padded).industry.groups.find(g => g.id === 'A|1998')!.diff).toEqual({ low: 50, median: 100, high: 300 });
+    const blank = base({ industryYear: csv(IY_HEAD, [{ ...iy('A', 1998), median: '  ' }]) });
+    expect(() => buildExposureInputs(blank)).toThrow('額が数でない');
+  });
+
   it('衆議院は賛成会派・反対会派を会派（party）に、weight 1 で、記録の表記のまま置く', () => {
     const out = run();
     const lower = out.industry.involvements.filter(x => x.lawId === '衆法-1-1' && x.groupId === 'A|1998' && x.house === 'lower');
@@ -378,12 +404,28 @@ describe('曝露ランキングの入力（実データの性質）', { timeout:
   });
 
   it('1本の法律・1つの群で、全員（人＋会派＋未配分）の受ける割合は比率の合計を超えず、1人の割合はその人の役割の比率の和を超えない', () => {
-    const sample = new Map<string, Involvement[]>();
+    // 役割（proposer/yes/no/cabinet）×院で層化して標本を取る。先頭だけを取ると cabinet が0行になるので、層ごとに等間隔で取る。
+    const byKey = new Map<string, Involvement[]>();
     for (const i of inputs.involvements) {
-      if (sample.size >= 40 && !sample.has(`${i.groupId}\u0000${i.lawId}`)) continue;
       const k = `${i.groupId}\u0000${i.lawId}`;
-      sample.set(k, [...(sample.get(k) ?? []), i]);
+      byKey.set(k, [...(byKey.get(k) ?? []), i]);
     }
+    const stratumOf = (i: Involvement) => `${i.role}|${i.house ?? '-'}`;
+    const strata = new Map<string, string[]>();
+    for (const [k, list] of byKey) for (const st of new Set(list.map(stratumOf))) strata.set(st, [...(strata.get(st) ?? []), k]);
+    const PER_STRATUM = 6;
+    const sample = new Map<string, Involvement[]>();
+    for (const keys of strata.values()) {
+      const step = Math.max(1, Math.floor(keys.length / PER_STRATUM));
+      for (let n = 0; n < keys.length && n / step < PER_STRATUM; n += step) sample.set(keys[n], byKey.get(keys[n])!);
+    }
+    // 必ず含める：閣法の閣議＋発議、衆議院の会派行、参議院の個人票。
+    for (const st of ['cabinet|-', 'proposer|-', 'yes|lower', 'no|lower', 'yes|upper', 'no|upper']) expect(strata.has(st)).toBe(true);
+    const sampled = [...sample.values()].flat();
+    expect(sampled.some(i => i.role === 'cabinet' && i.lawId.startsWith('閣法'))).toBe(true);
+    expect(sampled.some(i => i.role === 'proposer' && i.lawId.startsWith('閣法'))).toBe(true);
+    expect(sampled.some(i => i.house === 'lower' && i.actorKind === 'party')).toBe(true);
+    expect(sampled.some(i => i.house === 'upper' && i.actorKind === 'person')).toBe(true);
     let checked = 0;
     for (const [k, list] of sample) {
       const g = inputs.groups.find(x => x.id === k.split('\u0000')[0])!;
@@ -391,7 +433,8 @@ describe('曝露ランキングの入力（実データの性質）', { timeout:
       const one = buildExposureRanking([{ ...g, lawCount: 1 }], list, { ...params, minLaws: 1, topThreeShareCap: 1 });
       const t = one.totals;
       expect(rel(t.people.median + t.parties.median + t.unallocated.median, t.expected.median)).toBeLessThan(1e-9);
-      expect(Math.abs(t.expected.median)).toBeLessThanOrEqual(Math.abs(g.diff.median) * 0.6 * (1 + 1e-9));
+      // 1本・1つの群の配る額の合計は、群の額×比率の符号つき合計（0.4＋0.2−0.2＋0.2＝0.6）にちょうど等しい。
+      expect(rel(t.expected.median, g.diff.median * 0.6)).toBeLessThan(1e-9);
       for (const row of [...one.people, ...one.parties]) {
         const roles = new Set(list.filter(x => x.actorId === row.actorId && x.actorKind === row.actorKind).map(x => x.role));
         const cap = [...roles].reduce((s, r) => s + DEFAULT_ROLE_RATIO[r], 0);
@@ -465,7 +508,7 @@ describe('曝露ランキングの入力（実データの性質）', { timeout:
       if (p.tier !== null) expect(p.topThreeShare).toBeLessThanOrEqual(SCORING_CONSTANTS.topThreeShareCap);
       else if (p.laws >= SCORING_CONSTANTS.minContributingLaws && p.topThreeShare > SCORING_CONSTANTS.topThreeShareCap) { over++; expect(p.unrankedReason).toContain('上位3本の占有率'); }
     }
-    expect(over).toBeGreaterThanOrEqual(0);
+    expect(over).toBeGreaterThan(0);
   });
 
   it('人物台帳の全員が、点あり（tier が数）か点なし＋理由のどちらかで1回ずつ載る', () => {

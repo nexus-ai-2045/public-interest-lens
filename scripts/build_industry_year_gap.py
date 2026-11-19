@@ -65,6 +65,9 @@ def build(oecd: Oecd, years_by_industry: dict[str, set[int]]) -> tuple[list[dict
             if y - 1 not in jp or y not in jp or y - 1 not in nominal:
                 skipped.append(f"{industry} {y}: 日本の LR か前年の名目付加価値が無い")
                 continue
+            if jp[y - 1] <= 0:
+                skipped.append(f"{industry} {y}: 日本の前年の LR が0以下（伸び率が決まらない）")
+                continue
             used = [c for c, s in others.items() if y - 1 in s and y in s and s[y - 1] > 0]
             if len(used) < MIN_COUNTRIES:
                 skipped.append(f"{industry} {y}: 比較国が{len(used)}か国（{MIN_COUNTRIES}か国未満）")

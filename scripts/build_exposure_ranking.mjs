@@ -1,4 +1,5 @@
 // 曝露ランキング（案B）の集計結果 data/derived/exposure-v1/exposure-ranking.json を作る。画面には出さない（表示は別の変更）。
+// 書き出す JSON は公開用（exposure-ranking.ts の toPublicExposureRanking）：法律1本ぶんの額が読めないよう、階層に入らない人・会派の額と本数の少ない内訳の額を出さない。
 // 入力はリポジトリ内のデータだけ。入力の組み立ては app/src/exposure-inputs.ts、集計は app/src/exposure-ranking.ts。
 // 額は群（産業×年。data/derived/exposure-v1/industry-year.csv）の OECD 比較国との伸びの差を役割の固定比率で配った記述で、因果の推定ではない。出力に法律の ID は入れない。
 // 本体は産業別。全産業（_T）は産業別と同じ額を重ねて数えるので足さず、wholeEconomy 欄に別に出す。
@@ -10,29 +11,44 @@ import { fileURLToPath } from 'node:url';
 import { generationMetadata } from './generation_provenance.mjs';
 
 const argv = process.argv.slice(2);
+const USAGE = `使い方: node scripts/build_exposure_ranking.mjs [--out <出力先>] [--no-write] [--sensitivity <出力.md>] [--help]`;
 if (argv.includes('--help') || argv.includes('-h')) {
   console.log(`曝露ランキング（案B）の集計結果を作る。
 
-使い方: node scripts/build_exposure_ranking.mjs [--out <出力先>] [--no-write] [--sensitivity <出力.md>] [--help]
+${USAGE}
 
   --out <path>          出力先（既定：data/derived/exposure-v1/exposure-ranking.json）
   --no-write            検算だけして、ファイルは書かない
   --sensitivity <path>  役割の比率を5通りに変えたときの産業別の人の順位の動きを Markdown の表で書く（人名は書かない）
   --help                この説明を出して終了する
 
-標準出力に counts と totals を JSON で1行出す。検算（人＋会派＋未配分＝期待値、相対誤差 1e-9）が合わない、
-または出力に法律の ID が混ざっているときは、書かずに終了コード1で止まる。`);
+書き出す JSON は公開用：階層に入らない人・会派の額と、本数が下限に満たない内訳の額は出さない（法律1本ぶんの額が読めないように）。
+額を出さない人・会派が合わせて1つだけのときは、額を出さない人・会派の合計と totals の people・parties も伏せる。
+標準出力に counts と totals（公開用）を JSON で1行出す。内部の検算（人＋会派＋未配分＝期待値、相対誤差 1e-9）が合わない、
+公開用に額が残っている、または出力に法律の ID が混ざっているときは、書かずに終了コード1で止まる。
+未知の引数、値の無い --out・--sensitivity、値が -- で始まる --out・--sensitivity は終了コード2で止まる。`);
   process.exit(0);
 }
-const noWrite = argv.includes('--no-write');
-const outIdx = argv.indexOf('--out');
-if (outIdx >= 0 && !argv[outIdx + 1]) { console.error('--out に出力先がありません'); process.exit(2); }
-const sensIdx = argv.indexOf('--sensitivity');
-if (sensIdx >= 0 && !argv[sensIdx + 1]) { console.error('--sensitivity に出力先がありません'); process.exit(2); }
-const sensOut = sensIdx >= 0 ? resolve(argv[sensIdx + 1]) : '';
+// 引数：未知の引数と、値の無い（または次の引数 -- で始まる）--out・--sensitivity はエラー（終了コード2）。
+const argError = msg => { console.error(`${msg}\n${USAGE}`); process.exit(2); };
+let noWrite = false;
+let outArg = '';
+let sensArg = '';
+for (let i = 0; i < argv.length; i++) {
+  const a = argv[i];
+  if (a === '--no-write') noWrite = true;
+  else if (a === '--out' || a === '--sensitivity') {
+    const v = argv[i + 1];
+    if (v === undefined || v === '') argError(`${a} に出力先がありません`);
+    if (v.startsWith('--')) argError(`${a} の値が -- で始まっています：${v}`);
+    if (a === '--out') outArg = v; else sensArg = v;
+    i++;
+  } else argError(`未知の引数です：${a}`);
+}
+const sensOut = sensArg ? resolve(sensArg) : '';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const app = join(root, 'app');
-const out = outIdx >= 0 ? resolve(argv[outIdx + 1]) : join(root, 'data/derived/exposure-v1/exposure-ranking.json');
+const out = outArg ? resolve(outArg) : join(root, 'data/derived/exposure-v1/exposure-ranking.json');
 const ballotsDir = join(root, 'data/acquired/sangiin-votes/ballots');
 const inputs = {
   macro: join(root, 'data/derived/macro-v1/macro.csv'),
@@ -68,6 +84,31 @@ function checkTotals(label, t) {
   }
 }
 
+// 公開用の検査：階層に入らない行に額が無い／本数が下限に満たない内訳に額が無い／階層に入った行には額がある。破れたら終了コード1。
+// 額を出さない行の数と、額を消した内訳の数を返す。
+function checkPublic(label, p, minLaws) {
+  const stats = { hiddenPeople: 0, hiddenParties: 0, hiddenCells: 0 };
+  const fail = msg => { console.error(`公開用の検査に失敗（${label}）：${msg}`); process.exit(1); };
+  for (const [kind, rows] of [['人', p.people], ['会派', p.parties]]) {
+    for (const r of rows) {
+      if (r.tier === null) {
+        if (r.exposureYen !== null) fail(`階層に入らない${kind}の行に額がある`);
+        if (kind === '人') stats.hiddenPeople++; else stats.hiddenParties++;
+      } else if (r.exposureYen === null) fail(`階層に入った${kind}の行に額が無い`);
+      for (const c of r.cells) {
+        if (r.tier === null && c.exposureYen !== null) fail(`階層に入らない${kind}の内訳に額がある`);
+        if (c.laws < minLaws && c.exposureYen !== null) fail(`本数が下限に満たない内訳に額がある（${c.laws}本）`);
+        if (c.exposureYen === null) stats.hiddenCells++;
+      }
+    }
+  }
+  const withheld = stats.hiddenPeople + stats.hiddenParties === 1;
+  if (withheld && (p.totals.people !== null || p.totals.parties !== null || p.hidden.people.exposureYen !== null || p.hidden.parties.exposureYen !== null)) fail('額を出さない行が1つだけなのに合計が伏せられていない');
+  if (!withheld && (p.totals.people === null || p.totals.parties === null)) fail('額を出さない行が1つだけでないのに合計が伏せられている');
+  if (p.hidden.people.count !== stats.hiddenPeople || p.hidden.parties.count !== stats.hiddenParties) fail('額を出さない行の件数が合わない');
+  return stats;
+}
+
 // 順位相関（同順位は平均順位）。
 function ranks(values) {
   const idx = values.map((v, i) => [v, i]).sort((a, b) => a[0] - b[0]);
@@ -91,7 +132,7 @@ function spearman(a, b) {
 
 try {
   const { buildExposureInputs, withLedgerPeople } = await server.ssrLoadModule('/src/exposure-inputs.ts');
-  const { buildExposureRanking, DEFAULT_ROLE_RATIO } = await server.ssrLoadModule('/src/exposure-ranking.ts');
+  const { buildExposureRanking, toPublicExposureRanking, DEFAULT_ROLE_RATIO } = await server.ssrLoadModule('/src/exposure-ranking.ts');
   const { SCORING_CONSTANTS } = await server.ssrLoadModule('/src/scoring-constants.ts');
   const text = Object.fromEntries(Object.entries(inputs).map(([k, p]) => [k, readFileSync(p, 'utf8')]));
   const ballotFiles = readdirSync(ballotsDir).filter(f => f.endsWith('.csv')).sort();
@@ -114,14 +155,21 @@ try {
   checkTotals('産業別', ranking.totals);
   checkTotals('全産業', whole.totals);
 
+  // 公開用に変える（内部の検算は変える前の ranking・whole で済ませた）。階層に入らない行の額と、本数が下限に満たない内訳の額を出さない。
+  const minLaws = SCORING_CONSTANTS.minContributingLaws;
+  const pub = toPublicExposureRanking(ranking, minLaws);
+  const pubWhole = toPublicExposureRanking(whole, minLaws);
+  const publicStats = checkPublic('産業別', pub, minLaws);
+  const publicStatsWhole = checkPublic('全産業', pubWhole, minLaws);
+
   const groupRow = bucket => {
     const lawsWithRecord = new Map();
     for (const i of bucket.involvements) lawsWithRecord.set(i.groupId, (lawsWithRecord.get(i.groupId) ?? new Set()).add(i.lawId));
     return bucket.groups.map(g => ({ id: g.id, group: g.group, window: g.window, diff: g.diff, benchmark: g.benchmark, lawCount: g.lawCount, lawsWithInvolvement: lawsWithRecord.get(g.id)?.size ?? 0 }));
   };
   const payload = {
-    ...ranking,
-    wholeEconomy: { groups: groupRow(built.wholeEconomy), people: whole.people, parties: whole.parties, unallocated: whole.unallocated, totals: whole.totals },
+    ...pub,
+    wholeEconomy: { groups: groupRow(built.wholeEconomy), people: pubWhole.people, parties: pubWhole.parties, hidden: pubWhole.hidden, unallocated: pubWhole.unallocated, totals: pubWhole.totals },
     groups: groupRow(built.industry),
     counts: built.counts,
     coverage,
@@ -172,7 +220,7 @@ try {
     mkdirSync(dirname(sensOut), { recursive: true });
     writeFileSync(sensOut, lines.join('\n'));
   }
-  console.log(JSON.stringify({ counts: built.counts, coverage, totals: ranking.totals, wholeEconomyTotals: whole.totals }));
+  console.log(JSON.stringify({ counts: built.counts, coverage, totals: pub.totals, wholeEconomyTotals: pubWhole.totals, publicStats: { ...publicStats, wholeEconomy: publicStatsWhole, hidden: pub.hidden } }));
 } finally {
   await server.close();
 }

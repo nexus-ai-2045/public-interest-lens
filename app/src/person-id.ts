@@ -40,6 +40,7 @@ export class PersonLedger {
   /** persons.csv（scripts/person_ids.py の出力）と、本名の別名を引くための名簿。 */
   constructor(personsCsv: string, rosterCsv = '') {
     for (const r of parseCsv(personsCsv)) {
+      if (!r['人物ID']) continue; // 人物ID が空の行（persons.csv の1行目は全列空）は台帳に入れない。
       const p = { id: r['人物ID'], name: r['氏名'], reading: r['読み'], house: r['院'], district: r['選挙区'] };
       this.byId.set(p.id, p);
       const key = canonical(p.name);
