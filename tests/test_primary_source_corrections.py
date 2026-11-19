@@ -39,8 +39,14 @@ class CorrectionsTest(unittest.TestCase):
         cls.sample_lines = [x for n in ("lineA.json", "lineB.json") for x in json.loads((reread.SAMPLE / n).read_text(encoding="utf-8"))]
 
     def test_every_sample_candidate_is_in_the_table(self):
-        """抜き取り検証2回目の訂正候補は、すべて訂正表か確かめた表に入る（取りこぼさない）。"""
+        """抜き取り検証2回目の訂正候補は、すべて訂正表に入るか、Opus が退けて確かめた表に入る（取りこぼさない）。"""
+        conf = {(r["id"], r["項目"]): r for r in csv.DictReader((reread.OUT / "confirmed.csv").open(encoding="utf-8", newline=""))}
         for i, item in self.sample:
+            ruling = self.sample_rulings.get(i, {}).get(item, {})
+            if ruling.get("退ける"):
+                self.assertNotIn(item, self.corr.get(i, {}), f"{i} {item}")
+                self.assertEqual(conf[(i, item)]["確かめた値"], ruling["値"], f"{i} {item}")
+                continue
             self.assertIn(item, self.corr.get(i, {}), f"{i} {item}")
 
     def test_every_value_comes_from_the_recorded_reading(self):

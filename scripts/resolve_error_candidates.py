@@ -267,8 +267,14 @@ def merge_sample(rows: list[dict], conf: list[dict], res: list[dict]) -> tuple[l
         prev = index.get(k)
         if prev is None and k in confirmed:  # 読み直しではサイトの値が正しかった項目
             prev = {"直した値": confirmed[k]["確かめた値"]}
+        r = rulings.get(cand["id"], {}).get(cand["項目"])
+        if prev is None and r and r.get("退ける"):  # 候補を Opus が一次資料で退けた：サイトの値のまま
+            conf.append({"id": k[0], "項目": k[1], "確かめた値": r["値"], "理由": r["理由"],
+                         "判定者": "抜き取り検証2回目の訂正候補を Opus が一次資料で退けた", "記録": SAMPLE_RECORD})
+            res.append({"id": k[0], "型": "抜き取り2回目", "項目": k[1], "サイトの値": cand["直す前の値"], "系統A": "", "系統B": "",
+                        "Sonnet": v, "Opus 裁定": r["値"], "決めた値": r["値"], "決め方": "裁定（候補を退けた）", "決着": "誤りなし"})
+            continue
         if prev is not None and prev["直した値"] != v:  # 2つの読み直しが割れた：Opus の裁定
-            r = rulings.get(cand["id"], {}).get(cand["項目"])
             if not r:
                 raise SystemExit(f"{k}：読み直し（{prev['直した値']}）と抜き取り検証2回目（{v}）が割れていて、{SAMPLE_RULINGS.name} に裁定が無い")
             row = {**(index.get(k) or cand), "直した値": r["値"], "理由": r["理由"], "引用": r["引用"], "出典URL": r["出典URL"],
