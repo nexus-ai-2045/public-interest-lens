@@ -40,7 +40,7 @@ from scripts.evaluation_rules import (
     STATE_DEMOTED,
     STATE_FAILED,
     VERDICT_FAIL,
-    is_demoted,
+    amount_demoted,
     site_is_institutional,
 )
 
@@ -287,7 +287,7 @@ def cmd_resolve() -> int:
                           "直す前の値": before[item], "理由": why, "引用": quote, "出典URL": url, "判定者": who,
                           "指示文": "sample-v2/prompt-v2.md（版 v2）" + ("・prompt-adjudicate-v1.md" if ru else ""),
                           "記録": "data/derived/evaluation-ledger-v1/sample-v2/"})
-        has_amount = is_demoted(VERDICT_FAIL, cur["到達点"], cur["確かさ"])  # 台帳（ledger_state）と同じ規則
+        has_amount = amount_demoted(VERDICT_FAIL, cur["到達点"], cur["確かさ"])  # 台帳（ledger_state）と同じ規則
         if v == "割れ":
             how = RES_HELD
         elif v == "合格":
@@ -378,7 +378,7 @@ MEMO = "標本2（sample-v2）："
 def ledger_state(site: dict, rec: tuple[dict, dict, dict]) -> tuple[str, str]:
     """標本2の法律の検証状態を、今のサイトの値で判定し直して決める（AI は呼ばない）。site は 類型・分類・到達点・分野・確かさ。
     合格：サイトの値が読み直しと合う（訂正されて合った法律はメモに「訂正で合格」）。
-    参考に下げた：不合格で、額のある到達点（初回と同じ自動の降格の規則 is_demoted）か、範囲だけの不合格。
+    参考に下げた：不合格で、額のある到達点（初回と同じ規則 amount_demoted。評価対象外は額が無いので下げない）か、範囲だけの不合格。
     不合格のまま：額の無い法律で、サイトの値が訂正されるまで（訂正候補は correction-candidates.csv）。"""
     a, b, ru = rec
     v, diffs, splits = judge(site, a, b, ru.get("値"), ru.get("確認", ()))
@@ -388,7 +388,7 @@ def ledger_state(site: dict, rec: tuple[dict, dict, dict]) -> tuple[str, str]:
     reason = "／".join(diffs) or "割れ（独立の確認待ち）：" + "・".join(splits)
     if v == "不合格" and all(d.startswith("範囲") for d in diffs):
         return STATE_DEMOTED, f"{MEMO}{reason}"
-    if is_demoted(VERDICT_FAIL, site["到達点"], site.get("確かさ", "")):
+    if amount_demoted(VERDICT_FAIL, site["到達点"], site.get("確かさ", "")):
         return STATE_DEMOTED, f"{MEMO}訂正待ち（額は参考に下げた）：{reason}"
     return STATE_FAILED, f"{MEMO}訂正待ち：{reason}"
 
