@@ -86,7 +86,13 @@ test.describe('/ranking（法律ランキング）', () => {
     await page.goto('/ranking');
     const fold = page.locator('.laws-fold', { hasText: '経済全体の共有額の参考が付いた法律' });
     await expect(fold).toBeVisible();
-    await expect(fold).toContainText('490本は畳んでいます');
+    // 本数は配布データ（laws.json）から、画面と同じ数え方で数える。試験に数字を写して持たない（データが変わると古くなる）。
+    // 画面（LawCatalog）は、参考の額の畳み（step が amounted）に入った行を除いてから、経済全体の共有額の行を数える。
+    type Row = { step: string; shared?: { whole?: boolean } | null };
+    const catalog = await (await page.request.get('/distribution/laws.json')).json() as { laws: Row[]; policies: Row[] };
+    const whole = [...catalog.laws, ...catalog.policies].filter(row => row.shared?.whole && row.step !== 'amounted').length;
+    expect(whole).toBeGreaterThan(0);
+    await expect(fold).toContainText(`${whole.toLocaleString('ja-JP')}本は畳んでいます`);
     const sharedRows = page.locator('.laws-row.is-shared');
     await expect(sharedRows.first()).toBeVisible();
     await expect(sharedRows.first().locator('.laws-row-amount')).toContainText('共有額の参考');

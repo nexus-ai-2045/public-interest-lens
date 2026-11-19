@@ -388,6 +388,11 @@ def check(ranking: dict, ctx: dict) -> tuple[list[dict[str, str]], dict]:
     return rows, summary
 
 
+def members_vacuous(members: dict) -> bool:
+    """議員ページ（members.json）の議員か法律のどちらかが0件＝その側の照合は何も確かめていない。"""
+    return not members.get("members") or not members.get("laws")
+
+
 def check_members(members: dict, ranking: dict) -> list[dict[str, str]]:
     """議員ページ：法律の額が公開ランキングと同じか、証拠が一次資料か、個人・会派・名前不明の賛成票の配分の合計が額に一致するか。"""
     rows: list[dict[str, str]] = []
@@ -496,7 +501,11 @@ def main() -> int:
         members = json.loads(MEMBERS.read_text(encoding="utf-8"))
         rows = check_members(members, current)
         mismatches = [row for row in rows if row["結果"] == NG]
-        print(json.dumps({"memberItems": len(rows), "memberMismatch": len(mismatches)}, ensure_ascii=False))
+        # 議員か法律が0件なら、その側は照合する相手が無い。合格と区別できるように「空振り」と出す（終了コードは変えない）。
+        vacuous = members_vacuous(members)
+        print(json.dumps({"memberItems": len(rows), "memberMismatch": len(mismatches), "vacuous": vacuous}, ensure_ascii=False))
+        if vacuous:
+            print(f"注意  議員ページの照合は空振り：members.json の議員 {len(members.get('members') or [])} 人・法律 {len(members.get('laws') or [])} 本", file=sys.stderr)
         for row in mismatches:
             print(json.dumps(row, ensure_ascii=False), file=sys.stderr)
         return 1 if mismatches else 0

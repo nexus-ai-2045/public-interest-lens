@@ -44,3 +44,6 @@ jobs:
         working-directory: app
       - run: npm run test:e2e
         working-directory: app
+      # 公開版（VITE_PUBLIC_SITE=true）の主要ページの E2E。ジョブは増やさず手順を1つ足す（約1分）。固定の数字のずれを CI が見逃したため（2026-11-19）
+      - run: npm run test:e2e:public
+        working-directory: app
