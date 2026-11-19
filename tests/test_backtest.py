@@ -1,5 +1,6 @@
 """バックテスト（scripts/backtest.py）の検査。CI は毎回、今のデータで測り直してログに出す。"""
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -7,6 +8,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import backtest as bt  # noqa: E402
+
+
+class FixedConstantTest(unittest.TestCase):
+    """合格の線は点数設計 v2.1 の固定定数。正本（app/src/scoring-constants.ts）と食い違わない。"""
+
+    def test_target_matches_the_scoring_constants(self):
+        src = (ROOT / "app" / "src" / "scoring-constants.ts").read_text(encoding="utf-8")
+        found = re.findall(r"^\s*hitRateFloor:\s*([0-9.]+),", src, flags=re.M)
+        self.assertEqual(len(found), 1, "hitRateFloor の定義は1つだけ")
+        self.assertEqual(bt.TARGET, float(found[0]))
+        self.assertEqual(bt.tr.TARGET, float(found[0]))
+
+    def test_no_second_literal_in_the_scripts(self):
+        # backtest.py は backtest_transplant.py の値を使う（Python 側の置き場所は1つ）。
+        text = (ROOT / "scripts" / "backtest.py").read_text(encoding="utf-8")
+        self.assertRegex(text, r"(?m)^TARGET = tr\.TARGET\b")
+        self.assertIsNone(re.search(r"(?m)^TARGET\s*=\s*[0-9]", text))
 
 
 class BacktestCasesTest(unittest.TestCase):
