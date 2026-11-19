@@ -10,6 +10,7 @@ import { loadPriceIndex, toLatestYen, windowBaseYear, type PriceIndex } from './
 import { CORRECTION_EMAIL, correctionIssueUrl, correctionListUrl, correctionMailUrl } from './correction-link';
 import { isCovidBenefitGroup } from './public-distribution';
 import { useTone } from './site-tone';
+import { INTERIM_DISPLAY, foldAllReference, rankingPaused } from './interim-display';
 
 const PAGE = 60;
 const SIDE_OPTIONS: [CatalogQuery['side'], string][] = [['all', 'すべて'], ['confirmed', '確かな額'], ['amount', '額が出た（参考を含む）'], ['shared', '共有額の参考'], ['loss', '国賊側'], ['benefit', '国士側'], ['undetermined', '向き未確定'], ['none', '額なし']];
@@ -62,6 +63,8 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
   // 参考の額（確かさ低・合計に足さない）は既定では畳む。探す語・「額が出た」の絞り込み・#id で開く時は出す。
   const [showRef, setShowRef] = useState(false);
   // 共有額の参考のうち経済全体（産業コード _T）の分は、既定で畳む。産業ごとの分は代表の1行ずつ並べる。
+  // 振り分けの当て直し中（interim-display.ts）は、産業ごとの分も含めて共有額の参考を全部畳む。
+  const foldAll = foldAllReference();
   const [showWhole, setShowWhole] = useState(false);
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
   const showAllRef = useRef(showAll);
@@ -79,7 +82,7 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
   const wholeRevealed = showWhole || query.text.trim() !== '' || query.side === 'shared';
   const opened = (item: CatalogItem) => revealed.has(item.id) || open === item.id;
   const afterRef = useMemo(() => refRevealed ? filteredAll : filteredAll.filter(item => item.step !== 'amounted' || opened(item)), [filteredAll, refRevealed, revealed, open]);
-  const filtered = useMemo(() => wholeRevealed ? afterRef : afterRef.filter(item => !item.shared?.whole || opened(item)), [afterRef, wholeRevealed, revealed, open]);
+  const filtered = useMemo(() => wholeRevealed ? afterRef : afterRef.filter(item => !(foldAll ? item.shared : item.shared?.whole) || opened(item)), [afterRef, wholeRevealed, revealed, open, foldAll]);
   const foldedRef = filteredAll.length - afterRef.length;
   const foldedWhole = afterRef.length - filtered.length;
   const shown = useMemo(() => showAll ? filtered : collapseObservations(filtered, revealed), [filtered, showAll, revealed]);
@@ -107,7 +110,8 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
       const reveal = new Set(revealedRef.current).add(id);
       setRevealed(reveal);
       if (all.find(item => item.id === id)?.step === 'amounted') setShowRef(true);
-      if (all.find(item => item.id === id)?.shared?.whole) setShowWhole(true);
+      const target = all.find(item => item.id === id);
+      if (foldAll ? target?.shared : target?.shared?.whole) setShowWhole(true);
       const visible = (query: CatalogQuery) => showAllRef.current ? filterCatalog(all, query) : collapseObservations(filterCatalog(all, query), reveal);
       let list = visible(queryRef.current);
       if (!list.some(item => item.id === id)) {
@@ -163,10 +167,15 @@ export function LawCatalog({ data }: { data: LawsCatalog }) {
     <p className="laws-count" role="status">{shown.length.toLocaleString('ja-JP')}件（確かな額{confirmed.toLocaleString('ja-JP')}・参考の額{(amounted - confirmed).toLocaleString('ja-JP')}・共有額の参考{sharedShown.toLocaleString('ja-JP')}・額なし{(shown.length - amounted - sharedShown).toLocaleString('ja-JP')}）{JSON.stringify(query) !== JSON.stringify(DEFAULT_QUERY) && <button type="button" onClick={() => update(DEFAULT_QUERY)}>絞り込みを外す</button>} <ShareButton title="法律と政策の一覧｜法律ランキング" text={`法律と政策の一覧（${shown.length.toLocaleString('ja-JP')}件）`} url={`${window.location.origin}/ranking${writeQuery(query, true)}#list`} label="この一覧を共有" /></p>
     {(foldedRef > 0 || showRef) && !(query.text.trim() !== '' || query.side === 'amount' || query.side === 'loss' || query.side === 'benefit' || query.side === 'undetermined') && <p className="laws-fold" role="status">
       <Layers size={15} aria-hidden="true" />
-      <span>{showRef ? '参考の額も並べています。参考の額は産業や経済全体の差から見積もった値で、その法律だけの効果とは言えません（確かさ低。合計・議員には足しません）。' : `参考の額が付いた法律${foldedRef.toLocaleString('ja-JP')}本は畳んでいます。産業や経済全体の差から見積もった値で、その法律だけの効果とは言えず、合計・議員には足しません。`}</span>
+      <span>{foldAll && !showRef && `${INTERIM_DISPLAY.label}のため、`}{showRef ? '参考の額も並べています。参考の額は産業や経済全体の差から見積もった値で、その法律だけの効果とは言えません（確かさ低。合計・議員には足しません）。' : `参考の額が付いた法律${foldedRef.toLocaleString('ja-JP')}本は畳んでいます。産業や経済全体の差から見積もった値で、その法律だけの効果とは言えず、合計・議員には足しません。`}</span>
       <button type="button" aria-pressed={showRef} onClick={() => { setShowRef(value => !value); setLimit(PAGE); }}>{showRef ? '畳む' : '参考の額も表示'}</button>
     </p>}
-    {(foldedWhole > 0 || (showWhole && data.shared && data.shared.whole > 0)) && !(query.text.trim() !== '' || query.side === 'shared') && <p className="laws-fold" role="status">
+    {foldAll && (foldedWhole > 0 || showWhole) && !(query.text.trim() !== '' || query.side === 'shared') && <p className="laws-fold" role="status">
+      <Layers size={15} aria-hidden="true" />
+      <span>{showWhole ? '共有額の参考も並べています。産業や経済全体の差を法律ごとに分けていない参考値で、その法律だけの効果とは言えません（確かさ低。合計・議員には足しません）。' : `${INTERIM_DISPLAY.label}のため、共有額の参考が付いた法律${foldedWhole.toLocaleString('ja-JP')}本は畳んでいます。産業や経済全体の差をそのまま共有した額で、その法律だけの効果とは言えません。`}</span>
+      <button type="button" aria-pressed={showWhole} onClick={() => { setShowWhole(value => !value); setLimit(PAGE); }}>{showWhole ? '畳む' : '共有額の参考も表示'}</button>
+    </p>}
+    {!foldAll && (foldedWhole > 0 || (showWhole && data.shared && data.shared.whole > 0)) && !(query.text.trim() !== '' || query.side === 'shared') && <p className="laws-fold" role="status">
       <Layers size={15} aria-hidden="true" />
       <span>{showWhole ? '経済全体（産業コード _T）の共有額も並べています。経済全体の差を法律ごとに分けていない参考値で、規模が大きく、その法律だけの効果とは言えません（確かさ低。合計・議員には足しません）。' : `経済全体の共有額の参考が付いた法律${foldedWhole.toLocaleString('ja-JP')}本は畳んでいます。産業全体の差をそのまま共有した額で、規模が大きく、その法律だけの効果とは言えません。`}</span>
       <button type="button" aria-pressed={showWhole} onClick={() => { setShowWhole(value => !value); setLimit(PAGE); }}>{showWhole ? '畳む' : '経済全体の共有額も表示'}</button>
@@ -270,11 +279,13 @@ function CatalogRow({ item, open, onToggle, ...peers }: RowProps) {
 /** 冒頭の5行：何を・誰が・狙い・反対側の心配・結果。事実・AI 要約・計算を見分けられるように印を付ける。 */
 /** 額の物差し三欄。順位に使うのは付加価値の欄（ranked）だけ。国の収支は足さない別表、採算は参考。 */
 function ColumnsBox({ columns }: { columns: CatalogColumns }) {
-  const { valueAdded, fiscalOku, spendYen, profitability } = columns;
+  const { fiscalOku, spendYen, profitability } = columns;
+  // 振り分けの当て直し中（interim-display.ts）は、本線の付加価値も順位に使わない
+  const valueAdded = columns.valueAdded && { ...columns.valueAdded, ranked: columns.valueAdded.ranked && !rankingPaused() };
   return <section className="laws-columns" aria-label="額の三欄">
     <h5>額の三欄（物差しは3つに分けてある）</h5>
     <dl className="laws-facts">
-      {valueAdded && <div><dt>付加価値の変化{valueAdded.ranked ? '（本線）' : '（参考）'}</dt><dd>{formatYen(valueAdded.yen)}。{valueAdded.origin}、確かさ{valueAdded.certainty}。{valueAdded.ranked ? '順位に使う欄' : '順位・合計・議員への配分には使わない'}</dd></div>}
+      {valueAdded && <div><dt>付加価値の変化{valueAdded.ranked ? '（本線）' : '（参考）'}</dt><dd>{formatYen(valueAdded.yen)}。{valueAdded.origin}、確かさ{valueAdded.certainty}。{valueAdded.ranked ? '順位に使う欄' : columns.valueAdded?.ranked ? `順位に使う欄（${INTERIM_DISPLAY.label}のため、いまは順位に使わない）` : '順位・合計・議員への配分には使わない'}</dd></div>}
       {fiscalOku !== undefined && <div><dt>国の収支（別表）</dt><dd>{formatYen(fiscalOku * 1e8)}{fiscalOku < 0 ? 'の減収' : 'の増収'}の見込み。{columns.fiscalOrigin}。付加価値には足さない</dd></div>}
       {profitability !== undefined && spendYen !== undefined && <div><dt>採算（参考）</dt><dd>付加価値の変化 ÷ 国の支出 ＝ {profitability.toFixed(3)}（国の支出 {formatYen(spendYen)}）。{columns.profitabilityNote}</dd></div>}
     </dl>

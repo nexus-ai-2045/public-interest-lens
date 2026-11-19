@@ -13,6 +13,7 @@
   data/derived/publish-v1-triage-v2/publish.csv  公開可否
   data/derived/law-overviews-v1/overviews.csv    概要の作り方
   data/derived/evaluation-ledger-v1/sample-verdicts.csv  抜き取り検証の結果（あれば）
+  data/derived/evaluation-ledger-v1/interim-holds.csv    抜き取り2回目で不合格の額を、当て直しまで参考に下げる表（あれば）
 
 出力：
   data/derived/evaluation-ledger-v1/ledger.csv
@@ -37,8 +38,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts import primary_source_corrections as corrections
 from scripts.evaluation_rules import (
+    INTERIM_REASON_PREFIX,
     STATE_DEMOTED,
     STATE_FAILED,
+    STATE_INTERIM_HELD,
+    VERDICT_FAIL,
+    interim_holds,
     is_demoted,
     narrow_whole_economy,
 )
@@ -50,7 +55,7 @@ SAMPLE_TARGET = 100
 
 HEADER = ["id", "題名", "分類", "分類の方法", "類型", "経済に効くか", "分野", "分野の方法", "到達点", "向き",
           "額の方法", "額（円）", "付加価値の変化（円）", "付加価値の由来", "国の収支（億円）", "国の支出（円）", "採算（付加価値÷国の支出）", "確かさ", "公開可否", "概要の方法", "常識検査③", "頑健性④", "同型の誤り候補⑤", "ロジック検査", "検証状態", "検証メモ"]
-VERIFY_STATES = ("未検証", "分類を2系統で照合済み", "分類を第3判定で決着", "抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた")
+VERIFY_STATES = ("未検証", "分類を2系統で照合済み", "分類を第3判定で決着", "抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた", STATE_INTERIM_HELD)
 SAMPLED_STATES = ("抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた")
 RESOLVED_PASS = "合格に訂正"  # scripts/resolve_sample_failures.py が書く決着の語
 RESOLVED_DEMOTED = "参考に下げた"
@@ -87,6 +92,7 @@ def load():
         "pub": by_id(read(D / "publish-v1-triage-v2" / "publish.csv")),
         "ov": by_id(read(D / "law-overviews-v1" / "overviews.csv")),
         "sample": by_id(read(LEDGER_DIR / "sample-verdicts.csv")),
+        "interim": interim_holds(),  # 当て直しまで参考に下げる法律（抜き取り2回目の不合格。初回の抜き取りとは別に数える）
         "resolved": by_id(read(LEDGER_DIR / "sample-resolutions.csv")),  # 不合格のまま残った法律の読み直しと決着
         "cols": by_id(read(D / "three-columns-v1" / "columns.csv")),  # 額の物差し三欄（設計決定0024）
         "corr": corrections.load(D / "primary-source-corrections-v1" / "corrections.csv"),  # 一次資料で直した類型・経済に効くか
@@ -158,8 +164,13 @@ def amount_demoted(verdict: str, reach: str, certainty: str) -> bool:
     return is_demoted(verdict, reach, certainty) and reach != NO_AMOUNT_DEMOTED_REACH
 
 
-def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "", resolved: dict | None = None, key: str = "") -> tuple[str, str]:
+def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "", resolved: dict | None = None, key: str = "", interim: dict | None = None) -> tuple[str, str]:
     s = sample.get(id_)
+    held = (interim or {}).get(id_)
+    if held is not None and s:
+        raise ValueError(f"{id_} は初回の抜き取りと interim-holds.csv の両方にある（1つの事実は1か所）")
+    if held is not None and is_demoted(VERDICT_FAIL, reach_, certainty):
+        return STATE_INTERIM_HELD, f"{INTERIM_REASON_PREFIX}{held}"
     if s:
         if s["判定"] == "合格":
             return "抜き取り検証で合格", s.get("食い違い", "")
@@ -215,7 +226,7 @@ def build_rows(src) -> list[dict]:
             if fixed_econ == corrections.INSTITUTIONAL:
                 cls, how = "評価対象外", f"{corrections.METHOD}（制度）"
         key = site_key({"類型": o["種類"] or "", "分類": cls, "到達点": reach_, "経済に効くか": econ})
-        state, memo = verify_state(i, how, src["sample"], reach_, certainty, src.get("resolved"), key)
+        state, memo = verify_state(i, how, src["sample"], reach_, certainty, src.get("resolved"), key, src.get("interim"))
         col = src["cols"].get(i, {})
         rows.append({
             "id": i, "題名": o["題名"], "分類": cls, "分類の方法": how, "類型": o["種類"] or "",
