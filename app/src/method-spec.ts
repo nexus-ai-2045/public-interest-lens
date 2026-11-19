@@ -6,8 +6,8 @@
  */
 
 /** 仕様全体の版。部品の版が1つでも変われば上げる。 */
-export const SPEC_VERSION = 'method-spec-v2.3';
-export const SPEC_DATE = '2026-10-29';
+export const SPEC_VERSION = 'method-spec-v2.4';
+export const SPEC_DATE = '2026-11-19';
 
 export type SpecStatus = '採用' | '案';
 export type SpecFormula = { tex: string; note?: string };
@@ -35,12 +35,42 @@ export const STANDARD_METHODS: StandardMethod[] = [
   { name: '差の差', use: '法律の前後で、日本と比較国の差がどう変わったか', refs: ['Angrist & Pischke, Mostly Harmless Econometrics (2009), ch. 5'], sections: ['impact', 'loss', 'macro'] },
   { name: '合成対照と置換検定', use: '差が偶然の範囲かどうか（置換検定の順位で確かさを決める）', refs: ['Abadie, Diamond & Hainmueller (2010), Journal of the American Statistical Association 105(490)'], sections: ['cause-axis'] },
   { name: '費用便益分析', use: '規制の便益を公的な単価で円にし、損失から差し引く。税や交付金などの移転は数えない', refs: ['Boardman et al., Cost-Benefit Analysis: Concepts and Practice', '国土交通省「公共事業評価の費用便益分析に関する技術指針」'], sections: ['benefit', 'covid'] },
-  { name: 'シャープレイ＝シュービック投票力指数', use: '1票が法律の成立にどれだけ効いたか', refs: ['Shapley & Shubik (1954), American Political Science Review 48(3)'], sections: ['allocation-v0', 'allocation-v1', 'reference-members'] },
+  { name: 'シャープレイ＝シュービック投票力指数', use: '1票が法律の成立にどれだけ効いたか（点数設計 v2.1 で撤回。コードの移行が終わるまで、今の公開データの計算に残る）', refs: ['Shapley & Shubik (1954), American Political Science Review 48(3)'], sections: ['allocation-v0', 'allocation-v1', 'reference-members'] },
   { name: '実質化（GDP デフレーター）', use: '違う年の円を、同じ年の円にそろえる', refs: ['United Nations et al., System of National Accounts 2008, ch. 15'], sections: ['price'] },
   { name: '成長会計', use: '差を、働く人の数・資本・生産性の分に分ける', refs: ['Solow (1957), Review of Economics and Statistics 39(3)', 'OECD, Measuring Productivity (2001)'], sections: ['cause-axis'] },
 ];
 
 export const SPEC_SECTIONS: SpecSection[] = [
+  {
+    id: 'score-design',
+    title: '点数設計 v2.1（群まで識別し、人は固定比率）',
+    version: 'score-design-v2.1',
+    status: '案',
+    code: ['まだ実装されていません（設計は採用済み、設計決定0027。型・性質テスト・集計は移行中）。公開データは、移行が終わるまで下の「置き換え予定」の節の式で出ます'],
+    lead: '識別できる単位は産業×期間の群までです。群の差は記述として出し、法律へは配りません。法律単位の額は外部の証拠が取れた法律だけに付け、人へは役割ごとの固定比率（取り決め）で配ります。Shapley 値は使いません。',
+    formulas: [
+      { tex: 'G_{k,w} = \\mathrm{Loss}^{(q)}\\bigl(Y = \\text{産業 } k \\text{ の付加価値},\\ \\text{窓 } w\\bigr)', note: '群の差（記述）。OECD 同産業・同時期の中央値との差。法律の本数で割らない' },
+      { tex: 'E_i = \\begin{cases} \\text{外部証拠の額（幅つき）} & \\text{はしごのどれかが取れた} \\\\ \\text{測定できない} & \\text{それ以外} \\end{cases}', note: '法律単位の額。はしごは 他国の実測 → 官庁の見込み → 業界統計 → 弾力性×規模' },
+      { tex: 'w_{p,i} = \\frac{0.4\\,[p\\in\\mathcal P_i]}{|\\mathcal P_i|} + \\frac{0.2\\,[p\\in\\mathcal V_i]}{|\\mathcal V_i|} - \\frac{0.2\\,[p\\in\\mathcal N_i]}{|\\mathcal N_i|} + \\frac{0.2\\,[p\\in\\mathcal C_i]}{|\\mathcal C_i|}', note: '個人の固定比率（取り決め。初期値）。反対は逆向き。役割の中を人数で均等に割るのは案で、実装の PR で確定する' },
+      { tex: '\\mathrm{Score}_p = \\sum_{i\\in\\mathcal L_p} E_i\\,\\epsilon_i\\,w_{p,i},\\qquad \\mathcal L_p = \\{\\, i : E_i \\text{ があり、確かさが中以上} \\,\\}', note: '因果の点。ε は外部証拠の向き（便益 +1・損失 −1）' },
+      { tex: '\\text{点を出す}(p) \\iff |\\mathcal L_p| \\ge 5 \\ \\land\\ \\frac{\\sum_{i\\in\\text{上位3本}} |E_i\\,w_{p,i}|}{\\sum_{i\\in\\mathcal L_p} |E_i\\,w_{p,i}|} \\le 0.5', note: '固定の条件。満たさない人は点を出さず、関与した群と本数を出す。占有率の分母の取り方は実装の PR で確定する' },
+    ],
+    symbols: [
+      ['G_{k,w}', '産業 k・窓 w の群の差。「政策で説明できる割合」は出さない'],
+      ['E_i,\\ \\epsilon_i', '法律 i の外部証拠つきの額と、その向き。産業の差の符号から向きを決めない'],
+      ['\\mathcal P_i,\\ \\mathcal V_i,\\ \\mathcal N_i,\\ \\mathcal C_i', '法律 i の発議者、賛成した人、反対した人、閣議決定した閣僚（閣法。在任条件を満たす閣僚に均等。首相1人に付けない）'],
+      ['\\mathcal L_p', '人 p が関与し、点に入る法律'],
+    ],
+    rules: [
+      '固定の定数（つまみにしない。変えるときはこの仕様の版を上げる）：寄与法律数の下限 5、上位3本の占有率の上限 50%、確かさの下限「中」。的中率の合格線は 80%（ねくの確認待ち。確認まで評価方法設計書の 95% を書き換えない）。',
+      '残すつまみは2つ：個人の固定比率（初期値 発議0.4・賛成0.2・反対0.2・閣議決定0.2。変えたときの順位の動きを必ず並べる）と、順位の信頼水準（既定 90%）。',
+      '党への帰属を基本にし、党と個人に二重に配らない。責任度は比較用の別欄に出すだけ。',
+      '群の差を法律へ配る経路は作らない（型で作れないようにする）。法律単位の額が無い法律は人の点に入らない。',
+      '順位は同時信頼集合の階層で出す。幅と条件を満たさない人は「測定不能」。',
+      '点が出ない人の見せ方：関与した群と本数。加えて、群の伸び損ねた額を固定比率で人に配る「曝露ランキング」を、因果ではなく記述と明記して出す（因果の点と足さない。集計の式と版は実装の PR でここに足す）。',
+      '検証は3つに分ける：計算の再現、観測値の予測校正、因果の識別（外部の自然実験や対照がある法律だけ）。符号の的中率を因果の識別の代わりにしない。',
+    ],
+  },
   {
     id: 'triage',
     title: '振り分け（どの法律を、どの分野・指標で測るか）',
@@ -102,7 +132,8 @@ export const SPEC_SECTIONS: SpecSection[] = [
       ['\\mathcal{Q}_q', '比較国の値の q 分位（線形補間）'],
     ],
     rules: [
-      '額は影響の段階が1以上で、額の符号が段階の向きと一致するときだけ出す。段階1の額は確かさ「低」として印を付け、議員への配分にも使う（設計決定0014）。比較国は3か国以上。',
+      '額は影響の段階が1以上で、額の符号が段階の向きと一致するときだけ出す。段階1の額は確かさ「低」として印を付ける。比較国は3か国以上。',
+      '今の実装は確かさ「低」の額も議員に配る（設計決定0014 決定6）。点数設計 v2.1（設計決定0027）では、配るのは確かさ「中」以上だけにする。実装は移行中。',
       '額の単位は「開始前最後の年の名目円」。同じ年の円にそろえた額は物価の換算（price-v1）で並べる。順位と議員の額は、換算に切り替えるまで名目円のまま（切り替えは版を上げ、上位の動きを記録する）。',
     ],
   },
@@ -155,7 +186,7 @@ export const SPEC_SECTIONS: SpecSection[] = [
     version: 'macro-v1',
     status: '採用',
     code: ['scripts/build_macro_amounts.py'],
-    lead: '影響の段階が付かなかった法律にも、分野の産業の付加価値で同じ式の額を付けます。確かさは「参考」で、全議員の参考の欄へ別に配分します。確かな額の議員順位には合算しません。',
+    lead: '【置き換え予定：点数設計 v2.1（設計決定0027）】この額は産業×期間の群の差で、その法律の効果ではありません（単独で識別できる法律は 1,982 本中 2 本）。v2.1 では群の差として群のまま出し、因果の点としては法律にも人にも配りません（人へは、因果の点と足さない曝露ランキングとしてだけ出します）。以下は、移行が終わるまで公開データを作っている今の実装です。影響の段階が付かなかった法律にも、分野の産業の付加価値で同じ式の額を付け、確かさは「参考」とし、全議員の参考の欄へ別に配ります。確かな額の議員順位には合算しません。',
     formulas: [
       { tex: '\\mathrm{Loss}^{(q)}_i = \\mathrm{Loss}^{(q)}\\bigl(Y = \\text{産業 } k(i) \\text{ の付加価値},\\ s = \\text{施行日}_i\\bigr)', note: '式は損失額と同じ' },
       { tex: 'k(i) = \\text{振り分けの分野} \\;\\to\\; \\text{AI 2系統の分野} \\;\\to\\; \\text{全産業}', note: 'この順で最初に決まったもの。同じ元の題名の改正は最多の産業にそろえる' },
@@ -191,7 +222,7 @@ export const SPEC_SECTIONS: SpecSection[] = [
     version: 'observation-split-v1',
     status: '採用',
     code: ['app/src/members-build.ts（splitRange・observationKey）', 'scripts/build_public_ranking.py（_reading_notes）'],
-    lead: '同じ額の系列・同じ期間・同じ額の幅を複数の法律が共有するとき、それは1つの観測です。観測の額を本数で割ってから人に配り、同じ差を何度も数えません。',
+    lead: '【置き換え予定：点数設計 v2.1（設計決定0027）】v2.1 では、群の額を本数で割って法律へ配ること自体をやめます（群の差は群のまま出す）。以下は今の実装です。同じ額の系列・同じ期間・同じ額の幅を複数の法律が共有するとき、それは1つの観測として、観測の額を本数で割ってから人に配ります。',
     formulas: [
       { tex: 'o(i) = (\\text{観測グループ},\\ \\text{窓},\\ L_{\\mathrm{low}},\\ L_{\\mathrm{med}},\\ L_{\\mathrm{high}}),\\qquad n_o = \\bigl|\\{\\, j : o(j) = o \\,\\}\\bigr|' },
       { tex: 'A_i = \\operatorname{trunc}\\!\\left(\\frac{\\mathrm{Loss}_i}{n_{o(i)}}\\right)', note: '法律の分（円未満は0の方向へ切り捨て）' },
@@ -205,7 +236,7 @@ export const SPEC_SECTIONS: SpecSection[] = [
     version: 'causal-shapley-v1',
     status: '採用',
     code: ['app/src/causal-allocation.ts', 'app/src/members-build.ts'],
-    lead: '「この人の行動が無かったら、その法律は成立したか」を投票のゲームの Shapley 値で測ります。method-spec-v1.0 まではこの割合をそのまま配っていました（配分 v0）。v2.0 からは、この割合を配分 v1（行動 × 向き × 結果）の中で使います。',
+    lead: '【置き換え予定：点数設計 v2.1（設計決定0027）】v2.1 では Shapley 値による配分を撤回し、役割ごとの固定比率にします。以下は今の実装です。「この人の行動が無かったら、その法律は成立したか」を投票のゲームの Shapley 値で測ります。method-spec-v1.0 まではこの割合をそのまま配っていました（配分 v0）。v2.0 からは、この割合を配分 v1（行動 × 向き × 結果）の中で使います。',
     formulas: [
       { tex: 'q = \\left\\lfloor \\frac{Y+N}{2} \\right\\rfloor + 1', note: '参議院本会議で可決に必要な票数' },
       { tex: '\\varphi_{\\mathrm{veto}} = \\frac{1}{n}\\sum_{j=q}^{Y} \\frac{\\binom{Y}{j}}{\\binom{n-1}{j+k-1}},\\qquad n = k + Y', note: '拒否権者1人の値' },
@@ -231,7 +262,7 @@ export const SPEC_SECTIONS: SpecSection[] = [
     version: 'allocation-v1',
     status: '採用',
     code: ['app/src/members-build.ts', 'app/src/members-knobs.ts', 'scripts/build_opposing_votes.py', 'scripts/build_auto_involvements.py', 'scripts/build_public_ranking.py'],
-    lead: '一次資料に残る本人の行動ごとに、推したか止めたかの向きと、法律の結果の向きを掛けて配ります。閣法を閣議決定した担当の大臣の分は役職の帳簿にし、点数に入れません。コロナ期と分けて測れない法律とコロナ対応の法律は配りません（設計決定0014）。',
+    lead: '【置き換え予定：点数設計 v2.1（設計決定0027）】v2.1 では、割合を Shapley 値から役割ごとの固定比率に替え、配るのは確かさ「中」以上で法律単位の額がある法律だけにします。閣法の閣議決定の分は、役職の帳簿ではなく固定比率 0.2 で点に入れます。行動 × 向き × 結果の考え方と、コロナ期の扱いは変えません。以下は今の実装です。一次資料に残る本人の行動ごとに、推したか止めたかの向きと、法律の結果の向きを掛けて配ります。閣法を閣議決定した担当の大臣の分は役職の帳簿にし、点数に入れません。コロナ期と分けて測れない法律とコロナ対応の法律は配りません（設計決定0014）。',
     formulas: [
       { tex: '\\text{行動}_{p,i} = \\underbrace{\\frac{\\varphi_{\\mathrm{veto}}}{|\\mathcal P_i|}\\,[p\\in\\mathcal P_i,\\ i\\notin\\text{閣法}]}_{\\text{発議}} + \\underbrace{\\varphi_{\\mathrm{vote}}\\,[p\\in\\mathcal V_i]}_{\\text{参院の賛成}}', note: '成立させた側。φ は「成立への寄与」の Shapley 値' },
       { tex: '\\text{反対}_{p,i} = \\varphi_{\\mathrm{vote}}\\,[p\\in\\mathcal N_i]', note: '参議院本会議の反対票。賛成1票と同じ割合で、向きを逆にする（法律の額の配分 Σ=1 とは別に数える）' },
@@ -245,9 +276,9 @@ export const SPEC_SECTIONS: SpecSection[] = [
       ['A_i', '法律の分（同じ観測を共有する本数で割った額）'],
     ],
     rules: [
-      '配るのは確かさ「高」「中」「低」の法律（印つき）。「参考」は配らない。',
+      '今の実装が配るのは確かさ「高」「中」「低」の法律（印つき）。「参考」は配らない。v2.1 では「低」も配らない。',
       '判定表の R3（コロナ期と分けて測れない）と、コロナ対応の法律（data/derived/covid-response-v1/labels.csv）は配らない。',
-      '会議録から関与を集めていない法律は、議案の提出者の欄（閣法は提出した回次の会期の最初から最後まで在任した閣僚に均等に配る）と参議院の個人別の賛否だけで機械的に配る。提出者が決まらない法律は配らない。',
+      '会議録から関与を集めていない法律は、議案の提出者の欄（閣法は、今の scripts/build_auto_involvements.py では提出時の内閣総理大臣1人。v2.1 で在任条件を満たす閣僚に均等へ直す）と参議院の個人別の賛否だけで機械的に配る。提出者が決まらない法律は配らない。',
       '同姓同名で人物を決められない票は配らない。',
       '会派を比べるときは総額でなく、賛否を示した法律1本あたり・1人あたりで見る（与党は法案の大半に賛成するため）。',
       '出自・国籍・信仰・家族は扱わない（固定）。',
@@ -260,7 +291,7 @@ export const SPEC_SECTIONS: SpecSection[] = [
     alsoVersions: ['reference-split-by-observation-v1'],
     status: '採用',
     code: ['app/src/members-reference.ts'],
-    lead: '確かさ「参考」の法律の額も、確かな額とは別の欄に、同じ Shapley 値で全議員に配ります。確かな額とは足さず、順位も別です。',
+    lead: '【置き換え予定：点数設計 v2.1（設計決定0027）】v2.1 では、法律単位の額が無い法律は人の点に入れません。参考の額を全議員に配るこの欄はやめ、点が出ない人は関与した群と本数、曝露ランキング（記述）で見せます。以下は今の実装です。確かさ「参考」の法律の額も、確かな額とは別の欄に、同じ Shapley 値で全議員に配ります。確かな額とは足さず、順位も別です。',
     formulas: [
       { tex: 'A^{\\text{参考}}_i = \\frac{\\mathrm{Loss}_i}{n_{(g,w)}}', note: '同じ指標の組 g・同じ窓 w を共有する本数で等分' },
       { tex: '\\varphi_{\\text{提出者}} = \\varphi_{\\text{衆院会派}} = \\varphi_{\\text{参院会派}} = \\tfrac{1}{3}', note: '参議院の個人別の賛否が見つからない法律（会派の分は人に配らない）' },
@@ -313,7 +344,8 @@ export const SPEC_SECTIONS: SpecSection[] = [
     ],
     symbols: [],
     rules: [
-      '議員への配分は高・中・低を配る（低は印つき。設計決定0014）。参考は配らない。',
+      '今の実装は、議員への配分に高・中・低を使う（低は印つき。設計決定0014）。参考は配らない。',
+      '点数設計 v2.1（設計決定0027）では、順位と配分に使うのは「中」以上だけ。「低」は額と印を出すが、配らない。実装は移行中。',
       '例外：判定表の行が R3（コロナ期と分離できない）の法律と、コロナ対応の法律（covid-response-v1）は、段階が3・2でも確かさを参考に下げ、「コロナ期と分離できない」の印を付けて配らない（設計決定0014 決定3・4。いま段階3・2から下がるのは13本）。',
       '読み方の印：コロナ期と重なる、便益側の一部が未測定、同じ観測を共有、日本の全産業の付加価値1年分を超える額、施行日は推定（公布日）。',
     ],
@@ -350,6 +382,8 @@ export function specMarkdown(): string {
     '',
     'このファイルは `app/src/method-spec.ts` から `node scripts/build_formula_doc.mjs` で作ります。手で直さず、元のファイルを直してください。',
     '版の決まり・変更の記録・マクロ経済の枠組みは [設計決定0013](adr/0013-calculation-spec-versioning.md) にあります。',
+    '',
+    '**いまは移行中です。** 点数の付け方は点数設計 v2.1（[設計決定0027](adr/0027-score-design-v2-1.md)）に決まりました。最初の節がその設計です（状態は「案」＝実装がまだ）。「置き換え予定」の印が付いた節は、移行が終わるまで公開データを作っている今の実装で、移行が終わったら消します。',
     '',
     '## 使っている定番の手法',
     '',
