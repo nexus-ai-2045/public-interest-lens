@@ -5,26 +5,50 @@
   python3 scripts/fetch_law_source.py url https://...               任意の URL を文字にする
 
 取得できないときは「取得できない：理由」を出して 1 で終わる（読めたふりをしない）。
+取得した原資料は、読み手に渡す前に register_external_material.py で .local/external-materials/reverification-v1/ に
+登録する（観測時刻つき、内容は unverified）。出力の先頭に「外部資料ID」を出す。
 """
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import re
 import sys
 import urllib.parse
 import urllib.request
+from datetime import datetime
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from register_external_material import register_once
 
 KIND_CODE = {"閣法": "09", "衆法": "05", "参法": "06"}
 HONBUN = "https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/honbun/houan/g{session:03d}{code}{number:03d}.htm"
 KOKKAI = "https://kokkai.ndl.go.jp/api/speech"
 TIMEOUT = 40
+TASK_ID = "reverification-v1"
+STORAGE = ROOT / ".local" / "external-materials"
+RAW = ROOT / ".local" / "reverification-v1" / "raw"
+REGISTERED: list[str] = []
 
 
 def get(url: str) -> bytes:
+    """取って、原資料を外部資料として登録してから返す。登録できなければ読み手に渡さない。"""
     req = urllib.request.Request(url, headers={"User-Agent": "law-source-reader"})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as res:
-        return res.read()
+        raw = res.read()
+    fetched_at = datetime.now().astimezone().isoformat(timespec="seconds")
+    RAW.mkdir(parents=True, exist_ok=True)
+    suffix = ".json" if "kokkai.ndl.go.jp/api" in url else ".htm"
+    path = RAW / (hashlib.sha256(url.encode("utf-8")).hexdigest()[:16] + suffix)
+    path.write_bytes(raw)
+    REGISTERED.append(register_once(input_path=path, source_url=url, task_id=TASK_ID,
+                                    title="法律の一次資料（衆議院の議案本文または国会会議録）",
+                                    purpose="抜き取り検証で不合格の法律の読み直し（再判定）",
+                                    storage_root=STORAGE, observed_at=fetched_at))
+    return raw
 
 
 def to_text(raw: bytes) -> str:
@@ -73,14 +97,15 @@ def main(argv: list[str]) -> int:
         return 0 if argv and argv[0] in ("-h", "--help") else 2
     try:
         if argv[0] == "honbun":
-            print(honbun(argv[1]))
+            body = honbun(argv[1])
         elif argv[0] == "kokkai":
-            print(kokkai(argv[1], argv[2] if len(argv) > 2 else ""))
+            body = kokkai(argv[1], argv[2] if len(argv) > 2 else "")
         elif argv[0] == "url":
-            print(to_text(get(argv[1]))[:12000])
+            body = to_text(get(argv[1]))[:12000]
         else:
             print(__doc__)
             return 2
+        print(f"外部資料ID：{'、'.join(REGISTERED)}（{TASK_ID}、内容は unverified）\n{body}")
     except Exception as e:  # noqa: BLE001 読めない理由をそのまま読み手に返す
         print(f"取得できない：{type(e).__name__} {e}")
         return 1
