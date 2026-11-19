@@ -88,6 +88,9 @@ class LedgerTest(unittest.TestCase):
         fiscal = {r["id"] for r in read(ROOT / "data" / "derived" / "tax-impact-v1" / "fiscal.csv") if r["平年度_億円"] != ""}
         market = {r["id"] for r in self.rows if r["結果"] == "額あり" and r["経路"] != "財政（税収見込み）"}
         inst = {r["id"] for r in loss if ol.institutional_title(r["題名"])}
+        # 一次資料の読み直しで制度と分かった法律は、額があっても評価対象外にする（primary-source-corrections-v1）
+        corr = psc.load()
+        inst |= {i for i in corr if psc.value(corr, i, "経済に効くか") == psc.INSTITUTIONAL}
         # 向きと額の符号が逆・関与の出典なしの額は、法律の額にしない（evaluation_rules、論理検査 L1・L3）
         no_amount = {r["id"] for r in self.rows if r["経路"] in DEMOTED_ROUTES}
         self.assertTrue(no_amount <= with_amount)

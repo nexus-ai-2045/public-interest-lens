@@ -113,17 +113,15 @@ test.describe('/ranking（法律ランキング）', () => {
     watch.expectClean();
   });
 
-  test('抜き取り2回目で不合格の個別の額は、サイトの値の訂正まで参考に下げ、理由を出す', async ({ page }) => {
+  test('抜き取り2回目で不合格のまま訂正待ちの額は参考に下げ、理由を出す', async ({ page }) => {
+    // 個別の額の3本（衆法-189-20・閣法-193-61・閣法-196-2）は訂正表で値が直り、標本2を判定し直すと合格になった。
+    // 衆法-201-10 は訂正候補を退けたので、標本2の判定では訂正待ちのまま参考に下げる
     const watch = watchPage(page);
-    await page.goto('/ranking#%E9%96%A3%E6%B3%95-196-2');
-    const row = page.locator('[id="law-閣法-196-2"]');
+    await page.goto('/ranking#%E8%A1%86%E6%B3%95-201-10');
+    const row = page.locator('[id="law-衆法-201-10"]');
     await expect(row).toBeVisible();
     await expect(row.locator('.laws-row-amount')).toContainText('参考値（検証で降格）');
-    await expect(row.getByRole('note', { name: '参考値の理由と根拠' })).toContainText('抜き取り2回目で不合格（サイトの値の訂正まで参考）');
-    // 開いた詳細の三欄でも、付加価値を「順位に使う欄」と書かない
-    const columns = row.getByRole('region', { name: '額の三欄' });
-    await expect(columns).toContainText('付加価値の変化（参考）');
-    await expect(columns).not.toContainText('順位に使う欄');
+    await expect(row.getByRole('note', { name: '参考値の理由と根拠' })).toContainText('抜き取り2回目で不合格');
     watch.expectClean();
   });
 

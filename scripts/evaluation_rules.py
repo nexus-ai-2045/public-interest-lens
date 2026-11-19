@@ -21,7 +21,9 @@ SIDE_MEDIAN = re.compile(r"(便益|損失)：中央値=(-?\d+)")
 # 作る側が額を付けなかった行の経路。公開ランキングも同じ行を額なしにする（outcomes.csv が唯一の判断元）
 ROUTE_SIGN_CONFLICT = "市場（向きと額の符号が逆）"
 ROUTE_NO_CHAIN = "市場（議員の関与の出典なし）"
-DEMOTED_ROUTES = frozenset({ROUTE_SIGN_CONFLICT, ROUTE_NO_CHAIN})
+# 一次資料で分野を直した法律：額は振り分けの分野の産業で計算してあるので、直した分野で計算し直すまで付けない
+ROUTE_SOURCE_FIELD = "市場（一次資料で分野を直した）"
+DEMOTED_ROUTES = frozenset({ROUTE_SIGN_CONFLICT, ROUTE_NO_CHAIN, ROUTE_SOURCE_FIELD})
 
 
 def narrow_whole_economy(title: str, industry: str, field: str) -> bool:
