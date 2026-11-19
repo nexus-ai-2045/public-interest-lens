@@ -122,12 +122,22 @@ def cmd_fetch() -> int:
     return 0
 
 
-def judge(site: dict, a: dict, b: dict, ruling: dict | None = None) -> tuple[str, list[str], list[str]]:
-    """(判定, 食い違い, 割れ)。ruling は割れた項目の裁定 {項目: 値}。"""
+def overriding(a: dict, b: dict, ruling: dict | None, confirmed=()) -> list[str]:
+    """裁定が、2系統の一致を覆している項目（独立の確認が無いもの）。設計決定0007：採るのは2系統が一致した値なので、
+    1つの裁定だけで一致を覆さない。覆すなら別の系統の独立の確認（rulings.json の「確認」）が要り、それまでは割れ（保留）。"""
+    return [k for k, v in (ruling or {}).items() if a.get(k) == b.get(k) and v != a.get(k) and k not in confirmed]
+
+
+def judge(site: dict, a: dict, b: dict, ruling: dict | None = None, confirmed=()) -> tuple[str, list[str], list[str]]:
+    """(判定, 食い違い, 割れ)。ruling は裁定 {項目: 値}。2系統が食い違った項目は裁定で決める。
+    2系統が一致した項目を裁定が覆すときは、confirmed（独立の確認がある項目）に入っていなければ割れ（保留）にする。"""
     ruling = ruling or {}
+    held = set(overriding(a, b, ruling, confirmed))
     diffs, splits = [], []
 
     def agreed(k: str) -> str | None:
+        if k in held:
+            return None
         if k in ruling:
             return ruling[k]
         return a[k] if a[k] == b[k] else None
@@ -149,7 +159,7 @@ def judge(site: dict, a: dict, b: dict, ruling: dict | None = None) -> tuple[str
         sf = norm_field(site["分野"])
         field = agreed("主な産業分野")
         field = norm_field(field) if field is not None else None
-        if field is None and norm_field(a["主な産業分野"]) == norm_field(b["主な産業分野"]):
+        if field is None and "主な産業分野" not in held and norm_field(a["主な産業分野"]) == norm_field(b["主な産業分野"]):
             field = norm_field(a["主な産業分野"])
         if field is None:
             splits.append("主な産業分野")
@@ -179,6 +189,9 @@ def cmd_compare(force: bool = False) -> int:
     rulings_path = OUT / "rulings.json"
     rulings = json.loads(rulings_path.read_text(encoding="utf-8")) if rulings_path.exists() else {}
     ledger = {r["id"]: r for r in read_csv(LEDGER / "ledger.csv")}
+    if (OUT / "verdicts.csv").exists():  # 作り直し：記録した時点のサイトの値で判定し直す（今のサイトの値は台帳が見る）
+        ledger = {r["id"]: {"題名": ledger.get(r["id"], {}).get("題名", ""), **{k: r[f"サイト_{k}"] for k in SITE_KEYS}}
+                  for r in read_csv(OUT / "verdicts.csv")}
     sample = read_csv(OUT / "sample.csv")
     missing = [r["id"] for r in sample if r["id"] not in A or r["id"] not in B]
     if missing:
@@ -188,9 +201,11 @@ def cmd_compare(force: bool = False) -> int:
     for s in sample:
         i = s["id"]
         site = ledger[i]
-        v, diffs, splits = judge(site, A[i], B[i], rulings.get(i, {}).get("値"))
+        ru = rulings.get(i, {})
+        v, diffs, splits = judge(site, A[i], B[i], ru.get("値"), ru.get("確認", ()))
         if v == "割れ":
-            queue.append({"id": i, "題名": site["題名"], "割れ": splits, "A": A[i], "B": B[i]})
+            queue.append({"id": i, "題名": site["題名"], "割れ": splits, "A": A[i], "B": B[i],
+                          "裁定が一致を覆した項目（独立の確認待ち）": overriding(A[i], B[i], ru.get("値"), ru.get("確認", ()))})
         rows.append({"id": i, "層": s["層"], "判定": v, "食い違い": "／".join(diffs + [f"割れ:{x}" for x in splits if v == "割れ"]),
                      **{f"サイト_{k}": site[k] for k in SITE_KEYS}})
     with (OUT / "verdicts.csv").open("w", encoding="utf-8", newline="") as f:
@@ -225,6 +240,7 @@ def _value(a: dict, b: dict, ruling: dict, item: str) -> tuple[str, str, str, st
 
 
 RES_FIXED = "サイトの訂正で合格"
+RES_HELD = "独立の確認待ち（裁定が2系統の一致を覆したため保留）"
 
 
 def _causes(diffs: list[str], site_kind: str, reach: str) -> list[tuple[str, str]]:
@@ -254,11 +270,13 @@ def cmd_resolve() -> int:
     ledger = {r["id"]: r for r in read_csv(LEDGER / "ledger.csv")}
     res, cands = [], []
     for r in read_csv(OUT / "verdicts.csv"):
-        if r["判定"] != "不合格":
+        if r["判定"] not in ("不合格", "割れ"):
             continue
         i, ru, cur = r["id"], rulings.get(r["id"], {}), ledger[r["id"]]
         causes = [c for c, _ in _causes([d for d in r["食い違い"].split("／") if d], r["サイト_類型"], r["サイト_到達点"])]
-        v, now_diffs, _ = judge(cur, A[i], B[i], ru.get("値"))
+        if r["判定"] == "割れ":
+            causes.append("裁定が2系統の一致を覆した（独立の確認待ち）")
+        v, now_diffs, _ = judge(cur, A[i], B[i], ru.get("値"), ru.get("確認", ()))
         now = _causes(now_diffs, cur["類型"], cur["到達点"])
         items = [item for _, item in now if item]
         url = (A[i].get("出典URL") or [""])[0]
@@ -270,7 +288,9 @@ def cmd_resolve() -> int:
                           "指示文": "sample-v2/prompt-v2.md（版 v2）" + ("・prompt-adjudicate-v1.md" if ru else ""),
                           "記録": "data/derived/evaluation-ledger-v1/sample-v2/"})
         has_amount = is_demoted(VERDICT_FAIL, cur["到達点"], cur["確かさ"])  # 台帳（ledger_state）と同じ規則
-        if v == "合格":
+        if v == "割れ":
+            how = RES_HELD
+        elif v == "合格":
             how = RES_FIXED
         elif items:
             how = RES_CANDIDATE + ("（額は直るまで参考に下げた扱い）" if has_amount else "")
@@ -313,7 +333,7 @@ def cmd_report() -> int:
     t = Counter(r["判定"] for r in rows)
     fail = t["不合格"]
     lo, hi = wilson(fail, n)
-    no_scope = sum(1 for r in res.values() if any(not c.startswith("仕組み") for c in r["原因"].split("／")))
+    no_scope = sum(1 for r in res.values() if any(c.startswith("サイト") for c in r["原因"].split("／")))
     lo2, hi2 = wilson(no_scope, n)
     who = Counter(x["正しい側"] for v in rulings.values() for x in v["裁定"])
     by_reach: dict[str, Counter] = {}
@@ -321,7 +341,7 @@ def cmd_report() -> int:
         by_reach.setdefault(r["サイト_到達点"], Counter())[r["判定"]] += 1
     cand = read_csv(OUT / "correction-candidates.csv")
     out = {
-        "定義": "合格＝2系統の独立判定が一致した項目（類型・経済に効くか、額のある法律は分野、参考額は範囲も）が、すべてサイトの値と合う。割れた項目とサイトと食い違った項目は裁定者が一次資料で決めた値で比べる",
+        "定義": "合格＝2系統の独立判定が一致した項目（類型・経済に効くか、額のある法律は分野、参考額は範囲も）が、すべてサイトの値と合う。2系統が割れた項目は裁定者が一次資料で決めた値で比べる。裁定が2系統の一致を覆した項目は、独立の確認が無ければ割れ（保留）として合格にも不合格にも数えない",
         "標本": n,
         "2系統だけの判定（裁定前）": dict(first),
         "裁定後の判定": dict(t),
@@ -330,7 +350,7 @@ def cmd_report() -> int:
         "範囲を除いた不合格（サイトの値の誤り）": no_scope, "その率の95%区間（Wilson）": [round(lo2, 4), round(hi2, 4)],
         "不合格の原因（法律ごと、重なりあり）": dict(Counter(c for r in res.values() for c in r["原因"].split("／"))),
         "決着": dict(Counter(r["決着"] for r in res.values())),
-        "不合格のまま（決着なし）": fail - len(res),
+        "決着の無い不合格・割れ": sum(1 for r in rows if r["判定"] in ("不合格", "割れ") and r["id"] not in res),
         "訂正候補（項目）": dict(Counter(c["項目"] for c in cand)),
         "到達点ごと（裁定後）": {k: dict(v) for k, v in sorted(by_reach.items())},
     }
@@ -361,11 +381,11 @@ def ledger_state(site: dict, rec: tuple[dict, dict, dict]) -> tuple[str, str]:
     参考に下げた：不合格で、額のある到達点（初回と同じ自動の降格の規則 is_demoted）か、範囲だけの不合格。
     不合格のまま：額の無い法律で、サイトの値が訂正されるまで（訂正候補は correction-candidates.csv）。"""
     a, b, ru = rec
-    v, diffs, _ = judge(site, a, b, ru.get("値"))
+    v, diffs, splits = judge(site, a, b, ru.get("値"), ru.get("確認", ()))
     if v == "合格":
         fixed = "（訂正で合格）" if ru.get("初回") == "不合格" else ""
         return STATE_PASS, f"{MEMO}合格{fixed}"
-    reason = "／".join(diffs) or "裁定待ち"
+    reason = "／".join(diffs) or "割れ（独立の確認待ち）：" + "・".join(splits)
     if v == "不合格" and all(d.startswith("範囲") for d in diffs):
         return STATE_DEMOTED, f"{MEMO}{reason}"
     if is_demoted(VERDICT_FAIL, site["到達点"], site.get("確かさ", "")):

@@ -113,13 +113,13 @@ test.describe('/ranking（法律ランキング）', () => {
     watch.expectClean();
   });
 
-  test('抜き取り2回目で不合格の個別の額は、当て直しまで参考に下げ、理由を出す', async ({ page }) => {
+  test('抜き取り2回目で不合格の個別の額は、サイトの値の訂正まで参考に下げ、理由を出す', async ({ page }) => {
     const watch = watchPage(page);
     await page.goto('/ranking#%E9%96%A3%E6%B3%95-196-2');
     const row = page.locator('[id="law-閣法-196-2"]');
     await expect(row).toBeVisible();
     await expect(row.locator('.laws-row-amount')).toContainText('参考値（検証で降格）');
-    await expect(row.getByRole('note', { name: '参考値の理由と根拠' })).toContainText('抜き取り2回目で不合格（振り分けの当て直しまで参考）');
+    await expect(row.getByRole('note', { name: '参考値の理由と根拠' })).toContainText('抜き取り2回目で不合格（サイトの値の訂正まで参考）');
     // 開いた詳細の三欄でも、付加価値を「順位に使う欄」と書かない
     const columns = row.getByRole('region', { name: '額の三欄' });
     await expect(columns).toContainText('付加価値の変化（参考）');
