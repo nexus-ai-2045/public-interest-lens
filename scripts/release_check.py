@@ -23,6 +23,9 @@ from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+# python3 scripts/release_check.py で起動したとき sys.path[0] は scripts/ なので、`from scripts import …` のためにルートを足す
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 OUT = ROOT / ".local" / "release-check"
 PASS, WARN, FAIL = "合格", "注意", "失敗"
 
@@ -85,6 +88,8 @@ def members_step(root: Path = ROOT) -> dict:
     if not persons.is_file() or not any((r.get("人物ID") or "").strip() for r in design.read_csv(persons)):
         return {"step": name, "status": WARN, "detail": "人物台帳（persons.csv）が無いか0人で、照らす対象が無い（未測定）"}
     ok, detail = design._members_on_ledger(root, d)
+    if ok and not any(p.get("tier") is not None for p in json.loads(exposure.read_text(encoding="utf-8")).get("people", [])):
+        return {"step": name, "status": WARN, "detail": "全員が載っているが、点ありが0人（入力が空の疑い。未測定）：" + detail[:250]}
     return {"step": name, "status": PASS if ok else FAIL, "detail": detail[:300]}
 
 

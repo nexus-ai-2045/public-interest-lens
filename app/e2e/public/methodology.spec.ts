@@ -9,15 +9,15 @@ test.describe('/methodology（計算方法）', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'どう計算しているか' })).toBeVisible();
     const sections = page.locator('main.methodology h3');
     expect(await sections.count()).toBeGreaterThanOrEqual(4);
-    await expect(page.getByRole('heading', { level: 3, name: /この人が失わせた額・生んだ額/ })).toBeVisible();
-    await expect(page.getByRole('heading', { level: 3, name: '4. 訂正と反論' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 3, name: /議員の見せ方/ })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 3, name: '3. 訂正と反論' })).toBeVisible();
     watch.expectClean();
   });
 
   test('配布データへのリンクはJSONを返し、ナビで他ページへ移れる', async ({ page }) => {
     const watch = watchPage(page);
     await page.goto('/methodology');
-    const link = page.getByRole('link', { name: /members\.json/ });
+    const link = page.getByRole('link', { name: /ranking\.json/ });
     await expect(link).toBeVisible();
     const response = await page.request.get((await link.getAttribute('href'))!);
     expect(response.ok()).toBe(true);

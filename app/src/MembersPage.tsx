@@ -68,6 +68,7 @@ export function MethodologyPage() {
       <p>誤り・反証・本人や関係者からの反論は、<a href={correctionUrl} target="_blank" rel="noopener noreferrer">GitHub の Issue（訂正・異議の申し立て）</a>で受け付けます。公開資料の出典を添えてください。確認できたものは記録を直し、同じ計算で額と順位を出し直します。受付後の流れは<a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/corrections.md" target="_blank" rel="noopener noreferrer">訂正の手順</a>にあります。</p>
       <h3>4. 元のデータとコード</h3>
       <ul>
+        <li><a href="/distribution/ranking.json">法律ランキングの配布データ（ranking.json）</a></li>
         <li><a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/data/derived/allocation-v1/involvements.csv" target="_blank" rel="noopener noreferrer">関与の一覧（行動・日付・一次資料の URL、外した行動と理由を含む）</a></li>
         <li><a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/app/src/loss-rule.ts" target="_blank" rel="noopener noreferrer">損失の計算（loss-rule.ts）</a></li>
         <li><a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/app/src/exposure-ranking.ts" target="_blank" rel="noopener noreferrer">曝露ランキングの集計（exposure-ranking.ts）</a>・<a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/app/src/scoring-constants.ts" target="_blank" rel="noopener noreferrer">固定の定数（scoring-constants.ts）</a></li>

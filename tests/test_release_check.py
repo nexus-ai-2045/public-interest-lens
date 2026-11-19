@@ -49,11 +49,31 @@ class ReleaseCheckTest(unittest.TestCase):
             ("全員そろえば合格", persons_csv, full, rc.PASS),
             ("1人欠ければ失敗", persons_csv, {**full, "people": full["people"][:1]}, rc.FAIL),
             ("点なしで理由が空なら失敗", persons_csv, {**full, "people": [full["people"][0], {"actorId": "P2", "tier": None, "unrankedReason": ""}]}, rc.FAIL),
+            ("全員そろっても点ありが0人なら未測定", persons_csv,
+             {"people": [{"actorId": f"P{i}", "tier": None, "unrankedReason": "関与なし"} for i in (1, 2)],
+              "coverage": {"ledger": 2, "ranked": 0, "unrankedWithAmount": 0, "noInvolvement": 2}}, rc.WARN),
         ]
         for label, persons, exposure, want in cases:
             with self.subTest(label), tempfile.TemporaryDirectory() as tmp:
                 tree(Path(tmp), persons, exposure)
                 self.assertEqual(want, rc.members_step(Path(tmp))["status"])
+
+    def test_members_step_imports_when_run_as_a_script(self):
+        # python3 scripts/release_check.py で起動すると sys.path[0] は scripts/。そのときも `from scripts import …` が読めること
+        import subprocess
+        import sys
+        code = "import runpy, sys; sys.path[:] = [p for p in sys.path if p not in ('', '.')]; " \
+               "g = runpy.run_path('scripts/release_check.py', run_name='not_main'); print(g['members_step']()['status'])"
+        out = subprocess.run([sys.executable, "-c", code], cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, check=False)
+        self.assertEqual(0, out.returncode, out.stderr)
+        self.assertNotIn("ModuleNotFoundError", out.stdout + out.stderr)
+
+    def test_exposure_ranking_is_not_in_the_public_directory(self):
+        # 曝露ランキング（人別の額）は、表示を解く（設計決定0008 の確認）まで公開ディレクトリに置かない。ビルドに乗ると公開サイトから取れる
+        public = Path(__file__).resolve().parents[1] / "app" / "public"
+        self.assertNotIn("app/public", str(design.EXPOSURE))
+        leaked = [str(p) for p in public.rglob("*.json") if "exposure-ranking" in p.name or '"actorKind"' in p.read_text(encoding="utf-8", errors="ignore")]
+        self.assertEqual([], leaked)
 
     def test_unreadable_result_becomes_failure_and_keeps_going(self):
         from unittest import mock
