@@ -51,6 +51,8 @@ HEADER = ["id", "題名", "分類", "分類の方法", "類型", "経済に効�
           "額の方法", "額（円）", "付加価値の変化（円）", "付加価値の由来", "国の収支（億円）", "国の支出（円）", "採算（付加価値÷国の支出）", "確かさ", "公開可否", "概要の方法", "常識検査③", "頑健性④", "同型の誤り候補⑤", "ロジック検査", "検証状態", "検証メモ"]
 VERIFY_STATES = ("未検証", "分類を2系統で照合済み", "分類を第3判定で決着", "抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた")
 SAMPLED_STATES = ("抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた")
+RESOLVED_PASS = "合格に訂正"  # scripts/resolve_sample_failures.py が書く決着の語
+RESOLVED_DEMOTED = "参考に下げた"
 
 
 def read(path: Path) -> list[dict]:
@@ -75,6 +77,7 @@ def load():
         "pub": by_id(read(D / "publish-v1-triage-v2" / "publish.csv")),
         "ov": by_id(read(D / "law-overviews-v1" / "overviews.csv")),
         "sample": by_id(read(LEDGER_DIR / "sample-verdicts.csv")),
+        "resolved": by_id(read(LEDGER_DIR / "sample-resolutions.csv")),  # 不合格のまま残った法律の読み直しと決着
         "cols": by_id(read(D / "three-columns-v1" / "columns.csv")),  # 額の物差し三欄（設計決定0024）
     }
 
@@ -139,14 +142,20 @@ def sense_checks(rows_macro: dict[str, dict], title_of: dict[str, str]) -> dict[
     return out
 
 
-def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "") -> tuple[str, str]:
+def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "", resolved: dict | None = None) -> tuple[str, str]:
     s = sample.get(id_)
     if s:
         if s["判定"] == "合格":
             return "抜き取り検証で合格", s.get("食い違い", "")
-        # 不合格のうち額を参考値に下げたものは「参考に下げた」。分類を決め直す必要があるものは不合格のまま残す（隠さない）
+        # 不合格のうち額を参考値に下げたものは「参考に下げた」。額の無い法律は自動では下げず、不合格のまま残す（隠さない）
         if is_demoted(s["判定"], reach_, certainty):
             return STATE_DEMOTED, s.get("食い違い", "")
+        # 不合格のまま残った法律は、一次資料の読み直しで1本ずつ決着させたものだけ状態を変える（sample-resolutions.csv）
+        r = (resolved or {}).get(id_)
+        if r and r["決着"] == RESOLVED_PASS:
+            return "抜き取り検証で合格", f"読み直しで合格に訂正：{r['理由']}"
+        if r and r["決着"] == RESOLVED_DEMOTED:
+            return STATE_DEMOTED, f"読み直しで決着：{r['理由']}"
         return STATE_FAILED, s.get("食い違い", "")
     if "第3" in cls_how or "Sonnet" in cls_how or "Opus" in cls_how or cls_how.startswith("2系統の食い違い"):
         return "分類を第3判定で決着", ""
@@ -173,7 +182,7 @@ def build_rows(src) -> list[dict]:
         pub = src["pub"].get(i)
         ov = src["ov"].get(i)
         certainty = o["確かさ"] or (m["結果"] and "参考" if m and m["結果"] == "額" else "")
-        state, memo = verify_state(i, how, src["sample"], reach_, certainty)
+        state, memo = verify_state(i, how, src["sample"], reach_, certainty, src.get("resolved"))
         col = src["cols"].get(i, {})
         rows.append({
             "id": i, "題名": o["題名"], "分類": cls, "分類の方法": how, "類型": o["種類"] or "",
@@ -264,7 +273,7 @@ def summarize(rows: list[dict]) -> dict:
             "採算": sum(bool(r["採算（付加価値÷国の支出）"]) for r in rows),
             "合計": n,
         },
-        "rule": "分類の2系統照合は『分類』だけを確かめたもの。向き・類型・額まで確かめたのは抜き取り検証だけ。抜き取りで不合格だった法律のうち、額を順位・議員配分に使わない（参考値）ものは『参考に下げた』（額と根拠は参考値として出し続ける）、分類を決め直す必要があるものは『抜き取り検証で不合格』のまま数える。",
+        "rule": "分類の2系統照合は『分類』だけを確かめたもの。向き・類型・額まで確かめたのは抜き取り検証だけ。抜き取りで不合格だった法律のうち、額を順位・議員配分に使わない（参考値）ものは『参考に下げた』（額と根拠は参考値として出し続ける）、額の無いものは自動では下げず『抜き取り検証で不合格』のまま数える。不合格のまま残った法律は、一次資料を読み直して1本ずつ決着させる（`sample-resolutions.csv`、記録は `reverification-v1/`）：サイトに誤りが無かったものは『抜き取り検証で合格』に訂正し、サイトの値がまだ直っていないものは『参考に下げた』にして、サイトの値と読み直しの値を並べて出し続ける。",
     }
 
 
