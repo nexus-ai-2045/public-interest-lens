@@ -12,7 +12,7 @@ import './exposure.css';
  * 2. 順位は1位・2位ではなく階層で出す。幅が重なる人は同じ階層で、階層の中の並びに差の意味は無い。
  * 3. 関与した法律が下限に満たない人・会派は、額を出さない。関与した群と本数だけを出す。
  * 4. 配らなかった額（未配分）と検算を、畳んだ欄で必ず見られるようにする。
- * 5. 法律ごとの額は出さない（入力の型にも無い）。内訳も、本数が下限に満たない群×役割は額を伏せる（1本ぶんの枠が読めてしまうため）。
+ * 5. 法律ごとの額は出さない（入力の型にも無い）。内訳に本数が下限に満たない群×役割が1つでもある人は、内訳の額を全部伏せる（1つだけ伏せても、合計からの引き算で読めてしまうため）。
  * 6. 負の額は「上回った群に関与した」場合と「伸び損ねた群に反対した」場合の両方で出るので、「逆側」と呼び、群が上回ったとは書かない。
  */
 
@@ -88,15 +88,18 @@ function cellsByGroup(cells: readonly ExposureCell[]): { groupId: string; cells:
 
 type Labels = { group: (id: string) => string; actor: (row: ExposureRow) => string };
 
+/** 内訳の額を出してよいか。本数が下限に満たない内訳が1つでもあれば、全部伏せる（合計との引き算で復元させない）。 */
+export const canShowCellAmounts = (row: Pick<ExposureRow, 'cells'>, minLaws: number): boolean => row.cells.every(cell => cell.laws >= minLaws);
+
 /** amountFrom：額を出すのに要る本数の下限。null なら額を一切出さない。 */
 function CellList({ row, labels, amountFrom }: { row: ExposureRow; labels: Labels; amountFrom: number | null }) {
+  const show = amountFrom !== null && canShowCellAmounts(row, amountFrom);
   return <ul className="xr-cells">
     {cellsByGroup(row.cells).map(group => <li key={group.groupId}>
       <span className="xr-cell-group">{labels.group(group.groupId)}</span>
       <span className="xr-cell-roles">{group.cells.map(cell => {
-        const show = amountFrom !== null && cell.laws >= amountFrom;
         return <span key={cell.role} className={`xr-chip ${show ? exposureSide(cell.exposureYen.median) : 'none'}`}>
-          <b>{ROLE_LABEL[cell.role]}</b> {cell.laws}本{show && <> ・ {exposureYen(cell.exposureYen.median)}<small>（{exposureRange(cell.exposureYen)}）</small></>}{amountFrom !== null && !show && <small>（{amountFrom}本未満のため額は出しません）</small>}
+          <b>{ROLE_LABEL[cell.role]}</b> {cell.laws}本{show && <> ・ {exposureYen(cell.exposureYen.median)}<small>（{exposureRange(cell.exposureYen)}）</small></>}
         </span>;
       })}</span>
     </li>)}
@@ -128,7 +131,7 @@ function RankedRow({ row, index, labels, scale, flair, minLaws }: { row: Exposur
         <span className="xr-meta">関与した法律 {row.laws}本・{row.groups}群<span className="xr-open-hint">内訳を開く</span></span>
       </summary>
       <div className="xr-detail">
-        <p className="fine-note">群（産業×期間）と役割ごとの内訳です。法律1本ごとの額は出しません（識別できるのは群までです）。本数が{minLaws}本に満たない内訳は、額を伏せます。</p>
+        <p className="fine-note">群（産業×期間）と役割ごとの内訳です。法律1本ごとの額は出しません（識別できるのは群までです）。{!canShowCellAmounts(row, minLaws) && `本数が${minLaws}本に満たない内訳があるため、内訳の額は全部伏せます（合計からの引き算で1本ぶんの枠が読めてしまうため）。`}</p>
         <CellList row={row} labels={labels} amountFrom={minLaws} />
       </div>
     </details>

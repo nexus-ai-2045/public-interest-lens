@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { EXPOSURE_DISCLAIMER, type ExposureRanking } from './exposure-ranking';
-import { ExposureRankingPanel, ROLE_LABEL, exposureRange, exposureScale, exposureYen, groupByTier, totalsCheck, totalsOfRanked } from './ExposureRankingPanel';
+import { ExposureRankingPanel, ROLE_LABEL, canShowCellAmounts, exposureRange, exposureScale, exposureYen, groupByTier, totalsCheck, totalsOfRanked } from './ExposureRankingPanel';
 import { SAMPLE_GROUPS, SAMPLE_PARTY_NAMES, SAMPLE_PERSON_NAMES, sampleExposureRanking } from './exposure-ranking-sample';
 import { formatYen } from './laws-catalog';
 
@@ -82,16 +82,18 @@ describe('曝露ランキングの画面部品', () => {
     }
   });
 
-  it('内訳は、本数が下限に満たない群×役割の額を伏せます（1本ぶんの枠を読ませない）', () => {
-    const html = render() + render(ranking, 'parties');
+  it('内訳に本数が下限に満たない群×役割が1つでもある人は、内訳の額を全部伏せます（合計との引き算で復元させない）', () => {
     const min = ranking.params.minLaws;
+    const rows = [...blocks(render(), '<li class="xr-row'), ...blocks(render(ranking, 'parties'), '<li class="xr-row')];
+    const names = { ...SAMPLE_PERSON_NAMES, ...SAMPLE_PARTY_NAMES };
     let hidden = 0;
     let shown = 0;
-    for (const row of [...ranking.people, ...ranking.parties].filter(r => r.tier !== null)) for (const cell of row.cells) {
-      const chip = `<b>${ROLE_LABEL[cell.role]}</b> ${cell.laws}本`;
-      const withAmount = `${chip} ・ ${exposureYen(cell.exposureYen.median)}<small>（${exposureRange(cell.exposureYen)}）`;
-      if (cell.laws < min) { hidden++; expect(html).not.toContain(withAmount); expect(html).toContain(`${chip}<small>（${min}本未満のため額は出しません）`); }
-      else { shown++; expect(html).toContain(withAmount); }
+    for (const actor of [...ranking.people, ...ranking.parties].filter(r => r.tier !== null)) {
+      const detail = rows.find(b => b.includes(`>${names[actor.actorId]}<`))!.split('<div class="xr-detail">')[1];
+      const ok = canShowCellAmounts(actor, min);
+      expect(ok).toBe(actor.cells.every(c => c.laws >= min));
+      if (ok) { shown++; for (const cell of actor.cells) expect(detail).toContain(`<b>${ROLE_LABEL[cell.role]}</b> ${cell.laws}本 ・ ${exposureYen(cell.exposureYen.median)}`); }
+      else { hidden++; expect(detail.split('<ul class="xr-cells">')[1]).not.toMatch(/円/); expect(detail).toContain('内訳の額は全部伏せます'); }
     }
     expect(hidden).toBeGreaterThan(0);
     expect(shown).toBeGreaterThan(0);
