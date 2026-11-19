@@ -169,7 +169,10 @@ def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certain
     held = (interim or {}).get(id_)
     if held is not None and s:
         raise ValueError(f"{id_} は初回の抜き取りと interim-holds.csv の両方にある（1つの事実は1か所）")
-    if held is not None and is_demoted(VERDICT_FAIL, reach_, certainty):
+    if held is not None:
+        # 公開ランキング（verification_failed）は表の全 id を降格する。台帳が黙って別の状態にならないよう、額の無い到達点なら止める
+        if not is_demoted(VERDICT_FAIL, reach_, certainty):
+            raise ValueError(f"{id_} は interim-holds.csv にあるが、到達点「{reach_}」は参考に下げる額が無い（表から外すか到達点を確かめる）")
         return STATE_INTERIM_HELD, f"{INTERIM_REASON_PREFIX}{held}"
     if s:
         if s["判定"] == "合格":

@@ -53,8 +53,9 @@ class InterimHolds(unittest.TestCase):
         held = {"x": "分野：サイトA／一次資料ではB"}
         self.assertEqual(verify_state("x", "2系統が一致", {}, "額（個別の因果の鎖）", "段階3", interim=held),
                          (STATE_INTERIM_HELD, f"{INTERIM_REASON_PREFIX}分野：サイトA／一次資料ではB"))
-        # 額の無い到達点は下げない（参考にする額が無い）
-        self.assertEqual(verify_state("x", "2系統が一致", {}, "保留", "", interim=held)[0], "分類を2系統で照合済み")
+        # 額の無い到達点は下げられないので、台帳と公開ランキングが食い違わないよう止める
+        with self.assertRaises(ValueError):
+            verify_state("x", "2系統が一致", {}, "保留", "", interim=held)
         with self.assertRaises(ValueError):
             verify_state("x", "2系統が一致", {"x": {"判定": "不合格", "食い違い": ""}}, "額（個別の因果の鎖）", "段階3", interim=held)
 
