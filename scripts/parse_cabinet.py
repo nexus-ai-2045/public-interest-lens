@@ -4,9 +4,10 @@
 氏名が文字ではなく外字の画像（<img class="... gaiji ..." src="./img/gaiji/〇〇.png">）で書かれた行がある。
 画像の alt は漢字のときと読みだけのときがあるので使わず、画像のファイル名から対応表
 data/acquired/office-holders/cabinet-gaiji.csv（画像を目で読んで起こした氏名と、その出典）で氏名を引く。
-対応表に無い画像、読みが対応表と合わない行、氏名が空の行が1つでもあれば、CSV を書かずに止まる。
+対応表に無い画像、読みが対応表と合わない行、取得した画像が対応表の sha256 と違うもの、氏名が空の行が1つでもあれば、CSV を書かずに止まる。
 """
 import csv
+import hashlib
 import os
 import re
 import sys
@@ -38,23 +39,47 @@ def kana_key(s):
     return re.sub(r'\s+', '', unicodedata.normalize('NFKC', s))
 
 
+GAIJI_DIR = os.path.join(RAW, 'gaiji')
+SRC = re.compile(r'''src\s*=\s*["']([^"']*)["']''')
+
+
+def gaiji_key(img, gaiji, where=''):
+    """<img> から対応表の鍵（画像のファイル名）を出す。src が無い・対応表に無い画像は止める。"""
+    src = SRC.search(img)
+    key = os.path.basename(src.group(1)) if src else ''
+    if key not in gaiji:
+        raise SystemExit(f'外字画像 {key!r} が cabinet-gaiji.csv に無い（{where}）。画像を読んで氏名と出典を足す。')
+    return key
+
+
 def resolve_gaiji(cell, gaiji, where=''):
     """氏名のセルの外字画像を、対応表の氏名（文字）に置き換える。対応表に無い画像は止める。"""
-    def rep(m):
-        src = re.search(r'src="([^"]*)"', m.group(0))
-        key = os.path.basename(src.group(1)) if src else ''
-        if key not in gaiji:
-            raise SystemExit(f'外字画像 {key!r} が cabinet-gaiji.csv に無い（{where}）。画像を読んで氏名と出典を足す。')
-        return gaiji[key]['氏名']
-    return GAIJI_IMG.sub(rep, cell)
+    return GAIJI_IMG.sub(lambda m: gaiji[gaiji_key(m.group(0), gaiji, where)]['氏名'], cell)
 
 
 def check_gaiji_kana(cell, kana, gaiji, where=''):
-    """外字画像の行は、ページの読みが対応表の読みと同じかを確かめる（同じファイル名で別人の画像に差し替わったら止める）。"""
+    """外字画像の行は、ページの読みが対応表の読みと同じかを確かめる（同じファイル名で別人の画像に差し替わったら止める）。
+    ページに読みが無い行（古い代のページ・「（兼）」の行）は比べようが無いので確かめない。"""
     for m in GAIJI_IMG.finditer(cell):
-        key = os.path.basename(re.search(r'src="([^"]*)"', m.group(0)).group(1))
-        if kana_key(kana) != kana_key(gaiji[key]['読み']):
+        key = gaiji_key(m.group(0), gaiji, where)
+        if kana and kana_key(kana) != kana_key(gaiji[key]['読み']):
             raise SystemExit(f"外字画像 {key!r} の読みが対応表と違う：ページ {kana!r}、対応表 {gaiji[key]['読み']!r}（{where}）")
+
+
+def check_gaiji_images(gaiji, folder=GAIJI_DIR):
+    """取得した外字画像が、対応表に記録した sha256 と同じかを確かめる（画像が差し替わったら読み直すまで止める）。
+    画像を取っていない環境では確かめられないので、確かめた枚数を返す。"""
+    checked = 0
+    for key, r in gaiji.items():
+        path = os.path.join(folder, key)
+        if not os.path.exists(path):
+            continue
+        with open(path, 'rb') as fp:
+            digest = hashlib.sha256(fp.read()).hexdigest()
+        if digest != r['画像のsha256']:
+            raise SystemExit(f'外字画像 {key!r} が対応表の sha256 と違う。画像を読み直して cabinet-gaiji.csv を直す。')
+        checked += 1
+    return checked
 
 
 def empty_name_rows(rows, name_col=2):
@@ -112,6 +137,7 @@ def parse_page(n, gaiji):
 def main():
     out = []
     gaiji = load_gaiji()
+    print('外字画像の sha256 を確かめた：', check_gaiji_images(gaiji), '/', len(gaiji))
     for n in range(67, 106):
         url, pm_end, stages = parse_page(n, gaiji)
         for si, (h, start, note, tabs) in enumerate(stages):

@@ -9,5 +9,6 @@ for n in 102 103 104 105; do for s in index fukudaijin seimukan sourihosakan; do
 get https://www.kantei.go.jp/jp/rekidainaikaku/index.html rekidainaikaku_index.html
 # 氏名が外字の画像で書かれた行がある。画像が一次資料なので取っておく（読み取った氏名は data/acquired/office-holders/cabinet-gaiji.csv）。
 mkdir -p $R/raw/gaiji
-for g in $(grep -oh 'src="\./img/gaiji/[^"]*"' $R/raw/c*.html | sed 's/^src="\.\/img\/gaiji\///; s/"$//' | sort -u); do get https://www.kantei.go.jp/jp/rekidainaikaku/img/gaiji/$g gaiji/$g; done
+# src の書き方（./ ../ / で始まる）によらず、gaiji/ の後のファイル名で拾う（parse_cabinet.py もファイル名で引く）。
+for g in $(grep -oh "<img[^>]*gaiji[^>]*>" $R/raw/c*.html | grep -o "gaiji/[^\"']*" | sed 's/^gaiji\///' | sort -u); do get https://www.kantei.go.jp/jp/rekidainaikaku/img/gaiji/$g gaiji/$g; done
 echo done > $R/fetch.done

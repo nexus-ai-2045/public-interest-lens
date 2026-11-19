@@ -5,6 +5,8 @@
 リポジトリに入っている名簿と対応表は実物で検査する。
 """
 import csv
+import hashlib
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -41,6 +43,28 @@ class GaijiCell(unittest.TestCase):
         pc.check_gaiji_kana(cell, 'たかせ　まこと', TABLE)  # 空白の幅の違いは同じ読み
         with self.assertRaises(SystemExit):
             pc.check_gaiji_kana(cell, 'やまかわ まこと', TABLE)
+
+    def test_row_without_reading_is_not_compared(self):
+        pc.check_gaiji_kana(IMG % ('takase_makoto.png', ''), '', TABLE)  # 古い代のページや「（兼）」の行は読みが無い
+
+    def test_single_quoted_src_is_read(self):
+        cell = "<img class='gaiji' src='../img/gaiji/takase_makoto.png'>"
+        self.assertEqual(pc.resolve_gaiji(cell, TABLE), '髙瀬 真琴')
+        pc.check_gaiji_kana(cell, 'たかせ まこと', TABLE)
+
+    def test_image_without_src_stops(self):
+        with self.assertRaises(SystemExit):
+            pc.check_gaiji_kana('<img class="gaiji">', 'たかせ まこと', TABLE)
+
+    def test_replaced_image_stops(self):
+        with tempfile.TemporaryDirectory() as d:
+            Path(d, 'takase_makoto.png').write_bytes(b'png')
+            ok = {'takase_makoto.png': dict(TABLE['takase_makoto.png'], 画像のsha256=hashlib.sha256(b'png').hexdigest())}
+            self.assertEqual(pc.check_gaiji_images(ok, d), 1)
+            Path(d, 'takase_makoto.png').write_bytes(b'other')
+            with self.assertRaises(SystemExit):
+                pc.check_gaiji_images(ok, d)
+        self.assertEqual(pc.check_gaiji_images(ok, '/nonexistent'), 0)  # 画像を取っていない環境では確かめない
 
     def test_empty_names_are_reported(self):
         rows = [['架空内閣', '閣僚', '山川 誠'], ['架空内閣', '閣僚', ''], ['架空内閣', '副大臣', ' ']]
