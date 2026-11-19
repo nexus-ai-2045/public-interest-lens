@@ -50,7 +50,7 @@ function stringifyOnePerLine(payload) {
 }
 
 try {
-  const { buildExposureInputs } = await server.ssrLoadModule('/src/exposure-inputs.ts');
+  const { buildExposureInputs, withLedgerPeople } = await server.ssrLoadModule('/src/exposure-inputs.ts');
   const { buildExposureRanking, DEFAULT_ROLE_RATIO } = await server.ssrLoadModule('/src/exposure-ranking.ts');
   const { SCORING_CONSTANTS } = await server.ssrLoadModule('/src/scoring-constants.ts');
   const text = Object.fromEntries(Object.entries(inputs).map(([k, p]) => [k, readFileSync(p, 'utf8')]));
@@ -58,7 +58,8 @@ try {
     macro: text.macro, enacted: text.enacted, cabinet: text.cabinet, persons: text.persons, roster: text.roster,
     involvements: [text.involvements, text.involvementsAuto], opposing: text.opposing,
   });
-  const ranking = buildExposureRanking(built.groups, built.involvements, { roleRatio: DEFAULT_ROLE_RATIO, minLaws: SCORING_CONSTANTS.minContributingLaws });
+  // 人物台帳の全員を1回ずつ載せる（点あり＝tier が数、点なし＝tier が null で unrankedReason に理由）。
+  const { ranking, coverage } = withLedgerPeople(buildExposureRanking(built.groups, built.involvements, { roleRatio: DEFAULT_ROLE_RATIO, minLaws: SCORING_CONSTANTS.minContributingLaws }), text.persons);
 
   // 検算：人＋会派＋未配分＝期待値（low・median・high とも相対誤差 1e-9 以内）。
   const t = ranking.totals;
@@ -73,6 +74,7 @@ try {
     ...ranking,
     groups: built.groups.map(g => ({ id: g.id, group: g.group, window: g.window, diff: g.diff, benchmark: g.benchmark, lawCount: g.lawCount, lawsWithInvolvement: lawsWithRecord.get(g.id)?.size ?? 0 })),
     counts: built.counts,
+    coverage,
   };
   payload.generatedFrom = await generationMetadata(server, root, ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts'], ['scripts/build_exposure_ranking.mjs']);
   payload.inputs = Object.fromEntries(Object.entries(text).map(([k, v]) => [k, createHash('sha256').update(v).digest('hex')]));
@@ -80,7 +82,7 @@ try {
   const leaked = /(閣法|衆法|参法)-\d+-\d+/.exec(body);
   if (leaked) { console.error('出力に法律の ID が混ざっています：書きません'); process.exit(1); }
   if (!noWrite) { mkdirSync(dirname(out), { recursive: true }); writeFileSync(out, body); }
-  console.log(JSON.stringify({ counts: built.counts, totals: ranking.totals }));
+  console.log(JSON.stringify({ counts: built.counts, coverage, totals: ranking.totals }));
 } finally {
   await server.close();
 }

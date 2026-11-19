@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { parseCsv } from './impact-batch';
-import { buildExposureInputs, type ExposureSources } from './exposure-inputs';
+import { buildExposureInputs, withLedgerPeople, type ExposureSources } from './exposure-inputs';
 import { buildExposureRanking, DEFAULT_ROLE_RATIO, type ExposureRanking, type Involvement } from './exposure-ranking';
 import { SCORING_CONSTANTS } from './scoring-constants';
 
@@ -244,6 +244,18 @@ describe('曝露ランキングの入力（実データの性質）', () => {
     expect(ranking.params.minLaws).toBe(SCORING_CONSTANTS.minContributingLaws);
     expect(ranking.claim).toBe('descriptive');
     expect(ranking.parties).toEqual([]);
+  });
+
+  it('人物台帳の全員が、点あり（tier が数）か点なし＋理由のどちらかで1回ずつ載る', () => {
+    const { ranking: full, coverage } = withLedgerPeople(ranking, src.persons);
+    const ledgerIds = [...new Set(parseCsv(src.persons).map(r => r['人物ID']).filter(Boolean))];
+    const seen = new Map<string, number>();
+    for (const p of full.people) seen.set(p.actorId, (seen.get(p.actorId) ?? 0) + 1);
+    expect(ledgerIds.length).toBeGreaterThan(3000);
+    for (const id of ledgerIds) expect(seen.get(id)).toBe(1);
+    for (const p of full.people) expect(p.tier !== null ? p.unrankedReason === '' : p.unrankedReason.length > 0).toBe(true);
+    expect(coverage.ranked + coverage.unrankedWithAmount + coverage.noInvolvement).toBe(coverage.ledger);
+    expect(full.totals).toEqual(ranking.totals);
   });
 
   it('2回作って同じ', () => {

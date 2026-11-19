@@ -13,7 +13,7 @@
  * - 会派（party）への配りは今回作らない。衆議院は会派単位の賛否で、参議院は個人票なので、賛成の枠を会派と人でどう分けるかが未決のため。
  *   parties は空のまま。衆議院の賛成は、記録のある個人（involvements の vote）にだけ置く。
  */
-import type { ExposureGroup, Involvement, ExposureRole } from './exposure-ranking';
+import type { ExposureGroup, ExposureRanking, ExposureRow, Involvement, ExposureRole } from './exposure-ranking';
 import { cabinetBySession, normName } from './cabinet-members';
 import { COMMITTEE, parseProposer } from './members-reference';
 import { parseCsv } from './impact-batch';
@@ -180,4 +180,31 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
   }
   counts.lawsWithAnyInvolvement = withInvolvement.size;
   return { groups, involvements, counts };
+}
+
+export const NO_INVOLVEMENT_REASON = '群に属する法律への関与の記録が無い';
+export type LedgerCoverage = { ledger: number; ranked: number; unrankedWithAmount: number; noInvolvement: number; outsideLedger: number };
+
+/**
+ * 人物台帳（persons.csv）の全員を people に1回ずつ載せる（完了条件：全員が「点あり」か「点なし＋理由」のどちらか）。
+ * 点あり＝tier が数。点なし＝tier が null で unrankedReason に理由。関与の記録が無い人は0円・0本で理由つきの行を足す。
+ * 額の合計（totals）は変わらない。台帳に無い人（当時だけの閣僚など）の行はそのまま残し、人数を coverage に出す。
+ */
+export function withLedgerPeople(ranking: ExposureRanking, personsCsv: string): { ranking: ExposureRanking; coverage: LedgerCoverage } {
+  const ledgerIds = [...new Set(parseCsv(personsCsv).map(r => r['人物ID']).filter(Boolean))];
+  const ledger = new Set(ledgerIds);
+  const have = new Set(ranking.people.map(p => p.actorId));
+  if (have.size !== ranking.people.length) throw new Error('people に同じ人が2回いる');
+  const added: ExposureRow[] = ledgerIds.filter(id => !have.has(id)).sort((a, b) => a.localeCompare(b)).map(id => ({
+    actorKind: 'person', actorId: id, exposureYen: { low: 0, median: 0, high: 0 }, laws: 0, groups: 0, cells: [], tier: null, unrankedReason: NO_INVOLVEMENT_REASON,
+  }));
+  const inLedger = ranking.people.filter(p => ledger.has(p.actorId));
+  const coverage: LedgerCoverage = {
+    ledger: ledgerIds.length,
+    ranked: inLedger.filter(p => p.tier !== null).length,
+    unrankedWithAmount: inLedger.filter(p => p.tier === null).length,
+    noInvolvement: added.length,
+    outsideLedger: ranking.people.length - inLedger.length,
+  };
+  return { ranking: { ...ranking, people: [...ranking.people, ...added] }, coverage };
 }
