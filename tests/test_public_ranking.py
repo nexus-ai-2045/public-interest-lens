@@ -182,8 +182,12 @@ class PublicRankingTests(unittest.TestCase):
 
     def test_covid_overlap_and_unmeasured_notes(self):
         by_id = {law["id"]: law for law in self.payload["laws"]}
-        for law_id in ("衆法-189-20", "閣法-196-2"):
-            self.assertIn("コロナ期と重なる", by_id[law_id]["notes"])
+        self.assertIn("コロナ期と重なる", by_id["衆法-185-2"]["notes"])
+        # 衆法-189-20 は訂正表で制度（評価対象外）と決まり、額の行から外れる
+        self.assertNotIn("衆法-189-20", by_id)
+        # 閣法-196-2 は一次資料で分野を直した（宿泊・観光→交通・移動）。旧い分野の個別の額を外し、直した分野の参考額（共有額）に回す
+        self.assertNotIn("閣法-196-2", by_id)
+        self.assertIn("閣法-196-2", {item["id"] for item in self.payload["others"]})
         # 閣法-189-27 は向きと額の符号が逆で法律の額を付けない（全法律の結果と同じ判断）。損失表の額は議員にも配らない
         self.assertNotIn("便益側の一部が未測定", by_id.get("閣法-189-27", {"notes": []})["notes"])
         self.assertIn("閣法-189-27", self.payload["generatedFrom"]["parameters"]["noAmount"])
@@ -193,8 +197,9 @@ class PublicRankingTests(unittest.TestCase):
         # 全法律の結果が「評価対象外」とした法律は、降格の参考額としても laws に残さない（衆法-186-35：訂正表で制度・名称整備の型）
         outcomes = {r["id"]: r["結果"] for r in csv.DictReader(builder.INPUTS["outcomes"].open(encoding="utf-8"))}
         self.assertEqual([law["id"] for law in self.payload["laws"] if outcomes.get(law["id"]) == "評価対象外"], [])
-        other = next(item for item in self.payload["others"] if item["id"] == "衆法-186-35")
-        self.assertEqual(other["outcome"], OUTCOMES["excluded"])
+        for law_id in ("衆法-186-35", "衆法-189-20"):
+            other = next(item for item in self.payload["others"] if item["id"] == law_id)
+            self.assertEqual(other["outcome"], OUTCOMES["excluded"])
 
     def test_source_held_law_moves_to_others(self):
         payload = build(True, "2026-10-17", held_by_check={"衆法-185-2"})

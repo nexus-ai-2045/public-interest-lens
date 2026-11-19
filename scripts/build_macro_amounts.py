@@ -31,6 +31,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from scripts import primary_source_corrections as corrections
 from scripts.evaluation_rules import narrow_whole_economy
 from scripts.source_check import Oecd, recompute
 
@@ -125,6 +126,21 @@ def apply_sector_overrides(picks: dict[str, tuple[str, str, str]], overrides: li
     return out
 
 
+SOURCE_ORIGIN = "一次資料の読み直し"
+
+
+def source_fields(picks: dict[str, tuple[str, str, str]]) -> dict[str, tuple[str, str, str]]:
+    """一次資料で直した分野（primary-source-corrections-v1 の「分野」）を (分野, 由来, 産業コード) にする。
+    産業の節が無い分野（労働市場・行政のデジタル化など）は全産業（_T）で測る。分野の欄は一次資料で分かった分野のまま残し
+    （経済全体と書くと標本の照合で読み手と食い違い続ける）、測った産業は産業の欄と指標（全産業の実質付加価値）で示す。"""
+    out = {}
+    for law_id, items in corrections.load().items():
+        field = corrections.value({law_id: items}, law_id, "分野")
+        if field and law_id in picks:
+            out[law_id] = (field, SOURCE_ORIGIN, INDUSTRY[field]) if field in INDUSTRY else (WHOLE if field.startswith(WHOLE) else field, SOURCE_ORIGIN, "_T")
+    return out
+
+
 def base_title(title: str) -> str:
     """改正法の題名から元の法律の題名を取り出す。"""
     title = re.sub(r"(の一部|等の一部)?を改正する法律(案)?$", "", title)
@@ -192,12 +208,10 @@ def build() -> list[dict[str, str]]:
     laws = [law for law in _read(OUTCOMES) if law["結果"] not in SKIP]
     r2 = frozenset(r["id"] for r in _read(R2_HOLDS))
     tax_ledger = frozenset(r["法律ID"] for r in _read(TAX_LEDGER)) | TAX_LEDGER_COMPANIONS
-    picks = align_by_title(
-        {law["id"]: pick("", ai.get(law["id"], "")) if law["id"] in r2 else publication_field(law["分野"], ai.get(law["id"], ""), agreement.get(law["id"])) for law in laws},
-        {law["id"]: law["題名"] for law in laws},
-        r2,
-    )
-    picks = apply_sector_overrides(picks, _read(SECTOR_OVERRIDES))
+    picks = {law["id"]: pick("", ai.get(law["id"], "")) if law["id"] in r2 else publication_field(law["分野"], ai.get(law["id"], ""), agreement.get(law["id"])) for law in laws}
+    source = source_fields(picks)  # 一次資料で直した分野。題名でそろえる処理・結び直しより強い
+    picks = align_by_title({**picks, **source}, {law["id"]: law["題名"] for law in laws}, r2 | frozenset(source))
+    picks = {**apply_sector_overrides(picks, _read(SECTOR_OVERRIDES)), **source}
     rows = []
     for law in laws:
         dated = enforcement.get(law["id"], {})

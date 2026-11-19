@@ -99,15 +99,15 @@ class SourceCheckTests(unittest.TestCase):
         self.assertEqual(payload["counts"]["published"], len(payload["laws"]))
 
     def test_revision_based_enforcement_without_clause_is_not_a_mismatch(self):
-        # e-Gov の改正履歴から施行日を取った行は、附則の原文が無いことだけでは外さない。
+        # e-Gov の改正履歴から施行日を取った行は、附則の原文が無いことだけでは外さない（衆法-189-20 は評価対象外で額の行から外れたので、同じ取得方法の法律で見る）。
         tampered = copy.deepcopy(self.ctx)
-        row = tampered["enforcement"]["衆法-189-20"]
+        row = tampered["enforcement"]["閣法-204-53"]
         self.assertEqual(row["施行期日の原文"], "")
-        rows = source_check.check_law(next(l for l in self.ranking["laws"] if l["id"] == "衆法-189-20"), tampered)
+        rows = source_check.check_law(next(l for l in self.ranking["laws"] if l["id"] == "閣法-204-53"), tampered)
         clause = next(r for r in rows if r["項目"] == "施行期日の原文")
         self.assertEqual(clause["結果"], source_check.NA)
         row["取得方法"] = "その他"
-        rows = source_check.check_law(next(l for l in self.ranking["laws"] if l["id"] == "衆法-189-20"), tampered)
+        rows = source_check.check_law(next(l for l in self.ranking["laws"] if l["id"] == "閣法-204-53"), tampered)
         self.assertEqual(next(r for r in rows if r["項目"] == "施行期日の原文")["結果"], source_check.NG)
 
     def test_refetched_raw_is_checked_against_latest_manifest_row(self):
