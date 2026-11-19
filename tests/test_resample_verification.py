@@ -8,7 +8,15 @@ import json
 import unittest
 from pathlib import Path
 
-from scripts.resample_verification import SEED_V2, judge
+from scripts import build_public_ranking
+from scripts.evaluation_rules import SAMPLE2_REASON_PREFIX, sample2_failures
+from scripts.resample_verification import (
+    MEMO,
+    SEED_V2,
+    judge,
+    ledger_state,
+    load_record,
+)
 
 L = Path(__file__).resolve().parents[1] / "data" / "derived" / "evaluation-ledger-v1"
 V2 = L / "sample-v2"
@@ -82,6 +90,43 @@ class SampleRecord(unittest.TestCase):
         self.assertEqual(failed - set(res), set(), "決着の無い不合格がある")
         for i in failed:
             self.assertTrue(res[i]["決着"] and res[i]["原因"] and res[i]["理由"], i)
+
+
+class LedgerIntegration(unittest.TestCase):
+    """台帳は標本2を今のサイトの値で判定し直す。公開ランキングは、まだ不合格の標本2の法律を参考に下げる。"""
+
+    def setUp(self):
+        self.ledger = {r["id"]: r for r in rows(L / "ledger.csv")}
+        self.rec = load_record()
+
+    def test_ledger_state_is_recomputed_from_current_site(self):
+        self.assertEqual(set(self.rec), {r["id"] for r in rows(V2 / "sample.csv")})
+        for i, rec in self.rec.items():
+            r = self.ledger[i]
+            site = {"類型": r["類型"], "分類": r["分類"], "到達点": r["到達点"], "分野": r["分野"], "確かさ": r["確かさ"]}
+            self.assertEqual(ledger_state(site, rec), (r["検証状態"], r["検証メモ"]), i)
+            self.assertTrue(r["検証メモ"].startswith(MEMO), i)
+
+    def test_individual_amount_failures_are_demoted_in_ledger_and_ranking(self):
+        # #229 の暫定表（interim-holds.csv）の3本は、標本2の判定から台帳と公開ランキングの両方で参考に下げる
+        failed = build_public_ranking.verification_failed()
+        for i in ("衆法-189-20", "閣法-193-61", "閣法-196-2"):
+            self.assertEqual(self.ledger[i]["検証状態"], "参考に下げた", i)
+            self.assertTrue(failed[i].startswith(SAMPLE2_REASON_PREFIX), i)
+        self.assertFalse((L / "interim-holds.csv").exists())
+
+    def test_ranking_drops_laws_the_ledger_now_passes(self):
+        for i in sample2_failures():
+            self.assertNotEqual(self.ledger[i]["検証状態"], "抜き取り検証で合格", i)
+        fixed = [r["id"] for r in rows(V2 / "verdicts.csv") if r["判定"] == "不合格" and self.ledger[r["id"]]["検証状態"] == "抜き取り検証で合格"]
+        self.assertFalse(set(fixed) & set(sample2_failures()))
+
+    def test_candidates_cover_every_open_failure(self):
+        cand = {r["id"] for r in rows(V2 / "correction-candidates.csv")}
+        for r in rows(V2 / "resolutions.csv"):
+            self.assertEqual(r["決着"].startswith("訂正候補"), r["id"] in cand, r["id"])
+        kept = {i for i, r in self.ledger.items() if r["検証状態"] == "抜き取り検証で不合格" and i in self.rec}
+        self.assertLessEqual(kept, cand)
 
 
 if __name__ == "__main__":

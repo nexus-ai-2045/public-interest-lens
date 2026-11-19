@@ -39,7 +39,7 @@ from scripts.build_evaluation_ledger import (
     amount_demoted,
     site_key,
 )
-from scripts.evaluation_rules import VERDICT_FAIL, is_demoted
+from scripts.evaluation_rules import VERDICT_FAIL, is_demoted, site_is_institutional
 
 L = ROOT / "data" / "derived" / "evaluation-ledger-v1"
 RV = L / "reverification-v1"
@@ -56,7 +56,6 @@ CAUSE_CLASS = "サイトの分類の誤り（制度だけの法律を評価の�
 CAUSE_UNDECIDED = "一次資料が足りず決められない"
 CAUSE_ECON_OUT = "サイトの分類の誤り（経済に効く法律を制度だけと扱った）"
 CAUSE_FIXED = "サイトの値を一次資料で直した（primary-source-corrections-v1）"
-INSTITUTIONAL_REACHES = ("評価対象外", "効果なし（定例）")
 CAUSE_ECON = "サイトの分類の誤り（経済に効くと記録した法律が制度だけだった）"
 RECORD = "data/derived/evaluation-ledger-v1/reverification-v1/"
 
@@ -74,11 +73,6 @@ def agreed(a: dict, b: dict, key: str, ruling: dict | None) -> str:
     if va == vb and va not in NO_ANSWER:
         return va
     return UNDECIDED
-
-
-def site_is_institutional(site: dict) -> bool:
-    """サイトが「制度だけ（経済の量は動かない）」と扱っているか。到達点で読む（振り分けの分類では読まない）。"""
-    return site["到達点"] in INSTITUTIONAL_REACHES
 
 
 def resolve(site: dict, a: dict, b: dict, ruling: dict | None, first_memo: str, sampled_reach: str = "", fixed: dict | None = None) -> dict:

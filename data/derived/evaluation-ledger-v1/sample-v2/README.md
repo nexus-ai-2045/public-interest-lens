@@ -7,8 +7,9 @@
 - **定義**：合格＝2系統の独立判定が一致した項目（類型・経済に効くか。額のある法律は分野、参考額は範囲も）が、すべてサイトの値と合う。2系統が割れた項目と、サイトと食い違った項目は、裁定者が一次資料で決めた値で比べる。サイトの「制度だけ」は到達点で読む（`resolve_sample_failures.site_is_institutional`）。
 - **109本中、合格 49・不合格 60**（不合格率 55%、95%区間 46〜64%、Wilson）。
 - 不合格 60本のうち、**範囲だけ**（参考額は産業全体の差で、法律の範囲に合わせていない＝初回と同じ仕組みの原因）は 11本。**サイトの値そのものの誤り（類型・経済に効くか・分野）は 49本**（45%、95%区間 36〜54%）。
-- 決着：不合格のまま（決着なし）**0本**。内訳は「参考に下げた」11本、「訂正候補に回した」49本（うち額のある 33本は、直るまで額を参考に下げた扱い）。訂正候補は `correction-candidates.csv`（類型 24、経済に効くか 22、分野 14 項目）。
-- **サイトの値はこの記録では直していない**。訂正は `primary-source-corrections-v1/corrections.csv` の担当（582本の訂正表と同じ置き場）で行う。台帳（`ledger.csv`）の検証状態にもまだ入れていない（台帳は初回の `sample-verdicts.csv` だけを読む）。よって「不合格0」は**決着の記録の上での0**で、サイトの値が直ったことではない。
+- 決着（`resolutions.csv`、今の台帳のサイトの値で判定し直したもの。2026-11-19 夜、main 53a183b 取り込み後）：**サイトの訂正で合格 10本**（別スレッドの訂正表で値が直った）、**参考に下げた 15本**（範囲だけ。類型が直って範囲だけ残ったものを含む）、**訂正候補に回した 35本**（うち額のある 24本は直るまで額を参考に下げた）。訂正候補は `correction-candidates.csv`（経済に効くか 19、分野 14、類型 9 項目）。決着の無い不合格は 0本。
+- **台帳への組み込み**：`build_evaluation_ledger.py` が標本2の法律を、今のサイトの値で `resample_verification.ledger_state` により判定し直す。額のある不合格は「参考に下げた」（初回と同じ `is_demoted` の規則）、額の無い不合格は「抜き取り検証で不合格」（訂正待ち）。公開ランキングは `evaluation_rules.sample2_failures`（台帳が合格にした法律は外す）で参考に下げる。#229 の暫定表 `interim-holds.csv` の3本（衆法-189-20・閣法-193-61・閣法-196-2）はこの仕組みに移して表を消した。
+- **完了の条件3**（`check_design_consistency.py`）は標本1と標本2を別々に数える。今は**未達**：標本2で不合格のまま 6本（額の無い法律で、サイトの値の訂正待ち）。訂正が入って台帳を作り直すと減る。
 
 ## 前提
 
@@ -22,7 +23,7 @@
 2. 独立判定：1本につき2系統（計 218件）。モデルは Haiku（effort medium）、指示文は `prompt-v2.md`（版 v2）。サイトの値・台帳・初回の判定は見せない。系統Aは議案本文を先に、系統Bは会議録を先に読む。結果は `lineA.json`・`lineB.json`（判定、理由、原文の引用、読めた URL、読めなかった資料、確信）。確信は 高 144件・中 74件・低 0件。
 3. 突き合わせ：`python3 scripts/resample_verification.py compare` → `verdicts.csv`（サイトの値も並べる）。
 4. 裁定：サイトと食い違った項目か、2系統が割れた項目がある 69本を、Sonnet（effort medium、指示文 `prompt-adjudicate-v1.md`）が一次資料で裁定した。裁定者にはサイトの値と2系統の判定を両方見せる。Sonnet の裁定に入らなかった割れ 7項目（範囲 5本、類型 1本、経済に効くか 1本）は、このスレッドの Opus が裁定した。結果は `rulings.json`（項目・値・正しかった側・理由・引用・裁定者）。項目単位で、読み手が正しかった 64、サイトが正しかった 25。
-5. 決着：`python3 scripts/resample_verification.py resolve` → `resolutions.csv`（原因・決着・理由・参考値）と `correction-candidates.csv`（`corrections.csv` と同じ列。分野の行は今の `corrections.csv` では読めない項目）。規則はスクリプトの `cmd_resolve` にある（AI は呼ばない）。
+5. 決着：`python3 scripts/resample_verification.py resolve` → `resolutions.csv`（原因は裁定後の記録の食い違い、決着と「今の食い違い」は今の台帳の値で判定し直したもの）と `correction-candidates.csv`（まだ合わない項目だけ。`corrections.csv` と同じ列。分野の行は今の `corrections.csv` では読めない項目）。規則はスクリプトの `cmd_resolve` にある（AI は呼ばない）。サイトの値が変わったら `build_evaluation_ledger.py build` → `resample_verification.py resolve` → `report` の順に回す。
 6. 集計：`python3 scripts/resample_verification.py report` → `result.json`。
 
 検査：`tests/test_resample_verification.py`（標本が記録した種で作れること、初回と重ならないこと、`verdicts.csv` が2系統と裁定から機械的に出ること、不合格のすべてに決着があること）。
