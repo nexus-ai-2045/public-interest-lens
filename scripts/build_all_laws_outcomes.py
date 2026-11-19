@@ -253,7 +253,7 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     if tb2 and st.line_kind[side].get(t["id"]):  # TB2：第3の判定者が選んだ系統の種類を、v1 の A・B の種類の代わりに使う
         kind = st.line_kind[side][t["id"]]
         t = {**t, "種類": kind, "A_種類": kind, "B_種類": kind}
-    fixed_kind = corrections.value(st.corrections, t["id"], "類型")
+    fixed_kind = corrections.value(getattr(st, "corrections", {}), t["id"], "類型")
     if fixed_kind:  # 一次資料で直した類型を、振り分けの両系統の種類の代わりに使う
         t = {**t, "種類": fixed_kind, "A_種類": fixed_kind, "B_種類": fixed_kind}
     kinds = (t["A_種類"], t["B_種類"])
@@ -281,7 +281,7 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
         return out
 
     # 0a') 一次資料の読み直しで「制度」（この法律だけでは経済の量が動かない）と分かった法律：市場の経路より先に評価対象外
-    if corrections.value(st.corrections, t["id"], "経済に効くか") == corrections.INSTITUTIONAL and t["id"] not in st.covid:
+    if corrections.value(getattr(st, "corrections", {}), t["id"], "経済に効くか") == corrections.INSTITUTIONAL and t["id"] not in st.covid:
         why = st.corrections[t["id"]]["経済に効くか"]["理由"]
         out.update(結果="評価対象外", 経路=ROUTE_SOURCE_INSTITUTIONAL, 公開可否="公開不可",
                    理由=f"一次資料の読み直しで、民間の売上・費用・給付・税・規制の負担を直接は変えない制度の法律と分かった（{why}）。経済に絞る方針の外")
@@ -333,7 +333,7 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     # 2) 定例の改正（題名の語）
     # 一次資料の読み直しで「経済に効く」と分かった法律は、定例の規則（RT8 など）と種類による対象外に当てない。
     # 期限の延長でも、続けなければ止まる補助や特例があれば経済の量が動く（読み直しの指示文 prompt-v1 の定義）
-    source_econ = corrections.value(st.corrections, t["id"], "経済に効くか") == corrections.ECON
+    source_econ = corrections.value(getattr(st, "corrections", {}), t["id"], "経済に効くか") == corrections.ECON
     rt = None if source_econ else routine_rule(title, kinds)
     if rt:
         out.update(結果="効果なし（定例）", 経路=rt[0], 分野=out["分野"] or NO_FIELD,
