@@ -109,12 +109,15 @@ class PublicSyncTest(unittest.TestCase):
         # コロナ期と重なる・分離できない参考の法律は配らない（設計決定0014、app/src/members-reference.ts）。
         # 検証で参考に降格した法律（demotedReason あり）も配らない。
         # 額なし（noAmount）の法律も配らない（設計確定 v2.1、app/src/members-reference.ts）。
+        # 向きが未確定の法律（全体指標の行）も配らない（設計確定 v2.1：向きを産業の差の符号で決めない）。本数は別に数える。
         shared_ids = {l["id"] for l in self.ranking.get("sharedReference", {}).get("laws", [])}
         no_amount = set(self.ranking.get("generatedFrom", {}).get("parameters", {}).get("noAmount", []))
-        reference_laws = sum(1 for law in self.ranking["laws"] if law.get("certainty") == "参考" and not law.get("demotedReason")
-                             and law["id"] not in no_amount and law["id"] not in shared_ids
-                             and not any(n.startswith("コロナ期と") for n in law.get("notes", [])))
-        self.assertEqual(reference["counts"]["laws"], reference_laws, "全議員の表の参考の法律の本数が ranking.json と違う")
+        candidates = [law for law in self.ranking["laws"] if law.get("certainty") == "参考" and not law.get("demotedReason")
+                      and law["id"] not in no_amount and law["id"] not in shared_ids
+                      and not any(n.startswith("コロナ期と") for n in law.get("notes", []))]
+        undetermined = sum(1 for law in candidates if build_public_ranking.MACRO_DIRECTION_NOTE in law.get("notes", []))
+        self.assertEqual(reference["counts"]["laws"], len(candidates) - undetermined, "全議員の表の参考の法律の本数が ranking.json と違う")
+        self.assertEqual(reference["counts"]["lawsDirectionUndetermined"], undetermined, "向きが未確定で配らない法律の本数が ranking.json と違う")
         roster = (ROOT / "data/acquired/diet-roster/current.csv").read_text(encoding="utf-8").splitlines()[1:]
         names = {m["name"] for m in reference["members"]}
         missing = [line.split(",")[1] for line in roster if line.split(",")[1].replace(" ", "").replace("\u3000", "") not in names]

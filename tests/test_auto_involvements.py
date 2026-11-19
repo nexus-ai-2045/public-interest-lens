@@ -88,15 +88,13 @@ class CabinetsTest(unittest.TestCase):
             self.assertEqual({r["院"] for r in mine}, {""}, law)
 
 
-# TS 側だけが落としている閣僚。官邸の名簿が同じ人を会期の途中から脚注の印（*）つきで書いていて、TS の normName は印を取らないので別人になる。
-# TS を直したらここを空にする（空にしないとこのテストが落ちて気づける）。
-TS_MISSING = {"180": {"安住淳"}}
-
-
 @unittest.skipUnless(shutil.which("node") and (ROOT / "app" / "node_modules" / "vite").exists(), "node か app の依存が無い")
 class CabinetSyncWithTypeScriptTest(unittest.TestCase):
     def test_same_ministers_as_members_reference(self):
-        """TS（members-reference.ts、#184）が閣法の提出者として配った人と、回次ごとに同じ顔ぶれになる。"""
+        """TS（members-reference.ts）が閣法の提出者として配った人と、法律ごとに同じ顔ぶれになる（総理大臣が替わる回次は付託日の内閣）。
+
+        TS は向きが未確定の法律を人に配らないので、照らすのは配った閣法だけ。配った閣法が無いと何も確かめないので、単体テストで同じ決まりを別に確かめる
+        （app/src/members-reference.test.ts と、下の CabinetsTest）。"""
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "attributions.csv"
             crm.build_attributions(path)
@@ -105,12 +103,14 @@ class CabinetSyncWithTypeScriptTest(unittest.TestCase):
         ts: dict[str, set[str]] = defaultdict(set)
         for r in rows:
             if r["lawId"].startswith("閣法") and r["role"] == "proposer":
-                ts[r["lawId"].split("-")[1]].add(auto.canonical(r["name"]))
-        self.assertTrue(ts)
-        cabinets = auto.cabinets(auto._read(auto.ENACTED), auto._read(auto.CABINET))["session"]
-        for session, names in sorted(ts.items()):
-            self.assertEqual({name for name, _ in cabinets.get(session, [])} - TS_MISSING.get(session, set()), names, f"第{session}回")
-        self.assertLessEqual(set(TS_MISSING), set(ts))
+                ts[r["lawId"]].add(auto.canonical(r["name"]))
+        enacted = {f"{r['種別']}-{r['提出回次']}-{r['番号']}": r for r in auto._read(auto.ENACTED)}
+        cabinets = auto.cabinets(list(enacted.values()), auto._read(auto.CABINET))
+        for law, names in sorted(ts.items()):
+            bill = enacted[law]
+            referred = auto.wareki(bill["付託日_衆"]) if bill["回次"] == bill["提出回次"] else ""
+            expected = cabinets["session"].get(bill["提出回次"]) or cabinets["day"].get(referred, [])
+            self.assertEqual({name for name, _ in expected}, names, law)
 
 
 if __name__ == "__main__":

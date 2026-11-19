@@ -43,8 +43,10 @@ class CheckReferenceMembersTest(unittest.TestCase):
         # 合計に入るが top に出ない小さい配り先を、別人に差し替える。
         reference = crm.json.loads(crm.REFERENCE.read_text(encoding="utf-8"))
         tops = {(m["id"], t["lawId"], t["role"]) for m in reference["members"] for t in m["top"]}
+        # 配る法律が少ないと、どの配り先も top の5本に入る。そのときは top に出る配り先で確かめる（照合が全件を見ることは変わらない）。
         for role in ("proposer", "vote"):
-            r = next(r for r in rows if r["role"] == role and (r["member"], r["lawId"], r["role"]) not in tops)
+            mine = [r for r in rows if r["role"] == role]
+            r = next((r for r in mine if (r["member"], r["lawId"], r["role"]) not in tops), mine[0])
             r["name"] = "存在しない議員"
         bad = Path(self.tmp.name) / "bad.csv"
         _write(bad, rows)
