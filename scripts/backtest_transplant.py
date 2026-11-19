@@ -18,7 +18,7 @@ POOL = EVID / "backtest_foreign_pool.json"
 LABELS = EVID / "backtest_foreign_labels.json"
 MATCH = EVID / "backtest_foreign_match.json"
 
-TARGET = 0.95
+TARGET = 0.8   # 合格の線。正本は app/src/scoring-constants.ts の hitRateFloor（設計確定 v2.1 §2 の固定定数）。tests/test_backtest.py が一致を検査する
 MIN_N = 10
 MIN_GROUPS = 5
 

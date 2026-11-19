@@ -147,4 +147,22 @@ describe('全議員の参考の額', () => {
     expect(out.members[0]).toMatchObject({ current: null, laws: 0 });
     expect(out.counts).toMatchObject({ members: 1, current: 0, withAmount: 0, ledger: 1 });
   });
+  it('党と個人に二重に配らない：1本の法律で人に配る合計は、額を超えない（会派の分は人に配らない）', () => {
+    const law = { id: '衆法-150-1', title: '甲法案', side: 'loss', certainty: '参考', group: 'g', window: '2000〜2009年', amountLowYen: 90, amountMedianYen: 90, amountHighYen: 90 };
+    const enacted = '回次,種別,提出回次,番号,題名,提出者,提出者一覧,付託日_衆,議決日_衆,議決日_参\n150,衆法,150,1,甲法案,山田 太郎君,,,,平成12年 3月 1日\n';
+    const votesIndex = '投票ID,回次,投票日,議案名,集計_賛成,集計_反対\nv1,150,2000-03-01,日程第１ 甲法案（衆議院提出）,3,0\n';
+    const base = { enacted, cabinet: '区分,役職,氏名,就任日_西暦,退任日_西暦\n', roster: '院,氏名,本名,読み,会派,選挙区\n', sangiinMembers: '議員ID,回次,議員名,会派\n1,150,佐藤 一,自民\n2,150,鈴木 二,自民\n3,150,高橋 三,民主\n' };
+    const withVotes = buildReferenceMembers({ ...base, ranking: { laws: [law] }, votesIndex, ballots: ['投票ID,議員ID,賛否\nv1,1,Y\nv1,2,Y\nv1,3,Y\n'] });
+    const partyOnly = buildReferenceMembers({ ...base, ranking: { laws: [law] }, votesIndex: '投票ID,回次,投票日,議案名,集計_賛成,集計_反対\n', ballots: [] });
+    for (const out of [withVotes, partyOnly]) {
+      const total = out.attributions.reduce((s, a) => s + a.median, 0);
+      // 会派（党）の取り分は人に配らないので、人の合計は額より小さい。
+      expect(total).toBeLessThan(90);
+      // 同じ人・同じ法律・同じ役割を2回数えない。
+      const keys = out.attributions.map(a => `${a.member}|${a.lawId}|${a.role}`);
+      expect(new Set(keys).size).toBe(keys.length);
+    }
+    // 提出者の組・賛成票・会派で1を割る：会派分が残る（人の合計は 1 に届かない）。
+    expect(withVotes.attributions.reduce((s, a) => s + a.median, 0)).toBeLessThan(90 * 0.99);
+  });
 });
