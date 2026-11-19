@@ -23,7 +23,7 @@ ${USAGE}
   --help                この説明を出して終了する
 
 書き出す JSON は公開用：階層に入らない人・会派の額と、本数が下限に満たない内訳の額は出さない（法律1本ぶんの額が読めないように）。
-額を出さない人・会派が合わせて1つだけのときは、額を出さない人・会派の合計と totals の people・parties も伏せる。
+額を出さない人・会派が合わせて1つだけのときは、額を出さない人・会派の合計、totals の全部、未配分の内訳の額も伏せる。
 標準出力に counts と totals（公開用）を JSON で1行出す。内部の検算（人＋会派＋未配分＝期待値、相対誤差 1e-9）が合わない、
 公開用に額が残っている、または出力に法律の ID が混ざっているときは、書かずに終了コード1で止まる。
 未知の引数、値の無い --out・--sensitivity、値が -- で始まる --out・--sensitivity は終了コード2で止まる。`);
@@ -103,7 +103,7 @@ function checkPublic(label, p, minLaws) {
     }
   }
   const withheld = stats.hiddenPeople + stats.hiddenParties === 1;
-  if (withheld && (p.totals.people !== null || p.totals.parties !== null || p.hidden.people.exposureYen !== null || p.hidden.parties.exposureYen !== null)) fail('額を出さない行が1つだけなのに合計が伏せられていない');
+  if (withheld && (Object.values(p.totals).some(v => v !== null) || p.unallocated.some(u => u.exposureYen !== null) || p.hidden.people.exposureYen !== null || p.hidden.parties.exposureYen !== null)) fail('額を出さない行が1つだけなのに合計が伏せられていない');
   if (!withheld && (p.totals.people === null || p.totals.parties === null)) fail('額を出さない行が1つだけでないのに合計が伏せられている');
   if (p.hidden.people.count !== stats.hiddenPeople || p.hidden.parties.count !== stats.hiddenParties) fail('額を出さない行の件数が合わない');
   return stats;

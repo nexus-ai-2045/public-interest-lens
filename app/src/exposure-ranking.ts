@@ -29,7 +29,7 @@
  * 13. 公開用（toPublicExposureRanking）：階層に入らない行は額（exposureYen と cells の額）を出さず、本数・群の数・理由だけを残す。
  *     階層に入った行も、内訳に本数が下限（minLaws）に満たない群×役割が1つでもあれば内訳の額を全部伏せる（1つだけ伏せても合計との引き算で読めるため）。
  *     額を出さない人・会派の分の合計は出す（複数の合算で、個人の額ではない。丸めはしない）。ただし額を出さない人・会派が合わせて1つだけのときは、
- *     その合計も totals の people・parties も伏せる（null。残りとの引き算でその1つの額が読めるため）。検算に要る expected と unallocated は残す。
+ *     その合計も totals の全部（expected・unallocated を含む）も未配分の内訳の額も伏せる（null。expected − unallocated − 出ている額 でその1つの額が読めるため）。
  */
 
 import type { GroupDiff, Range } from './scoring-types';
@@ -290,13 +290,16 @@ export type PublicExposureRow = Omit<ExposureRow, 'exposureYen' | 'cells'> & {
 };
 /** 額を出さない人（または会派）の合計。count は件数。額を出さない行が全体で1つだけのときは exposureYen を伏せて null にする。 */
 export type HiddenTotal = { count: number; exposureYen: Range | null };
-export type PublicExposureRanking = Omit<ExposureRanking, 'people' | 'parties' | 'totals'> & {
+export type PublicUnallocated = Omit<Unallocated, 'exposureYen'> & { exposureYen: Range | null };
+export type PublicExposureRanking = Omit<ExposureRanking, 'people' | 'parties' | 'totals' | 'unallocated'> & {
   people: PublicExposureRow[];
   parties: PublicExposureRow[];
   /** 額を出さない人・会派（階層に入らない行）の合計。 */
   hidden: { people: HiddenTotal; parties: HiddenTotal };
-  /** people・parties は全員ぶんの合計。額を出さない行が合わせて1つだけのときは、引き算で読めるので null。 */
-  totals: { people: Range | null; parties: Range | null; unallocated: Range; expected: Range };
+  /** 未配分の内訳。額を出さない行が合わせて1つだけのときは額を null にする。 */
+  unallocated: PublicUnallocated[];
+  /** 全員ぶんの合計。額を出さない行が合わせて1つだけのときは、どの合計からでも引き算で読めるので全部 null。 */
+  totals: { people: Range | null; parties: Range | null; unallocated: Range | null; expected: Range | null };
 };
 
 /** 内訳の額を出してよいか：本数が下限に満たない内訳が1つも無いこと。 */
@@ -307,7 +310,7 @@ const cellsShowable = (cells: readonly ExposureCell[], minLaws: number): boolean
  * - 階層に入らない行（tier null）：exposureYen と cells の額を出さない（laws・groups・unrankedReason・cells の本数と役割は残す）。
  * - 階層に入った行：内訳に本数が minLaws 未満のものが1つでもあれば、内訳の額を全部出さない。
  * - 額を出さない人・会派の合計を hidden に件数つきで足す。額を出さない行が人・会派を合わせて1つだけのときは、
- *   hidden の額も totals.people・totals.parties も null にする。
+ *   hidden の額、totals の全部（expected・unallocated を含む）、未配分の内訳の額を null にする（expected − unallocated − 出ている額 で読めるため）。
  */
 export function toPublicExposureRanking(ranking: ExposureRanking, minLaws: number): PublicExposureRanking {
   const toRow = (r: ExposureRow): PublicExposureRow => {
@@ -332,11 +335,12 @@ export function toPublicExposureRanking(ranking: ExposureRanking, minLaws: numbe
       people: { count: hp.length, exposureYen: withheld ? null : sumOf(hp) },
       parties: { count: pp.length, exposureYen: withheld ? null : sumOf(pp) },
     },
+    unallocated: ranking.unallocated.map(u => ({ ...u, exposureYen: withheld ? null : u.exposureYen })),
     totals: {
       people: withheld ? null : ranking.totals.people,
       parties: withheld ? null : ranking.totals.parties,
-      unallocated: ranking.totals.unallocated,
-      expected: ranking.totals.expected,
+      unallocated: withheld ? null : ranking.totals.unallocated,
+      expected: withheld ? null : ranking.totals.expected,
     },
   };
 }

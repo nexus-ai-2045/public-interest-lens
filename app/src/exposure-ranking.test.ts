@@ -377,15 +377,19 @@ describe('公開用への変換（法律1本ぶんの額を出さない）', () 
     expect(ranked + p.hidden.people.exposureYen!.median).toBeCloseTo(p.totals.people!.median);
   });
 
-  it('額を出さない人が1人だけのときは、その合計も totals の people・parties も伏せる（引き算で1人の額が読めるため）', () => {
+  it('額を出さない人が1人だけのときは、その合計も totals の全部も未配分の内訳の額も伏せる（引き算で1人の額が読めるため）', () => {
     const { out, pub: p } = pub([...five('多い人'), inv('一本の人', 'L1', 'proposer')]);
     expect(p.hidden.people).toEqual({ count: 1, exposureYen: null });
     expect(p.hidden.parties).toEqual({ count: 0, exposureYen: null });
     expect(p.totals.people).toBeNull();
     expect(p.totals.parties).toBeNull();
-    // 検算に要る expected と unallocated は残る。
-    expect(p.totals.expected).toEqual(out.totals.expected);
-    expect(p.totals.unallocated).toEqual(out.totals.unallocated);
+    // expected − unallocated − 出ている額 で読めるので、expected・unallocated と未配分の内訳の額も伏せる。
+    expect(p.totals.expected).toBeNull();
+    expect(p.totals.unallocated).toBeNull();
+    for (const u of p.unallocated) expect(u.exposureYen).toBeNull();
+    // 出ている数の組み合わせで1人の額を作れない：額のある数は階層に入った人の行と内訳だけ。
+    const shown = [...p.people, ...p.parties].filter(r => r.exposureYen !== null).reduce((x, r) => x + r.exposureYen!.median, 0);
+    expect(shown).toBeCloseTo(person(out, '多い人').exposureYen.median, 9);
     // 引き算で復元できない：公開用の JSON のどこにも、その人の額も、全員の合計から残りを引いた値も無い。
     const text = JSON.stringify(p);
     expect(text).not.toContain(String(person(out, '一本の人').exposureYen.median));
@@ -397,6 +401,8 @@ describe('公開用への変換（法律1本ぶんの額を出さない）', () 
     // 額を出さない行が無ければ、合計は出て、hidden は件数0の0円。
     const none = pub(five('多い人')).pub;
     expect(none.totals.people).not.toBeNull();
+    expect(none.totals.expected).toEqual(pub(five('多い人')).out.totals.expected);
+    expect(none.unallocated.every(u => u.exposureYen !== null)).toBe(true);
     expect(none.hidden.people).toEqual({ count: 0, exposureYen: { low: 0, median: 0, high: 0 } });
   });
 
