@@ -8,5 +8,6 @@
 ## readings-kokkai.csv（人物の読みの補い）
 
 - 中身：人物台帳（data/derived/person-ids/persons.csv）で読みが空の人の読み。国会会議録 API の発言者の読み（speakerYomi）から取る。`scripts/fetch_person_readings.py`。
+- 原本：API の応答は非公開のローカル保管庫（.local/external-materials/person-readings-kokkai/）に登録し、行の「外部資料ID」で結ぶ。
 - 取り方：1986-07 以降の発言を発言者名（氏名、無ければ台帳の別表記）の完全一致で引き、読みが1通り（濁点の有無だけの違いは同じ）のときだけ入れる。2通り以上・一致なし・院と選挙区で分けた同姓同名の人物は、読みを空にして理由を書く。行ごとに出典URL と取得日時。
 - 使い道：議員ページの曝露ランキングで、同じ階層の中を読みの五十音順に並べるためだけ。額・人物IDの決め方には使わない。persons.csv の読みは「現職の名簿に載った人」の印も兼ねるので、そこには書き足さない。

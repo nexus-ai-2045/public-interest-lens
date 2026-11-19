@@ -9,7 +9,7 @@ persons.csv の読みは「現職の名簿に載った人」の印も兼ねる�
 読みが2通り以上（同姓同名の疑い）や一致なしは、読みを空にして理由を書く（推測しない）。
 院と選挙区を付けて分けた人物ID（「鬼木誠（衆・福岡2）」など）は、同姓同名がいると分かっている人なので引かずに理由を書く。
 
-出力：data/acquired/diet-roster/readings-kokkai.csv（人物ID,氏名,読み,一致した発言数,理由,出典URL,取得日時）
+出力：data/acquired/diet-roster/readings-kokkai.csv（人物ID,氏名,読み,一致した発言数,理由,出典URL,取得日時,外部資料ID）。API の応答の原本は .local/external-materials/person-readings-kokkai/ に登録する（Git に置かない）
 再開できる：取得済みの人物IDは引き直さない（--refresh で全部引き直す）。API が応答しなかった人は理由を書いて残し、次の実行で引き直す。
 
 使い方：python3 scripts/fetch_person_readings.py [--workers 4] [--sleep 0.2] [--limit N] [--dry-run] [--refresh]
@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
+import json
 import re
 import sys
 import time
@@ -32,10 +34,15 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.fetch_roster_kokkai import API, call, nospace, spellings
+from scripts.register_external_material import register_once
 
 PERSONS = ROOT / "data/derived/person-ids/persons.csv"
 OUT = ROOT / "data/acquired/diet-roster/readings-kokkai.csv"
-FIELDS = ["人物ID", "氏名", "読み", "一致した発言数", "理由", "出典URL", "取得日時"]
+FIELDS = ["人物ID", "氏名", "読み", "一致した発言数", "理由", "出典URL", "取得日時", "外部資料ID"]
+# API の応答の原本は非公開のローカル保管庫に登録する（AGENTS.md：外部資料は register_external_material で保存）。
+RAW = ROOT / ".local/person-readings/raw"
+STORAGE = ROOT / ".local/external-materials"
+TASK_ID = "person-readings-kokkai"
 SPLIT_ID = re.compile(r"（[^）]*）$")
 
 
@@ -61,24 +68,39 @@ def source_url(spelled: str) -> str:
     return API + "?" + urllib.parse.urlencode({"speaker": spelled, "from": "1986-07-01", "maximumRecords": "100", "recordPacking": "json"})
 
 
-def exact_records(spelled: str, sleep: float) -> list[dict]:
+def fetch(params: dict[str, str], materials: list[str]) -> dict:
+    """API を1回引き、応答を原本として保存・登録する（material_id を materials に足す）。"""
+    url = API + "?" + urllib.parse.urlencode({**params, "recordPacking": "json"})
+    fetched_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    d = call(params)
+    body = json.dumps(d, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    RAW.mkdir(parents=True, exist_ok=True)
+    raw = RAW / f"{hashlib.sha256(url.encode('utf-8')).hexdigest()[:24]}.json"
+    raw.write_bytes(body)
+    materials.append(register_once(input_path=raw, source_url=url, task_id=TASK_ID, title="国会会議録検索システム API の応答（発言者の読み）",
+                                   purpose="曝露ランキングの並びに使う人物の読みを決める", storage_root=STORAGE, observed_at=fetched_at))
+    return d
+
+
+def exact_records(spelled: str, sleep: float, materials: list[str]) -> list[dict]:
     """発言者名の完全一致の発言。API の speaker は部分一致なので、長い名前の発言で先頭100件が埋まっても、
     最大 PAGES ページまで読み進める（新しい順）。同姓同名の別人を見落とさないよう、いちばん古い発言も1件足す。"""
     base = {"speaker": spelled, "from": "1986-07-01", "maximumRecords": "100"}
     out: list[dict] = []
-    start, total = 1, None
+    start, total, read_end = 1, None, 0
     for _ in range(PAGES):
-        d = call({**base, "startRecord": str(start)})
+        d = fetch({**base, "startRecord": str(start)}, materials)
         time.sleep(sleep)
         total = int(d.get("numberOfRecords", 0))
+        read_end = start - 1 + len(d.get("speechRecord", []))  # 読んだ最後の位置
         out += [r for r in d.get("speechRecord", []) if nospace(r.get("speaker", "")) == spelled]
         nxt = d.get("nextRecordPosition")
         if len(out) >= 100 or not nxt:
             break
         start = int(nxt)
-    if out and total and total > start + 99:
+    if out and total and total > read_end:
         # 読み切っていない：いちばん古い発言（部分一致の最後）が同じ名前なら足す
-        last = call({**base, "startRecord": str(total), "maximumRecords": "1"}).get("speechRecord", [])
+        last = fetch({**base, "startRecord": str(total), "maximumRecords": "1"}, materials).get("speechRecord", [])
         time.sleep(sleep)
         out += [r for r in last if nospace(r.get("speaker", "")) == spelled]
     return out
@@ -86,20 +108,22 @@ def exact_records(spelled: str, sleep: float) -> list[dict]:
 
 def look_up(pid: str, name: str, aliases: list[str], sleep: float) -> dict[str, str]:
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    row = {"人物ID": pid, "氏名": name, "読み": "", "一致した発言数": "0", "理由": "", "出典URL": "", "取得日時": now}
+    row = {"人物ID": pid, "氏名": name, "読み": "", "一致した発言数": "0", "理由": "", "出典URL": "", "取得日時": now, "外部資料ID": ""}
+    materials: list[str] = []
     if SPLIT_ID.search(pid):
         return {**row, "理由": "同姓同名を院と選挙区で分けた人物（発言者名だけでは決まらない）"}
     recs: list[dict] = []
     tries = list(dict.fromkeys(s for n in [name, *aliases] for s in spellings(nospace(n))))
     try:
         for spelled in tries:
-            recs = exact_records(spelled, sleep)
+            recs = exact_records(spelled, sleep, materials)
             if recs:
                 break
     except RuntimeError as e:  # API が応答しない人は空にして理由を書く（他の人の結果は残す。次の実行で引き直す）
         return {**row, "理由": f"{RETRY_REASON}（{e}）"}
     # 出典：一致した表記の問い合わせ。一致なしなら、試した表記の問い合わせを全部。
     row["出典URL"] = " ".join(source_url(t) for t in ([spelled] if recs else tries))
+    row["外部資料ID"] = " ".join(dict.fromkeys(materials))
     yomi = Counter(nospace(r.get("speakerYomi") or "") for r in recs if r.get("speakerYomi"))
     row["一致した発言数"] = str(sum(yomi.values()))
     if not yomi:
