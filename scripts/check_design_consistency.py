@@ -462,11 +462,13 @@ def _sampling_condition(d: Path) -> dict:
         state = Counter(ledger_state.get(i, ("", ""))[0] for i in sample)
         still_failed, demoted = state["抜き取り検証で不合格"], state["参考に下げた"]
         unjudged = len(sample) - len(verdict_of)
-        # 不合格の判定のうち、台帳で「参考に下げた」でも「不合格のまま」でもないもの＝読み直し・訂正で合格になった法律
-        fixed = sum(1 for i, v in verdict_of.items() if v == "不合格" and ledger_state.get(i, ("", ""))[0] not in ("参考に下げた", "抜き取り検証で不合格"))
-        ok = ok and unjudged == 0 and still_failed == 0
+        # 不合格の判定のうち、台帳で「抜き取り検証で合格」になったもの＝読み直し・訂正で合格になった法律
+        fixed = sum(1 for i, v in verdict_of.items() if v == "不合格" and ledger_state.get(i, ("", ""))[0] == "抜き取り検証で合格")
+        missing = sorted(sample - set(ledger_state))  # 台帳から消えた抜き取りの法律は合格に数えない
+        ok = ok and unjudged == 0 and still_failed == 0 and not missing
         parts.append(f"{name}：{len(sample):,} 本中 合格 {tally['合格']:,}・不合格 {tally['不合格']:,}・判定なし {unjudged:,}。"
-                     f"不合格のうち 参考に下げた {demoted:,}・訂正（読み直し）で合格 {fixed:,}・不合格のまま {still_failed:,}")
+                     f"不合格のうち 参考に下げた {demoted:,}・訂正（読み直し）で合格 {fixed:,}・不合格のまま {still_failed:,}"
+                     + (f"。台帳に無い {len(missing):,} 本（{'、'.join(missing[:5])}）" if missing else ""))
     return {
         "state": "達成" if ok else "未達",
         "now": "／".join(parts),

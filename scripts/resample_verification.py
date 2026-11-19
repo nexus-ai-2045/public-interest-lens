@@ -2,7 +2,7 @@
 
   python3 scripts/resample_verification.py sample    # 標本を作る → sample-v2/sample.csv・manifest.json
   python3 scripts/resample_verification.py fetch     # 一次資料を取って .local/sample-v2/sources/{id}.txt に置く（読み手に渡す）
-  python3 scripts/resample_verification.py compare   # 2系統（lineA.json・lineB.json）とサイトの値を突き合わせる → verdicts.csv・split-queue.json
+  python3 scripts/resample_verification.py compare   # 2系統（lineA.json・lineB.json）とサイトの値を突き合わせる → verdicts.csv・split-queue.json（記録は固定。作り直しは --force）
   python3 scripts/resample_verification.py resolve   # 不合格を原因で分けて決着 → resolutions.csv・correction-candidates.csv
   python3 scripts/resample_verification.py report    # 集計 → sample-v2/result.json と README の結果の節の数
 
@@ -17,6 +17,11 @@
   分野が「コロナ対応」の参考額は、産業ではなく費用便益の群なので、分野・範囲を照合しない。
   サイトの「制度だけ」は到達点で読む（evaluation_rules.site_is_institutional。初回の読み直しで決めた規則）。
   割れた項目が合否を左右するときは「割れ」として裁定待ちに出す（rulings.json を置けば反映）。
+
+訂正候補（correction-candidates.csv）の注意：
+  類型・経済に効くかの行は primary-source-corrections-v1/corrections.csv と同じ列で、そのまま入れられる。
+  ただし合否はサイトの到達点で読むので、経済に効くかの訂正は到達点まで直らないと合格に戻らない。
+  分野の行は今の primary_source_corrections（項目は類型・経済に効くかだけ）では読めない。分野を直す経路が要る。
 """
 from __future__ import annotations
 
@@ -86,10 +91,17 @@ def _run_fetch(args: list[str]) -> str:
     for attempt in range(4):
         p = subprocess.run([sys.executable, str(ROOT / "scripts" / "fetch_law_source.py"), *args],
                            capture_output=True, text=True, timeout=120, check=False)
-        if p.returncode == 0:
+        if p.returncode == 0 and p.stdout.strip():
             return p.stdout
         time.sleep(2 * (attempt + 1))
-    return p.stdout or "取得できない\n"
+    return "取得できない\n"  # 4回とも失敗：エラーの出力を本文として残さない（次の fetch で取り直す）
+
+
+def _has_body(text: str) -> bool:
+    """取れた議案本文があるか。取得に失敗した本文（空・取得できない）は取り直す。"""
+    _head, sep, rest = text.partition("【議案本文】\n")
+    body = rest.split("\n\n【会議録】", 1)[0].strip()
+    return bool(sep) and bool(body) and not body.startswith("取得できない")
 
 
 def cmd_fetch() -> int:
@@ -97,7 +109,7 @@ def cmd_fetch() -> int:
     SOURCES.mkdir(parents=True, exist_ok=True)
     for r in read_csv(OUT / "sample.csv"):
         path = SOURCES / f"{r['id']}.txt"
-        if path.exists() and "【議案本文】" in path.read_text(encoding="utf-8"):
+        if path.exists() and _has_body(path.read_text(encoding="utf-8")):
             continue
         session = r["id"].split("-")[1]
         title = r["題名"].removesuffix("案")
@@ -157,7 +169,11 @@ def judge(site: dict, a: dict, b: dict, ruling: dict | None = None) -> tuple[str
 SITE_KEYS = ("類型", "分類", "到達点", "経済に効くか", "分野", "額（円）", "確かさ")
 
 
-def cmd_compare() -> int:
+def cmd_compare(force: bool = False) -> int:
+    """verdicts.csv は裁定のあとの記録で、書き換えない（サイトの値が直ったかは台帳が判定し直す）。作り直すときだけ --force。"""
+    if (OUT / "verdicts.csv").exists() and not force:
+        print("verdicts.csv は記録として固定してある。作り直すときは compare --force")
+        return 1
     A = {x["id"]: x for x in json.loads((OUT / "lineA.json").read_text(encoding="utf-8"))}
     B = {x["id"]: x for x in json.loads((OUT / "lineB.json").read_text(encoding="utf-8"))}
     rulings_path = OUT / "rulings.json"
@@ -204,7 +220,7 @@ def _value(a: dict, b: dict, ruling: dict, item: str) -> tuple[str, str, str, st
     for r in ruling.get("裁定", []):
         if r["項目"] == item:
             return r["値"], r["理由"], r["引用"], r.get("裁定者", ruling.get("裁定者", ""))
-    reason = a.get("類型の理由" if item == "類型" else "経済の理由", "")
+    reason = {"類型": a.get("類型の理由", ""), "経済に効くか": a.get("経済の理由", "")}.get(item, "")  # 分野の理由は読み手が書かない
     return a[item], reason, (a.get("引用") or [""])[0], "Haiku 2系統（系統A 議案本文から・系統B 会議録から）が一致"
 
 
@@ -253,7 +269,7 @@ def cmd_resolve() -> int:
                           "直す前の値": before[item], "理由": why, "引用": quote, "出典URL": url, "判定者": who,
                           "指示文": "sample-v2/prompt-v2.md（版 v2）" + ("・prompt-adjudicate-v1.md" if ru else ""),
                           "記録": "data/derived/evaluation-ledger-v1/sample-v2/"})
-        has_amount = cur["到達点"].startswith(("参考額", "額", "国の収支"))
+        has_amount = is_demoted(VERDICT_FAIL, cur["到達点"], cur["確かさ"])  # 台帳（ledger_state）と同じ規則
         if v == "合格":
             how = RES_FIXED
         elif items:
@@ -362,8 +378,11 @@ def main() -> int:
 
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("cmd", choices=["sample", "fetch", "compare", "resolve", "report"])
-    cmd = ap.parse_args().cmd
-    return {"sample": cmd_sample, "fetch": cmd_fetch, "compare": cmd_compare, "resolve": cmd_resolve, "report": cmd_report}[cmd]()
+    ap.add_argument("--force", action="store_true", help="compare：記録として固定した verdicts.csv を作り直す")
+    args = ap.parse_args()
+    if args.cmd == "compare":
+        return cmd_compare(args.force)
+    return {"sample": cmd_sample, "fetch": cmd_fetch, "resolve": cmd_resolve, "report": cmd_report}[args.cmd]()
 
 
 if __name__ == "__main__":

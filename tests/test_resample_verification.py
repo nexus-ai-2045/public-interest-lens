@@ -115,6 +115,11 @@ class LedgerIntegration(unittest.TestCase):
             self.assertTrue(failed[i].startswith(SAMPLE2_REASON_PREFIX), i)
         self.assertFalse((L / "interim-holds.csv").exists())
 
+    def test_ranking_and_ledger_agree_on_sample2(self):
+        # 公開ランキングの降格は、台帳と同じ判定し直しから決める（台帳が後で作られても、記録の判定欄と向きが違っても食い違わない）
+        open_ = {i for i in self.rec if self.ledger[i]["検証状態"] != "抜き取り検証で合格"}
+        self.assertEqual(set(sample2_failures()), open_)
+
     def test_ranking_drops_laws_the_ledger_now_passes(self):
         for i in sample2_failures():
             self.assertNotEqual(self.ledger[i]["検証状態"], "抜き取り検証で合格", i)
@@ -127,6 +132,20 @@ class LedgerIntegration(unittest.TestCase):
             self.assertEqual(r["決着"].startswith("訂正候補"), r["id"] in cand, r["id"])
         kept = {i for i, r in self.ledger.items() if r["検証状態"] == "抜き取り検証で不合格" and i in self.rec}
         self.assertLessEqual(kept, cand)
+
+
+class FetchAndRecord(unittest.TestCase):
+    def test_failed_fetch_is_fetched_again(self):
+        from scripts.resample_verification import _has_body
+        self.assertTrue(_has_body("法律：x\n\n【議案本文】\n第一条 …\n\n【会議録】\n…\n"))
+        self.assertFalse(_has_body("法律：x\n\n【議案本文】\n取得できない\n\n\n【会議録】\n…\n"))
+        self.assertFalse(_has_body("法律：x\n\n【議案本文】\n\n\n【会議録】\n…\n"))
+
+    def test_compare_does_not_overwrite_the_record(self):
+        from scripts.resample_verification import cmd_compare
+        before = (V2 / "verdicts.csv").read_bytes()
+        self.assertEqual(cmd_compare(), 1)
+        self.assertEqual((V2 / "verdicts.csv").read_bytes(), before)
 
 
 if __name__ == "__main__":
