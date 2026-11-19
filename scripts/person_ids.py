@@ -136,6 +136,8 @@ class Ledger:
 
 
 def _add(ledger: Ledger, person: Person) -> None:
+    if not person.id.strip():
+        return  # 氏名の空の行（内閣名簿の空欄など）は人物ではない。台帳に全列空の行を作らない
     ledger.persons[person.id] = person
     ledger.by_canonical[canonical(person.name)].append(person)
 
@@ -383,8 +385,9 @@ def main(argv=None) -> int:
     rows = [{"人物ID": q.id, "氏名": q.name, "読み": q.reading, "院": q.house, "選挙区": q.district, "別表記": "／".join(sorted(q.aliases))}
             for q in sorted(ledger.persons.values(), key=lambda q: q.id)]
     write_csv(a.out_dir / "persons.csv", PERSON_HEADER, rows)
-    # 人物ID は絶対に重ならない（重なったら別人を1人にしてしまう）。
+    # 人物ID は絶対に重ならない（重なったら別人を1人にしてしまう）。空の人物IDの行も作らない。
     assert len({r["人物ID"] for r in rows}) == len(rows)
+    assert all(r["人物ID"].strip() for r in rows), "人物IDが空の行があります"
     undecided = list(ledger.undecided)
     if a.annotate_involvements and inv:
         from scripts import allocation_involvements as ai

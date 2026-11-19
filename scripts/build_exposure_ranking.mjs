@@ -1,4 +1,4 @@
-// 曝露ランキング（案B）の集計結果 data/derived/exposure-v1/exposure-ranking.json を作る。画面には出さない（表示は別の変更）。
+// 曝露ランキング（案B）の集計結果 app/public/distribution/exposure-ranking.json を作る。画面には出さない（表示は別の変更）。
 // 書き出す JSON は公開用（exposure-ranking.ts の toPublicExposureRanking）：法律1本ぶんの額が読めないよう、階層に入らない人・会派の額と本数の少ない内訳の額を出さない。
 // 入力はリポジトリ内のデータだけ。入力の組み立ては app/src/exposure-inputs.ts、集計は app/src/exposure-ranking.ts。
 // 額は群（産業×年。data/derived/exposure-v1/industry-year.csv）の OECD 比較国との伸びの差を役割の固定比率で配った記述で、因果の推定ではない。出力に法律の ID は入れない。
@@ -17,7 +17,7 @@ if (argv.includes('--help') || argv.includes('-h')) {
 
 ${USAGE}
 
-  --out <path>          出力先（既定：data/derived/exposure-v1/exposure-ranking.json）
+  --out <path>          出力先（既定：app/public/distribution/exposure-ranking.json）
   --no-write            検算だけして、ファイルは書かない
   --sensitivity <path>  役割の比率を5通りに変えたときの産業別の人の順位の動きを Markdown の表で書く（人名は書かない）
   --help                この説明を出して終了する
@@ -48,7 +48,7 @@ for (let i = 0; i < argv.length; i++) {
 const sensOut = sensArg ? resolve(sensArg) : '';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const app = join(root, 'app');
-const out = outArg ? resolve(outArg) : join(root, 'data/derived/exposure-v1/exposure-ranking.json');
+const out = outArg ? resolve(outArg) : join(root, 'app/public/distribution/exposure-ranking.json');
 const ballotsDir = join(root, 'data/acquired/sangiin-votes/ballots');
 const inputs = {
   macro: join(root, 'data/derived/macro-v1/macro.csv'),

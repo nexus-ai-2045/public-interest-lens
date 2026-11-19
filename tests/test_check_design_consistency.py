@@ -236,6 +236,31 @@ class CompletionTest(unittest.TestCase):
         status = self.status({d + "all-laws-v1/outcomes.csv": "id\nA\n", d + "evaluation-ledger-v1/ledger.csv": LEDGER_HEAD + "A,測定できない,,,未検証\n"})
         self.assertEqual(status[1]["state"], "一部達成")
 
+    def test_members_are_measured_against_the_exposure_output(self):
+        # 進め方 5章-1 の議員：人物台帳の全員が、曝露ランキングに「点あり」か「点なし＋理由」で1回ずつ載る
+        d = "data/derived/"
+        laws = {d + "all-laws-v1/outcomes.csv": "id\nA\n", d + "evaluation-ledger-v1/ledger.csv": LEDGER_HEAD + "A,測定できない,,,未検証\n"}
+        persons = {d + "person-ids/persons.csv": "人物ID,氏名\nP1,a\nP2,b\n"}
+        cov = {"ledger": 2, "ranked": 1, "unrankedWithAmount": 0, "noInvolvement": 1, "outsideLedger": 1}
+        people = [{"actorId": "P1", "tier": 1, "unrankedReason": ""}, {"actorId": "P2", "tier": None, "unrankedReason": "関与の記録が無い"},
+                  {"actorId": "当時だけの閣僚", "tier": 1, "unrankedReason": ""}]
+        out = "app/public/distribution/exposure-ranking.json"
+        status = self.status(laws | persons | {out: json.dumps({"people": people, "coverage": cov})})
+        self.assertEqual(status[1]["state"], "達成")
+        self.assertIn("人物台帳 2 人中、曝露ランキングに載る 2 人（点あり 1、点なし＋理由 1、載っていない 0、2回以上 0）", status[1]["now"])
+        # 理由の無い点なし・載っていない人・2回・台帳の空行は、どれも達成にしない
+        for broken_people, broken_persons in [
+            ([people[0], {"actorId": "P2", "tier": None, "unrankedReason": ""}], persons),
+            ([people[0]], persons),
+            ([people[0], people[1], people[1]], persons),
+            (people, {d + "person-ids/persons.csv": "人物ID,氏名\nP1,a\n,\nP2,b\n"}),
+        ]:
+            status = self.status(laws | broken_persons | {out: json.dumps({"people": broken_people, "coverage": cov})})
+            self.assertEqual(status[1]["state"], "一部達成", broken_people)
+        status = self.status(laws | persons)
+        self.assertIn("曝露ランキングの出力", status[1]["now"])
+        self.assertEqual(status[1]["state"], "一部達成")
+
     def test_empty_or_broken_inputs_are_not_measured_and_do_not_crash(self):
         d = "data/derived/"
         status = self.status({

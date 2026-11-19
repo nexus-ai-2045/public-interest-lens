@@ -354,3 +354,20 @@ class HistoricalRosterTest(unittest.TestCase):
         self.assertNotIn("永江孝子", ledger.persons)
         self.assertIn("永江孝子", ledger.persons["ながえ孝子"].aliases)
         self.assertEqual(ledger.by_canonical["永江孝子"][0].id, "ながえ孝子")
+
+
+class EmptyRowTest(unittest.TestCase):
+    """人物台帳に全列空の行を作らない（内閣名簿の氏名の空欄が人物になっていた。曝露の Y人中X人 の母数がずれる）。"""
+
+    def test_blank_cabinet_name_does_not_become_a_person(self):
+        cabinet = [{"回次": "180", "役職": "大臣", "氏名": "", "就任日": "", "退任日": ""}]
+        previous = [{"人物ID": "", "氏名": "", "読み": "", "院": "", "選挙区": ""}]
+        ledger = pi.build_ledger(ROSTER, cabinet, previous=previous)
+        self.assertNotIn("", ledger.persons)
+        self.assertTrue(all(p.id.strip() for p in ledger.persons.values()))
+
+    def test_committed_ledger_has_no_blank_row(self):
+        with (pi.OUT_DIR / "persons.csv").open(encoding="utf-8", newline="") as f:
+            rows = list(csv.DictReader(f))
+        blank = [i + 2 for i, r in enumerate(rows) if not (r.get("人物ID") or "").strip()]
+        self.assertEqual(blank, [], f"persons.csv に人物IDの空の行があります（行番号 {blank}）")
