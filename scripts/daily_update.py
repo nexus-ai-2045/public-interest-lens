@@ -62,6 +62,10 @@ HOSTS = {
     # ほかの取得先（厚労省・JNTO・観光庁・財務省・農水省・総務省・国環研）は段ごとに落ちても残りを回す。
     "target-series": "www.esri.cao.go.jp",
 }
+# --skip で飛ばせる取得先（HOSTS の名前）。政治資金は、一覧・取得の記録・月1回の記録（data/acquired/political-funds の
+# index.csv・manifest.csv・last-fetch.txt）と原本の保管庫（.local、全件で数十GB）が Git に入らない。使い捨ての実行環境
+# （GitHub Actions）では毎回ゼロから全件を取り直して1段の上限で必ず時間切れになり、取った原本も消えるので、そこでは飛ばす。
+SKIPPABLE = {HOSTS["political-funds"]: "political-funds"}
 STALE_DAYS = 2
 KEEP_WORK_DAYS = 14
 
@@ -220,7 +224,8 @@ class Run:
         return done.returncode == 0
 
 
-def fetch(run: Run, today: str) -> None:
+def fetch(run: Run, today: str, skip: frozenset[str] = frozenset()) -> None:
+    """skip は HOSTS の名前。その取得先の段は通信も手元の作り直しもせず、「飛ばした」と記録する。"""
     work = WORK / today
     session = latest_session()
     if reachable(HOSTS["bill-census"]):
@@ -257,7 +262,9 @@ def fetch(run: Run, today: str) -> None:
         ("取得：数値目標の達成状況を測る系列（内閣府・厚労省・JNTO・観光庁・財務省・農水省・総務省・国環研、月1回）", HOSTS["target-series"],
          [sys.executable, "scripts/fetch_target_series.py", "all", "--monthly"]),
     ]:
-        if reachable(host):
+        if SKIPPABLE.get(host) in skip:
+            run.record(step, "飛ばした", f"--skip {SKIPPABLE[host]}")
+        elif reachable(host):
             run.command(step, args)
         else:
             run.record(step, "届かない", host)
@@ -339,6 +346,26 @@ def cleanup(run: Run, delete_remote: bool) -> None:
     run.record("片付け：取り込み済みのブランチ", "完了", f"{len(deleted)}本 " + "、".join(deleted))
 
 
+def fetch_failures(run: Run) -> list[str]:
+    """取得・取り込みの段のうち失敗したもの（「届かない」「飛ばした」は失敗に数えない）。"""
+    return [s["step"] for s in run.steps if s["status"] == "失敗" and s["step"].startswith(("取得：", "取り込み："))]
+
+
+def rebuild_blockers(run: Run, unlabeled: list[dict[str, str]]) -> list[str]:
+    """--strict のとき、再計算へ進まない理由。空なら進む。
+
+    - 取得が失敗した段がある：欠けた入力で再計算すると、main より貧しい結果を差分として出す
+    - 振り分けが無い成立法がある：公開ランキングの作り直しが振り分けを前提にしていて落ちる（AI の2系統で振り分けを付けてから回す）
+    """
+    reasons = []
+    failed = fetch_failures(run)
+    if failed:
+        reasons.append(f"取得が失敗した段 {len(failed)}件（" + "、".join(failed) + "）")
+    if unlabeled:
+        reasons.append(f"振り分けが無い成立法 {len(unlabeled)}本（" + "、".join(row["id"] for row in unlabeled[:10]) + "）")
+    return reasons
+
+
 def report(run: Run, unlabeled: list[dict[str, str]], path: Path, queue: dict | None = None) -> None:
     lines = [f"# 自動更新の記録（{date.today()}）", "", "| 段階 | 結果 | 内容 |", "|---|---|---|"]
     lines += [f"| {s['step']} | {s['status']} | {s['detail'].replace('|', '／')} |" for s in run.steps]
@@ -363,6 +390,10 @@ def main() -> int:
     parser.add_argument("--delete-merged-branches", action="store_true", help="main に取り込み済みの古い claude/・report/ ブランチをリモートから消す")
     parser.add_argument("--all", action="store_true", help="--fetch --rebuild --test --cleanup")
     parser.add_argument("--report", type=Path, default=None)
+    parser.add_argument("--skip", action="append", default=[], choices=sorted(SKIPPABLE.values()),
+                        help="取得を飛ばす取得先（複数可）。原本の保管庫が残らない実行環境で使う")
+    parser.add_argument("--strict", action="store_true",
+                        help="取得が1段でも失敗したか、振り分けが無い成立法があれば、再計算へ進まず失敗で終える（無人の定期実行用）")
     args = parser.parse_args()
     if args.all:
         args.fetch = args.rebuild = args.test = args.cleanup = True
@@ -379,14 +410,22 @@ def main() -> int:
     saved = preflight.save(items)
     run.record("事前チェック", "完了" if preflight_ok else "失敗", f"{preflight.summary(items)}（全項目：{saved.relative_to(ROOT)}）")
     if args.fetch:
-        fetch(run, today)
+        fetch(run, today, frozenset(args.skip))
     if args.incoming:
         take_incoming(run, args.incoming)
     unlabeled = unlabeled_laws()
     run.record("振り分けの確認", "要対応" if unlabeled else "完了", f"振り分けが無い成立法 {len(unlabeled)}本")
     ok = preflight_ok
+    blockers = rebuild_blockers(run, unlabeled) if args.strict else []
+    if blockers:
+        run.record("再計算", "飛ばした", "・".join(blockers))
+        ok = False
     if args.rebuild and ok:
-        ok = rebuild(run)
+        try:
+            ok = rebuild(run)
+        except Exception as error:  # 再計算の途中で落ちても、どの段まで進んだかの記録は残す
+            run.record("再計算", "失敗", f"{type(error).__name__}: {error}"[:300])
+            ok = False
     if args.test and ok:
         ok = tests(run)
     queue = evaluation_queue()
