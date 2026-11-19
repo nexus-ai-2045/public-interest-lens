@@ -4,6 +4,7 @@ import {
   EVALUATED_RESULTS, RESULT_ORDER, amountWord, countByResult, enforcedBetween, groupByResult, isReferenceAmount, lawOutcomesUrl, parseLawOutcomes, reasonBreakdown,
   type LawOutcome, type LawOutcomes, type OutcomeResult,
 } from './law-outcomes-view';
+import { InterimNotice } from './InterimNotice';
 
 const FIRST = 60;
 const OTHER_RESULTS = RESULT_ORDER.filter(result => !EVALUATED_RESULTS.includes(result));
@@ -57,6 +58,7 @@ export function LawOutcomesSection({ from, to }: { from: number; to: number }) {
   const evaluated = EVALUATED_RESULTS.reduce((sum, key) => sum + counts[key], 0);
   return <section className="lower-panel" aria-label="この期間に施行された法律・政策と評価">
     <h3>この期間に施行された法律・政策と評価（{from}〜{to}年）</h3>
+    <InterimNotice />
     {error && <p role="alert">全法律の評価一覧を読み込めませんでした。</p>}
     {!data && !error && <p>読み込み中です。</p>}
     {data && <>

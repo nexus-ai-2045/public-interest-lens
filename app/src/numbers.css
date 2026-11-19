@@ -70,3 +70,6 @@
 /* スマホでは図の文字が小さくなりすぎないよう、図だけ横に動かせる（ページ全体は横にはみ出さない）。 */
 .nc-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 @media (max-width:640px){.nc-scroll .nc-svg{min-width:560px}}
+.nc-fold{margin:16px 0}
+.nc-fold>summary{cursor:pointer;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--quiet);font-size:14px;color:var(--link)}
+.nc-fold[open]>summary{margin-bottom:12px}
