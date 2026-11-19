@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { EXPOSURE_DISCLAIMER, type ExposureRanking } from './exposure-ranking';
-import { ExposureRankingPanel, exposureRange, exposureScale, exposureYen, groupByTier, totalsCheck } from './ExposureRankingPanel';
+import { ExposureRankingPanel, ROLE_LABEL, exposureRange, exposureScale, exposureYen, groupByTier, totalsCheck, totalsOfRanked } from './ExposureRankingPanel';
 import { SAMPLE_GROUPS, SAMPLE_PARTY_NAMES, SAMPLE_PERSON_NAMES, sampleExposureRanking } from './exposure-ranking-sample';
 import { formatYen } from './laws-catalog';
 
@@ -13,7 +13,10 @@ const render = (r: ExposureRanking = ranking, tab: 'people' | 'parties' = 'peopl
 const blocks = (html: string, open: string) => html.split(open).slice(1);
 
 describe('曝露ランキングの画面部品', () => {
-  it('架空データに、階層に入る人・下限未満の人・未配分・上回りの群がそろっています（前提）', () => {
+  it('架空データに、階層に入る人・下限未満の人・未配分・負の額・本数の少ない内訳がそろっています（前提）', () => {
+    expect(ranking.parties.some(p => p.tier === null)).toBe(true);
+    expect(ranking.people.some(p => p.tier !== null && p.cells.some(c => c.laws < ranking.params.minLaws))).toBe(true);
+    expect(ranking.parties.some(p => p.tier !== null && p.exposureYen.median < 0 && p.cells.every(c => c.role === 'no'))).toBe(true);
     expect(ranking.people.some(p => p.tier !== null)).toBe(true);
     expect(ranking.people.some(p => p.tier === null)).toBe(true);
     expect(ranking.people.some(p => p.exposureYen.median < 0)).toBe(true);
@@ -45,10 +48,11 @@ describe('曝露ランキングの画面部品', () => {
     for (const p of ranking.people.filter(x => x.tier !== null)) {
       const row = blocks(html, '<li class="xr-row').find(b => b.includes(`>${SAMPLE_PERSON_NAMES[p.actorId]}<`));
       expect(row, p.actorId).toBeDefined();
+      expect(row).toContain(`<summary aria-label="${SAMPLE_PERSON_NAMES[p.actorId]}、${exposureYen(p.exposureYen.median)}、${exposureRange(p.exposureYen)}、関与した法律${p.laws}本・${p.groups}群">`);
       expect(row).toContain(`aria-label="${formatYen(Math.abs(p.exposureYen.median))}"`);
       expect(row).toContain(exposureRange(p.exposureYen));
       expect(row).toContain(`関与した法律 ${p.laws}本・${p.groups}群`);
-      expect(row).toContain(p.exposureYen.median < 0 ? '国士側・上回り' : '国賊側・伸び損ね');
+      expect(row).toContain(p.exposureYen.median < 0 ? '国士側・逆側' : '国賊側・伸び損ね側');
     }
   });
 
@@ -63,9 +67,58 @@ describe('曝露ランキングの画面部品', () => {
       expect(row).toContain('架空の小売（2011〜2020年）');
       expect(row).not.toMatch(/円/);
       expect(row).not.toContain('伸び損ね');
-      expect(row).not.toContain('上回り');
+      expect(row).not.toContain('逆側');
     }
     expect(html).toContain(`関与した法律が${ranking.params.minLaws}本未満`);
+  });
+
+  it('下限に満たない会派も、額を出さず群と本数だけを出します', () => {
+    const html = render(ranking, 'parties');
+    const rows = blocks(html, '<li class="xr-unranked-row">').map(b => b.split('</ul></li>')[0]);
+    expect(rows).toHaveLength(ranking.parties.filter(p => p.tier === null).length);
+    for (const row of rows) {
+      expect(row).toContain('架空の会D');
+      expect(row).not.toMatch(/円/);
+    }
+  });
+
+  it('内訳は、本数が下限に満たない群×役割の額を伏せます（1本ぶんの枠を読ませない）', () => {
+    const html = render() + render(ranking, 'parties');
+    const min = ranking.params.minLaws;
+    let hidden = 0;
+    let shown = 0;
+    for (const row of [...ranking.people, ...ranking.parties].filter(r => r.tier !== null)) for (const cell of row.cells) {
+      const chip = `<b>${ROLE_LABEL[cell.role]}</b> ${cell.laws}本`;
+      const withAmount = `${chip} ・ ${exposureYen(cell.exposureYen.median)}<small>（${exposureRange(cell.exposureYen)}）`;
+      if (cell.laws < min) { hidden++; expect(html).not.toContain(withAmount); expect(html).toContain(`${chip}<small>（${min}本未満のため額は出しません）`); }
+      else { shown++; expect(html).toContain(withAmount); }
+    }
+    expect(hidden).toBeGreaterThan(0);
+    expect(shown).toBeGreaterThan(0);
+  });
+
+  it('負の額を「上回り」と書きません（伸び損ねた群への反対でも負になるため「逆側」と呼び、意味を説明します）', () => {
+    const html = render() + render(ranking, 'parties');
+    expect(html).not.toContain('上回り');
+    expect(html).toContain('伸び損ねた群に反対した額');
+    expect(html).toContain('群が上回ったという意味とは限りません');
+  });
+
+  it('検算欄は、額を出さない人・会派の分を未配分と合わせた1行にし、1つだけのときは合計の額を出しません', () => {
+    const section = (html: string) => blocks(html, '<details class="xr-totals">')[0];
+    const rankedTotals = totalsOfRanked(ranking);
+    const rest = totalsCheck(ranking.totals).sum.median - rankedTotals.people.median - rankedTotals.parties.median;
+    const html = section(render());
+    expect(html).toContain(`<dt>階層に入る議員</dt><dd>${exposureYen(rankedTotals.people.median)}</dd>`);
+    expect(html).toContain(`<dd>${exposureYen(rest)}</dd>`);
+    expect(html).not.toContain(`<dd>${exposureYen(ranking.totals.people.median)}</dd>`);
+    expect(html).not.toContain(`<dd>${exposureYen(ranking.totals.unallocated.median)}</dd>`);
+    const one: ExposureRanking = { ...ranking, parties: ranking.parties.filter(p => p.tier !== null) };
+    const hiddenOne = section(render(one));
+    expect(hiddenOne).toContain('合計の額は出しません');
+    expect(hiddenOne).not.toContain('<dt>合計</dt>');
+    expect(hiddenOne).not.toContain('それ以外');
+    expect(render(one)).not.toMatch(/配らなかった額（未配分）：[^<]*円/);
   });
 
   it('法律の ID も法律ごとの額も画面に出しません', () => {
@@ -115,12 +168,12 @@ describe('曝露ランキングの画面部品', () => {
   });
 
   it('額は向きを言葉で付け、幅はゼロをまたぐときだけ両端に向きを付けます', () => {
-    expect(exposureYen(3e12)).toBe('伸び損ね 3兆円');
-    expect(exposureYen(-2e12)).toBe('上回り 2兆円');
+    expect(exposureYen(3e12)).toBe('伸び損ね側 3兆円');
+    expect(exposureYen(-2e12)).toBe('逆側 2兆円');
     expect(exposureYen(0)).toBe('0円');
-    expect(exposureRange({ low: 1e12, median: 2e12, high: 3e12 })).toBe('幅 伸び損ね 1兆円〜3兆円');
-    expect(exposureRange({ low: -3e12, median: -2e12, high: -1e12 })).toBe('幅 上回り 1兆円〜3兆円');
-    expect(exposureRange({ low: -1e12, median: 1e12, high: 3e12 })).toBe('幅 上回り 1兆円〜伸び損ね 3兆円');
+    expect(exposureRange({ low: 1e12, median: 2e12, high: 3e12 })).toBe('幅 伸び損ね側 1兆円〜3兆円');
+    expect(exposureRange({ low: -3e12, median: -2e12, high: -1e12 })).toBe('幅 逆側 1兆円〜3兆円');
+    expect(exposureRange({ low: -1e12, median: 1e12, high: 3e12 })).toBe('幅 逆側 1兆円〜伸び損ね側 3兆円');
     expect(exposureRange({ low: 0, median: 0, high: 0 })).toBe('幅 0億円〜0億円');
   });
 

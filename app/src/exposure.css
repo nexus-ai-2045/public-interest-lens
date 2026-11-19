@@ -33,7 +33,7 @@
 .xr-row.none{border:1px solid var(--line,#d9e0e5)}
 .xr-row.loss:hover{transform:translateY(3px) scale(.995);box-shadow:inset 0 4px 16px rgba(0,0,0,.85),0 0 0 1px #5a1a22}
 .xr-row.benefit:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 14px 30px -14px var(--m-glow),0 0 0 2px rgba(56,201,180,.4)}
-.xr-row summary{display:grid!important;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name amount" "track track" "meta meta";gap:6px 12px;align-items:start;padding:12px 14px;list-style:none}
+.xr-row summary{display:grid!important;grid-template-columns:minmax(5.5em,1fr) minmax(0,auto);grid-template-areas:"name amount" "track track" "meta meta";gap:6px 12px;align-items:start;padding:12px 14px;list-style:none}
 .xr-row summary::-webkit-details-marker{display:none}
 .xr-name{position:relative;font-size:18px;font-weight:800;line-height:1.3}
 .xr-row .xr-name{grid-area:name}
@@ -84,5 +84,5 @@
 }
 @media(prefers-reduced-motion:reduce){
   .xr-row,.xr-row.loss,.xr-row.benefit,.xr-tier.top .xr-tier-no{animation:none;transition:none}
-  .xr-row:hover{transform:none}
+  .xr-row:hover,.xr-row.loss:hover,.xr-row.benefit:hover{transform:none}
 }

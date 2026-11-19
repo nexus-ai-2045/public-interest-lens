@@ -15,7 +15,7 @@ export const SAMPLE_GROUPS: ExposureGroup[] = [
 export const SAMPLE_PERSON_NAMES: Record<string, string> = {
   P01: '架空 一郎', P02: '架空 二葉', P03: '架空 三奈', P04: '架空 四季', P05: '架空 五月', P06: '架空 六花', P07: '架空 七海',
 };
-export const SAMPLE_PARTY_NAMES: Record<string, string> = { A: '架空の会A', B: '架空の会B', C: '架空の会C' };
+export const SAMPLE_PARTY_NAMES: Record<string, string> = { A: '架空の会A', B: '架空の会B', C: '架空の会C', D: '架空の会D' };
 
 function sampleInvolvements(): Involvement[] {
   const out: Involvement[] = [];
@@ -36,6 +36,7 @@ function sampleInvolvements(): Involvement[] {
     person('P04', 'G-retail-2011', law, 'cabinet');
     person('P05', 'G-retail-2011', law, 'yes');
     party('A', 'G-retail-2011', law, 'yes', 2);
+    if (i <= 2) party('D', 'G-retail-2011', law, 'yes', 1);
     if (i <= 2) person('P07', 'G-retail-2011', law, 'no');
     else party('C', 'G-retail-2011', law, 'no');
   }
