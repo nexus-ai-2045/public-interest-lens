@@ -48,7 +48,10 @@ JUDGE = {
     "多数": "Haiku 2系統が割れ、Sonnet（系統C 議案本文の条文・附則と会議録）が片方と一致（3つのうち2つ）",
     "裁定": "Haiku 2系統と Sonnet で決まらず、Opus が一次資料で裁定",
     "決められない": "Haiku 2系統・Sonnet・Opus のどれも一次資料から決められない（判定不能のまま残す）",
+    "本法未読": "読み手は制度としたが、元の法律（本法）を読めていないと書いている。改正法だけでは補助や特例の有無が分からないので、制度とは確定しない（判定不能のまま残す。Codex の指摘）",
 }
+# 制度（経済に効かない）と決めた読みのうち、理由に本法を読めていないと書いたもの。期限の延長などは、延ばす本法の中身で経済に効くかが決まる
+UNREAD_BASE = ("未読", "取得できず")
 FIELD = {"類型": ("類型", "類型の理由"), "経済に効くか": ("経済に効くか", "経済の理由")}
 
 
@@ -100,8 +103,8 @@ def ok(v: str | None) -> str | None:
     return v if v and v != "判定不能" else None
 
 
-def decide(i: str, item: str, a: dict, b: dict, c: dict, rulings: dict) -> tuple[str | None, str, dict | None]:
-    """(値, 決め方, 根拠に使う記録)。値が None なら決められない。"""
+def vote(i: str, item: str, a: dict, b: dict, c: dict, rulings: dict) -> tuple[str | None, str, dict | None]:
+    """読みの多数で決める（一致・多数・裁定）。"""
     key = FIELD[item][0]
     va, vb = ok(a.get(i, {}).get(key)), ok(b.get(i, {}).get(key))
     if va and va == vb:
@@ -113,6 +116,16 @@ def decide(i: str, item: str, a: dict, b: dict, c: dict, rulings: dict) -> tuple
     if r and ok(r.get("値")):
         return r["値"], "裁定", r
     return None, "決められない", None
+
+
+def decide(i: str, item: str, a: dict, b: dict, c: dict, rulings: dict) -> tuple[str | None, str, dict | None]:
+    """(値, 決め方, 根拠に使う記録)。値が None なら決められない。"""
+    v, how, rec = vote(i, item, a, b, c, rulings)
+    if item == "経済に効くか" and SITE_WORD.get(v or "", v) == "制度":
+        reason = rec.get("理由") or rec.get(FIELD[item][1], "")
+        if any(w in reason for w in UNREAD_BASE):
+            return None, "本法未読", rec
+    return v, how, rec
 
 
 def evidence(rec: dict, item: str, how: str) -> tuple[str, str, str]:
@@ -178,8 +191,8 @@ def build() -> tuple[list[dict], list[dict], list[dict]]:
             if v is None:
                 res.append({**row, "決めた値": "", "決め方": how, "決着": "決められない"})
                 if item == "経済に効くか":  # 決められないことも後段へ渡す（定例の規則で効果なしに確定させない）
-                    rec = a.get(i) or b.get(i) or {}
-                    reason, quote, url = evidence(rec, item, "一致") if rec else ("", "", "")
+                    rec = rec or a.get(i) or b.get(i) or {}
+                    reason, quote, url = evidence(rec, item, "裁定" if "理由" in rec else "一致") if rec else ("", "", "")
                     new_corr.append({"id": i, "項目": item, "直した値": "判定不能", "直す前の値": site,
                                      "理由": reason, "引用": quote, "出典URL": url, "判定者": JUDGE[how],
                                      "指示文": PROMPT, "記録": RECORD})

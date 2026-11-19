@@ -47,6 +47,9 @@ class CorrectionsTest(unittest.TestCase):
                     v = v or corrections.UNDECIDED  # 決められない項目は判定不能のまま後段へ渡す
                     self.assertEqual(row["直した値"], SITE_WORD.get(v, v), f"{i} {item}")
                     self.assertEqual(row["判定者"], reread.JUDGE[how], f"{i} {item}")
+                    # 本法を読めていないと書いた読みで、制度（経済に効かない）と確定しない（Codex の指摘）
+                    if item == "経済に効くか" and row["直した値"] == "制度":
+                        self.assertFalse(any(w in row["理由"] for w in reread.UNREAD_BASE), i)
                     continue
                 ruling = self.rulings.get(i, {}).get(item)
                 if ruling:
