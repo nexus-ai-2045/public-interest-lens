@@ -1,14 +1,14 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { EXPOSURE_DISCLAIMER, type ExposureRanking } from './exposure-ranking';
-import { ExposureRankingPanel, ROLE_LABEL, canShowCellAmounts, exposureRange, exposureScale, exposureYen, groupByTier, totalsCheck, totalsOfRanked } from './ExposureRankingPanel';
+import { EXPOSURE_DISCLAIMER, summarizeUnallocated, toPanelExposureRanking, type ExposureRanking } from './exposure-ranking';
+import { ExposureRankingPanel, ROLE_LABEL, canShowCellAmounts, exposureRange, exposureScale, exposureYen, groupByTier, orderWithinTiers, reasonKind, totalsCheck, totalsOfRanked, unrankedBreakdown } from './ExposureRankingPanel';
 import { SAMPLE_GROUPS, SAMPLE_PARTY_NAMES, SAMPLE_PERSON_NAMES, sampleExposureRanking } from './exposure-ranking-sample';
 import { formatYen } from './laws-catalog';
 
 const ranking = sampleExposureRanking();
 const render = (r: ExposureRanking = ranking, tab: 'people' | 'parties' = 'people') =>
-  renderToStaticMarkup(<ExposureRankingPanel ranking={r} groups={SAMPLE_GROUPS} personNames={SAMPLE_PERSON_NAMES} partyNames={SAMPLE_PARTY_NAMES} initialTab={tab} />);
+  renderToStaticMarkup(<ExposureRankingPanel ranking={toPanelExposureRanking(r)} groups={SAMPLE_GROUPS} personNames={SAMPLE_PERSON_NAMES} partyNames={SAMPLE_PARTY_NAMES} initialTab={tab} />);
 /** 開始タグから次の同じ開始タグまでを切り出す（行ごとの中身を調べる）。 */
 const blocks = (html: string, open: string) => html.split(open).slice(1);
 
@@ -52,8 +52,39 @@ describe('曝露ランキングの画面部品', () => {
       expect(row).toContain(`aria-label="${formatYen(Math.abs(p.exposureYen.median))}"`);
       expect(row).toContain(exposureRange(p.exposureYen));
       expect(row).toContain(`関与した法律 ${p.laws}本・${p.groups}群`);
-      expect(row).toContain(p.exposureYen.median < 0 ? '国士側・逆側' : '国賊側・伸び損ね側');
+      expect(row).toContain(`<span class="xr-side">${p.exposureYen.median < 0 ? '逆側' : '伸び損ね側'}</span>`);
     }
+  });
+
+  it('実名の横に「国賊」「国士」の札を付けず、先頭の人を目立たせる演出も付けません', () => {
+    const html = render() + render(ranking, 'parties');
+    expect(html).not.toContain('国賊');
+    expect(html).not.toContain('国士');
+    expect(html).not.toContain('burst');
+  });
+
+  it('同じ階層の中は名前の順に並べ、額の順にしません', () => {
+    const nameOf = (r: { actorId: string }) => SAMPLE_PERSON_NAMES[r.actorId];
+    const ordered = orderWithinTiers(ranking.people, nameOf);
+    const html = render();
+    const shown = blocks(html, '<li class="xr-row').map(b => /<span class="xr-name">([^<]*)</.exec(b)![1]);
+    expect(shown).toEqual(ordered.map(nameOf));
+    for (const t of groupByTier(ordered)) {
+      const names = t.rows.map(nameOf);
+      expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'ja')));
+    }
+  });
+
+  it('階層が1つだけのときは、そう書きます', () => {
+    const one: ExposureRanking = { ...ranking, people: ranking.people.map(p => (p.tier === null ? p : { ...p, tier: 1 })) };
+    expect(render(one)).toContain('階層は1つだけです。並びは名前（人物ID）の文字の順で、額の大きい順ではありません');
+    expect(render()).not.toContain('階層は1つだけです');
+  });
+
+  it('衆議院の賛否は会派の欄に入ることと、閣僚の額が大きくなりやすいことを出します', () => {
+    const html = render();
+    expect(html).toContain('衆議院の賛成・反対は会派単位の記録しか無いため「会派」の欄に入り');
+    expect(html).toContain('閣僚は関与の量が多く額が大きくなりやすい');
   });
 
   it('関与した法律が下限に満たない人は、額を出さず、関与した群と本数だけを出します', () => {
@@ -64,12 +95,22 @@ describe('曝露ランキングの画面部品', () => {
     for (const p of unranked) {
       const row = rows.find(b => b.includes(SAMPLE_PERSON_NAMES[p.actorId]))!;
       expect(row).toContain(`関与した法律 ${p.laws}本・${p.groups}群（額は出しません）`);
+      expect(row).toContain(`理由：${p.unrankedReason}`);
       expect(row).toContain('架空の小売（2011〜2020年）');
       expect(row).not.toMatch(/円/);
       expect(row).not.toContain('伸び損ね');
       expect(row).not.toContain('逆側');
     }
-    expect(html).toContain(`関与した法律が${ranking.params.minLaws}本未満`);
+    const breakdown = unrankedBreakdown(ranking.people);
+    expect(breakdown.reduce((n, b) => n + b.count, 0)).toBe(unranked.length);
+    expect(html).toContain(`額を出さない人（理由つき）：${unranked.length}人（${breakdown.map(b => `${b.reason} ${b.count}`).join('・')}）`);
+  });
+
+  it('理由の種類は末尾の「（○本）」を外して数えます', () => {
+    expect(reasonKind('関与した法律が5本に満たない（3本）')).toBe('関与した法律が5本に満たない');
+    expect(reasonKind('上位3本の占有率が50.0%を超える（61.2%）')).toBe('上位3本の占有率が50.0%を超える');
+    expect(reasonKind('産業別の群への関与の記録が無い（全産業の別欄にある）')).toBe('産業別の群への関与の記録が無い（全産業の別欄にある）');
+    expect(reasonKind('群に属する法律への関与の記録が無い')).toBe('群に属する法律への関与の記録が無い');
   });
 
   it('下限に満たない会派も、額を出さず群と本数だけを出します', () => {
@@ -135,13 +176,15 @@ describe('曝露ランキングの画面部品', () => {
     expect(html).not.toContain(SAMPLE_PERSON_NAMES.P01);
   });
 
-  it('配らなかった額は、群・役割・理由つきで全部出します', () => {
+  it('配らなかった額は、群×役割の合計で理由つきに出し、「N本ぶんの枠」は出しません', () => {
     const html = render();
     const items = blocks(html, '<ul class="xr-unallocated-list">')[0].split('</ul>')[0];
-    expect(items.split('<li>').length - 1).toBe(ranking.unallocated.length);
-    for (const u of ranking.unallocated) expect(items).toContain(`理由：${u.reason}`);
-    expect(items).toContain('架空の運輸（2011〜2020年）');
+    const summary = summarizeUnallocated(ranking.unallocated, ranking.params.minLaws);
+    expect(items.split("<li>").length - 1).toBe(Math.min(summary.length, 30));
+    for (const u of ranking.unallocated) expect(items).toContain(u.reason);
+    expect(items).not.toContain('本ぶんの枠');
     expect(items).toContain('全役割');
+    expect(items).toContain('本数の少ない群×役割（まとめ）');
   });
 
   it('検算が合えば「一致」、合わなければ警告を出します', () => {
@@ -162,7 +205,7 @@ describe('曝露ランキングの画面部品', () => {
   });
 
   it('名前の対応が無いときは ID を、群の対応が無いときは群の ID を出します', () => {
-    const html = renderToStaticMarkup(<ExposureRankingPanel ranking={ranking} />);
+    const html = renderToStaticMarkup(<ExposureRankingPanel ranking={toPanelExposureRanking(ranking)} />);
     expect(html).toContain('>P01<');
     expect(html).toContain('G-info-2001');
     expect(html).not.toContain('NaN');

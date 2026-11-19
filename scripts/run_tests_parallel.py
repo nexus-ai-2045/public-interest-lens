@@ -3,6 +3,8 @@
 
 `python -m unittest discover -s tests` と同じ試験を、同じ import の形（tests/ を先頭の探索先に置く）で回す。
 試験は1本も外さない：tests/test_*.py をすべて並べ、全モジュールの結果を集める。1つでも失敗すれば終了コード 1。
+skip は一覧にあるものだけ許す：tests/data_gated_tests.txt（データ待ち）か tests/allowed_skips.txt（環境で飛ぶもの）に
+無い試験が skip されたら失敗にする（@unittest.skip を足して黙って外すのを止める。2026-11-19 の変異テストで見逃しを確認）。
 単独プロセスでは約6分かかるので、CPU の数だけ並列にして待ち時間を縮める（試験はどれも一時ディレクトリで動く前提）。
 
 使い方：python scripts/run_tests_parallel.py [--jobs N] [モジュール名 ...]
@@ -21,6 +23,24 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = ROOT / "tests"
+SKIP_LISTS = (TESTS / "data_gated_tests.txt", TESTS / "allowed_skips.txt")
+# unittest -v の skip 行。docstring があると「名前 (ID)」の次の行に「説明 ... skipped」が来る。
+SKIPPED = re.compile(r"^\w+ \(([\w.]+)\)(?:\n[^\n]*?)? \.\.\. skipped", re.MULTILINE)
+
+
+def allowed_skips() -> set[str]:
+    """skip してよい試験 ID（1列目）。# から始まる行と空行は読まない。"""
+    out: set[str] = set()
+    for path in SKIP_LISTS:
+        if path.exists():
+            for line in path.read_text(encoding="utf-8").splitlines():
+                if line.strip() and not line.startswith("#"):
+                    out.add(line.split("\t")[0].strip())
+    return out
+
+
+def skipped_ids(out: str) -> set[str]:
+    return set(SKIPPED.findall(out))
 
 
 # 1本で試験時間のほぼ全部（node の段を何度も回す）を占めるモジュール。試験1件ずつ別プロセスに分ける
@@ -81,6 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     t0 = time.time()
     ran = skipped = 0
     failed: list[tuple[str, str]] = []
+    skipped_all: set[str] = set()
     with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as ex:
         for name, code, out, sec in ex.map(run_one, names):
             m = re.search(r"Ran (\d+) tests?", out)
@@ -88,14 +109,18 @@ def main(argv: list[str] | None = None) -> int:
             s = re.search(r"skipped=(\d+)", out)
             ran += n
             skipped += int(s.group(1)) if s else 0
+            skipped_all |= skipped_ids(out)
             code = 0 if code == 5 and n == 0 else code  # 試験が0件のモジュールは、discover と同じく成功にする
             print(f"{'ok  ' if code == 0 else 'FAIL'} {name}（{n}件、{sec:.1f}秒）", flush=True)
             if code != 0:
                 failed.append((name, out))
     for name, out in failed:
         print(f"\n===== {name} =====\n{out}")
+    unlisted = sorted(skipped_all - allowed_skips())
+    for test_id in unlisted:
+        print(f"FAIL 一覧に無い skip：{test_id}（理由を確かめ、外してよいなら tests/allowed_skips.txt に理由つきで足す）")
     print(f"\n{len(names)}単位・{ran}件（skip {skipped}件）・{time.time() - t0:.0f}秒・失敗モジュール {len(failed)}")
-    return 1 if failed else 0
+    return 1 if failed or unlisted else 0
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ test('法律ランキングは全法律と政策を理由つきで並べ、行�
   await expect(page.getByRole('heading', { name: '法律と政策ごとの損失と便益' })).toBeVisible();
   await expect(page.getByRole('heading', { name: /全部の法律と政策（3,4\d\d件）/ })).toBeVisible();
   await expect(page.locator('.laws-row')).toHaveCount(60);
-  await expect(page.getByText('結果への責任を測るもので', { exact: false })).toBeVisible();
+  await expect(page.getByText('観測された結果の差の推計で', { exact: false })).toBeVisible();
   await page.getByRole('searchbox', { name: '法律の名前・番号・分野で探す' }).fill('金融再生プログラム');
   const row = page.locator('.laws-row').first();
   await expect(row).toContainText('金融再生プログラム');

@@ -75,6 +75,22 @@ class SourceCheckTests(unittest.TestCase):
             self.assertEqual(summary["heldOut"], [law["id"]], field)
 
     @requires_data("industry_va")
+    def test_dry_run_fails_when_ranking_on_disk_was_rewritten(self):
+        # --dry-run は書き換えない代わりに、手元の ranking.json が入力から作り直したものと同じかを確かめる
+        import tempfile
+        from pathlib import Path
+        approve_all = self.ranking["approval"]["scope"] == "all-laws"
+        approved_at = self.ranking["approval"]["approvedAt"] or ""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ranking.json"
+            path.write_text(json.dumps(self.ranking, ensure_ascii=False), encoding="utf-8")
+            self.assertFalse(source_check.rebuild(approve_all, approved_at, path, write=False)["rankingStale"])
+            tampered = copy.deepcopy(self.ranking)
+            tampered["approval"]["approvedAt"] = "1999-01-01"
+            path.write_text(json.dumps(tampered, ensure_ascii=False), encoding="utf-8")
+            self.assertTrue(source_check.rebuild(approve_all, approved_at, path, write=False)["rankingStale"])
+
+    @requires_data("industry_va")
     def test_held_law_moves_to_source_reason(self):
         law_id = self.ranking["laws"][0]["id"]
         payload = build_public_ranking.build(True, self.ranking["approval"]["approvedAt"], held_by_check={law_id})

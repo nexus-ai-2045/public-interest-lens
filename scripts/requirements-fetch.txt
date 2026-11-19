@@ -1,0 +1,9 @@
+# 週2回の自動更新（.github/workflows/weekly-update.yml）の取得の段が使う Python の部品。正本はこの1つ。
+# 取得のスクリプトが新しい部品を使い始めたら、ここに足す（tests/test_fetch_requirements.py が取りこぼしを落とす）。
+# コマンドの道具（apt）：poppler-utils（pdftotext）と poppler-data（埋め込みの無い日本語フォントの PDF）。workflow の apt-get の行が正本。
+openpyxl==3.1.5
+xlrd==2.0.1
+pypdf==6.17.0
+# pypdf は暗号化された PDF（財務省の資料の一部）を読むときだけ cryptography を使う。import では見えないので、
+# tests/test_fetch_requirements.py の追跡に掛からない。ここに明記して固定する（2026-11-19 の試し実行で DependencyError）。
+cryptography==50.0.1
