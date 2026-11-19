@@ -7,7 +7,9 @@ export const RESULT_ORDER: OutcomeResult[] = ['額あり', '効果なし（定�
 export const EVALUATED_RESULTS: OutcomeResult[] = ['額あり', '効果なし（定例）'];
 export type LawOutcome = {
   id: string; title: string; field: string; indicator: string; certainty: string; result: OutcomeResult; reason: string; route: string;
-  enforced: string; kind: string; stage: string; direction: string; side: 'loss' | 'benefit' | null; median: number | null; unit: string; publishable: boolean;
+  enforced: string; kind: string; stage: string; direction: string; side: 'loss' | 'benefit' | 'undetermined' | null; median: number | null; unit: string; publishable: boolean;
+  /** 公開ランキングが1本ごとの額を出さない法律だけ。額を出さない理由。 */
+  amountWithheld?: string;
 };
 export type LawOutcomes = { schema: 'law-outcomes/v1'; counts: Record<OutcomeResult, number>; items: LawOutcome[] };
 
@@ -17,6 +19,9 @@ export function parseLawOutcomes(text: string): LawOutcomes {
   for (const item of data.items) if (typeof item.id !== 'string' || !RESULT_ORDER.includes(item.result)) throw new Error(`行の形が違います: ${String(item.id)}`);
   return data;
 }
+
+/** 額の呼び名。向き未確定は損失とも便益とも呼ばない。 */
+export const amountWord = (side: LawOutcome['side']) => side === 'loss' ? '損失' : side === 'benefit' ? '便益' : '差の大きさ（向き未確定）';
 
 /** 参考の額か。確かさに「参考」を含む、または公開不可。合計には足さない。 */
 export const isReferenceAmount = (item: LawOutcome) => item.result === '額あり' && (item.certainty.includes('参考') || !item.publishable);

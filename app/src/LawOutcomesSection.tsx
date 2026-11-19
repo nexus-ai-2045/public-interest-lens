@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { formatYen } from './laws-catalog';
 import {
-  EVALUATED_RESULTS, RESULT_ORDER, countByResult, enforcedBetween, groupByResult, isReferenceAmount, lawOutcomesUrl, parseLawOutcomes, reasonBreakdown,
+  EVALUATED_RESULTS, RESULT_ORDER, amountWord, countByResult, enforcedBetween, groupByResult, isReferenceAmount, lawOutcomesUrl, parseLawOutcomes, reasonBreakdown,
   type LawOutcome, type LawOutcomes, type OutcomeResult,
 } from './law-outcomes-view';
 
@@ -14,7 +14,7 @@ function OutcomeRow({ item }: { item: LawOutcome }) {
     <summary>
       <span>{item.title}</span>{' '}
       <small>（{item.enforced || '施行日不明'}施行・{item.result}）</small>
-      {item.median !== null && <small className={reference ? 'law-outcome-reference' : undefined} style={reference ? { color: 'gray' } : undefined}> {reference ? '参考' : item.side === 'loss' ? '損失' : '便益'} {formatYen(item.median)}{reference ? '（合計に足しません）' : ''}</small>}
+      {item.median !== null && <small className={reference ? 'law-outcome-reference' : undefined} style={reference ? { color: 'gray' } : undefined}> {reference ? '参考' : amountWord(item.side)} {formatYen(item.median)}{reference ? '（合計に足しません）' : ''}</small>}
     </summary>
     <dl>
       <dt>結果</dt><dd>{item.result}{item.direction && `（向き：${item.direction}）`}</dd>
@@ -23,7 +23,8 @@ function OutcomeRow({ item }: { item: LawOutcome }) {
       <dt>確かさ</dt><dd>{item.certainty || '評価していません'}{item.stage && `（${item.stage}）`}</dd>
       <dt>経路</dt><dd>{item.route}</dd>
       <dt>分野・種類</dt><dd>{item.field}・{item.kind || '種類なし'}</dd>
-      {item.median !== null && <><dt>額</dt><dd>{item.side === 'loss' ? '損失' : '便益'}の中央値 {formatYen(item.median)}（{item.unit}）{reference ? '。参考の額で、合計・順位・配分には使いません。' : ''}</dd></>}
+      {item.median !== null && <><dt>額</dt><dd>{amountWord(item.side)}の中央値 {formatYen(item.median)}（{item.unit}）{reference ? '。参考の額で、合計・順位・配分には使いません。' : ''}</dd></>}
+      {item.amountWithheld && <><dt>額</dt><dd>{item.amountWithheld}</dd></>}
       <dt>評価方法</dt><dd><a href="/methodology">計算方法（評価のしかた）</a></dd>
       <dt>出典</dt><dd><a href={`/ranking#${encodeURIComponent(item.id)}`}>元の法律（{item.id}）：法律ランキングで因果の鎖と一次資料を見る</a></dd>
     </dl>
