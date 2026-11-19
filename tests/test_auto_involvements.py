@@ -3,6 +3,9 @@
 閣法は内閣の提出なので、総理大臣1人に付けず、会期を通して在任した閣僚の全員に付ける（設計確定 v2.1）。
 条件は app/src/cabinet-members.ts の cabinetForBill と同じ（総理大臣が会期中に替わる回次は、交代より前に付託された閣法だけ付託日の閣僚、交代より後は閣僚を付けない）。
 """
+import json
+import shutil
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -96,6 +99,26 @@ class CabinetBillAfterChangeTest(unittest.TestCase):
         for session in sessions_changing:
             days = {auto.wareki(r["付託日_衆"]) for r in enacted if r["種別"] == "閣法" and r["回次"] == r["提出回次"] == session} - {""}
             self.assertLess(len(days & set(got["day"])), len(days), session)
+
+
+@unittest.skipUnless(shutil.which("node") and (ROOT / "app" / "node_modules" / "vite").exists(), "node か app の依存が無い")
+class CabinetSyncWithTypeScriptTest(unittest.TestCase):
+    def test_every_cabinet_bill_gets_the_same_ministers_as_cabinet_members_ts(self):
+        """成立した閣法の全件で、ここ（Python）と app/src/cabinet-members.ts の cabinetForBill が同じ閣僚を返す（決まりの写しがずれない）。"""
+        res = subprocess.run(["node", str(ROOT / "tests" / "cabinet_members_ts_dump.mjs")], capture_output=True, text=True, check=True, cwd=ROOT)
+        ts = {law: {auto.canonical(name) for name in names} for law, names in json.loads(res.stdout).items()}
+        enacted = {f"{r['種別']}-{r['提出回次']}-{r['番号']}": r for r in auto._read(auto.ENACTED) if r["種別"] == "閣法"}
+        self.assertEqual(set(ts), set(enacted))
+        cabinets = auto.cabinets(list(enacted.values()), auto._read(auto.CABINET))
+        empty = 0
+        for law, bill in sorted(enacted.items()):
+            referred = auto.wareki(bill["付託日_衆"]) if bill["回次"] == bill["提出回次"] else ""
+            mine = cabinets["session"].get(bill["提出回次"]) or cabinets["day"].get(referred, [])
+            self.assertEqual({name for name, _ in mine}, ts[law], law)
+            empty += not mine
+        self.assertGreater(len(enacted) - empty, 2000)  # 大半の閣法に閣僚が付く
+        self.assertGreater(empty, 0)  # 交代より後の付託・継続審査の閣法は付かない（例：閣法-151-43）
+        self.assertEqual(ts["閣法-151-43"], set())
 
 
 if __name__ == "__main__":
