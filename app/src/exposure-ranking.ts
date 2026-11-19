@@ -49,7 +49,8 @@ export const HOUSE_SPLIT = 0.5;
  * 1つの関与：誰が、どの群のどの法律に、どの役割で関わったか。weight は同じ法律・同じ役割（賛成・反対は同じ院）の中での重み（正の数）。
  * house は賛成・反対（yes・no）では必須。発議・閣議決定では見ない。
  */
-export type Involvement = { actorKind: ActorKind; actorId: string; groupId: string; lawId: string; role: ExposureRole; weight: number; house?: House };
+export type Involvement = { actorKind: ActorKind; actorId: string; groupId: string; lawId: string; role: ExposureRole; weight: number; house?: House;
+  /** actorKind: 'none' のとき、未配分に積む理由（無ければ「同姓同名で人物台帳に結べない票」）。 */ noneReason?: string };
 export type ExposureParams = {
   roleRatio: RoleRatio;
   /** 階層に入れるのに要る、関与した法律の本数の下限。 */ minLaws: number;
@@ -89,6 +90,8 @@ export type ExposureRanking = {
 export const EXPOSURE_DISCLAIMER =
   'この額は、関与した法律が属する産業群の伸び損ね額を、役割ごとの固定比率（取り決め）で配った記述です。その人や法律が伸び損ねの原因だという因果の推定ではありません。';
 
+/** 小数1桁の百分率（四捨五入で「50%を超える（50%）」のように見えないため）。 */
+const pct = (x: number): string => `${(x * 100).toFixed(1)}%`;
 const zero = (): Range => ({ low: 0, median: 0, high: 0 });
 const add = (a: Range, b: Range): Range => ({ low: a.low + b.low, median: a.median + b.median, high: a.high + b.high });
 /** 負の数を掛けると端が入れ替わる。 */
@@ -124,7 +127,14 @@ export function assignTiers<T extends { actorId: string; exposureYen: Range }>(r
   });
 }
 
-export function buildExposureRanking(groups: readonly ExposureGroup[], involvements: readonly Involvement[], params: ExposureParams): ExposureRanking {
+/**
+ * options.cellGroupOf：内訳（cells）の束ね方。群の ID を内訳の行の ID に写す（既定は群の ID のまま）。
+ * 例：産業×年の群を産業で束ねると、内訳は産業×役割になる（本数は法律の重複なし、額は年を足したもの）。row の groups は束ねる前の群の数のまま。
+ */
+export type ExposureOptions = { cellGroupOf?: (groupId: string) => string };
+
+export function buildExposureRanking(groups: readonly ExposureGroup[], involvements: readonly Involvement[], params: ExposureParams, options: ExposureOptions = {}): ExposureRanking {
+  const cellGroupOf = options.cellGroupOf ?? ((id: string) => id);
   checkParams(params);
   const groupById = new Map<string, ExposureGroup>();
   for (const g of groups) {
@@ -156,17 +166,19 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
     tree.set(inv.groupId, laws);
   }
 
-  type Acc = { kind: ActorKind; id: string; total: Range; laws: Set<string>; byLaw: Map<string, number>; cells: Map<string, { groupId: string; role: ExposureRole; laws: Set<string>; exposure: Range }> };
+  type Acc = { kind: ActorKind; id: string; total: Range; laws: Set<string>; groupIds: Set<string>; byLaw: Map<string, number>; cells: Map<string, { groupId: string; role: ExposureRole; laws: Set<string>; exposure: Range }> };
   const actors = new Map<string, Acc>();
   const give = (inv: Involvement, amount: Range) => {
     const key = `${inv.actorKind}\u0000${inv.actorId}`;
-    const a = actors.get(key) ?? { kind: inv.actorKind, id: inv.actorId, total: zero(), laws: new Set<string>(), byLaw: new Map<string, number>(), cells: new Map() };
+    const a = actors.get(key) ?? { kind: inv.actorKind, id: inv.actorId, total: zero(), laws: new Set<string>(), groupIds: new Set<string>(), byLaw: new Map<string, number>(), cells: new Map() };
     a.total = add(a.total, amount);
     a.laws.add(inv.lawId);
+    a.groupIds.add(inv.groupId);
     // 法律ごとの寄与（全群・全役割の median の和）。上位3本の占有率を出すためだけに持ち、出力しない。
     a.byLaw.set(inv.lawId, (a.byLaw.get(inv.lawId) ?? 0) + amount.median);
-    const cellKey = `${inv.groupId}\u0000${inv.role}`;
-    const c = a.cells.get(cellKey) ?? { groupId: inv.groupId, role: inv.role, laws: new Set<string>(), exposure: zero() };
+    const cellGroup = cellGroupOf(inv.groupId);
+    const cellKey = `${cellGroup}\u0000${inv.role}`;
+    const c = a.cells.get(cellKey) ?? { groupId: cellGroup, role: inv.role, laws: new Set<string>(), exposure: zero() };
     c.laws.add(inv.lawId);
     c.exposure = add(c.exposure, amount);
     a.cells.set(cellKey, c);
@@ -207,7 +219,7 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
           if (!Number.isFinite(totalWeight)) throw new Error(`重みの合計が有限でない：${g.id}`);
           for (const inv of list) {
             const amount = scale(slot, inv.weight / totalWeight);
-            if (inv.actorKind === 'none') pend(g.id, role, house, '同姓同名で人物台帳に結べない票', lawId, amount);
+            if (inv.actorKind === 'none') pend(g.id, role, house, inv.noneReason ?? '同姓同名で人物台帳に結べない票', lawId, amount);
             else give(inv, amount);
           }
         }
@@ -227,7 +239,7 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
       actorId: a.id,
       exposureYen: a.total,
       laws: a.laws.size,
-      groups: new Set([...a.cells.values()].map(c => c.groupId)).size,
+      groups: a.groupIds.size,
       topThreeShare: topThree(a.byLaw),
       cells: [...a.cells.values()]
         .map(c => ({ groupId: c.groupId, role: c.role, laws: c.laws.size, exposureYen: c.exposure }))
@@ -242,7 +254,7 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
         ...r, tier: null,
         unrankedReason: few(r)
           ? `関与した法律が${params.minLaws}本に満たない（${r.laws}本）`
-          : `上位3本の占有率が${Math.round(params.topThreeShareCap * 100)}%を超える（${Math.round(r.topThreeShare * 100)}%）`,
+          : `上位3本の占有率が${pct(params.topThreeShareCap)}を超える（${pct(r.topThreeShare)}）`,
       }));
     return [...ranked, ...unranked];
   };

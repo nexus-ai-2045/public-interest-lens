@@ -8,24 +8,25 @@
  * 全産業（_T）は産業別と同じ額を重ねて数えるので、足さずに別欄（wholeEconomy）にする。
  *
  * 関与：群に属する法律だけを、法律×年ごとに置く（groupId が産業×年、lawId は法律 ID のまま）。属さない法律の行は数えて捨てる。
- * - 衆法・参法の提出（decide）→ proposer。involvements*.csv から使うのは、この decide だけ。人は人物IDで結ぶ。
- * - 賛成・反対は投票の一次資料から取る（involvements の vote 行と opposing.csv は使わない。二重に置かない）。
+ * - 衆法・参法の提出者 → proposer。enacted.csv から members-reference.ts と同じ読み方で取る（involvements*.csv は使わない）：
+ *   委員会提出（COMMITTEE）は置かない／「提出者一覧」があれば全員（normName）を weight 1／無ければ parseProposer(提出者) の代表者を weight 1、
+ *   名前の分からない「外N名」は actorKind 'none'・weight N（その分は未配分。理由「名前の分からない提出者（外N名）」）。
+ *   人は ledger.resolve(名前, 衆法なら 衆議院・参法なら 参議院)。同姓同名で結べなければ 'none'（理由「同姓同名で人物台帳に結べない提出者」）。
+ * - 賛成・反対は投票の一次資料から取る。
  *   参議院：votes_index.csv の、議決日（enacted.csv の 議決日_参）の投票から pickVote（members-reference.ts と同じ）で1つに決まったものの
  *   ballots の賛否（Y → yes、N → no。棄権など Y・N 以外は置かない）。人は 議員ID → members.csv の氏名 → PersonLedger.resolve(氏名, '参議院')。
  *   同姓同名で結べない人は actorKind: 'none'（重みだけ枠に入れ、その分は未配分に積む。ほかの人へ寄せない）。
  *   衆議院：enacted.csv の 賛成会派_衆・反対会派_衆（「; 」区切り）を会派（party）に、weight 1 で均等に置く。
  *   議席数の表が無いための取り決めで、会派の大きさを無視する限界がある。会派名は記録の表記のまま。
  *   参議院で個人票が決まらない法律は、参議院の会派賛否のデータが無いので未配分のまま（counts に数える）。
- * - 閣法の提出（decide）は使わず、提出した回次の閣僚（cabinet-members.ts）全員に cabinet と proposer の両方を置く
+ * - 閣法の提出（decide）は使わず、提出時の閣僚（cabinet-members.ts。総理大臣が会期中に替わる回次は付託日で決め、決められない法律は置かない）全員に cabinet と proposer の両方を置く
  *   （閣法は全閣僚へ：閣議決定0.2＋発議0.4。2026-11-19 確定）。involvements に記録があるかどうかに依らない。
- * - chair・amend・question は役割の取り決めに無いので使わない。
- * - 委員会提出（提出者が「○○委員長」など）の衆法・参法は人の提出ではないので、proposer を置かない（全議員の表と同じ決まり）。
  * - 法律が1本だけの産業×年の群には置かない。群の差がそのままその法律の額になり、群の差を法律へ配ることになるため（設計確定 v2.1）。枠は未配分に積まれる。
  * - 閣僚の1人でも人物台帳に結べない閣法は、cabinet と proposer を置かない（結べた人だけに置くと、結べない人の枠がほかの閣僚へ寄るため）。枠は未配分に積まれる。
  * - 同じ（法律・役割・院・配り先）の重複は1つにする（年ごとに増やさない）。
  */
 import type { ExposureGroup, ExposureRanking, ExposureRow, House, Involvement, ExposureRole } from './exposure-ranking';
-import { cabinetBySession, normName } from './cabinet-members';
+import { cabinetForBill, normName } from './cabinet-members';
 import { COMMITTEE, parseProposer, pickVote } from './members-reference';
 import { warekiDate } from './members-build';
 import { parseCsv } from './impact-batch';
@@ -33,8 +34,6 @@ import { PersonLedger } from './person-id';
 
 export type ExposureSources = {
   macro: string; industryYear: string; enacted: string; cabinet: string; persons: string; roster: string;
-  /** 提出者（decide）だけを使う。 */
-  involvements: string[];
   votesIndex: string; sangiinMembers: string; ballots: string[];
 };
 export type ExposureCounts = {
@@ -72,25 +71,18 @@ export type ExposureCounts = {
   /** 衆議院の会派の賛成・反対の行数。 */
   lowerYesRows: number;
   lowerNoRows: number;
-  /** 衆法・参法の提出者の行数。 */
+  /** 衆法・参法の提出者のうち人に置いた行数。 */
   proposerRows: number;
   /** 閣僚に置いた cabinet の行数（proposer も同じ数だけ置く）。 */
   cabinetRows: number;
+  /** 衆法・参法のうち提出者を置いた法律の数、委員会提出で置かなかった法律の数、名前の分からない提出者（外N名）の延べ人数、台帳に結べなかった提出者の行数。 */
+  proposerLaws: number;
+  committeeLaws: number;
+  unnamedProposers: number;
+  unresolvedProposerRows: number;
   skipped: {
-    /** 群に属さない法律の行（算入=はい のもの）。 */
-    notInGroup: number;
-    /** 算入=はい でない行（群に属する法律のもの）。 */
-    notCounted: number;
-    /** 閣法の decide（閣僚で置き換える）。 */
-    cabinetDecide: number;
-    /** 委員会提出の衆法・参法の decide。 */
-    committeeProposer: number;
     /** 関与を置こうとして、置き場（法律が2本以上の群）が無かった法律の数。 */
     singleLawGroup: number;
-    /** involvements の vote 行（投票の一次資料から取るので使わない）。 */
-    voteRowIgnored: number;
-    chair: number; amend: number; question: number; otherAction: number;
-    noPersonId: number;
     /** 同じ（法律・役割・院・配り先）の重複。 */
     duplicates: number;
   };
@@ -171,48 +163,26 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
     cabinetLaws: 0, cabinetLawsUndetermined: 0, cabinetLawsUnresolved: 0, cabinetUnresolvedMinisters: 0, singleLawGroups: singleGroups,
     votesLaws: 0, votesNoDate: 0, votesMatched: 0, votesNotFound: 0, lowerYesLaws: 0, lowerNoLaws: 0,
     yesRows: 0, noRows: 0, unresolvedVoteRows: 0, lowerYesRows: 0, lowerNoRows: 0, proposerRows: 0, cabinetRows: 0,
-    skipped: { notInGroup: 0, notCounted: 0, cabinetDecide: 0, committeeProposer: 0, singleLawGroup: 0, voteRowIgnored: 0, chair: 0, amend: 0, question: 0, otherAction: 0, noPersonId: 0, duplicates: 0 },
+    proposerLaws: 0, committeeLaws: 0, unnamedProposers: 0, unresolvedProposerRows: 0,
+    skipped: { singleLawGroup: 0, duplicates: 0 },
   };
   const out = { industry: { groups: industryGroups, involvements: [] as Involvement[] }, wholeEconomy: { groups: wholeGroups, involvements: [] as Involvement[] } };
   const enactedRows = parseCsv(src.enacted);
-  // 委員会提出の法律（提出者の欄が「○○委員長」など）。
-  const committeeLaws = new Set(enactedRows.filter(r => COMMITTEE.test(parseProposer(r['提出者'] ?? '').lead)).map(r => `${r['種別']}-${r['提出回次']}-${r['番号']}`));
   const seen = new Set<string>();
   const withInvolvement = new Set<string>();
   const noPlace = new Set<string>();
   /** 法律×役割×院×配り先を1つ置き、群（産業×年）ごとに展開する。置けたら true。 */
-  const place = (lawId: string, role: ExposureRole, actorKind: Involvement['actorKind'], actorId: string, dedupeId: string, house?: House): boolean => {
+  const place = (lawId: string, role: ExposureRole, actorKind: Involvement['actorKind'], actorId: string, dedupeId: string, house?: House, extra: { weight?: number; noneReason?: string } = {}): boolean => {
     const key = `${lawId}\u0000${role}\u0000${house ?? ''}\u0000${actorKind}\u0000${dedupeId}`;
     if (seen.has(key)) { counts.skipped.duplicates++; return false; }
     seen.add(key);
     const ids = placeable.get(lawId)!;
     if (ids.length === 0) { noPlace.add(lawId); return false; }
     const bucket = lawYears.get(lawId)!.industry === WHOLE ? out.wholeEconomy : out.industry;
-    for (const groupId of ids) bucket.involvements.push({ actorKind, actorId, groupId, lawId, role, weight: 1, ...(house ? { house } : {}) });
+    for (const groupId of ids) bucket.involvements.push({ actorKind, actorId, groupId, lawId, role, weight: extra.weight ?? 1, ...(house ? { house } : {}), ...(extra.noneReason ? { noneReason: extra.noneReason } : {}) });
     withInvolvement.add(lawId);
     return true;
   };
-
-  for (const text of src.involvements) {
-    for (const r of parseCsv(text)) {
-      const lawId = r['法律ID'];
-      if (!grouped.has(lawId)) { if (r['算入'] === 'はい') counts.skipped.notInGroup++; continue; }
-      if (r['算入'] !== 'はい') { counts.skipped.notCounted++; continue; }
-      const action = r['行動'];
-      if (action === 'vote') { counts.skipped.voteRowIgnored++; continue; }
-      if (action === 'decide' && lawId.startsWith('閣法')) { counts.skipped.cabinetDecide++; continue; }
-      if (action !== 'decide') {
-        if (action === 'chair') counts.skipped.chair++;
-        else if (action === 'amend') counts.skipped.amend++;
-        else if (action === 'question') counts.skipped.question++;
-        else counts.skipped.otherAction++;
-        continue;
-      }
-      if (committeeLaws.has(lawId)) { counts.skipped.committeeProposer++; continue; }
-      if (!r['人物ID']) { counts.skipped.noPersonId++; continue; }
-      if (place(lawId, 'proposer', 'person', r['人物ID'], r['人物ID'])) counts.proposerRows++;
-    }
-  }
 
   // 賛成・反対：参議院は個人票（一次資料）、衆議院は会派。
   const ledger = new PersonLedger(src.persons, src.roster);
@@ -264,14 +234,42 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
     for (const name of lowerNo) if (place(lawId, 'no', 'party', name, name, 'lower')) counts.lowerNoRows++;
   }
 
+  // 衆法・参法の提出者（enacted.csv。members-reference.ts と同じ読み方）。
+  const splitNames = (t: string) => t.split(/[;；、,]/).map(normName).filter(Boolean);
+  for (const lawId of [...grouped].sort()) {
+    if (lawId.startsWith('閣法')) continue;
+    const e = enactedById.get(lawId);
+    if (!e) continue;
+    if (COMMITTEE.test(parseProposer(e['提出者'] ?? '').lead)) { counts.committeeLaws++; continue; }
+    const house = lawId.startsWith('参法') ? '参議院' : '衆議院';
+    const unresolvedReason = '同姓同名で人物台帳に結べない提出者';
+    const named: { name: string; weight: number }[] = [];
+    let unnamed = 0;
+    if (e['提出者一覧']) for (const name of splitNames(e['提出者一覧'])) named.push({ name, weight: 1 });
+    else if (e['提出者']) {
+      const p = parseProposer(e['提出者']);
+      if (p.lead) named.push({ name: p.lead, weight: 1 });
+      unnamed = p.others;
+    }
+    let any = false;
+    for (const { name, weight } of named) {
+      const res = ledger.resolve(name, house);
+      const placed = res ? place(lawId, 'proposer', 'person', res.id, res.id, undefined, { weight }) : place(lawId, 'proposer', 'none', '', `未特定:${name}`, undefined, { weight, noneReason: unresolvedReason });
+      if (!placed) continue;
+      any = true;
+      if (res) counts.proposerRows++; else counts.unresolvedProposerRows++;
+    }
+    if (unnamed > 0 && place(lawId, 'proposer', 'none', '', `外${unnamed}名`, undefined, { weight: unnamed, noneReason: `名前の分からない提出者（外${unnamed}名）` })) { any = true; counts.unnamedProposers += unnamed; }
+    if (any) counts.proposerLaws++;
+  }
+
   // 閣法：群に属する閣法すべてに、提出した回次の閣僚全員へ cabinet と proposer を置く。
-  const cabinetOf = cabinetBySession(enactedRows, parseCsv(src.cabinet));
+  const cabinetOf = cabinetForBill(enactedRows, parseCsv(src.cabinet));
   const cabinetLawIds = [...grouped].filter(id => id.startsWith('閣法')).sort();
   for (const lawId of cabinetLawIds) {
     counts.cabinetLaws++;
-    const m = LAW_ID.exec(lawId);
-    if (!m) throw new Error(`法律 ID の形が不正：${lawId}`);
-    const all = cabinetOf(m[2]);
+    const bill = enactedById.get(lawId);
+    const all = bill ? cabinetOf(bill).names : [];
     if (all.length === 0) { counts.cabinetLawsUndetermined++; continue; }
     const resolved = all.map(n => ledger.resolve(normName(n), '')?.id ?? '');
     const missing = resolved.filter(x => !x).length;

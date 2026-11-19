@@ -4,8 +4,14 @@ app/src/members-reference.ts が配った全員・全法律の配り先（build_
 別の実装で1件ずつ次のように確かめる。あわせて、配り先の額を人ごとに足すと公開ファイルの損失・便益（中央値）と一致することも確かめる
 （top の5本だけでなく、合計と順位に入るすべての配り先が照合の対象になる）。
 - 法律が公開ランキングにあり、確かさが「参考」であること。
+- 向きが未確定の法律（公開ランキングの印 MACRO_DIRECTION_NOTE つき）を人に配っていないこと（設計確定 v2.1：向きを産業の差の符号で決めない）。
+  配らなかった関わり（side が undetermined・額0の行）も、提出者・参議院の賛成の事実を配り先と同じ方法で照らし、
+  人ごとの本数が公開ファイルの withheldLaws と理由の文に書いた本数に一致することを確かめる。
 - 提出者（proposer）：衆法・参法は成立法の一覧の「提出者」「提出者一覧」にその名前があること。
   閣法は内閣の提出なので、提出した回次の会期の最初から最後まで（継続審査でない閣法の衆議院の付託日の最初と最後）在任した閣僚であること。
+  総理大臣が会期中に替わる回次は、付託日が交代より前の法律に限り、その付託日に在任した閣僚であること
+  （提出は付託より前なので前の内閣の提出と決まる。交代より後に付託された法律は、どちらの内閣の提出か決められないので配らない）。
+  氏名は名簿の脚注の印（*）と字体のゆれを寄せてから比べる。
 - 人物ID：配り先の人物IDが人物台帳（persons.csv）にあり、氏名が同じ人物の氏名と canonical で一致すること。同姓同名で分けた名前は
   配っていないこと（台帳は今の院しか持たず院を移った人がいるので、院では決めない）。
 - 参議院の賛成（vote）：参議院で議決した日の押しボタン投票のうち、議案名に題名を含むものに、その名前の議員の「賛成」があること。
@@ -28,6 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from scripts.build_public_ranking import MACRO_DIRECTION_NOTE
 from scripts.person_ids import canonical  # noqa: E402
 REFERENCE = ROOT / "app/public/distribution/members-reference.json"
 RANKING = ROOT / "app/public/distribution/ranking.json"
@@ -40,6 +47,7 @@ PERSONS = ROOT / "data/derived/person-ids/persons.csv"
 
 ERA = {"昭和": 1925, "平成": 1988, "令和": 2018}
 COMMITTEE = re.compile(r"(委員長|委員会|調査会長|審査会長)$")
+UNDETERMINED = "undetermined"  # 配り先の一覧の side。向きが未確定で配らなかった関わり（app/src/members-reference.ts）
 DIGITS = str.maketrans("０１２３４５６７８９", "0123456789")
 
 
@@ -90,17 +98,22 @@ def check(attributions_path: Path | None = None) -> list[str]:
         if d:
             referrals.setdefault(r["提出回次"], set()).add(d)
 
-    def cabinet_served(name: str, dates: set[str]) -> bool:
-        """閣法は内閣の提出。提出した回次の会期の最初と最後の付託日の両方に在任した閣僚（総理大臣を含む）か。"""
-        if not dates:
+    def serving(date: str, prime_minister: bool = False) -> set[str]:
+        return {canonical(p["氏名"]) for p in ministers if p["就任日_西暦"] <= date and (not p["退任日_西暦"] or date < p["退任日_西暦"])
+                and (not prime_minister or p["役職"] == "内閣総理大臣")}
+
+    def cabinet_served(name: str, bill: dict[str, str]) -> bool:
+        """閣法は内閣の提出。提出した回次の会期の最初と最後の付託日の両方に在任した閣僚（総理大臣を含む）か。
+        総理大臣が会期中に替わる回次は、付託日（継続審査でないもの）の総理大臣が会期の最初の付託日と同じ法律に限り、その付託日に在任した閣僚か。
+        交代より後に付託された法律は、どちらの内閣の提出か付託日では決められないので、誰に配っても合わない。"""
+        dates = referrals.get(bill["提出回次"], set())
+        who = canonical(name)
+        if dates and serving(min(dates), True) and serving(min(dates), True) == serving(max(dates), True):
+            return who in serving(min(dates)) & serving(max(dates))
+        referred = wareki(bill["付託日_衆"]) if bill["回次"] == bill["提出回次"] else ""
+        if not dates or not referred or not serving(referred, True) or serving(referred, True) != serving(min(dates), True):
             return False
-        lo, hi = min(dates), max(dates)
-        # 総理大臣が会期中に替わる回次は、どの内閣の提出か決められないので配らない。
-        pm_at = lambda d: {norm_name(p["氏名"]) for p in ministers if p["役職"] == "内閣総理大臣" and p["就任日_西暦"] <= d and (not p["退任日_西暦"] or d < p["退任日_西暦"])}
-        if not pm_at(lo) or pm_at(lo) != pm_at(hi):
-            return False
-        return all(any(norm_name(p["氏名"]) == name and p["就任日_西暦"] <= d and (not p["退任日_西暦"] or d < p["退任日_西暦"])
-                       for p in ministers) for d in (min(dates), max(dates)))
+        return who in serving(referred)
 
     votes_by_day: dict[str, list[dict[str, str]]] = {}
     for v in read_csv(VOTES_INDEX):
@@ -115,11 +128,23 @@ def check(attributions_path: Path | None = None) -> list[str]:
     for p in persons.values():
         by_canonical.setdefault(canonical(p["氏名"]), []).append(p)
     # 人ごとの合計が公開ファイルと一致するか（配り先の一覧が公開ファイルの合計をすべて説明していること）。
+    # 向きが未確定で配らなかった関わり（side が undetermined）は額に入らない。人ごとの本数を別に数える。
     totals: dict[tuple[str, str], float] = {}
+    withheld: dict[str, set[str]] = {}
     for a in attributions:
+        if a["side"] == UNDETERMINED:
+            withheld.setdefault(a["member"], set()).add(a["lawId"])
+            continue
         key = (a["member"], a["side"])
         totals[key] = totals.get(key, 0.0) + float(a["median"])
     published = {m["id"]: m for m in reference["members"]}
+    for m in reference["members"]:
+        count = len(withheld.get(m["id"], ()))
+        told = re.search(r"法律(\d+)本は、向きが未確定", m.get("reason", ""))
+        if m.get("withheldLaws", 0) != count or (int(told.group(1)) if told else 0) != count:
+            errors.append(f"{m['id']}：向きが未確定で配らなかった法律の本数（withheldLaws・理由の文）が配り先の一覧と合わない")
+    for member in withheld.keys() - published.keys():
+        errors.append(f"{member}：向きが未確定で配らなかった関わりの人が公開ファイルに無い")
     for (member, side), total in totals.items():
         m = published.get(member)
         expected = m and (m["loss"] if side == "loss" else m["credit"])["median"]
@@ -143,6 +168,10 @@ def check(attributions_path: Path | None = None) -> list[str]:
         if not law or law.get("certainty") != "参考" or not bill:
             errors.append(f"{where}：公開ランキングの参考の法律、または成立法の一覧に無い")
             continue
+        marked = MACRO_DIRECTION_NOTE in law.get("notes", [])
+        if marked != (a["side"] == UNDETERMINED) or (marked and float(a["median"]) != 0):
+            errors.append(f"{where}：向きが未確定の法律を人に配っている、または向きの決まった法律を配っていない")
+            continue
         person = persons.get(a["member"])
         if person is not None and canonical(person["氏名"]) != canonical(name):
             errors.append(f"{where}：人物IDの氏名が出典の氏名と合わない")
@@ -153,8 +182,8 @@ def check(attributions_path: Path | None = None) -> list[str]:
             errors.append(f"{where}：人物IDが人物台帳に無い")
         if role == "proposer":
             if law_id.startswith("閣法"):
-                if not cabinet_served(m["name"], referrals.get(bill["提出回次"], set())):
-                    errors.append(f"{where}：提出した回次の会期の最初から最後まで在任した閣僚ではない")
+                if not cabinet_served(m["name"], bill):
+                    errors.append(f"{where}：提出した回次の会期の最初から最後まで（総理大臣が替わる回次は付託日に）在任した閣僚ではない")
             elif COMMITTEE.search(re.sub(r"君(外.+名)?$", "", squash(bill["提出者"]))):
                 errors.append(f"{where}：委員会提出の法律を人に配っている")
             elif m["name"] not in squash(bill["提出者"]) + squash(bill["提出者一覧"]):

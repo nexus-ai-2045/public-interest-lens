@@ -194,7 +194,7 @@ describe('曝露ランキングの集計器', () => {
     const b = person(out, '乙');
     expect(b.topThreeShare).toBe(1);
     expect(b.tier).toBeNull();
-    expect(b.unrankedReason).toBe('上位3本の占有率が50%を超える（100%）');
+    expect(b.unrankedReason).toBe('上位3本の占有率が50.0%を超える（100.0%）');
     // 法律の ID も法律ごとの額も出さない。
     expect(JSON.stringify(out)).not.toContain('L7');
   });
@@ -270,6 +270,20 @@ describe('曝露ランキングの集計器', () => {
   it('同じ人が複数の役割を持てば足す（閣僚は閣議0.2＋発議0.4）', () => {
     const out = buildExposureRanking([group('g1', 1000)], [inv('閣僚', 'L1', 'cabinet'), inv('閣僚', 'L1', 'proposer')], P);
     expect(person(out, '閣僚').exposureYen.median).toBeCloseTo(600);
+  });
+
+  it('内訳の束ね方を呼ぶ側が決められる（産業×年の群を産業で束ねる）。本数は法律の重複なし、額は年の和、row の groups は群の数のまま', () => {
+    const gs = [{ ...group('A|1998', 1000, 0, 2), group: 'A' }, { ...group('A|1999', 2000, 0, 2), group: 'A' }];
+    const invs = [inv('甲', 'L1', 'proposer', 1, 'A|1998'), inv('甲', 'L1', 'proposer', 1, 'A|1999'), inv('甲', 'L2', 'proposer', 1, 'A|1999')];
+    const plain = buildExposureRanking(gs, invs, P);
+    const rolled = buildExposureRanking(gs, invs, P, { cellGroupOf: id => id.split('|')[0] });
+    expect(person(plain, '甲').cells).toHaveLength(2);
+    const cells = person(rolled, '甲').cells;
+    expect(cells).toHaveLength(1);
+    expect(cells[0]).toMatchObject({ groupId: 'A', role: 'proposer', laws: 2 });
+    expect(cells[0].exposureYen.median).toBeCloseTo(person(plain, '甲').exposureYen.median);
+    expect(person(rolled, '甲').groups).toBe(2);
+    expect(person(rolled, '甲').exposureYen).toEqual(person(plain, '甲').exposureYen);
   });
 
   it('既定の比率は書き換えられない', () => {

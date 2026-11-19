@@ -88,15 +88,13 @@ class CabinetsTest(unittest.TestCase):
             self.assertEqual({r["院"] for r in mine}, {""}, law)
 
 
-# TS 側だけが落としている閣僚。官邸の名簿が同じ人を会期の途中から脚注の印（*）つきで書いていて、TS の normName は印を取らないので別人になる。
-# TS を直したらここを空にする（空にしないとこのテストが落ちて気づける）。
-TS_MISSING = {"180": {"安住淳"}}
-
-
 @unittest.skipUnless(shutil.which("node") and (ROOT / "app" / "node_modules" / "vite").exists(), "node か app の依存が無い")
 class CabinetSyncWithTypeScriptTest(unittest.TestCase):
     def test_same_ministers_as_members_reference(self):
-        """TS（members-reference.ts、#184）が閣法の提出者として配った人と、回次ごとに同じ顔ぶれになる。"""
+        """TS（members-reference.ts）が閣法の提出者とした人（配った人と、向きが未確定で配らなかった人）と、法律ごとに同じ顔ぶれになる。
+
+        総理大臣が会期中に替わる回次だけ決まりが違う。TS は付託日が交代より前の法律だけを付託日の内閣に付け、交代より後に付託された法律は
+        どちらの内閣の提出か決められないので付けない。ここ（自動の関与）は付託日の内閣に付ける。TS が付けた法律では同じ顔ぶれになる。"""
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "attributions.csv"
             crm.build_attributions(path)
@@ -105,12 +103,17 @@ class CabinetSyncWithTypeScriptTest(unittest.TestCase):
         ts: dict[str, set[str]] = defaultdict(set)
         for r in rows:
             if r["lawId"].startswith("閣法") and r["role"] == "proposer":
-                ts[r["lawId"].split("-")[1]].add(auto.canonical(r["name"]))
-        self.assertTrue(ts)
-        cabinets = auto.cabinets(auto._read(auto.ENACTED), auto._read(auto.CABINET))["session"]
-        for session, names in sorted(ts.items()):
-            self.assertEqual({name for name, _ in cabinets.get(session, [])} - TS_MISSING.get(session, set()), names, f"第{session}回")
-        self.assertLessEqual(set(TS_MISSING), set(ts))
+                ts[r["lawId"]].add(auto.canonical(r["name"]))
+        enacted = {f"{r['種別']}-{r['提出回次']}-{r['番号']}": r for r in auto._read(auto.ENACTED)}
+        cabinets = auto.cabinets(list(enacted.values()), auto._read(auto.CABINET))
+        self.assertGreater(len({law.split("-")[1] for law in ts}), 10)  # 配る法律が減っても、配らなかった関わりの行で多くの回次を照らせる
+        for law, names in sorted(ts.items()):
+            bill = enacted[law]
+            referred = auto.wareki(bill["付託日_衆"]) if bill["回次"] == bill["提出回次"] else ""
+            expected = cabinets["session"].get(bill["提出回次"]) or cabinets["day"].get(referred, [])
+            self.assertEqual({name for name, _ in expected}, names, law)
+        # 名簿が会期の途中から脚注の印（*）つきで書く閣僚（第180回）も落ちない。
+        self.assertTrue(any("安住淳" in names for law, names in ts.items() if law.split("-")[1] == "180"))
 
 
 if __name__ == "__main__":

@@ -15,11 +15,9 @@ const MACRO_HEAD = ['id', '題名', '分野', '分野の由来', '産業', '施�
 const macroRow = (id: string, 産業: string, 窓 = '1998〜2000年', 結果 = '額') => ({ id, 題名: 'テスト', 産業, 窓, 結果 });
 const IY_HEAD = ['産業', '年', 'low', 'median', 'high', '比較国', '前年の名目付加価値_百万円'];
 const iy = (産業: string, 年: number, median = 100, low = 50, high = 300) => ({ 産業, 年: String(年), low: String(low), median: String(median), high: String(high), 比較国: 'AUS・FRA・KOR', '前年の名目付加価値_百万円': '1000' });
-const ENACTED_HEAD = ['回次', '種別', '提出回次', '番号', '題名', '提出者', '付託日_衆', '議決日_参', '賛成会派_衆', '反対会派_衆'];
+const ENACTED_HEAD = ['回次', '種別', '提出回次', '番号', '題名', '提出者', '提出者一覧', '付託日_衆', '議決日_参', '賛成会派_衆', '反対会派_衆'];
 const CAB_HEAD = ['内閣名', '区分', '氏名', '役職', '就任日_西暦', '退任日_西暦'];
 const cab = (氏名: string, 役職: string, from: string, to = '', 区分 = '閣僚') => ({ 内閣名: 'テスト内閣', 区分, 氏名, 役職, 就任日_西暦: from, 退任日_西暦: to });
-const INV_HEAD = ['法律ID', '氏名', '行動', '算入', '人物ID'];
-const inv = (法律ID: string, 行動: string, 人物ID: string, 算入 = 'はい') => ({ 法律ID, 氏名: '氏名', 行動, 算入, 人物ID });
 const VOTES_HEAD = ['投票ID', '回次', '投票日', '議案名', '集計_賛成', '集計_反対'];
 const MEMBER_HEAD = ['議員ID', '回次', '議員名', '会派'];
 const BALLOT_HEAD = ['投票ID', '議員ID', '賛否'];
@@ -30,8 +28,8 @@ const enacted = csv(ENACTED_HEAD, [
   { 回次: '2', 種別: '閣法', 提出回次: '2', 番号: '2', 付託日_衆: '平成10年 3月10日' },
   { 回次: '3', 種別: '閣法', 提出回次: '3', 番号: '1', 付託日_衆: '平成12年 1月10日' },
   { 回次: '3', 種別: '閣法', 提出回次: '3', 番号: '2', 付託日_衆: '平成12年 5月10日' },
-  { 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '1', 題名: 'テスト一号法案', 議決日_参: '平成10年 3月10日', 賛成会派_衆: '会派甲; 会派乙', 反対会派_衆: '会派丙' },
-  { 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '2', 題名: 'テスト二号法案', 議決日_参: '平成10年 3月10日' },
+  { 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '1', 題名: 'テスト一号法案', 提出者: '提出 太郎君外二名', 議決日_参: '平成10年 3月10日', 賛成会派_衆: '会派甲; 会派乙', 反対会派_衆: '会派丙' },
+  { 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '2', 題名: 'テスト二号法案', 提出者: '一覧 甲君外二名', 提出者一覧: '一覧 甲;一覧 乙;山田 花子', 議決日_参: '平成10年 3月10日' },
 ]);
 const cabinet = csv(CAB_HEAD, [
   cab('首相 一', '内閣総理大臣', '1995-01-01', '2000-03-01'),
@@ -65,13 +63,13 @@ const base = (over: Partial<ExposureSources> = {}): ExposureSources => ({
   macro: csv(MACRO_HEAD, [
     macroRow('衆法-1-1', 'A'), macroRow('衆法-1-2', 'A'),
     macroRow('閣法-2-1', 'B'), macroRow('閣法-2-2', 'B'),
-    macroRow('閣法-3-1', 'C'),
+    macroRow('閣法-3-1', 'C'), macroRow('閣法-3-2', 'C'),
     macroRow('閣法-2-9', 'COVID'), macroRow('閣法-2-8', 'B', '', '理由'),
   ]),
   // A は 2000 年の行が無い（群を作れない）。
   industryYear: csv(IY_HEAD, [iy('A', 1998), iy('A', 1999, 200), iy('B', 1998, 1000, 900, 1100), iy('B', 1999, 1000, 900, 1100), iy('B', 2000, 1000, 900, 1100), iy('C', 1998), iy('C', 1999), iy('C', 2000), iy('_T', 1998), iy('_T', 1999), iy('_T', 2000)]),
   enacted, cabinet, persons, roster: '',
-  involvements: [csv(INV_HEAD, [])], votesIndex, sangiinMembers, ballots, ...over,
+  votesIndex, sangiinMembers, ballots, ...over,
 });
 const sortedKeys = (xs: Involvement[]) => xs.map(x => `${x.lawId}|${x.role}|${x.house ?? ''}|${x.actorId}`).sort();
 const params = { roleRatio: DEFAULT_ROLE_RATIO, minLaws: 1, topThreeShareCap: 1 };
@@ -89,7 +87,7 @@ describe('曝露ランキングの入力（群＝産業×年）', () => {
     // 法律が無いので全産業の群は作らない。
     expect(wholeEconomy.groups).toEqual([]);
     // A の 2000 年は industry-year.csv に行が無いので群を作らず、数える。
-    expect(counts).toMatchObject({ groups: 8, groupsWithoutGap: 1, laws: 5 });
+    expect(counts).toMatchObject({ groups: 8, groupsWithoutGap: 1, laws: 6 });
   });
 
   it('全産業（_T）は別欄の群にする（産業別に入れない）', () => {
@@ -131,41 +129,40 @@ describe('曝露ランキングの入力（群＝産業×年）', () => {
 });
 
 describe('曝露ランキングの入力（関与）', () => {
-  const run = (invs: Record<string, string>[], second: Record<string, string>[] = [], over: Partial<ExposureSources> = {}) =>
-    buildExposureInputs(base({ involvements: [csv(INV_HEAD, invs), csv(INV_HEAD, second)], ...over }));
-  const nonCabinet = (xs: Involvement[]) => xs.filter(x => !x.lawId.startsWith('閣法'));
-  const nonVotes = (xs: Involvement[]) => nonCabinet(xs).filter(x => x.role === 'proposer');
+  const run = (over: Partial<ExposureSources> = {}) => buildExposureInputs(base(over));
+  const proposers = (xs: Involvement[]) => xs.filter(x => x.role === 'proposer' && !x.lawId.startsWith('閣法'));
 
-  it('衆法・参法の decide は proposer。法律×年ごとに置く（年の数だけ）', () => {
-    const out = run([inv('衆法-1-1', 'decide', '提出者')]);
-    expect(nonVotes(out.industry.involvements)).toEqual([
-      { actorKind: 'person', actorId: '提出者', groupId: 'A|1998', lawId: '衆法-1-1', role: 'proposer', weight: 1 },
-      { actorKind: 'person', actorId: '提出者', groupId: 'A|1999', lawId: '衆法-1-1', role: 'proposer', weight: 1 },
-    ]);
-    expect(out.counts.proposerRows).toBe(1);
+  it('衆法・参法の提出者は enacted.csv から：一覧があれば全員、無ければ代表者と「外N名」（配り先なし・重みN）。同姓同名は配り先なし', () => {
+    const out = run();
+    const a = proposers(out.industry.involvements).filter(x => x.groupId === 'A|1998');
+    expect(a.map(x => `${x.lawId}|${x.actorKind}|${x.actorId}|${x.weight}|${x.noneReason ?? ''}`).sort()).toEqual([
+      '衆法-1-1|none||2|名前の分からない提出者（外2名）',
+      '衆法-1-1|person|提出太郎|1|',
+      '衆法-1-2|none||1|同姓同名で人物台帳に結べない提出者',
+      '衆法-1-2|person|一覧乙|1|',
+      '衆法-1-2|person|一覧甲|1|',
+    ].sort());
+    expect(proposers(out.industry.involvements).filter(x => x.actorId === '提出太郎')).toHaveLength(2); // A|1998 と A|1999
+    expect(out.counts).toMatchObject({ proposerLaws: 2, proposerRows: 3, committeeLaws: 0, unnamedProposers: 2, unresolvedProposerRows: 1 });
   });
 
-  it('involvements の vote 行は使わない（投票の一次資料と二重に置かない）。算入=はい でない行・人物ID が空の行・使わない行動は数える', () => {
-    const out = run([
-      inv('衆法-1-1', 'vote', '票だけの人'), inv('衆法-1-1', 'decide', '甲', 'いいえ'), inv('衆法-1-1', 'decide', ''),
-      inv('衆法-1-1', 'chair', '乙'), inv('衆法-1-1', 'amend', '乙'), inv('衆法-1-1', 'question', '乙'), inv('衆法-1-1', 'その他', '乙'),
-      inv('閣法-2-1', 'decide', '閣法の提出者'),
-      inv('衆法-99-9', 'decide', '群に無い法律'),
-    ]);
-    const all = [...out.industry.involvements, ...out.wholeEconomy.involvements];
-    expect(all.some(x => ['票だけの人', '甲', '乙', '閣法の提出者', '群に無い法律'].includes(x.actorId))).toBe(false);
-    expect(out.counts.skipped).toEqual({ notInGroup: 1, notCounted: 1, cabinetDecide: 1, voteRowIgnored: 1, chair: 1, amend: 1, question: 1, otherAction: 1, noPersonId: 1, committeeProposer: 0, singleLawGroup: 0, duplicates: 0 });
+  it('名前の分からない提出者と結べない提出者の分は、理由つきで未配分に積まれる（ほかの人へ寄せない）', () => {
+    const r = rankOf(run().industry);
+    expect(r.unallocated.some(u => u.reason === '名前の分からない提出者（外2名）' && u.role === 'proposer')).toBe(true);
+    expect(r.unallocated.some(u => u.reason === '同姓同名で人物台帳に結べない提出者')).toBe(true);
+    const t = r.totals;
+    for (const k of ['low', 'median', 'high']) expect(t.people[k] + t.parties[k] + t.unallocated[k]).toBeCloseTo(t.expected[k], 3);
   });
 
-  it('同じ（法律・役割・配り先）の重複は1つにする（2つのファイルにまたがっても。年ごとには増やさない）', () => {
-    const out = run([inv('衆法-1-1', 'decide', '甲'), inv('衆法-1-1', 'decide', '甲')], [inv('衆法-1-1', 'decide', '甲')]);
-    expect(nonVotes(out.industry.involvements).filter(x => x.actorId === '甲')).toHaveLength(2); // A|1998 と A|1999
-    expect(out.counts.proposerRows).toBe(1);
-    expect(out.counts.skipped.duplicates).toBe(2);
+  it('提出者一覧に同じ人が2回あれば1つにする（重複を数える）', () => {
+    const dup = enacted.replace('一覧 甲;一覧 乙;山田 花子', '一覧 甲;一覧 甲;山田 花子');
+    const out = run({ enacted: dup });
+    expect(proposers(out.industry.involvements).filter(x => x.groupId === 'A|1998' && x.actorId === '一覧甲')).toHaveLength(1);
+    expect(out.counts.skipped.duplicates).toBe(1);
   });
 
   it('参議院は投票の個人票：Y は yes、N は no、A（棄権）は置かない。同姓同名で結べない人は配り先なしで置く', () => {
-    const out = run([]);
+    const out = run();
     const l1 = out.industry.involvements.filter(x => x.lawId === '衆法-1-1' && x.groupId === 'A|1998' && x.house === 'upper');
     expect(sortedKeys(l1)).toEqual(['衆法-1-1|no|upper|議員三', '衆法-1-1|yes|upper|議員一', '衆法-1-1|yes|upper|議員二', '衆法-1-1|yes|upper|'].sort());
     expect(l1.find(x => x.actorKind === 'none')).toMatchObject({ role: 'yes', actorId: '', weight: 1 });
@@ -174,7 +171,7 @@ describe('曝露ランキングの入力（関与）', () => {
   });
 
   it('衆議院は賛成会派・反対会派を会派（party）に、weight 1 で、記録の表記のまま置く', () => {
-    const out = run([]);
+    const out = run();
     const lower = out.industry.involvements.filter(x => x.lawId === '衆法-1-1' && x.groupId === 'A|1998' && x.house === 'lower');
     expect(sortedKeys(lower)).toEqual(['衆法-1-1|no|lower|会派丙', '衆法-1-1|yes|lower|会派乙', '衆法-1-1|yes|lower|会派甲']);
     expect(lower.every(x => x.actorKind === 'party' && x.weight === 1)).toBe(true);
@@ -182,7 +179,7 @@ describe('曝露ランキングの入力（関与）', () => {
   });
 
   it('賛成・反対の関与には院が必ず付く／同じ法律・役割・院の枠は人と会派に混ざらない', () => {
-    const out = run([]);
+    const out = run();
     const by = new Map<string, Set<string>>();
     for (const x of out.industry.involvements) {
       if (x.role !== 'yes' && x.role !== 'no') continue;
@@ -195,7 +192,7 @@ describe('曝露ランキングの入力（関与）', () => {
   });
 
   it('参議院の個人票が決まらない法律（衆法-1-2）は参議院の枠が未配分のまま。衆議院の賛否が無い法律では参議院の人の額が増えない', () => {
-    const out = run([]);
+    const out = run();
     const r = rankOf(out.industry);
     expect(out.industry.involvements.some(x => x.lawId === '衆法-1-2' && (x.role === 'yes' || x.role === 'no'))).toBe(false);
     expect(r.unallocated.some(u => u.reason === '参議院の賛否の記録が無い法律の枠')).toBe(true);
@@ -211,36 +208,45 @@ describe('曝露ランキングの入力（関与）', () => {
   });
 
   it('閣法は、提出した回次の最初から最後まで在任した閣僚全員に cabinet と proposer を置く（記録の有無に依らない）', () => {
-    const out = run([]);
+    const out = run();
     const l1 = out.industry.involvements.filter(x => x.lawId === '閣法-2-1' && x.groupId === 'B|1998');
     expect(sortedKeys(l1)).toEqual([
       '閣法-2-1|cabinet||大臣甲', '閣法-2-1|cabinet||大臣乙', '閣法-2-1|cabinet||首相一',
       '閣法-2-1|proposer||大臣甲', '閣法-2-1|proposer||大臣乙', '閣法-2-1|proposer||首相一',
     ].sort());
     expect(out.industry.involvements.filter(x => x.lawId === '閣法-2-1').length).toBe(6 * 3); // B は 3 年
-    expect(out.counts).toMatchObject({ cabinetLaws: 3, cabinetLawsUndetermined: 1, cabinetLawsUnresolved: 0, cabinetUnresolvedMinisters: 0, cabinetRows: 6 });
+    // 回次3の閣法-3-1は付託日（交代前）で決まり、閣法-3-2は交代後の付託なので決まらない。
+    expect(out.counts).toMatchObject({ cabinetLaws: 4, cabinetLawsUndetermined: 1, cabinetLawsUnresolved: 0, cabinetUnresolvedMinisters: 0, cabinetRows: 10 });
   });
 
   it('閣僚の1人でも台帳に結べない閣法には cabinet と proposer を置かない（ほかの閣僚へ寄せない）', () => {
     const out = buildExposureInputs(base({ cabinet: cabinetWithUnresolved }));
     expect(out.industry.involvements.filter(x => x.lawId.startsWith('閣法'))).toEqual([]);
-    expect(out.counts).toMatchObject({ cabinetLawsUnresolved: 2, cabinetUnresolvedMinisters: 2, cabinetRows: 0 });
+    expect(out.counts).toMatchObject({ cabinetLawsUnresolved: 3, cabinetUnresolvedMinisters: 3, cabinetRows: 0 });
   });
 
   it('法律が1本だけの産業×年の群には関与を置かない／委員会提出の法律には proposer を置かない', () => {
     const one = buildExposureInputs(base({
       macro: csv(MACRO_HEAD, [macroRow('衆法-1-1', 'A', '1998〜1998年'), macroRow('衆法-1-2', 'B', '1998〜1998年'), macroRow('衆法-1-3', 'B', '1998〜1998年')]),
-      enacted: csv(ENACTED_HEAD, [{ 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '2', 提出者: '内閣委員長' }, { 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '3', 提出者: '甲 太郎君外二名' }]),
-      involvements: [csv(INV_HEAD, [inv('衆法-1-1', 'decide', '甲'), inv('衆法-1-2', 'decide', '乙'), inv('衆法-1-3', 'decide', '丙')])],
+      enacted: csv(ENACTED_HEAD, [
+        { 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '1', 提出者: '甲 太郎君' },
+        { 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '2', 提出者: '内閣委員長' },
+        { 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '3', 提出者: '丙 太郎君' }]),
     }));
-    expect(sortedKeys(one.industry.involvements)).toEqual(['衆法-1-3|proposer||丙']);
+    expect(sortedKeys(one.industry.involvements)).toEqual(['衆法-1-3|proposer||丙太郎']);
     expect(one.counts.singleLawGroups).toBe(1);
-    expect(one.counts.skipped).toMatchObject({ singleLawGroup: 1, committeeProposer: 1 });
+    expect(one.counts.skipped).toMatchObject({ singleLawGroup: 1 });
+    expect(one.counts.committeeLaws).toBe(1);
   });
 
-  it('総理大臣が会期中に替わる回次の閣法には関与を置かず、数える', () => {
-    const out = run([]);
-    expect(out.industry.involvements.some(x => x.lawId === '閣法-3-1')).toBe(false);
+  it('総理大臣が替わる回次で、付託日が交代より前の閣法には付託日の閣僚を置き、後の閣法には置かない', () => {
+    const out = run();
+    const of = (id: string) => new Set(out.industry.involvements.filter(x => x.lawId === id && x.role === 'cabinet').map(x => x.actorId));
+    // 閣法-3-1（付託 2000-01-10、交代 2000-03-01 より前）：前の総理大臣と、その日に在任していた閣僚。
+    expect([...of('閣法-3-1')].sort()).toEqual(['大臣乙', '大臣甲', '大臣途中', '首相一'].sort());
+    expect(of('閣法-3-1').has('首相二')).toBe(false);
+    // 閣法-3-2（付託 2000-05-10、交代より後）：決められないので置かない。
+    expect(of('閣法-3-2').size).toBe(0);
     expect(out.counts.cabinetLawsUndetermined).toBe(1);
   });
 
@@ -255,7 +261,7 @@ describe('曝露ランキングの入力（関与）', () => {
   });
 
   it('集計器に通すと検算が合う（記録の無い法律の枠は未配分）', () => {
-    const out = run([inv('衆法-1-1', 'decide', '甲')]);
+    const out = run();
     for (const b of [out.industry, out.wholeEconomy]) {
       const t = rankOf(b).totals;
       for (const k of ['low', 'median', 'high']) expect(t.people[k] + t.parties[k] + t.unallocated[k]).toBeCloseTo(t.expected[k], 3);
@@ -263,7 +269,7 @@ describe('曝露ランキングの入力（関与）', () => {
   });
 
   it('配り先なしの票の分は未配分に積まれる（理由つき）', () => {
-    const r = rankOf(run([]).industry);
+    const r = rankOf(run().industry);
     const u = r.unallocated.find(x => x.reason === '同姓同名で人物台帳に結べない票');
     expect(u).toBeTruthy();
     expect(u.house).toBe('upper');
@@ -277,7 +283,7 @@ describe('withLedgerPeople', () => {
     ]);
     const out = buildExposureInputs(base({
       macro: csv(MACRO_HEAD, [macroRow('衆法-1-1', '_T'), macroRow('衆法-1-2', '_T'), macroRow('衆法-1-3', 'B'), macroRow('衆法-1-4', 'B')]),
-      involvements: [csv(INV_HEAD, [inv('衆法-1-1', 'decide', '甲'), inv('衆法-1-3', 'decide', '乙')])],
+      enacted: csv(ENACTED_HEAD, [{ 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '1', 提出者: '甲君' }, { 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '3', 提出者: '乙君' }]),
     }));
     const whole = rankOf(out.wholeEconomy);
     const { ranking } = withLedgerPeople(rankOf(out.industry), personsCsv, whole);
@@ -302,7 +308,6 @@ describe('曝露ランキングの入力（実データの性質）', { timeout:
     cabinet: file('acquired/office-holders/cabinet.csv'),
     persons: file('derived/person-ids/persons.csv'),
     roster: file('acquired/diet-roster/current.csv'),
-    involvements: [file('derived/allocation-v1/involvements.csv'), file('derived/allocation-v1/involvements-auto.csv')],
   };
   const params = { roleRatio: DEFAULT_ROLE_RATIO, minLaws: SCORING_CONSTANTS.minContributingLaws, topThreeShareCap: SCORING_CONSTANTS.topThreeShareCap };
   const build = () => {

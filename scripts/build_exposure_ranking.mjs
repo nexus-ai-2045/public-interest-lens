@@ -41,8 +41,6 @@ const inputs = {
   cabinet: join(root, 'data/acquired/office-holders/cabinet.csv'),
   persons: join(root, 'data/derived/person-ids/persons.csv'),
   roster: join(root, 'data/acquired/diet-roster/current.csv'),
-  involvements: join(root, 'data/derived/allocation-v1/involvements.csv'),
-  involvementsAuto: join(root, 'data/derived/allocation-v1/involvements-auto.csv'),
   // 賛成・反対は投票の一次資料から取る（参議院は個人票、衆議院は enacted.csv の会派）。
   votesIndex: join(root, 'data/acquired/sangiin-votes/votes_index.csv'),
   sangiinMembers: join(root, 'data/acquired/sangiin-votes/members.csv'),
@@ -100,11 +98,14 @@ try {
   const ballots = ballotFiles.map(f => readFileSync(join(ballotsDir, f), 'utf8'));
   const built = buildExposureInputs({
     macro: text.macro, industryYear: text.industryYear, enacted: text.enacted, cabinet: text.cabinet, persons: text.persons, roster: text.roster,
-    involvements: [text.involvements, text.involvementsAuto],
     votesIndex: text.votesIndex, sangiinMembers: text.sangiinMembers, ballots,
   });
   const paramsOf = roleRatio => ({ roleRatio, minLaws: SCORING_CONSTANTS.minContributingLaws, topThreeShareCap: SCORING_CONSTANTS.topThreeShareCap });
-  const rank = (bucket, roleRatio) => buildExposureRanking(bucket.groups, bucket.involvements, paramsOf(roleRatio));
+  // 内訳（cells）は産業×役割に束ねる（産業×年のままだと出力が数十MBになる）。row の groups は産業×年の数のまま。
+  const rank = (bucket, roleRatio) => {
+    const industryOf = new Map(bucket.groups.map(g => [g.id, g.group]));
+    return buildExposureRanking(bucket.groups, bucket.involvements, paramsOf(roleRatio), { cellGroupOf: id => industryOf.get(id) ?? id });
+  };
   // 産業別（本体）と全産業（別欄）。全産業は産業別と同じ額を重ねて数えるので足さない。
   const industryRanking = rank(built.industry, DEFAULT_ROLE_RATIO);
   const whole = rank(built.wholeEconomy, DEFAULT_ROLE_RATIO);
