@@ -174,15 +174,10 @@ def obs_id(group: str, window: str, low: int, median: int, high: int) -> str:
     return f"{group}／{window}／{low}／{median}／{high}"
 
 
-# ---- 人・行動・配分 ----
+# ---- 人・行動 ----
+# 議員への配分（allocations・member_scores）は作らない（設計決定0027・0028で撤回。議員は曝露ランキング）。表の定義は残すが空。
 
-def load_people_and_allocations(db: Db) -> None:
-    members = read_json(DIST / "members.json")
-    reference = read_json(DIST / "members-reference.json")
-    # 配分 v1（allocation-v1、設計決定0014）があればその名前、無い古いデータは成立への寄与の版。
-    method = "allocation-v1" if "allocation-v1" in members["rules"] else ("+".join(r for r in members["rules"] if r.startswith("causal-")) or members["rules"][0])
-    for m in [*members["members"], *reference["members"]]:
-        db.ensure("people", "person_id", m["id"], name=m["name"])
+def load_people_and_involvements(db: Db) -> None:
     # 会議録から集めた関与と、提出者の欄・参議院の賛否から機械的に作った関与（scripts/build_auto_involvements.py）の両方を入れる。
     alloc = DERIVED / "allocation-v1"
     involvements = read_csv(alloc / "involvements.csv") + read_csv(alloc / "involvements-auto.csv")
@@ -203,42 +198,6 @@ def load_people_and_allocations(db: Db) -> None:
         db.insert("involvements", {"law_id": r["法律ID"], "person_id": pid, "house": "参議院", "action": "oppose", "position": "other",
                                    "title_then": None, "acted_on": vote_day.get(r["投票ID"]) or None, "source_id": db.source(r["証拠URL"]),
                                    "counted": int(r["算入"] == "はい"), "excluded_reason": r["除外理由"] or None})
-    sign = lambda r, side: r  # noqa: E731  額は正で持ち、向きは laws.side
-    for m in members["members"]:
-        for law in m["laws"]:
-            if not law["fraction"]:
-                continue
-            role = "+".join(sorted(k for k, v in law["roles"].items() if v))
-            s = sign(law["share"], law["side"])
-            office = law.get("office") or {"low": 0, "median": 0, "high": 0}
-            # 役職の帳簿がある行は、割合も提出者の分（roles.proposer）と残りの行動の分に分ける。
-            office_fraction = law["roles"].get("proposer", 0) if any(office.values()) else 0
-            # 反対票（direction: against）は役割 oppose。法律の額の配分（合計1）とは別に数え、向きは laws.side の逆。
-            # 閣法の担当の大臣の分（office）は役割 office の別の行にする（点数に入れない役職の帳簿）。
-            db.insert("allocations", {"method": method, "ledger": "確か", "law_id": law["lawId"], "recipient_kind": "person", "recipient_id": m["id"],
-                                      "role": role, "fraction": law["fraction"] - office_fraction, "low": s["low"], "median": s["median"], "high": s["high"]})
-            if any(office.values()):
-                db.insert("allocations", {"method": method, "ledger": "確か", "law_id": law["lawId"], "recipient_kind": "person", "recipient_id": m["id"],
-                                          "role": "office", "fraction": office_fraction, "low": office["low"], "median": office["median"], "high": office["high"]})
-        db.insert("member_scores", {"method": method, "ledger": "確か", "person_id": m["id"], "rank": m["rank"],
-                                    "net_low": m["net"]["low"], "net_median": m["net"]["median"], "net_high": m["net"]["high"],
-                                    "loss_median": m["loss"]["median"], "credit_median": m["credit"]["median"],
-                                    "chair_veto_rank": m["sensitivity"]["chairVetoRank"], "flagged": int(m["sensitivity"]["flagged"])})
-    for law in members["laws"]:
-        g = law["game"]
-        for kind, rid, rng, frac in (("party", "衆議院の賛成会派", g["party"], g["vetoShare"]), ("unidentified", "名前不明の賛成票", g["unidentified"], None)):
-            if rng["median"] == 0 and rng["low"] == 0 and rng["high"] == 0:
-                continue
-            total = law["amount"]["median"] / law["observationLaws"] if law["observationLaws"] else law["amount"]["median"]
-            db.insert("allocations", {"method": method, "ledger": "確か", "law_id": law["id"], "recipient_kind": kind, "recipient_id": rid, "role": kind,
-                                      "fraction": frac if frac is not None else (rng["median"] / total if total else 0.0),
-                                      "low": round(rng["low"]), "median": round(rng["median"]), "high": round(rng["high"])})
-    ref_method = "+".join(reference["rules"])
-    ranked = sorted(reference["members"], key=lambda m: (m["net"]["median"], m["id"]))
-    for i, m in enumerate(ranked, 1):
-        db.insert("member_scores", {"method": ref_method, "ledger": "参考", "person_id": m["id"], "rank": i,
-                                    "net_low": round(m["net"]["low"]), "net_median": round(m["net"]["median"]), "net_high": round(m["net"]["high"]),
-                                    "loss_median": round(m["loss"]["median"]), "credit_median": round(m["credit"]["median"]), "chair_veto_rank": None, "flagged": None})
 
 
 # ---- 団体の行動・判決・政策 ----
@@ -636,7 +595,7 @@ def inputs_digest(files: set[Path] | None = None) -> str:
 
 
 # グラフ（charts.json）が使う入力。指標の CSV だけが変わったときに、ほかの作業の charts.json を古くしない。
-CHART_INPUTS = {DIST / "ranking.json", DIST / "members.json", DIST / "members-reference.json", DIST / "laws.json",
+CHART_INPUTS = {DIST / "ranking.json", DIST / "laws.json",
                 ACQ / "bill-census-full" / "enacted.csv", ACQ / "enforcement-dates" / "enforcement.csv",
                 DERIVED / "allocation-v1" / "involvements.csv", DERIVED / "allocation-v1" / "votes.csv"}
 
@@ -645,34 +604,32 @@ CHART_INPUTS = {DIST / "ranking.json", DIST / "members.json", DIST / "members-re
 
 def charts(con: sqlite3.Connection, spec_version: str) -> dict:
     q = lambda sql, *a: con.execute(sql, a).fetchall()  # noqa: E731
-    # 額の分布：桁（10^k 円）ごとの本数。同じ観測を共有する法律は観測1つとして数える（代表の行）。
+    # 同じ観測（群・窓・額が同じ）を共有する法律は、観測の額を本数で割らず、観測ごとに1回だけ代表の1本で数える（設計 v2.1）。
+    # 代表は公開ランキングと同じく確かさの高い順、同じなら id の昇順の先頭。
+    rows = q("SELECT l.observation_id, l.law_id, l.side, l.certainty, l.median, l.enforced_on FROM laws l WHERE l.outcome='額' AND l.observation_id IS NOT NULL")
+    order = {"高": 1, "中": 2, "低": 3}
+    representative: dict[str, tuple] = {}
+    for row in sorted(rows, key=lambda r: (order.get(r[3], 4), r[1])):
+        representative.setdefault(row[0], row)
+    # 額の分布：桁（10^k 円）ごとの本数。観測1つにつき代表の1本だけ数える。
     dist = defaultdict(lambda: {"loss": 0, "benefit": 0})
-    for median, side in q("SELECT o.median, l.side FROM observations o JOIN laws l ON l.observation_id = o.observation_id GROUP BY o.observation_id"):
+    for _obs, _law, side, _certainty, median, _enforced in representative.values():
         if median and median > 0:
             dist[len(str(int(median))) - 1][side] += 1
     histogram = [{"exp": k, **dist[k]} for k in range(min(dist), max(dist) + 1)] if dist else []
     by_certainty = [{"certainty": c, "loss": lo, "benefit": be, "laws": n} for c, lo, be, n in q(
         "SELECT certainty, SUM(side='loss'), SUM(side='benefit'), COUNT(*) FROM laws WHERE outcome='額' GROUP BY certainty ORDER BY CASE certainty WHEN '高' THEN 1 WHEN '中' THEN 2 WHEN '低' THEN 3 ELSE 4 END")]
-    # 時系列：施行年ごとの本数と、確かな額（高・中・低）の観測の合計。観測を共有する法律は本数で割った分を足す。
+    # 時系列：施行年ごとの本数（額のある法律の全部）と、額の合計。額は観測ごとに1回、代表の1本の施行年に数える（本数で割らない）。
     years = defaultdict(lambda: {"laws": 0, "confirmedLoss": 0, "confirmedBenefit": 0, "referenceLoss": 0, "referenceBenefit": 0})
-    for year, side, certainty, median, n in q(
-            "SELECT CAST(substr(l.enforced_on,1,4) AS INTEGER), l.side, l.certainty, l.median, o.n_laws FROM laws l JOIN observations o ON o.observation_id = l.observation_id WHERE l.outcome='額' AND l.enforced_on IS NOT NULL"):
-        y = years[year]
-        y["laws"] += 1
-        key = ("confirmed" if certainty != "参考" else "reference") + ("Loss" if side == "loss" else "Benefit")
-        y[key] += median // n
+    for _obs, _law, _side, _certainty, _median, enforced in rows:
+        if enforced:
+            years[int(enforced[:4])]["laws"] += 1
+    for _obs, _law, side, certainty, median, enforced in representative.values():
+        if enforced:
+            key = ("confirmed" if certainty != "参考" else "reference") + ("Loss" if side == "loss" else "Benefit")
+            years[int(enforced[:4])][key] += median or 0
     timeline = [{"year": y, **years[y]} for y in sorted(years)]
-    members = [{"id": pid, "name": name, "rank": rank, "net": net, "low": lo, "high": hi, "loss": loss, "credit": credit} for pid, name, rank, net, lo, hi, loss, credit in q(
-        "SELECT s.person_id, p.name, s.rank, s.net_median, s.net_low, s.net_high, s.loss_median, s.credit_median FROM member_scores s JOIN people p USING (person_id) WHERE s.ledger='確か' ORDER BY s.rank")]
-    # 法律の額の配り先（合計＝法律の額）。反対票（oppose）は額の配分とは別に数えるので入れない（設計決定0014）。
-    roles = [{"role": role, "kind": kind, "loss": loss or 0, "benefit": benefit or 0} for role, kind, loss, benefit in q(
-        "SELECT a.role, a.recipient_kind, SUM(CASE WHEN l.side='loss' THEN a.median END), SUM(CASE WHEN l.side='benefit' THEN a.median END) FROM allocations a JOIN laws l USING (law_id) WHERE a.ledger='確か' AND a.role != 'oppose' GROUP BY a.role, a.recipient_kind ORDER BY a.recipient_kind, a.role")]
-    parties = [{"party": party, "laws": n, "loss": loss or 0, "benefit": benefit or 0} for party, n, loss, benefit in q(
-        """SELECT s.party_id, COUNT(*), SUM(CASE WHEN l.side='loss' THEN l.median / o.n_laws END), SUM(CASE WHEN l.side='benefit' THEN l.median / o.n_laws END)
-           FROM law_party_stances s JOIN laws l USING (law_id) JOIN observations o ON o.observation_id = l.observation_id
-           WHERE s.stance='賛成' AND l.certainty IN ('高','中','低') GROUP BY s.party_id ORDER BY COUNT(*) DESC, s.party_id""")]
-    return {"schema": "public-charts/v1", "spec": spec_version, "histogram": histogram, "byCertainty": by_certainty, "timeline": timeline,
-            "members": members, "roles": roles, "parties": parties}
+    return {"schema": "public-charts/v1", "spec": spec_version, "histogram": histogram, "byCertainty": by_certainty, "timeline": timeline}
 
 
 def build(out: Path, write_charts: bool) -> dict:
@@ -681,7 +638,7 @@ def build(out: Path, write_charts: bool) -> dict:
     spec_version = load_spec(db)
     load_registry(db)
     load_laws(db)
-    load_people_and_allocations(db)
+    load_people_and_involvements(db)
     load_org_actions(db)
     load_other_decisions(db)
     load_fiscal(db)

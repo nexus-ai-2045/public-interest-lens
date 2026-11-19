@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""議員ページの全員について、国会会議録検索システム API から発言の件数と期間を直接取る。
+"""曝露ランキングで点がある（tier が null でない）全員について、国会会議録検索システム API から発言の件数と期間を直接取る。
 
 2系統で照合する。
   系統A: speech API で氏名だけを指定した総件数。
@@ -7,12 +7,15 @@
 一致したものだけ「採用」、ずれたものは「保留」として理由を書く。
 実名が入るので出力は共有フォルダの private-m2 側に置く（リポジトリには入れない）。
 
-使い方: python3 scripts/fetch_kokkai_member_counts.py [--members app/public/distribution/members.json]
+使い方: python3 scripts/fetch_kokkai_member_counts.py [--exposure data/derived/exposure-v1/exposure-ranking.json] [--persons data/derived/person-ids/persons.csv]
             [--out /mnt/project-files/private-m2/kokkai-direct] [--sleep 1.0]
 """
 import argparse, csv, json, sys, time, urllib.parse, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from person_ids import EXPOSURE, ranked_people  # noqa: E402
 
 API = "https://kokkai.ndl.go.jp/api/speech"
 HOUSES = ("衆議院", "参議院", "両院")
@@ -68,11 +71,12 @@ COLS = ["氏名", "判定", "理由", "系統A_総件数", "系統B_院別合計
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--members", default="app/public/distribution/members.json")
+    ap.add_argument("--exposure", default=str(EXPOSURE), help="曝露ランキング。tier が null でない人が対象")
+    ap.add_argument("--persons", default="data/derived/person-ids/persons.csv", help="人物台帳（人物IDから氏名を引く）")
     ap.add_argument("--out", default="/mnt/project-files/private-m2/kokkai-direct")
     ap.add_argument("--sleep", type=float, default=1.0)
     a = ap.parse_args()
-    names = [m["name"] for m in json.load(open(a.members, encoding="utf-8"))["members"]]
+    names = [name for _, name in ranked_people(Path(a.exposure), Path(a.persons))]
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     path = out / "members-speech-counts.csv"
     done = {}

@@ -45,7 +45,7 @@ HISTORICAL = ROOT / "data" / "acquired" / "diet-roster" / "historical.csv"
 SAME_PERSON = ROOT / "data" / "acquired" / "diet-roster" / "same-person.csv"
 CABINET = ROOT / "data" / "acquired" / "office-holders" / "cabinet.csv"
 INVOLVEMENTS = ROOT / "data" / "derived" / "allocation-v1" / "involvements.csv"
-REFERENCE = ROOT / "app" / "public" / "distribution" / "members-reference.json"
+EXPOSURE = ROOT / "data" / "derived" / "exposure-v1" / "exposure-ranking.json"
 OUT_DIR = ROOT / "data" / "derived" / "person-ids"
 OVERRIDES = OUT_DIR / "overrides.csv"
 OVERRIDES_HEADER = ["法律ID", "証拠URL", "人物ID", "根拠URL"]
@@ -252,10 +252,11 @@ def _new(ledger: Ledger, canon: str, r: dict, pid: str) -> None:
 
 def build_ledger(roster: list[dict], cabinet: list[dict] | None = None, involvements: list[dict] | None = None,
                  previous: list[dict] | None = None, overrides: dict[tuple[str, str], str] | None = None,
-                 reference: list[dict] | None = None, historical: list[dict] | None = None,
+                 historical: list[dict] | None = None,
                  same: list[dict] | None = None) -> Ledger:
     """名簿の人物に、内閣名簿と関与の一覧にしか出ない人物（元職など）を足す。別表記は同じ人物IDに集める。
-    previous（前の persons.csv）の人物は、人物IDを変えずに引き継ぐ。"""
+    previous（前の persons.csv）の人物は、人物IDを変えずに引き継ぐ。歴代の人（今の名簿にいない人）も前の台帳で残る。
+    台帳に残さないと、のちに同じ氏名の人が名簿に載ったとき、歴代の人の投票・提出が新しい人へ移ってしまう。"""
     ledger = Ledger()
     ledger.overrides = overrides or {}
     load_previous(ledger, previous or [])
@@ -281,12 +282,6 @@ def build_ledger(roster: list[dict], cabinet: list[dict] | None = None, involvem
             targets = [p]
         for p in targets:
             p.aliases |= {s for s in counts if s != p.name}
-    # 全議員の表（members-reference.json）にだけ出る歴代の人も台帳に残す。台帳に無いと、のちに同じ氏名の人が名簿に載ったとき、
-    # 歴代の人の投票・提出が新しい人へ移ってしまう。参議院の投票記録に会派がある人は参議院、ほかは院を決めない。
-    for m in reference or []:
-        canon = canonical(m.get("name") or m["id"])
-        if canon and canon not in ledger.by_canonical:
-            _add(ledger, Person(canon, clean_name(m.get("name") or m["id"]), house="参議院" if m.get("lastSangiinParty") else ""))
     # 元職の名簿（会議録の発言者から確かめた人。scripts/fetch_roster_kokkai.py）。台帳に同じ氏名がいれば結ばない（同姓同名を混ぜない）。
     # 読みが複数ある（同姓同名の疑い）人は台帳に入れず、一覧に残す。
     for h in historical or []:
@@ -369,7 +364,6 @@ def main(argv=None) -> int:
     p.add_argument("--out-dir", type=Path, default=OUT_DIR)
     p.add_argument("--overrides", type=Path, default=OVERRIDES, help="同姓同名の行を人物IDに結ぶ対応表（法律ID,証拠URL,人物ID,根拠URL）")
     p.add_argument("--previous", type=Path, help="前の persons.csv（既定は出力先の persons.csv）。付けた人物IDはここから引き継いで変えない")
-    p.add_argument("--reference", type=Path, default=REFERENCE, help="前に作った全議員の表。歴代の人を台帳に残すために読む")
     p.add_argument("--historical", type=Path, default=HISTORICAL, help="元職の名簿（会議録の発言者から確かめた人）")
     p.add_argument("--same-person", type=Path, default=SAME_PERSON, help="一次資料で同じ人と確かめた表記の対応表")
     p.add_argument("--annotate-involvements", action="store_true", help="関与の一覧に人物ID列を足し直し、役職を canonical で照合し直す")
@@ -379,7 +373,6 @@ def main(argv=None) -> int:
     previous = a.previous or a.out_dir / "persons.csv"
     ledger = build_ledger(read_csv(a.roster), cabinet, inv, read_csv(previous) if previous.exists() else None,
                           load_overrides(a.overrides),
-                          json.loads(a.reference.read_text(encoding="utf-8"))["members"] if a.reference.exists() else None,
                           read_csv(a.historical) if a.historical.exists() else None,
                           read_csv(a.same_person) if a.same_person.exists() else None)
     rows = [{"人物ID": q.id, "氏名": q.name, "読み": q.reading, "院": q.house, "選挙区": q.district, "別表記": "／".join(sorted(q.aliases))}
@@ -401,5 +394,14 @@ def main(argv=None) -> int:
     return 0
 
 
+def ranked_people(exposure: Path = EXPOSURE, persons: Path | None = None) -> list[tuple[str, str]]:
+    """曝露ランキング（exposure-ranking.json）で点がある（tier が null でない）人の (人物ID, 氏名)。氏名は人物台帳（persons.csv）で引く。
+    国会での活動の取得・公開（scripts/fetch_kokkai_member_*.py・build_member_activity.py）の対象。台帳に無い人物IDは氏名を人物IDで代える。"""
+    people = json.loads(exposure.read_text(encoding="utf-8"))["people"]
+    names = {r["人物ID"]: r["氏名"] for r in read_csv(persons or OUT_DIR / "persons.csv")}
+    return [(p["actorId"], names.get(p["actorId"], p["actorId"])) for p in people if p.get("tier") is not None]
+
+
 if __name__ == "__main__":
     raise SystemExit(main())
+

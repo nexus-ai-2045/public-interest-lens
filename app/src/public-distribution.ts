@@ -1,5 +1,4 @@
-import type { PublicMembers } from './members-build';
-import type { PublicMembersReference } from './members-reference';
+import type { ExposureRanking, PublicExposureRanking } from './exposure-ranking';
 import { validGenerationMetadata, type GenerationMetadata } from './generation-metadata';
 /** コロナ対応の費用便益（covid-benefit-v1）の観測グループ。比較国を持たない。 */
 export const COVID_BENEFIT_GROUP = '全体指標-コロナ費用便益';
@@ -180,16 +179,33 @@ export function parsePublicRanking(text: string): PublicRanking {
 }
 
 
-export function parsePublicMembers(text: string): PublicMembers {
-  const data = JSON.parse(text) as PublicMembers;
-  if (data.schema !== 'public-members/v3' || !Array.isArray(data.members) || !Array.isArray(data.laws)) throw new Error('議員データの形式が違います');
-  if (!validGenerationMetadata(data.generatedFrom, ['app/src/members-build.ts', 'scripts/build_public_members.mjs', 'scripts/generation_provenance.mjs', 'scripts/path_guard.mjs', 'app/package-lock.json'])) throw new Error('議員データの生成元が不正です');
+/** 曝露ランキングの公開用データ（scripts/build_exposure_ranking.mjs が作る）。形と生成元を確かめる。 */
+export type PublicExposureDistribution = PublicExposureRanking & { generatedFrom: GenerationMetadata };
+export function parsePublicExposureRanking(text: string): PublicExposureDistribution {
+  const data = JSON.parse(text) as PublicExposureDistribution;
+  if (data.schema !== 'exposure-ranking/v1' || data.claim !== 'descriptive' || !Array.isArray(data.people) || !Array.isArray(data.parties) || !Array.isArray(data.unallocated)) throw new Error('曝露ランキングの形式が違います');
+  if (!validGenerationMetadata(data.generatedFrom, ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts', 'scripts/build_exposure_ranking.mjs'])) throw new Error('曝露ランキングの生成元が不正です');
+  // 法律1本ぶんの額を出さない決まり（設計決定0028）：階層に入らない行に額があれば受け取らない。
+  for (const row of [...data.people, ...data.parties]) {
+    if ((row.tier === null) !== (row.exposureYen === null)) throw new Error('曝露ランキングの額の伏せ方が不正です');
+  }
   return data;
 }
 
-export function parsePublicMembersReference(text: string): PublicMembersReference {
-  const data = JSON.parse(text) as PublicMembersReference;
-  if (data.schema !== 'public-members-reference/v2' || !Array.isArray(data.members)) throw new Error('参考一覧の形式が違います');
-  if (!validGenerationMetadata(data.generatedFrom, ['app/src/members-reference.ts', 'scripts/build_reference_members.mjs', 'scripts/generation_provenance.mjs', 'scripts/path_guard.mjs', 'app/package-lock.json'])) throw new Error('参考一覧の生成元が不正です');
-  return data;
+const ZERO = { low: 0, median: 0, high: 0 };
+/**
+ * 公開用データを画面部品（ExposureRankingPanel）の入力に変える。伏せた額（null）は画面が出さない所にだけあるので0で埋める
+ * （階層に入らない行の額と、本数が下限に満たない内訳を含む行の内訳の額。画面はどちらも出さない）。
+ * 合計まで伏せた状態（額を出さない行が1つだけ）は、画面の検算が嘘になるので受け取らない。
+ */
+export function panelExposureRanking(data: PublicExposureRanking): ExposureRanking {
+  const { totals } = data;
+  if (!totals.people || !totals.parties || !totals.unallocated || !totals.expected || data.unallocated.some(u => u.exposureYen === null)) throw new Error('合計を伏せた曝露ランキングは画面に出せません');
+  const row = (r: PublicExposureRanking['people'][number]) => ({ ...r, exposureYen: r.exposureYen ?? ZERO, cells: r.cells.map(c => ({ ...c, exposureYen: c.exposureYen ?? ZERO })) });
+  return {
+    schema: data.schema, claim: data.claim, disclaimer: data.disclaimer, params: data.params,
+    people: data.people.map(row), parties: data.parties.map(row),
+    unallocated: data.unallocated.map(u => ({ ...u, exposureYen: u.exposureYen ?? ZERO })),
+    totals: { people: totals.people, parties: totals.parties, unallocated: totals.unallocated, expected: totals.expected },
+  };
 }

@@ -38,7 +38,6 @@ ACQUIRED = ROOT / "data" / "acquired"
 REVISION_METHODS = ("新規法令の初めの版（law_revisions）", "改正履歴（law_revisions）", "e-Gov 改正履歴の施行日",
                     "施行期日政令（e-Gov", "施行期日政令と改正履歴が一致")
 RANKING = ROOT / "app" / "public" / "distribution" / "ranking.json"
-MEMBERS = ROOT / "app" / "public" / "distribution" / "members.json"
 REPORT_DIR = DERIVED / "source-check"
 ESTIMATED = "推定（公布日）"
 
@@ -388,57 +387,6 @@ def check(ranking: dict, ctx: dict) -> tuple[list[dict[str, str]], dict]:
     return rows, summary
 
 
-def members_vacuous(members: dict) -> bool:
-    """議員ページ（members.json）の議員か法律のどちらかが0件＝その側の照合は何も確かめていない。"""
-    return not members.get("members") or not members.get("laws")
-
-
-def check_members(members: dict, ranking: dict) -> list[dict[str, str]]:
-    """議員ページ：法律の額が公開ランキングと同じか、証拠が一次資料か、個人・会派・名前不明の賛成票の配分の合計が額に一致するか。"""
-    rows: list[dict[str, str]] = []
-
-    def add(subject: str, item: str, published, primary, result: str, note: str = "") -> None:
-        rows.append({"id": subject, "項目": item, "公開値": str(published), "一次資料の値": str(primary), "結果": result, "備考": note})
-
-    published = {law["id"]: law for law in ranking["laws"]}
-    held = {item["id"] for item in ranking["others"] if item["outcome"] == "出典チェックで食い違い（確認中）"}
-    for law in members["laws"]:
-        if law["id"] in held:
-            add(law["id"], "議員ページの法律", "載っている", "出典チェックで外した法律", NG)
-        elif law["id"] in published:
-            want = published[law["id"]]
-            got = (law["amount"]["low"], law["amount"]["median"], law["amount"]["high"])
-            exp = (want["amountLowYen"], want["amountMedianYen"], want["amountHighYen"])
-            add(law["id"], "議員ページの額", got, exp, OK if got == exp else NG, "公開ランキングの額")
-    shares: dict[str, list[int]] = {}
-    bad_urls = 0
-    for member in members["members"]:
-        for law in member["laws"]:
-            # 反対票（direction=against）は法律の額とは別に数えるので、配分の合計に入れない。点数外の役職の帳簿（office）は入れる（設計決定0014）。
-            if law.get("direction", "with") == "with":
-                shares.setdefault(law["lawId"], []).append(abs(law["share"]["median"]) + abs(law.get("office", {}).get("median", 0)))
-            bad_urls += sum(not is_primary(e["url"]) for e in law["evidence"] + law.get("context", []))
-    add("議員ページ", "証拠URL", "一次資料以外の URL の数", bad_urls, OK if bad_urls == 0 else NG, "国会会議録・衆参の議案情報だけ")
-    # 同じ観測（同じ観測グループ・同じ期間・同じ額の幅）を共有する法律の本数を公開ランキングから数え直し、配る額＝額÷本数を確かめる。
-    def observation(want: dict) -> tuple:
-        return (want.get("group", ""), want.get("window", ""), want["amountLowYen"], want["amountMedianYen"], want["amountHighYen"])
-
-    sharing: dict[tuple, int] = {}
-    for want in ranking["laws"]:
-        if want.get("certainty") != "参考" and want.get("amountMedianYen") is not None:
-            sharing[observation(want)] = sharing.get(observation(want), 0) + 1
-    for law in members["laws"]:
-        if law["id"] in published:
-            n = sharing.get(observation(published[law["id"]]), 0)
-            add(law["id"], "同じ観測を共有する本数", law["observationLaws"], n, OK if law["observationLaws"] == n else NG, "公開ランキングで同じ観測グループ・同じ期間・同じ額の幅の法律の本数")
-        persons = sum(shares.get(law["id"], []))
-        game = law["game"]
-        total = persons + game["party"]["median"] + game["unidentified"]["median"]
-        expected = int(law["amount"]["median"] / law["observationLaws"])
-        add(law["id"], "配分の合計", total, expected, OK if total == expected else NG, "個人＋衆議院の賛成会派＋名前不明の賛成票＝法律の額÷同じ観測を共有する本数（Shapley 値の合計は1）")
-    return rows
-
-
 def write_report(rows: list[dict[str, str]], summary: dict, report_dir: Path = REPORT_DIR) -> None:
     report_dir.mkdir(parents=True, exist_ok=True)
     # 原本の有無は環境（クラウドか Mac か）で変わるので、公開の記録には残さない。
@@ -473,12 +421,6 @@ def rebuild(approve_all: bool, approved_at: str, ranking_path: Path = RANKING, w
     candidate = ranking_builder.build(approve_all, approved_at, held_by_check=set())
     rows, summary = check(candidate, context())
     payload = ranking_builder.build(approve_all, approved_at, held_by_check=set(summary["heldOut"]))
-    if MEMBERS.exists():
-        member_rows = check_members(json.loads(MEMBERS.read_text(encoding="utf-8")), payload)
-        rows += member_rows
-        summary["memberMismatch"] = sum(r["結果"] == NG for r in member_rows)
-        summary["items"] = len(rows)
-        summary["match"] = sum(r["結果"] == OK for r in rows)
     if write:
         write_report(rows, summary)
         ranking_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -490,31 +432,18 @@ def main() -> int:
     parser.add_argument("--ranking", type=Path, default=RANKING)
     parser.add_argument("--dry-run", action="store_true", help="ranking.json と報告を書き換えない")
     parser.add_argument("--generate-ranking", action="store_true", help="入力だけから ranking.json を作る（Git に置かない派生物。報告は書かない）")
-    parser.add_argument("--members-only", action="store_true", help="生成済み議員ページと公開ランキングだけを照合し、ファイルを書き換えない")
     args = parser.parse_args()
     if args.generate_ranking:
         args.ranking.write_text(json.dumps(generate_ranking(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(f"書きました: {args.ranking}")
         return 0
     current = json.loads(args.ranking.read_text(encoding="utf-8"))
-    if args.members_only:
-        members = json.loads(MEMBERS.read_text(encoding="utf-8"))
-        rows = check_members(members, current)
-        mismatches = [row for row in rows if row["結果"] == NG]
-        # 議員か法律が0件なら、その側は照合する相手が無い。合格と区別できるように「空振り」と出す（終了コードは変えない）。
-        vacuous = members_vacuous(members)
-        print(json.dumps({"memberItems": len(rows), "memberMismatch": len(mismatches), "vacuous": vacuous}, ensure_ascii=False))
-        if vacuous:
-            print(f"注意  議員ページの照合は空振り：members.json の議員 {len(members.get('members') or [])} 人・法律 {len(members.get('laws') or [])} 本", file=sys.stderr)
-        for row in mismatches:
-            print(json.dumps(row, ensure_ascii=False), file=sys.stderr)
-        return 1 if mismatches else 0
     # 承認は記録済みの日付を引き継ぐ。前回外した法律も全件を照合し直す（直っていれば公開に戻る）。
     approve_all = current["approval"]["scope"] == "all-laws"
     approved_at = current["approval"]["approvedAt"] or ""
     summary = rebuild(approve_all, approved_at, args.ranking, write=not args.dry_run)
     print(json.dumps(summary, ensure_ascii=False))
-    return 1 if summary["mismatch"] or summary.get("memberMismatch") else 0
+    return 1 if summary["mismatch"] else 0
 
 
 if __name__ == "__main__":

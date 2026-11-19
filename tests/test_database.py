@@ -90,41 +90,20 @@ class DatabaseTest(unittest.TestCase):
     def test_observation_sizes_match_published_laws(self) -> None:
         self.assertEqual(self.one("SELECT SUM(n_laws) FROM observations"), self.one("SELECT COUNT(*) FROM laws WHERE outcome = '額'"))
 
-    def test_allocations_add_up_to_each_law_share(self) -> None:
-        """人・会派・名前不明の配分の合計は、法律の分（観測の額を本数で割ったもの）に一致する（最大剰余法）。"""
-        members = json.loads((DIST / "members.json").read_text(encoding="utf-8"))
-        for law in members["laws"]:
-            # 反対票（oppose）は法律の額の配分とは別に数える（設計決定0014）。
-            total = self.one("SELECT SUM(median) FROM allocations WHERE law_id = ? AND role != 'oppose'", law["id"])
-            expected = abs(int(law["amount"]["median"] / law["observationLaws"]))
-            self.assertLessEqual(abs(total - expected), 2, law["id"])
+    def test_no_member_allocation_tables_are_filled(self) -> None:
+        """議員への配分は撤回した（設計決定0027・0028）。表の定義は残るが空で、関与（一次資料つき）だけがある。"""
+        self.assertEqual(self.one("SELECT COUNT(*) FROM allocations"), 0)
+        self.assertEqual(self.one("SELECT COUNT(*) FROM member_scores"), 0)
+        self.assertGreater(self.one("SELECT COUNT(*) FROM involvements"), 0)
+        self.assertGreater(self.one("SELECT COUNT(*) FROM people"), 0)
 
-    def test_fractions_do_not_exceed_one(self) -> None:
-        """役職の帳簿と行動の行で割合を二重に数えない。反対票を除いた割合の合計は1を超えない。"""
-        over = self.con.execute(
-            "SELECT law_id, SUM(fraction) FROM allocations WHERE role != 'oppose' GROUP BY law_id HAVING SUM(fraction) > 1.000001").fetchall()
-        self.assertEqual(over, [])
-
-    def test_every_allocated_law_has_its_vote_and_actions(self) -> None:
-        """人に配った法律には、参議院の票数と、根拠の行動（一次資料つき）がデータベースにある（自動の関与・反対票を含む）。"""
-        missing = self.con.execute(
-            "SELECT DISTINCT a.law_id FROM allocations a LEFT JOIN sangiin_votes v USING (law_id) WHERE a.recipient_kind = 'person' AND v.law_id IS NULL").fetchall()
-        self.assertEqual(missing, [])
-        for role, action in (("vote", "vote"), ("oppose", "oppose")):
-            orphan = self.con.execute(
-                "SELECT a.law_id, a.recipient_id FROM allocations a WHERE a.role = ? AND NOT EXISTS (SELECT 1 FROM involvements i WHERE i.law_id = a.law_id AND i.person_id = a.recipient_id AND i.action = ? AND i.source_id IS NOT NULL) LIMIT 5",
-                (role, action)).fetchall()
-            self.assertEqual(orphan, [], role)
-
-    def test_member_scores_match_members_json(self) -> None:
-        members = json.loads((DIST / "members.json").read_text(encoding="utf-8"))
-        for m in members["members"][:50]:
-            self.assertEqual(self.one("SELECT net_median FROM member_scores WHERE ledger = '確か' AND person_id = ?", m["id"]), m["net"]["median"], m["id"])
+    def test_charts_have_no_member_sections(self) -> None:
+        payload = build_database.charts(self.con, "spec")
+        self.assertEqual(set(payload), {"schema", "spec", "histogram", "byCertainty", "timeline"})
 
     def test_spec_versions_are_loaded(self) -> None:
         versions = {c: v for c, v in self.con.execute("SELECT component, version FROM method_versions")}
         self.assertEqual(versions["loss"], "loss-rule-v1")
-        self.assertEqual(versions["allocation-v0"], "causal-shapley-v1")
         self.assertRegex(self.one("SELECT value FROM meta WHERE key = 'spec'"), r"^method-spec-v\d+\.\d+$")
 
     def test_registry_statuses(self) -> None:

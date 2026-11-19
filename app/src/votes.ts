@@ -1,9 +1,7 @@
 /** 法律ごとの会派・議員の賛否（/votes）。配布ファイル votes.json は scripts/build_public_votes.py が作る。 */
-import { blocOf } from './members-build';
+import { blocOf } from './diet-records';
 
 export const distributionVotesUrl = '/distribution/votes.json';
-/** 議員ページの配布データ（MembersPage.tsx の distributionMembersUrl と同じ場所）。人物IDだけ読む。 */
-export const distributionMembersIdsUrl = '/distribution/members.json';
 
 export type VoteLaw = {
   id: string; title: string; kind: string; session: number; proposer: string; promulgated: string | null; url: string;
@@ -62,16 +60,6 @@ export function shuSpan(laws: VoteLaw[], bloc: Bloc): { first: string; last: str
   }
   return { first, last };
 }
-
-/** 議員ページの配布データ（members.json）から人物IDだけを取る。/votes の議員から /members へのリンクを、人物IDが一致するときだけ張るために使う。 */
-export function memberIdsOf(text: string): Set<string> {
-  const v = JSON.parse(text) as unknown;
-  const list = isRecord(v) && Array.isArray(v.members) ? v.members : [];
-  return new Set(list.map(m => isRecord(m) ? m.id : null).filter((id): id is string => typeof id === 'string'));
-}
-
-/** 議員ページ（/members）への道。人物IDと名前が一致するときだけ返す（同姓同名は人物IDに院と選挙区が付くので、一致しない）。 */
-export const memberPageHref = (name: string, ids: ReadonlySet<string> | undefined): string | null => ids?.has(name) ? `/members?name=${encodeURIComponent(name)}` : null;
 
 export type Stance = 'yes' | 'no' | 'split' | 'none';
 export type BlocStance = { shu: Stance; san: { yes: number; no: number; absent: number } | null; sanMethod: 'ballot' | 'standing' | null };

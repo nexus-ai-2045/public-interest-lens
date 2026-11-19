@@ -1,5 +1,5 @@
 /**
- * 閣法の提出者＝閣僚の割り出し（純関数）。members-reference.ts と exposure-inputs.ts が共有する（決まりの置き場はここ1つ）。
+ * 閣法の提出者＝閣僚の割り出し（純関数）。exposure-inputs.ts が使う（決まりの置き場はここ1つ）。
  *
  * 閣法は内閣の提出。総理大臣1人に全部付けず（首相だけが突出する原因）、提出した回次の会期の最初から最後まで在任した閣僚
  * （総理大臣を含む）を提出者とする（設計確定 v2.1：閣法は首相1人に付けない）。副長官・法制局長官は閣僚ではないので除く。途中で替わった閣僚は含めない。
@@ -9,13 +9,12 @@
  * 継続審査で付託日が後の回次のものも空にする。
  * 返すのは名簿の表記（印と空白を取った氏名）で、人物台帳への解決は呼ぶ側が行う。
  */
-import { warekiDate } from './members-build';
+import { normName, warekiDate } from './diet-records';
 import { canonical } from './person-id';
 
-type Row = Record<string, string>;
+export { normName };
 
-/** 空白と敬称「君」、名簿の脚注の印（*・※ など）を取る。印を残すと、同じ人が印の有無で別人になる。字体は寄せない（出典の表記のまま）。 */
-export const normName = (s: string): string => s.replace(/[\s　]/g, '').replace(/君$/, '').replace(/[*＊※†‡]+$/, '');
+type Row = Record<string, string>;
 
 /** 閣僚＝国務大臣（総理大臣・各大臣・官房長官・担当大臣）。区分が「閣僚」の行には内閣官房副長官・総理府総務副長官・内閣法制局長官も入るが、閣僚ではないので除く。 */
 const NOT_MINISTER = /副長官|法制局長官/;

@@ -1,6 +1,5 @@
-"""段階1の法律の額は「確かさ：低」の額として数え、貸出残高だけが参考。議員への配分には使わないことを、保存済みの出力で確かめる。"""
+"""段階1の法律の額は「確かさ：低」の額として数え、貸出残高だけが参考。保存済みの出力で確かめる。"""
 import csv
-import re
 import unittest
 from pathlib import Path
 
@@ -71,14 +70,6 @@ class Stage1LowConfidenceTest(unittest.TestCase):
     def test_v1_outputs_have_no_stage1_rows(self):
         v1 = rows(DERIVED / "loss-v1" / "loss.csv")
         self.assertFalse([r for r in v1 if r["段階"] == "段階1"])
-
-    def test_allocation_skips_reference_and_low_confidence_rows_in_script(self):
-        script = (ROOT / "app" / "scripts" / "run-allocation-v1.mjs").read_text(encoding="utf-8")
-        self.assertIn("A.allocatable(", script)
-        self.assertTrue(re.search(r"参考フラグ'\] === '参考'", script))
-        self.assertIn("'確かさ'", script)
-        src = (ROOT / "app" / "src" / "allocation-batch.ts").read_text(encoding="utf-8")
-        self.assertIn("!l.reference && !l.lowConfidence", src)
 
 
 if __name__ == "__main__":

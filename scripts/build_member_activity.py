@@ -4,8 +4,8 @@
 - diet.json：国会会議録検索システム API から取った件数と直近の発言（名前ごと）
 - roles.json：公的機関・政党の公式ページで確かめられた役職など（名前ごと）
 
-点数には使わない参考表示。議員ページ（members.json）にいる人だけを出す。
-入力は氏名のキーで、議員ページの人物と canonical（空白・敬称を除き、髙→高 など同一人物の字体ゆれを寄せた氏名）で結ぶ。
+点数には使わない参考表示。曝露ランキング（exposure-ranking.json）で点がある（tier が null でない）人だけを出す（入力にいても点が無い人は出さない）。
+入力は氏名のキーで、その人物と canonical（空白・敬称を除き、髙→高 など同一人物の字体ゆれを寄せた氏名）で結ぶ。
 出力のキーは人物ID。同じ氏名の人物が複数いて入力のキーが人物IDそのものでないときは、どちらか決められないので止める。
 """
 
@@ -22,10 +22,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.person_ids import canonical  # noqa: E402
+from scripts.person_ids import EXPOSURE, canonical, ranked_people  # noqa: E402
 
 SOURCE = ROOT / "data" / "derived" / "member-activity-v1"
-MEMBERS = ROOT / "app" / "public" / "distribution" / "members.json"
 OUTPUT = ROOT / "app" / "public" / "distribution" / "member-activity.json"
 PERSONS = ROOT / "data" / "derived" / "person-ids" / "persons.csv"
 
@@ -37,17 +36,19 @@ ROLE_KEYS = ("category", "title", "period", "url", "source")
 
 
 def build(fetched_at: str) -> dict:
-    people = json.loads(MEMBERS.read_text(encoding="utf-8"))["members"]
-    ids = {m["id"] for m in people}
+    people = ranked_people(EXPOSURE, PERSONS)
+    ids = {pid for pid, _ in people}
     by_name: dict[str, list[str]] = {}
-    for m in people:
-        by_name.setdefault(canonical(m["name"]), []).append(m["id"])
-    # 人物台帳で分かれた同姓同名（議員ページに片方しか載っていない場合も）。
+    for pid, name in people:
+        by_name.setdefault(canonical(name), []).append(pid)
+    # 人物台帳で分かれた同姓同名（曝露ランキングに片方しか載っていない場合も）。
     in_ledger: dict[str, int] = {}
+    ledger_ids: set[str] = set()
     if PERSONS.exists():
         with PERSONS.open(encoding="utf-8", newline="") as f:
             for r in csv.DictReader(f):
                 in_ledger[canonical(r["氏名"])] = in_ledger.get(canonical(r["氏名"]), 0) + 1
+                ledger_ids.add(r["人物ID"])
 
     def person_of(key: str) -> str | None:
         found = by_name.get(canonical(key), [])
@@ -64,12 +65,13 @@ def build(fetched_at: str) -> dict:
 
     diet_raw = json.loads((SOURCE / "diet.json").read_text(encoding="utf-8"))
     roles_raw = json.loads((SOURCE / "roles.json").read_text(encoding="utf-8"))
-    unknown = sorted(k for k in set(diet_raw) | set(roles_raw) if person_of(k) is None)
+    # 入力は点が付く前の人も含む。台帳にもいない名前（綴りの誤り）だけ止め、台帳にいて点が無い人は出さない。
+    unknown = sorted(k for k in set(diet_raw) | set(roles_raw) if person_of(k) is None and k not in ledger_ids and canonical(k) not in in_ledger)
     if unknown:
-        raise ValueError(f"議員ページにいない名前があります: {unknown}")
-    diet = {person_of(k): v for k, v in diet_raw.items()}
-    roles = {person_of(k): v for k, v in roles_raw.items()}
-    if len(diet) != len(diet_raw) or len(roles) != len(roles_raw):
+        raise ValueError(f"人物台帳にいない名前があります: {unknown}")
+    diet = {person_of(k): v for k, v in diet_raw.items() if person_of(k) is not None}
+    roles = {person_of(k): v for k, v in roles_raw.items() if person_of(k) is not None}
+    if len(diet) != len([k for k in diet_raw if person_of(k) is not None]) or len(roles) != len([k for k in roles_raw if person_of(k) is not None]):
         raise ValueError("入力の中に、同じ人物になる名前が2つあります（表記ゆれ）")
     members: dict[str, dict] = {}
     for name in sorted(ids):

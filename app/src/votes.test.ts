@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { BlocPanel, MemberSearch, MergerNote } from './VotesPage';
-import { BLOCS, blocStance, blocSummary, fromYear, lawYear, memberIdsOf, memberPageHref, noLawsByMember, parseVotes, shuSpan, type VoteLaw } from './votes';
-import { blocOf } from './members-build';
+import { BLOCS, blocStance, blocSummary, fromYear, lawYear, noLawsByMember, parseVotes, shuSpan, type VoteLaw } from './votes';
+import { blocOf } from './diet-records';
 
 const data = parseVotes(readFileSync(new URL('../public/distribution/votes.json', import.meta.url), 'utf8'));
 
@@ -140,11 +140,5 @@ describe('新しい会派の系統と、他ページとのつながり', () => {
     expect(renderToStaticMarkup(createElement(MergerNote, { laws: data.laws, bloc: '立憲' }))).toContain('中道改革連合・無所属');
     expect(renderToStaticMarkup(createElement(MergerNote, { laws: data.laws, bloc: '共産' }))).toBe('');
   });
-  it('議員ページへのリンクは、人物IDが一致するときだけ出す', () => {
-    const ids = memberIdsOf(JSON.stringify({ members: [{ id: '小池晃' }, { id: '鬼木誠（衆・福岡2）' }, {}] }));
-    expect(ids).toEqual(new Set(['小池晃', '鬼木誠（衆・福岡2）']));
-    expect(memberPageHref('小池晃', ids)).toBe(`/members?name=${encodeURIComponent('小池晃')}`);
-    expect(memberPageHref('鬼木誠', ids)).toBeNull();
-    expect(memberPageHref('小池晃', undefined)).toBeNull();
-  });
+
 });
