@@ -283,6 +283,8 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
         out.update(結果="評価対象外", 経路=ROUTE_SOURCE_INSTITUTIONAL, 公開可否="公開不可",
                    理由=f"一次資料の読み直しで、民間の売上・費用・給付・税・規制の負担を直接は変えない制度の法律と分かった（{why}）。経済に絞る方針の外")
         return out
+    # 判定不能（読み直しでも決められない）：定例の規則だけに当てない（効果なしへ確定させず、不確かさを残す）
+    source_undecided = source_econ == corrections.UNDECIDED
     source_econ = source_econ == corrections.ECON
 
     # 00) 毎年の税制改正の法律：政府（財務省）の国税の増減収見込み。GDP への損失とは別の量なので、順位・合計・議員への配分には入れない
@@ -337,7 +339,7 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
 
     # 2) 定例の改正（題名の語）
     # 期限の延長でも、続けなければ止まる補助や特例があれば経済の量が動く（読み直しの指示文 prompt-v1 の定義）
-    rt = None if source_econ else routine_rule(title, kinds)
+    rt = None if source_econ or source_undecided else routine_rule(title, kinds)
     if rt:
         out.update(結果="効果なし（定例）", 経路=rt[0], 分野=out["分野"] or NO_FIELD,
                    理由=f"{rt[1]}。毎年・毎回の定例の改正で、市場の産業への新たな効果を測る対象にしない")
