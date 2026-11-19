@@ -19,10 +19,17 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.build_public_ranking import direction_undetermined  # noqa: E402
+from scripts.build_public_ranking import OUTCOMES, direction_undetermined  # noqa: E402
 
 RANKING = ROOT / "app" / "public" / "distribution" / "ranking.json"
-WITHHELD = "1本ごとの額は公開ランキングで出していない（{outcome}）。法律ランキングで見る"
+WITHHELD = "1本ごとの額は公開ランキングで出していない（{outcome}）。法律ランキングで見る。全法律の台帳の結果は「{ledger}」"
+# 公開ランキングの結果（others の outcome）を、この一覧の5つの結果に写す。写し先の無い結果が来たら止める。
+RESULT_OF_OUTCOME = {
+    OUTCOMES["excluded"]: "評価対象外",
+    OUTCOMES["no_series"]: "測定できない",
+    **{OUTCOMES[key]: "保留" for key in ("pending", "source", "triage_hold", "undated", "impact_hold", "amount_hold", "covid_scale",
+                                         "hidden_failed", "hidden_shared", "hidden_oversize")},
+}
 SOURCE = ROOT / "data" / "derived" / "all-laws-v1" / "outcomes.csv"
 OUTPUT = ROOT / "app" / "public" / "distribution" / "law-outcomes.json"
 RESULTS = ("額あり", "保留", "測定できない", "評価対象外", "効果なし（定例）")
@@ -53,7 +60,7 @@ def build(ranking: dict | None = None) -> dict:
                 indicator, stage = law["indicator"], law["stage"]
                 unit = row["単位"] or f"円（窓 {law['window']} の差）"
                 if result != row["結果"] or side == "undetermined":
-                    reason = "法律ランキングで出した額（" + "・".join(law["notes"][:2] or [law["certainty"]]) + "）"
+                    reason = "法律ランキングで出した額（" + "・".join(law["notes"][:2] or [law["certainty"]]) + f"）。全法律の台帳の結果は「{row['結果']}」"
                 if side == "undetermined":
                     direction = ""  # 向きの欄も出さない（損失・便益の証拠が無い）
             elif median is not None or row["結果"] == "額あり":
@@ -61,9 +68,12 @@ def build(ranking: dict | None = None) -> dict:
                     raise ValueError(f"結果台帳に額があるのに公開ランキングに無い: {row['id']}")
                 # 公開ランキングが1本ごとの額を出さない法律（共有額の参考・税収の見込みなど）は、額を出さず、ランキングの結果にそろえる
                 outcome = others[row["id"]]["outcome"]
-                side, median = None, None
-                result = "評価対象外" if outcome == "評価対象外" else "保留"
-                reason = WITHHELD.format(outcome=outcome) + "。" + row["理由"]
+                if outcome not in RESULT_OF_OUTCOME:
+                    raise ValueError(f"公開ランキングの結果をこの一覧の結果に写せない: {row['id']} {outcome}")
+                # 額に付いていた向き・確かさ・段階・単位も出さない（出さない額の説明になるため）
+                side, median, direction, certainty, stage, unit = None, None, "", "", "", ""
+                result = RESULT_OF_OUTCOME[outcome]
+                reason = WITHHELD.format(outcome=outcome, ledger=row["結果"])
             items.append({
                 "id": row["id"], "title": row["題名"], "field": row["分野"], "indicator": indicator, "certainty": certainty,
                 "result": result, "reason": reason, "route": row["経路"], "enforced": row["施行日"], "kind": row["種類"],

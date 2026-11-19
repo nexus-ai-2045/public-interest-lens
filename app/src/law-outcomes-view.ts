@@ -8,8 +8,6 @@ export const EVALUATED_RESULTS: OutcomeResult[] = ['額あり', '効果なし（
 export type LawOutcome = {
   id: string; title: string; field: string; indicator: string; certainty: string; result: OutcomeResult; reason: string; route: string;
   enforced: string; kind: string; stage: string; direction: string; side: 'loss' | 'benefit' | 'undetermined' | null; median: number | null; unit: string; publishable: boolean;
-  /** 公開ランキングが1本ごとの額を出さない法律だけ。額を出さない理由。 */
-  amountWithheld?: string;
 };
 export type LawOutcomes = { schema: 'law-outcomes/v1'; counts: Record<OutcomeResult, number>; items: LawOutcome[] };
 

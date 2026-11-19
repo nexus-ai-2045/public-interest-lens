@@ -24,7 +24,6 @@ function OutcomeRow({ item }: { item: LawOutcome }) {
       <dt>経路</dt><dd>{item.route}</dd>
       <dt>分野・種類</dt><dd>{item.field}・{item.kind || '種類なし'}</dd>
       {item.median !== null && <><dt>額</dt><dd>{amountWord(item.side)}の中央値 {formatYen(item.median)}（{item.unit}）{reference ? '。参考の額で、合計・順位・配分には使いません。' : ''}</dd></>}
-      {item.amountWithheld && <><dt>額</dt><dd>{item.amountWithheld}</dd></>}
       <dt>評価方法</dt><dd><a href="/methodology">計算方法（評価のしかた）</a></dd>
       <dt>出典</dt><dd><a href={`/ranking#${encodeURIComponent(item.id)}`}>元の法律（{item.id}）：法律ランキングで因果の鎖と一次資料を見る</a></dd>
     </dl>
