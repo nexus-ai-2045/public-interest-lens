@@ -60,6 +60,20 @@ class CheckReferenceMembersTest(unittest.TestCase):
         self.assertTrue(any("合計が公開ファイルと合わない" in e or "配り先が無い" in e for e in crm.check(bad)))
 
 
+    def test_withheld_involvements_are_checked_and_never_carry_an_amount(self):
+        """向きが未確定で配らなかった関わりも事実を照らす。額を付けたら止まり、本数が公開ファイルと違っても止まる。"""
+        rows = _rows(self.attributions)
+        held = [r for r in rows if r["side"] == crm.UNDETERMINED]
+        self.assertTrue(held)
+        self.assertEqual({float(r["median"]) for r in held}, {0.0})
+        for name, change in (("amount", {"median": "1"}), ("side", {"side": "loss"})):
+            bad = Path(self.tmp.name) / f"bad_withheld_{name}.csv"
+            _write(bad, [{**r, **change} if r is held[0] else r for r in rows])
+            self.assertTrue(any("向きが未確定の法律を人に配っている" in e for e in crm.check(bad)), name)
+        bad = Path(self.tmp.name) / "bad_withheld_count.csv"
+        _write(bad, [r for r in rows if r is not held[0]])
+        self.assertTrue(any("本数（withheldLaws・理由の文）" in e for e in crm.check(bad)))
+
     def test_person_id_must_match_source_name(self):
         rows = _rows(self.attributions)
         other = next(r["member"] for r in rows if r["member"] != rows[0]["member"] and crm.canonical(r["name"]) != crm.canonical(rows[0]["name"]))
