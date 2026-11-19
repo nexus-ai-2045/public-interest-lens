@@ -1,6 +1,7 @@
 """法律の一次資料（衆議院の議案本文、国会会議録）を読みやすい文字にして標準出力へ出す。再判定の読み手（AI）が使う。
 
   python3 scripts/fetch_law_source.py honbun 閣法-180-38          議案本文（衆議院）。理由の節と本文の先頭
+  python3 scripts/fetch_law_source.py honbun 閣法-180-38 full     議案本文の全体（改める本法の条文まで読むとき）
   python3 scripts/fetch_law_source.py kokkai "棚田地域振興法 提案" 217   会議録の発言検索（語, 回次）。発言の先頭を並べる
   python3 scripts/fetch_law_source.py url https://...               任意の URL を文字にする
 
@@ -71,12 +72,14 @@ def honbun_url(law_id: str) -> str:
     return HONBUN.format(session=int(session), code=KIND_CODE[kind], number=int(number))
 
 
-def honbun(law_id: str, head: int = 6000) -> str:
+def honbun(law_id: str, head: int | None = 6000) -> str:
+    """head=None で本文の全体を返す。"""
     url = honbun_url(law_id)
     text = to_text(get(url))
     at = text.rfind("理　由")
     reason = text[at:at + 1500] if at >= 0 else "（理由の節が見つからない）"
-    return f"出典：{url}\n全体 {len(text)} 字\n\n【理由】\n{reason}\n\n【本文の先頭 {head} 字】\n{text[:head]}"
+    label = "本文の全体" if head is None else f"本文の先頭 {head} 字"
+    return f"出典：{url}\n全体 {len(text)} 字\n\n【理由】\n{reason}\n\n【{label}】\n{text if head is None else text[:head]}"
 
 
 def kokkai(words: str, session: str = "", records: int = 6, head: int = 1800) -> str:
@@ -97,7 +100,7 @@ def main(argv: list[str]) -> int:
         return 0 if argv and argv[0] in ("-h", "--help") else 2
     try:
         if argv[0] == "honbun":
-            body = honbun(argv[1])
+            body = honbun(argv[1], None if argv[2:3] == ["full"] else 6000)
         elif argv[0] == "kokkai":
             body = kokkai(argv[1], argv[2] if len(argv) > 2 else "")
         elif argv[0] == "url":

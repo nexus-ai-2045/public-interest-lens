@@ -14,6 +14,13 @@
 7. `apply --set S`：`labels.csv` に書く（`primary-source-corrections-v1/corrections.csv` と同じ列。判定者・指示文の版・記録の場所つき）。類型・分野が判定不能なら行を置かない。経済に効くかの判定不能は行に残す（後段で「判定済み」に数えない）。
 8. `estimate`：試走の実測（`pilot/usage.json`）から全件の費用と所要時間 → `pilot/estimate.json`。
 
+### 本法まで読む法律（`DEEP_READ`）
+
+議案本文の先頭（6 千字）だけでは決められないと分かった法律は、`scripts/primary_triage.py` の `DEEP_READ` に理由と一緒に載せる。
+載せた法律は、`fetch` が議案本文の全体を取り（`fetch_law_source.py honbun ID full`）、読み手の指示文に「改める本法の条文まで読む」注意を足し、経済に効くかは2系統が一致しても Sonnet が裁定する。
+
+- 閣法-211-46（番号法などの改正、到達点は測定できない）：抜き取り2回目で経済に効くかが判定不能。制度かどうかは本法の改正条文まで読まないと決められない（#226 で確定できず）。議案本文は全体 65,080 字。
+
 ## 後段へのつなぎ（別の PR）
 
 - `labels.csv` は、`corrections.csv`（抜き取り検証の読み直し）より下、AI の振り分け（bill-triage・econ-relevance・ai-field）より上の順位で読む。

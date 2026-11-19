@@ -40,6 +40,23 @@ class NeedsRulingTest(unittest.TestCase):
         self.assertEqual(pt.needs_ruling({**SITE, "主な産業分野": "医療・福祉"}, reader(主な産業分野="医療"), reader(主な産業分野="医療・福祉")), {})
 
 
+class DeepReadTest(unittest.TestCase):
+    def test_deep_read_law_always_goes_to_sonnet_for_econ(self):
+        self.assertEqual(pt.needs_ruling(SITE, reader(), reader(), deep=True), {"経済に効くか": pt.DEEP_REASON})
+        self.assertEqual(pt.needs_ruling(SITE, reader(類型="新規"), reader(), deep=True), {"経済に効くか": pt.DEEP_REASON, "類型": "割れ"})
+
+    def test_deep_read_laws_are_measured_targets(self):
+        path = pt.set_dir("all") / "targets.csv"
+        if not path.exists():
+            self.skipTest("all/targets.csv が無い")
+        ids = {r["id"] for r in pt.read_csv(path)}
+        self.assertLessEqual(set(pt.DEEP_READ), ids)
+
+    def test_decide_without_ruling_stops_for_deep_read(self):
+        with self.assertRaises(ValueError):
+            pt.decide(target(id="閣法-211-46"), reader(), reader(), None)
+
+
 class DecideTest(unittest.TestCase):
     def test_rows_use_corrections_vocabulary(self):
         rows = pt.decide(target(), reader(経済に効くか="制度のみ"), reader(経済に効くか="制度のみ"),

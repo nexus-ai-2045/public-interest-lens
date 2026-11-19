@@ -56,6 +56,15 @@ NOT_MEASURED = ("評価対象外",)
 ITEMS = ("類型", "経済に効くか", "主な産業分野")
 LINES = {"A": "系統A：議案本文（理由と条文）を先に読み、会議録で補う。", "B": "系統B：会議録（提案理由の説明・委員長報告）を先に読み、議案本文で補う。"}
 CORR_HEADER = ["id", "項目", "直した値", "直す前の値", "理由", "引用", "出典URL", "判定者", "指示文", "記録"]
+# 本法まで読む法律：議案本文の先頭（6千字）だけでは決められないと分かった法律。本文の全体を取り、読み手に条文まで読ませ、
+# 経済に効くかは2系統が一致しても Sonnet が裁定する。{id: 理由}
+DEEP_READ = {
+    "閣法-211-46": "抜き取り2回目で経済に効くかが判定不能。制度かどうかは本法（番号法など）の改正条文まで読まないと決められない（PR #226 で確定できず）",
+}
+DEEP_REASON = "本法まで読む（資料の議案本文の全体から、改める本法の条文を読んで決める）"
+DEEP_NOTE = ("\n## この法律の注意（本法まで読む）\n\n{why}。資料の議案本文は全体を載せてある（先頭だけではない）。"
+             "経済に効くかは、理由の節や会議録で決めず、改める本法の条文（事業者・家計の負担、給付、規制、手数料など）まで読んで決める。"
+             "読み切れなければ判定不能とする。\n")
 # 試走の層：到達点ごとの本数（合計 10）。参考額は経済に効くかが空（一度も聞いていない）の法律を厚くする（連鎖の誤りの主因）
 PILOT_STRATA = {
     ("参考額", "空"): 4, ("参考額", "判定済み"): 1, ("効果なし（定例）", ""): 2, ("保留", ""): 1, ("測定できない", ""): 1, ("額", ""): 1,
@@ -175,12 +184,12 @@ def cmd_fetch(a: argparse.Namespace) -> int:
     stats = Counter()
     for r in read_csv(set_dir(a.set) / "targets.csv"):
         path = SOURCES / f"{r['id']}.txt"
-        if path.exists() and fetched_ok(path.read_text(encoding="utf-8")):
+        if path.exists() and fetched_ok(path.read_text(encoding="utf-8")) and (r["id"] not in DEEP_READ or "【本文の全体】" in path.read_text(encoding="utf-8")):
             stats["既にある"] += 1
             continue
         session = r["id"].split("-")[1]
         title = r["題名"].removesuffix("案")
-        honbun = _run_fetch(["honbun", r["id"]])
+        honbun = _run_fetch(["honbun", r["id"]] + (["full"] if r["id"] in DEEP_READ else []))
         kokkai = _run_fetch(["kokkai", f"{title} 提案", session])
         if "該当 0 件" in kokkai or kokkai.startswith("取得できない"):
             kokkai += "\n" + _run_fetch(["kokkai", title, session])
@@ -211,6 +220,8 @@ def cmd_prompts(a: argparse.Namespace) -> int:
             out = LOCAL / a.set / f"line{line}" / f"{r['id']}.json"
             text = (body.replace("{id}", r["id"]).replace("{title}", r["題名"]).replace("{source}", str((SOURCES / f"{r['id']}.txt").relative_to(ROOT)))
                     .replace("{order}", order).replace("{line}", line).replace("{out}", str(out.relative_to(ROOT))))
+            if r["id"] in DEEP_READ:
+                text += DEEP_NOTE.format(why=DEEP_READ[r["id"]])
             p = LOCAL / "prompts" / f"line{line}" / f"{r['id']}.md"
             p.parent.mkdir(parents=True, exist_ok=True)
             out.parent.mkdir(parents=True, exist_ok=True)
@@ -246,12 +257,14 @@ def canonical(item: str, v: str) -> str:
     return v
 
 
-def needs_ruling(site: dict, a: dict, b: dict) -> dict[str, str]:
-    """{項目: 裁定に回す理由}。空なら2系統の一致をそのまま採用する。"""
-    out: dict[str, str] = {}
+def needs_ruling(site: dict, a: dict, b: dict, deep: bool = False) -> dict[str, str]:
+    """{項目: 裁定に回す理由}。空なら2系統の一致をそのまま採用する。deep（本法まで読む法律）は経済に効くかを必ず裁定に回す。"""
+    out: dict[str, str] = {"経済に効くか": DEEP_REASON} if deep else {}
     low = "低" in (a.get("確信"), b.get("確信"))
     for item in ITEMS:
         va, vb = norm(item, a.get(item, "")), norm(item, b.get(item, ""))
+        if item in out:
+            continue
         if UNDECIDED in (va, vb) or not va or not vb:
             out[item] = "判定不能"
         elif va != vb:
@@ -284,7 +297,7 @@ def cmd_queue(a: argparse.Namespace) -> int:
     queue = []
     for t in targets:
         i = t["id"]
-        why = needs_ruling(site_of(t), A[i], B[i])
+        why = needs_ruling(site_of(t), A[i], B[i], i in DEEP_READ)
         if not why:
             continue
         case = LOCAL / a.set / "adjudicate" / f"{i}.json"
@@ -309,7 +322,7 @@ def cmd_queue(a: argparse.Namespace) -> int:
 def decide(t: dict, a: dict, b: dict, ruling: dict | None, reader_version: str = "v1") -> list[dict]:
     """1本の決着。項目ごとに (値, 判定者, 理由, 引用)。判定不能も行に残す（経済に効くかは判定不能として扱う。類型・分野は行を置かない）。"""
     site = site_of(t)
-    why = needs_ruling(site, a, b)
+    why = needs_ruling(site, a, b, t["id"] in DEEP_READ)
     ruled = {r["項目"]: r for r in (ruling or {}).get("裁定", [])}
     url = ";".join(dict.fromkeys((a.get("出典URL") or []) + (b.get("出典URL") or [])))
     rows = []
