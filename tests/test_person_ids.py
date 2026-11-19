@@ -264,9 +264,9 @@ class StablePersonIdsTest(unittest.TestCase):
         self.assertTrue(ledger.is_split('森川空'))
         self.assertEqual(ledger.resolve('森川空', sangiin_vote=True), ('', pi.UNRESOLVED))
 
-    def test_historical_people_from_reference_stay_and_are_not_given_to_a_new_namesake(self):
-        reference = [{'id': '森川空', 'name': '森川 空', 'lastSangiinParty': ''}]
-        first = pi.build_ledger([], reference=reference)
+    def test_historical_people_from_previous_stay_and_are_not_given_to_a_new_namesake(self):
+        # 歴代の人（今の名簿にいない人）は前の persons.csv で引き継がれる。
+        first = pi.build_ledger([], previous=[{'人物ID': '森川空', '氏名': '森川空', '読み': '', '院': '', '選挙区': '', '別表記': ''}])
         self.assertEqual([(p.id, p.house) for p in first.persons.values()], [('森川空', '')])
         # 次の名簿に同じ氏名の人が初めて載った。歴代の人とは結ばず、新しい人は院と選挙区付きのID。
         later = pi.build_ledger([roster_row('参議院', '森川 空', 'もりかわ そら', 'ア党', '比例')], previous=self.previous_of(first))

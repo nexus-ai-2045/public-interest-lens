@@ -29,6 +29,8 @@ jobs:
       - run: python -m scripts.build_public_distribution --input-root data/distribution/sources/world-bank --case data/distribution/case-source.json --output-root data/distribution/generated --public-dir app/public/distribution
       # Git に置かない派生物（設計決定0022）を入力から作る（scripts/generate_artifacts.py の順）
       - run: python scripts/generate_artifacts.py
+      # 設計の整合（点数設計 v2.1）：固定定数の一致・置き換え予定の印0・撤回した方式がコードに残らない。完了の条件の表は合否に入れない
+      - run: python scripts/check_design_consistency.py --strict
       # CSV（speeches・industry_va）に頼るテストは tests/data_gated_tests.txt の分だけ skip される。一覧に無い skip は赤
       # 計算式のバックテスト：毎回今のデータで測り直し、結果をログに出す（定義は docs/adr/0020）
       - run: python scripts/backtest.py

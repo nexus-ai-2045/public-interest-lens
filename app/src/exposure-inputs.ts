@@ -8,12 +8,12 @@
  * 全産業（_T）は産業別と同じ額を重ねて数えるので、足さずに別欄（wholeEconomy）にする。
  *
  * 関与：群に属する法律だけを、法律×年ごとに置く（groupId が産業×年、lawId は法律 ID のまま）。属さない法律の行は数えて捨てる。
- * - 衆法・参法の提出者 → proposer。enacted.csv から members-reference.ts と同じ読み方で取る（involvements*.csv は使わない）：
+ * - 衆法・参法の提出者 → proposer。enacted.csv から diet-records.ts の読み方で取る（involvements*.csv は使わない）：
  *   委員会提出（COMMITTEE）は置かない／「提出者一覧」があれば全員（normName）を weight 1／無ければ parseProposer(提出者) の代表者を weight 1、
  *   名前の分からない「外N名」は actorKind 'none'・weight N（その分は未配分。理由「名前の分からない提出者（外N名）」）。
  *   人は ledger.resolve(名前, 衆法なら 衆議院・参法なら 参議院)。同姓同名で結べなければ 'none'（理由「同姓同名で人物台帳に結べない提出者」）。
  * - 賛成・反対は投票の一次資料から取る。
- *   参議院：votes_index.csv の、議決日（enacted.csv の 議決日_参）の投票から pickVote（members-reference.ts と同じ）で1つに決まったものの
+ *   参議院：votes_index.csv の、議決日（enacted.csv の 議決日_参）の投票から pickVote（diet-records.ts）で1つに決まったものの
  *   ballots の賛否（Y → yes、N → no。棄権など Y・N 以外は置かない）。人は 議員ID → members.csv の氏名 → PersonLedger.resolve(氏名, '参議院')。
  *   同姓同名で結べない人は actorKind: 'none'（重みだけ枠に入れ、その分は未配分に積む。ほかの人へ寄せない）。
  *   衆議院：enacted.csv の 賛成会派_衆・反対会派_衆（「; 」区切り）を会派（party）に、weight 1 で均等に置く。
@@ -27,8 +27,7 @@
  */
 import type { ExposureGroup, ExposureRanking, ExposureRow, House, Involvement, ExposureRole } from './exposure-ranking';
 import { cabinetForBill, normName } from './cabinet-members';
-import { COMMITTEE, parseProposer, pickVote } from './members-reference';
-import { warekiDate } from './members-build';
+import { COMMITTEE, parseProposer, pickVote, warekiDate } from './diet-records';
 import { parseCsv } from './impact-batch';
 import { PersonLedger } from './person-id';
 
@@ -239,7 +238,7 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
     for (const name of lowerNo) if (place(lawId, 'no', 'party', name, name, 'lower')) counts.lowerNoRows++;
   }
 
-  // 衆法・参法の提出者（enacted.csv。members-reference.ts と同じ読み方）。
+  // 衆法・参法の提出者（enacted.csv。diet-records.ts の読み方）。
   const splitNames = (t: string) => t.split(/[;；、,]/).map(normName).filter(Boolean);
   for (const lawId of [...grouped].sort()) {
     if (lawId.startsWith('閣法')) continue;

@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SiteShell } from './SiteHeader';
 import { useTone } from './site-tone';
-import { CountUp, RankBars, Reveal, useInView } from './motion';
+import { CountUp, Reveal, useInView } from './motion';
 import {
-  chartsUrl, magnitudeLabel, memberHref, memberRange, niceMax, parseCharts, roleShares, SIDE_LABEL, ticks, timelineValues, topMembers, yen,
+  chartsUrl, magnitudeLabel, niceMax, parseCharts, SIDE_LABEL, ticks, timelineValues, yen,
   type PublicCharts, type Side,
 } from './numbers-view';
 import './numbers.css';
@@ -100,50 +100,7 @@ function Timeline({ data }: { data: PublicCharts['timeline'] }) {
       <line className="nc-base" x1={L} x2={W} y1={mid} y2={mid} />
     </svg></div>
     <Tooltip tip={tip} />
-    <p className="fine-note">同じ観測を共有する法律は、観測の額を本数で割った分を足しています（同じ差を何度も数えない）。施行日が無い法律は公布日で推定した年です。</p>
-  </div>;
-}
-
-/** 配り先の内訳：法律の額が、提出者・参院の賛成票・衆院の会派にどう分かれたか（100% の帯）。 */
-function RoleSplit({ roles }: { roles: PublicCharts['roles'] }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, 0.2);
-  return <div ref={ref} className={`nc-roles ${inView ? 'is-in' : ''}`}>
-    {(['loss', 'benefit'] as const).map(side => {
-      const rows = roleShares(roles, side);
-      const total = rows.reduce((s, r) => s + r.value, 0);
-      return <figure key={side} className={`nc-role ${side}`}>
-        <figcaption>{SIDE_LABEL[side]}：配った額の合計 <strong>{yen(total)}</strong></figcaption>
-        <div className="nc-stack" role="img" aria-label={rows.map(r => `${r.label} ${Math.round(r.share * 100)}%`).join('、')}>
-          {rows.map((r, i) => <span key={r.role} className={`nc-seg s${i}`} style={{ width: `${r.share * 100}%` }} title={`${r.label}：${yen(r.value)}（${Math.round(r.share * 100)}%）`} />)}
-        </div>
-        <ul className="nc-role-list">{rows.map((r, i) => <li key={r.role}><i className={`nc-seg-key s${i}`} aria-hidden="true" />{r.label}<span>{Math.round(r.share * 100)}%・{yen(r.value)}</span></li>)}</ul>
-      </figure>;
-    })}
-  </div>;
-}
-
-function Parties({ parties }: { parties: PublicCharts['parties'] }) {
-  const top = parties.slice(0, 12);
-  const max = niceMax(Math.max(1, ...top.flatMap(p => [p.loss, p.benefit])));
-  const ref = useRef<HTMLTableElement>(null);
-  const inView = useInView(ref, 0.2);
-  return <div className="nc-figure">
-    <Legend sides={['loss', 'benefit']} />
-    <table ref={ref} className={`nc-party ${inView ? 'is-in' : ''}`}>
-      <thead><tr><th scope="col">衆議院の会派（記録の表記）</th><th scope="col">賛成した確かな額の法律</th><th scope="col">額（国賊側／国士側）</th></tr></thead>
-      <tbody>{top.map((p, i) => <tr key={p.party}>
-        <th scope="row">{p.party}</th>
-        <td className="num">{p.laws}本</td>
-        <td>
-          <span className="nc-pbar loss" style={{ width: `${p.loss / max * 100}%`, transitionDelay: `${i * 40}ms` }} title={`${SIDE_LABEL.loss} ${yen(p.loss)}`} />
-          <small>{yen(p.loss)}</small>
-          <span className="nc-pbar benefit" style={{ width: `${p.benefit / max * 100}%`, transitionDelay: `${i * 40}ms` }} title={`${SIDE_LABEL.benefit} ${yen(p.benefit)}`} />
-          <small>{yen(p.benefit)}</small>
-        </td>
-      </tr>)}</tbody>
-    </table>
-    <p className="fine-note">これは配分ではなく、その会派が衆議院で賛成した法律の分（観測を本数で割ったもの）の合計です。同じ法律に賛成した会派はみな同じ額を数えるので、会派どうしで足し合わせません。会派の名前は議案の経過の表記のままです（同じ党でも時期で表記が変わります）。</p>
+    <p className="fine-note">同じ観測を共有する法律は、観測の額を1回だけ、代表の1本（確かさの高い順、同じなら id の順の先頭）の年に数えます（同じ差を何度も数えない）。施行日が無い法律は公布日で推定した年です。</p>
   </div>;
 }
 
@@ -165,7 +122,6 @@ export function NumbersPage() {
     })();
     return () => controller.abort();
   }, []);
-  const members = useMemo(() => charts ? topMembers(charts.members, tone) : [], [charts, tone]);
   const side: Side = tone === 'harm' ? 'loss' : 'benefit';
   const counts = charts?.byCertainty ?? [];
   const confirmed = counts.filter(c => c.certainty !== '参考').reduce((s, c) => s + c.laws, 0);
@@ -173,14 +129,13 @@ export function NumbersPage() {
   return <SiteShell active="/numbers" label="数字で見る" className="law-ranking numbers-page">
     <main id="main">
       <h1>数字で見る</h1>
-      <p className="nc-lead">法律ごとの額、施行の年ごとの推移、議員と党への配り先を、同じデータベースから描いています。計算の式は<a href="/methodology#formulas">計算方法</a>、元の表は <a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/データベース.md" target="_blank" rel="noopener noreferrer">データベースの説明</a>にあります。</p>
+      <p className="nc-lead">法律ごとの額と、施行の年ごとの推移を、同じデータベースから描いています。計算の式は<a href="/methodology#formulas">計算方法</a>、元の表は <a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/データベース.md" target="_blank" rel="noopener noreferrer">データベースの説明</a>にあります。</p>
       {error && <p className="state-banner">{error}</p>}
       {!charts && !error && <p className="empty-state">読み込み中…</p>}
       {charts && <>
         <Reveal tone={side} className="nc-hero">
           <div><strong><CountUp value={confirmed} format={n => `${Math.round(n)}`} /></strong><span>本：確かな額（高・中・低）</span></div>
           <div><strong><CountUp value={reference} format={n => `${Math.round(n)}`} /></strong><span>本：参考の額</span></div>
-          <div><strong><CountUp value={charts.members.length} format={n => `${Math.round(n)}`} /></strong><span>人：確かな額を配った議員</span></div>
         </Reveal>
 
         <section className="nc-section">
@@ -198,22 +153,6 @@ export function NumbersPage() {
           <Timeline data={charts.timeline} />
         </section>
 
-        <section className="nc-section">
-          <h3>3. {tone === 'harm' ? '失わせた額の大きい議員' : '生んだ額の大きい議員'}（確かな額、上位10人）</h3>
-          <RankBars items={members.map(m => ({ id: m.id, label: m.name, value: Math.abs(m.net), ...memberRange(m), side, note: `純額。失わせた額 ${yen(m.loss)}・生んだ額 ${yen(m.credit)}`, href: memberHref(m.id) }))}
-            format={yen} caption={tone === 'harm' ? '失わせた額の大きい議員' : '生んだ額の大きい議員'} />
-          <p className="fine-note">今の配り方（成立への寄与、causal-shapley-v1）の結果です。配り方は見直し中で、決まったら計算方法の版を上げて差し替えます。</p>
-        </section>
-
-        <section className="nc-section">
-          <h3>4. 法律の額はだれに配られたか</h3>
-          <RoleSplit roles={charts.roles} />
-        </section>
-
-        <section className="nc-section">
-          <h3>5. 会派ごとの、賛成した法律の額</h3>
-          <Parties parties={charts.parties} />
-        </section>
         <p className="fine-note">計算方法の版：{charts.spec}。入力の照合値 {charts.inputs.slice(0, 12)}…</p>
       </>}
     </main>

@@ -133,32 +133,6 @@ class SourceCheckTests(unittest.TestCase):
         self.assertNotIn("rawFilesPresent", stable)
         self.assertEqual([r["id"] for r in written], ["閣法-1-1", "閣法-1-2"])
 
-    def test_members_page_matches_ranking(self):
-        members = json.loads(source_check.MEMBERS.read_text(encoding="utf-8"))
-        rows = source_check.check_members(members, self.ranking)
-        self.assertEqual([r for r in rows if r["結果"] == source_check.NG], [])
-        # 検証で参考に降格した法律は、議員の額に配らない（順位と同じ扱い）。
-        demoted = {l["id"] for l in self.ranking["laws"] if l.get("demotedReason")}
-        self.assertEqual(demoted & {l["id"] for l in members["laws"]}, set())
-        if not members["laws"]:
-            # 配分に使える法律が検証を通っていない間は議員別の額が0人で、書き換える相手がいない。
-            self.assertEqual(members["members"], [])
-            return
-        tampered = copy.deepcopy(members)
-        listed = {l["id"] for l in self.ranking["laws"]}
-        law = next(l for l in tampered["laws"] if l["id"] in listed and l["observationLaws"] == 1)
-        law["amount"]["median"] += 1
-        tampered["members"][0]["laws"][0]["evidence"][0]["url"] = "https://example.com/"
-        bad = {r["項目"] for r in source_check.check_members(tampered, self.ranking) if r["結果"] == source_check.NG}
-        # 額を変えると、配分の合計も額と合わなくなる。
-        self.assertEqual(bad, {"議員ページの額", "証拠URL", "配分の合計"})
-        # 同じ観測を共有する本数を書き換えると（二重に数える配り方）、本数も配分の合計も合わない。共有する法律が公開に残っているときだけ確かめる
-        shared = copy.deepcopy(members)
-        law = next((l for l in shared["laws"] if l["id"] in listed and l["observationLaws"] > 1), None)
-        if law is not None:
-            law["observationLaws"] = 1
-            bad = {r["項目"] for r in source_check.check_members(shared, self.ranking) if r["結果"] == source_check.NG}
-            self.assertEqual(bad, {"同じ観測を共有する本数", "配分の合計"})
 
 if __name__ == "__main__":
     unittest.main()

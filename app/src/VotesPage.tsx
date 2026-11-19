@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { PUBLIC_SITE } from './site-mode';
 import { SiteShell } from './SiteHeader';
 import {
-  BLOCS, START_YEARS, blocStance, blocSummary, distributionMembersIdsUrl, distributionVotesUrl, fromYear, lawYear, memberIdsOf, memberPageHref, noLawsByMember, parseVotes, recentCutoff, shuSpan, startLabel,
+  BLOCS, START_YEARS, blocStance, blocSummary, distributionVotesUrl, fromYear, lawYear, noLawsByMember, parseVotes, recentCutoff, shuSpan, startLabel,
   type Bloc, type PublicVotes, type StartYear, type VoteLaw,
 } from './votes';
 import { LensFilterBar, MultiSelect } from './LensFilterBar';
@@ -78,8 +78,7 @@ export function MergerNote({ laws, bloc }: { laws: VoteLaw[]; bloc: Bloc }) {
   return <p className="fine-note votes-merger">衆議院の{bloc}の会派は{own.last}の採決が最後で、{next.first}以降は「中道改革連合・無所属」の会派で記録されます（「中道改革連合」の系統で見られます）。選んだ期間がそれより後だけだと、衆議院は「記載なし」になります。参議院は{bloc}のまま続きます。</p>;
 }
 
-/** linkable：議員ページ（/members）に載っている人物ID。名前がこれと一致するときだけ議員ページへのリンクを出す。 */
-export function MemberSearch({ data, laws, linkable }: { data: PublicVotes; laws: VoteLaw[]; linkable?: ReadonlySet<string> }) {
+export function MemberSearch({ data, laws }: { data: PublicVotes; laws: VoteLaw[] }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState('');
   const noByMember = useMemo(() => noLawsByMember(data.laws, data.members.length), [data]);
@@ -99,7 +98,6 @@ export function MemberSearch({ data, laws, linkable }: { data: PublicVotes; laws
           <strong>{m.name}</strong><span>{m.group}（最後の採決時）</span><span>全期間：賛成 {m.yes}・反対 {m.no}・欠席 {m.absent}</span><span>選択期間の反対法数 {nos.length}本</span>
         </button>
         {open === m.name && <div className="votes-member-detail">
-          {memberPageHref(m.name, linkable) && <p><a href={memberPageHref(m.name, linkable)!}>この議員の額と一次資料のつながり（議員ページ）</a></p>}
           <p className="fine-note">反対した法律：選んだ期間で{nos.length}本（新しい順に最大40本まで）。</p>
           <ul>{nos.slice(0, 40).map(i => <li key={data.laws[i].id}><span className="votes-date">{dateOf(data.laws[i])}</span> {data.laws[i].title} <a href={data.laws[i].san!.url} target="_blank" rel="noopener noreferrer">採決</a></li>)}</ul>
         </div>}
@@ -123,14 +121,6 @@ export function VotesPage() {
     void fetch(lawsCatalogUrl, { signal: controller.signal, cache: 'no-store' })
       .then(r => r.ok ? r.text() : Promise.reject(new Error('missing')))
       .then(text => { const c = parseLawsCatalog(text); setCatalog(new Map([...c.laws, ...c.policies].map(item => [item.id, item]))); }).catch(() => undefined);
-    return () => controller.abort();
-  }, []);
-  // 議員ページの人物ID（読めなければリンクを出さないだけ）。
-  const [memberIds, setMemberIds] = useState<ReadonlySet<string>>(new Set());
-  useEffect(() => {
-    const controller = new AbortController();
-    void fetch(distributionMembersIdsUrl, { signal: controller.signal, cache: 'no-store' })
-      .then(r => r.ok ? r.text() : Promise.reject(new Error('missing'))).then(text => setMemberIds(memberIdsOf(text))).catch(() => undefined);
     return () => controller.abort();
   }, []);
   useEffect(() => {
@@ -184,7 +174,7 @@ export function VotesPage() {
         <MergerNote laws={data.laws} bloc={bloc} />
         <BlocPanel laws={laws} bloc={bloc} />
       </section>}
-      <section aria-labelledby="votes-member-h"><h3 id="votes-member-h">議員ごとの賛否（参議院）</h3><MemberSearch data={data} laws={laws} linkable={memberIds} /></section>
+      <section aria-labelledby="votes-member-h"><h3 id="votes-member-h">議員ごとの賛否（参議院）</h3><MemberSearch data={data} laws={laws} /></section>
       <section aria-labelledby="votes-notes-h"><h3 id="votes-notes-h">この表の読み方と限界</h3><ul className="world-notes">{data.notes.map(n => <li key={n}>{n}</li>)}
         <li>系統の分け方は、会派名の一部で寄せています（自民・公明・立憲・共産・国民民主・維新・れいわ・社民・参政・中道改革連合・チームみらい・日本保守党・民主系。それ以外は「その他」）。中道改革連合は立憲・公明とは別の会派として数え、合算しません。</li>
         <li>対象：衆議院の会派別 {data.counts.shugiin.toLocaleString()}本（2014年以降）、参議院の押しボタン採決 {data.counts.sangiinBallot.toLocaleString()}本（1998年以降）、起立採決 {data.counts.sangiinStanding.toLocaleString()}本。</li></ul></section>

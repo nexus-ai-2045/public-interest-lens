@@ -2,7 +2,7 @@
 
 作るもの（前の出力が後の入力になる順）：
   inputs：物価の換算表 price-index.json → 公開ランキング ranking.json → 賛否 votes.json
-  derived：議員ページ members.json → 全議員の表 members-reference.json → 曝露ランキング data/derived/exposure-v1/exposure-ranking.json（公開ディレクトリには置かない）→ 法律の一覧 laws.json・laws-detail/・law-names.json
+  derived：曝露ランキング（議員の側。設計決定0027・0028）data/derived/exposure-v1/exposure-ranking.json（公開ディレクトリには置かない）→ 法律の一覧 laws.json・laws-detail/・law-names.json
            → 暫定評価 provisional.json → グラフ用の集計 charts.json
 既定は、出力が無い・入力（data/ と scripts/）より古い・前の出力を作り直したものだけ作る（--force で全部作り直す）。
 CI・アプリの prebuild/pretest・sync_main から呼ぶ。環境変数 KOKUZOKU_SKIP_GENERATE=1 なら何もしない（架空入力の検査用）。
@@ -17,21 +17,17 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "app" / "public" / "distribution"
 PY = sys.executable
-ATTRIBUTIONS = Path(tempfile.gettempdir()) / "reference-attributions.csv"
 
 # (段, 出力, コマンド)
 STEPS = [
     ("inputs", DIST / "price-index.json", [PY, "scripts/build_price_index.py"]),
     ("inputs", DIST / "ranking.json", [PY, "scripts/source_check.py", "--generate-ranking"]),
     ("inputs", DIST / "votes.json", [PY, "scripts/build_public_votes.py"]),
-    ("derived", DIST / "members.json", ["node", "scripts/build_public_members.mjs"]),
-    ("derived", DIST / "members-reference.json", ["node", "scripts/build_reference_members.mjs", "--attributions", str(ATTRIBUTIONS)]),
     # 曝露ランキングは公開ディレクトリ（app/public/）に置かない：ビルドに乗ると、画面を隠していても公開サイトから取れてしまう。
     # 表示を解く（設計決定0008 のねくの確認の後）ときに、公開データへ移す。
     ("derived", ROOT / "data" / "derived" / "exposure-v1" / "exposure-ranking.json", ["node", "scripts/build_exposure_ranking.mjs"]),

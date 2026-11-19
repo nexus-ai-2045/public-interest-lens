@@ -127,7 +127,7 @@ def _head(path: Path) -> str:
 def goal_metrics(root: Path = ROOT) -> dict[str, int]:
     """ゴール指標の「いま」を、リポジトリ内のデータから数える（手書きにしない）。
 
-    入力はすべて追跡されたファイル。議員ページの members.json はビルド生成物なので使わず、
+    入力はすべて追跡されたファイル。議員の曝露ランキングはビルド生成物なので使わず、
     その入力の関与の一覧から数える。
     """
     laws = _csv(root, "data/derived/all-laws-v1/outcomes.csv")
@@ -158,7 +158,7 @@ def goal_metrics(root: Path = ROOT) -> dict[str, int]:
         "laws_published": ranking["published"],
         "laws_confirmed": ranking["confirmed"],
         # G5 公開前検査（ファイルが在る本数）
-        "pre_publish_guards": exists("tests/test_public_members_safety.py") + exists("scripts/source_check.py")
+        "pre_publish_guards": exists("scripts/release_check.py") + exists("scripts/source_check.py")
         + exists(".repo-preflight/hooks") + exists("scripts/preflight.py"),
         # G6 定期更新・訂正窓口・改善ループ
         "scheduled_workflows": len(scheduled),

@@ -3,7 +3,7 @@
 
 本番への配信はしない。配信の手順は docs/operations.md の「リリース」を正本とする。
 順番：ループの点検 → 事前チェック（スモーク・E2E つき）→ CI と同じ検査（ローカル）→ ロジック検査
-      → 設計の整合と完了の条件1〜3 → バックテストの判定 → 議員ページの検査の対象件数。
+      → 設計の整合と完了の条件1〜3 → バックテストの判定 → 議員ページ（曝露ランキング）の検査。
 結果は3つに分ける。合格・注意・失敗。
   注意：検査は通ったが、確かめる対象が無い（空振り）・件数が足りず判定できない・まだ測っていない。合格と混ぜない。
   失敗：1つでもあればリリースしない（終了コード1）。注意だけなら終了コード0だが、最後の行に注意の件数を出す。
@@ -24,7 +24,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / ".local" / "release-check"
-MEMBERS = ROOT / "app" / "public" / "distribution" / "members.json"
 PASS, WARN, FAIL = "合格", "注意", "失敗"
 
 
@@ -73,17 +72,20 @@ def backtest_step(result: dict) -> dict:
             "detail": "、".join(f"{k} {v}" for k, v in verdicts.items()) + f"（合格の線 {result['target'] * 100:.0f}%、判定に要る件数 {result['min_n']}）"}
 
 
-def members_step(path: Path = MEMBERS) -> dict:
-    """議員ページの安全検査・出典の照合が、中身のあるデータを見たか。議員か法律のどちらかが0件なら、その分の検査は空振り。"""
-    name = "議員ページの検査の対象"
-    if not path.exists():
-        return {"step": name, "status": WARN, "detail": "members.json がまだ無い（未測定）"}
-    members = json.loads(path.read_text(encoding="utf-8"))
-    people, laws = len(members.get("members") or []), len(members.get("laws") or [])
-    if people == 0 or laws == 0:
-        return {"step": name, "status": WARN,
-                "detail": f"空振り：議員 {people:,} 人・法律 {laws:,} 本。安全検査と出典の照合は通ったが、0件の側は確かめていない"}
-    return {"step": name, "status": PASS, "detail": f"議員 {people:,} 人・法律 {laws:,} 本"}
+def members_step(root: Path = ROOT) -> dict:
+    """議員ページ＝曝露ランキングの検査。人物台帳（persons.csv）の全員が、曝露ランキングに「点あり」か「点なし＋理由」で1回ずつ載っているか。
+    曝露ランキングの出力か台帳が無い・台帳が0人なら、確かめる対象が無いので未測定（注意）。全員そろわなければ失敗。0件を合格にしない。"""
+    from scripts import check_design_consistency as design
+
+    name = "議員ページ（曝露ランキング）の検査"
+    d = root / "data" / "derived"
+    exposure, persons = root / design.EXPOSURE, d / "person-ids" / "persons.csv"
+    if not exposure.is_file():
+        return {"step": name, "status": WARN, "detail": f"{design.EXPOSURE} がまだ無い（未測定）。python3 scripts/generate_artifacts.py で作る"}
+    if not persons.is_file() or not any((r.get("人物ID") or "").strip() for r in design.read_csv(persons)):
+        return {"step": name, "status": WARN, "detail": "人物台帳（persons.csv）が無いか0人で、照らす対象が無い（未測定）"}
+    ok, detail = design._members_on_ledger(root, d)
+    return {"step": name, "status": PASS if ok else FAIL, "detail": detail[:300]}
 
 
 def measured_steps() -> list[dict]:
@@ -93,7 +95,7 @@ def measured_steps() -> list[dict]:
     for name, build in (
         ("設計の整合と完了の条件", lambda: design_steps(_json_from([py, "scripts/check_design_consistency.py", "--json"]))),
         ("バックテストの判定", lambda: [backtest_step(_json_from([py, "scripts/backtest.py", "--json"]))]),
-        ("議員ページの検査の対象", lambda: [members_step()]),
+        ("議員ページ（曝露ランキング）の検査", lambda: [members_step()]),
     ):
         try:
             steps += build()

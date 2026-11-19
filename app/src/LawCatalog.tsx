@@ -14,7 +14,6 @@ import { useTone } from './site-tone';
 const PAGE = 60;
 const SIDE_OPTIONS: [CatalogQuery['side'], string][] = [['all', 'すべて'], ['confirmed', '確かな額'], ['amount', '額が出た（参考を含む）'], ['shared', '共有額の参考'], ['loss', '国賊側'], ['benefit', '国士側'], ['none', '額なし']];
 const SORT_OPTIONS: [CatalogQuery['sort'], string][] = [['amount', '額の大きい順'], ['loss', '損失の大きい順'], ['benefit', '便益の大きい順'], ['progress', '計算が進んだ順'], ['newest', '新しい順'], ['oldest', '古い順']];
-const ROLE_LABEL: Record<string, string> = { proposer: '提出', vote: '参院で賛成', chair: '委員長' };
 
 /** 詳細は束（提出回次ごと）を、初めてその束の行を開いた時に1回だけ読む。 */
 const detailCache = new Map<string, Promise<Record<string, CatalogDetail>>>();
@@ -307,7 +306,6 @@ function CatalogDetailPanel({ item }: { item: CatalogItem }) {
   }, [item.id]);
   if (error) return <div className="laws-detail"><p role="alert">詳細を読み込めませんでした。時間をおいて開き直してください。</p></div>;
   if (!detail) return <div className="laws-detail" aria-busy="true"><p className="fine-note">読み込み中…</p></div>;
-  const members = detail.members ?? [];
   const target = { title: item.kind === '政策' ? item.title : `${lawNameText(item.title, item.what)}（${item.id}）`, page: `/ranking#${encodeURIComponent(item.id)}`, sources: detail.sources };
   return <div className="laws-detail">
     {detail.overview && <OverviewBox overview={detail.overview} />}
@@ -337,18 +335,13 @@ function CatalogDetailPanel({ item }: { item: CatalogItem }) {
       const latest = toLatestYen(item.amount.median, base, prices);
       return latest === null ? null : <p className="fine-note">額は{base}年の円です。物価をそろえると {prices.latestYear}年の円で {formatYen(latest)}（GDP デフレーター {base}年→{prices.latestYear}年。<a href="/methodology#spec-price">換算のしかた</a>）。順位と議員の額は、まだ各法律の開始前の年の円で並べています。</p>;
     })()}
-    {(members.length > 0 || detail.people) && <>
-      <h5>関わった議員（{item.membersTotal ?? members.length}人）</h5>
-      {members.length > 0 && <>
-        {detail.attributed && <p className="fine-note">法律の額のうち、議員に配った額は {formatYen(detail.attributed.median)}（成立への寄与、Shapley 値）。名前を押すと議員ランキングのその人が開きます。</p>}
-        <ul className="laws-members">{members.map(member => <li key={member.id}><a href={`/members?name=${encodeURIComponent(member.id)}#member-${encodeURIComponent(member.id)}`}>{member.name}</a><span>{member.roles.map(role => ROLE_LABEL[role] ?? role).join('・')}</span><strong>{formatYen(Math.abs(member.median))}</strong></li>)}</ul>
-        {(item.membersTotal ?? 0) > members.length && <p className="fine-note">ほか{(item.membersTotal ?? 0) - members.length}人は<a href={`/members`}>議員ランキング</a>で見られます。</p>}
-      </>}
-      {detail.people && <ul className="laws-people">{detail.people.map(person => <li key={person.name}><strong>{person.name}</strong>：{person.note}</li>)}</ul>}
+    {detail.people && <>
+      <h5>関わった人</h5>
+      <ul className="laws-people">{detail.people.map(person => <li key={person.name}><strong>{person.name}</strong>：{person.note}</li>)}</ul>
     </>}
-    {!members.length && !detail.people && item.kind !== '政策' && <p className="fine-note">{item.amount && item.certainty === '参考'
-      ? <>この法律の参考の額は、提出者と参議院の賛成者に配り、<a href="/members#all-members">議員ページの「全議員」の表</a>に「参考」の欄として出しています（確かな額とは足しません）。</>
-      : item.amount ? 'この法律の額は、まだ議員に配っていません（配分は議員ランキングに載る法律から順に進めています）。' : item.shared ? '共有額の参考値は、法律ごとの額ではないので、議員への配分には使っていません。' : '額が出ていないので、議員への配分はありません。'}</p>}
+    {item.kind !== '政策' && <p className="fine-note">{item.amount && item.certainty === '参考'
+      ? 'この法律の参考の額は、その法律の効果ではなく、産業×期間の群の動きです。議員の点には配りません（点数設計 v2.1）。'
+      : item.amount ? '議員への配り方は、役割ごとの固定比率（発議・賛成・反対・閣議決定）に替えました（点数設計 v2.1）。議員ページは計算方法の見直し中のため、いまは表示していません。' : item.shared ? '共有額の参考値は、法律ごとの額ではないので、議員への配分には使っていません。' : '額が出ていないので、議員への配分はありません。'}</p>}
     <h5>一次資料</h5>
     <ul className="laws-sources">{detail.sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} <ArrowUpRight size={13} /></a></li>)}</ul>
     <p className="laws-deeper">さらに詳しく：<a href="/methodology">計算方法</a>{item.href && <> ・ <a href={item.href}>この政策のページ</a></>} ・ <a href="https://github.com/nexus-ai-2045/public-interest-lens/tree/main/data/derived" target="_blank" rel="noopener noreferrer">計算に使った表 <ArrowUpRight size={13} /></a></p>

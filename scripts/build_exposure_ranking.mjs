@@ -174,9 +174,9 @@ try {
     counts: built.counts,
     coverage,
   };
-  payload.generatedFrom = await generationMetadata(server, root, ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts', 'app/src/members-reference.ts'], ['scripts/build_exposure_ranking.mjs']);
+  payload.generatedFrom = await generationMetadata(server, root, ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts'], ['scripts/build_exposure_ranking.mjs']);
   payload.inputs = Object.fromEntries(Object.entries(text).map(([k, v]) => [k, createHash('sha256').update(v).digest('hex')]));
-  // 個人別の賛否（ballots_*.csv）は、ファイル名と中身を順に並べた1つの照合値にする（build_reference_members.mjs と同じ方法）。
+  // 個人別の賛否（ballots_*.csv）は、ファイル名と中身を順に並べた1つの照合値にする。
   const ballotHash = createHash('sha256');
   ballotFiles.forEach((f, i) => ballotHash.update(f + '\n').update(ballots[i]).update('\n'));
   payload.inputs.ballots = ballotHash.digest('hex');
