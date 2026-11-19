@@ -47,6 +47,7 @@ JUDGE = {
     "一致": "Haiku 2系統（系統A 議案本文から・系統B 会議録から）が一致",
     "多数": "Haiku 2系統が割れ、Sonnet（系統C 議案本文の条文・附則と会議録）が片方と一致（3つのうち2つ）",
     "裁定": "Haiku 2系統と Sonnet で決まらず、Opus が一次資料で裁定",
+    "決められない": "Haiku 2系統・Sonnet・Opus のどれも一次資料から決められない（判定不能のまま残す）",
 }
 FIELD = {"類型": ("類型", "類型の理由"), "経済に効くか": ("経済に効くか", "経済の理由")}
 
@@ -176,6 +177,12 @@ def build() -> tuple[list[dict], list[dict], list[dict]]:
             v, how, rec = decide(i, item, a, b, c, rulings)
             if v is None:
                 res.append({**row, "決めた値": "", "決め方": how, "決着": "決められない"})
+                if item == "経済に効くか":  # 決められないことも後段へ渡す（定例の規則で効果なしに確定させない）
+                    rec = a.get(i) or b.get(i) or {}
+                    reason, quote, url = evidence(rec, item, "一致") if rec else ("", "", "")
+                    new_corr.append({"id": i, "項目": item, "直した値": "判定不能", "直す前の値": site,
+                                     "理由": reason, "引用": quote, "出典URL": url, "判定者": JUDGE[how],
+                                     "指示文": PROMPT, "記録": RECORD})
                 continue
             v = SITE_WORD.get(v, v)
             reason, quote, url = evidence(rec, item, how)

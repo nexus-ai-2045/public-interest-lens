@@ -97,7 +97,9 @@ def find(outcomes: list[dict], ledger: dict[str, dict], v1: dict, l1: dict, l2: 
         if g.get("分類") == "評価対象外" and measured:
             hits.append(("R1", f"分類「評価対象外」・到達点「{reach}」・経済の区分「{econ or '（空）'}」"))
         skip = {"K"} if "類型" in fixed.get(i, {}) else set()
-        skip |= {"C"} if "経済に効くか" in fixed.get(i, {}) else set()
+        econ_fix = fixed.get(i, {}).get("経済に効くか")
+        # 読み直しでも決められなかった（判定不能）項目は確定していないので、型には数え続ける
+        skip |= {"C"} if econ_fix and econ_fix.get("直した値") != corrections.UNDECIDED else set()
         rows += [{"id": i, "題名": title, "型": c, "根拠": w} for c, w in hits if c[0] not in skip]
     return rows
 

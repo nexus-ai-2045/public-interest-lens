@@ -25,5 +25,5 @@
 
 ## 候補の確定（2026-11-19）
 
-候補 582 本は一次資料の読み直しで確定した（`../primary-source-corrections-v1/reread-v1/README.md`）。K2 は規則で実質改正に、そのほかは Haiku 2系統 → Sonnet → Opus で決め、直した値は `../primary-source-corrections-v1/corrections.csv`、サイトの値が正しかった項目は `confirmed.csv` に置いた（どちらも、その項目の型には数えない）。決められなかったのは 3 本（C3 に残るのは衆法-139-18 の1本）。
+候補 582 本は一次資料の読み直しで確定した（`../primary-source-corrections-v1/reread-v1/README.md`）。K2 は規則で実質改正に、そのほかは Haiku 2系統 → Sonnet → Opus で決め、直した値は `../primary-source-corrections-v1/corrections.csv`、サイトの値が正しかった項目は `confirmed.csv` に置いた（どちらも、その項目の型には数えない）。決められなかった 3 本は経済に効くかを判定不能として置き、C3 の候補に残す（定例の規則で効果なしに確定させない）。
 上の表の本数は #208 の時点のもの。今の本数は `counts.json`。

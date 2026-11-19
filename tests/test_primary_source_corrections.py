@@ -44,7 +44,7 @@ class CorrectionsTest(unittest.TestCase):
                     continue
                 if row["記録"] == REREAD:  # 誤り候補の読み直し（2系統の一致、Sonnet との多数、Opus の裁定の順）
                     v, how, _ = reread.decide(i, item, ra, rb, rc, rr)
-                    self.assertIsNotNone(v, f"{i} {item}：記録から値が決まらない")
+                    v = v or corrections.UNDECIDED  # 決められない項目は判定不能のまま後段へ渡す
                     self.assertEqual(row["直した値"], SITE_WORD.get(v, v), f"{i} {item}")
                     self.assertEqual(row["判定者"], reread.JUDGE[how], f"{i} {item}")
                     continue
@@ -74,6 +74,8 @@ class CorrectionsTest(unittest.TestCase):
                 self.assertTrue(ledger[i]["経済に効くか"].startswith(v), i)
                 if v == corrections.INSTITUTIONAL:
                     self.assertEqual((outcomes[i]["結果"], ledger[i]["分類"]), ("評価対象外", "評価対象外"), i)
+                elif v == corrections.UNDECIDED:  # 決められない：定例の規則で効果なしに確定させない
+                    self.assertNotEqual(outcomes[i]["結果"], "効果なし（定例）", i)
                 else:
                     self.assertNotIn(outcomes[i]["結果"], ("評価対象外", "効果なし（定例）"), i)
 
