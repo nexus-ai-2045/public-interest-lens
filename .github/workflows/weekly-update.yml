@@ -3,6 +3,9 @@ name: weekly-update
 # 週2回（月曜・木曜の 3:00 JST）、一次資料の取得と再計算を回し、変化があれば PR を作る。
 # 毎日更新はしない（2026-10-25 の決定）。cron は UTC：日曜・水曜 18:00 UTC = 月曜・木曜 3:00 JST。
 # PR は自動で取り込まない。検査（verify・preflight）が通ってから人かレビューが取り込む。
+# 守り（2026-11-19）：取得が1段でも失敗したか、振り分けが無い成立法があれば再計算へ進まず、ジョブを失敗させて PR を出さない。
+#   再計算のあとも、main より大きく減ったデータがあれば PR を出さない（scripts/check_data_shrink.py）。
+#   理由はジョブの Summary に出る。意図した減少を通すときだけ、手動実行で allow_shrink にチェックを入れる。
 # 注意：GITHUB_TOKEN で作った PR には他のワークフローが走らない。検査は PR を開き直す（Close→Reopen）か、
 #       「Update branch」で起こす。リポジトリ設定「Allow GitHub Actions to create and approve pull requests」が要る。
 
@@ -10,6 +13,11 @@ on:
   schedule:
     - cron: '0 18 * * 0,3'
   workflow_dispatch:
+    inputs:
+      allow_shrink:
+        description: 'データが大きく減っていても PR を出す（意図した減少のときだけ）'
+        type: boolean
+        default: false
 
 concurrency:
   group: weekly-update
@@ -50,6 +58,14 @@ jobs:
           python-version: '3.12'
       - run: npm ci
         working-directory: app
+      # 取得の段が使う道具。無いと段が失敗する：pdftotext（poppler-utils。国策の本文・数値目標の系列）、
+      # openpyxl・xlrd（財務省・総務省などの Excel）。
+      - name: 取得に使う道具を入れる
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends poppler-utils
+          python3 -m pip install --disable-pip-version-check openpyxl==3.1.5 xlrd==2.0.1
+          pdftotext -v
       # 公開用の名義を設定し、書き込みの前に identity guard の config を通す。不合格ならここで止まり、何も書かない。
       - name: 公開用の名義を設定して identity guard の config を通す
         run: |
@@ -61,22 +77,46 @@ jobs:
         env:
           REPO_PREFLIGHT_HOME: ${{ github.workspace }}/tool
         run: python3 scripts/install_hooks.py
-      # 取得と再計算。落ちた段階は報告に残して次へ進む（daily_update.py の作り）。検査は PR 側の verify に任せる。
+      # 取得と再計算。--strict：取得が失敗した段か、振り分けが無い成立法があれば再計算へ進まない。
+      # 再計算が途中で落ちたときも含め、失敗で終わったらこの段でジョブを止め、PR を出さない（欠けたデータを差分にしない）。
+      # 政治資金は飛ばす：一覧・取得の記録・原本の保管庫が Git に入らないので、ここでは毎回ゼロから全件を取り直して
+      # 1段の上限（3600秒）で必ず時間切れになり、取った原本も実行の終わりに消える。原本の保管庫が残る環境で回す。
       - name: 取得と再計算
         env:
           REPO_PREFLIGHT_ROOT: ${{ github.workspace }}/tool
           REPO_PREFLIGHT_HOME: ${{ github.workspace }}/tool
         run: |
+          set -uo pipefail
           mkdir -p .local/daily-update
-          python3 scripts/daily_update.py --fetch --rebuild --report .local/daily-update/report.md 2>&1 | tee .local/daily-update/log.txt || true
+          status=0
+          python3 scripts/daily_update.py --fetch --rebuild --strict --skip political-funds \
+            --report .local/daily-update/report.md 2>&1 | tee .local/daily-update/log.txt || status=$?
+          if [ -f .local/daily-update/report.md ]; then
+            cat .local/daily-update/report.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            { echo '報告を書く前に落ちた。ログの末尾：'; echo '```'; tail -n 40 .local/daily-update/log.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "$status" -ne 0 ]; then
+            echo "::error::取得か再計算が失敗で終わった（終了コード $status）。PR は出さない。段ごとの結果は Summary を見る。"
+            exit "$status"
+          fi
       - name: 変化があれば個人名義検査を通して PR を作る
         env:
           REPO_PREFLIGHT_HOME: ${{ github.workspace }}/tool
+          ALLOW_SHRINK: ${{ inputs.allow_shrink && '--allow' || '' }}
         run: |
           set -euo pipefail
           if [ -z "$(git status --porcelain -- data app/public)" ]; then
             echo "変化なし。PR は作らない。"
             exit 0
+          fi
+          # main より大きく減ったデータがあれば、ここで失敗させて PR を出さない。
+          shrink=0
+          python3 scripts/check_data_shrink.py --base HEAD $ALLOW_SHRINK | tee .local/daily-update/shrink.txt || shrink=$?
+          { echo; echo '## データの減り方の確認'; echo; cat .local/daily-update/shrink.txt; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$shrink" -ne 0 ]; then
+            echo "::error::main より大きく減ったデータがある。PR は出さない。一覧は Summary を見る。"
+            exit "$shrink"
           fi
           branch="report/weekly-update-$(date -u +%Y%m%d-%H%M)"
           git checkout -b "$branch"
@@ -89,8 +129,12 @@ jobs:
           {
             echo "週2回の自動更新（月・木 3:00 JST）。取得と再計算の結果です。"
             echo
-            echo "- 再計算が落ちた場合は公開ランキングを作り直していません（段階の記録を見てください）。"
+            echo "- 取得の全段と再計算が通り、main より大きく減ったデータが無いときだけ、この PR を作ります。"
             echo "- 検査（verify・preflight）が通ってから取り込みます。"
+            echo
+            echo '```'
+            cat .local/daily-update/shrink.txt
+            echo '```'
             echo
             echo '```'
             tail -n 60 .local/daily-update/log.txt

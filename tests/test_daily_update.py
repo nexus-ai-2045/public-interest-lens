@@ -1,4 +1,5 @@
 import unittest
+from unittest import mock
 
 from scripts import daily_update
 
@@ -18,6 +19,31 @@ class DailyUpdateTests(unittest.TestCase):
         approved = daily_update.standing_approvals()
         self.assertTrue(approved)
         self.assertEqual(len(approved), len(set(approved)))
+
+    def test_strict_stops_before_rebuild_on_fetch_failure_or_unlabeled_law(self):
+        run = daily_update.Run()
+        run.record("取得：成立法（衆議院 議案情報）", "完了")
+        run.record("取得：OECD 産業別付加価値", "届かない", "sdmx.oecd.org")
+        run.record("取得：政治資金収支報告書（総務省・都道府県選管、月1回）", "飛ばした", "--skip political-funds")
+        self.assertEqual(daily_update.rebuild_blockers(run, []), [])  # 届かない・飛ばしたは失敗に数えない
+        run.record("取得：財政と為替介入（財務省・総務省・内閣府、月1回）", "失敗", "ModuleNotFoundError")
+        run.record("検査：Python", "失敗", "取得の段ではない")
+        self.assertEqual(daily_update.fetch_failures(run), ["取得：財政と為替介入（財務省・総務省・内閣府、月1回）"])
+        reasons = daily_update.rebuild_blockers(run, [{"id": "衆法-222-2", "題名": "x", "回次": "222", "経過URL": ""}])
+        self.assertEqual(len(reasons), 2)
+        self.assertIn("取得が失敗した段 1件", reasons[0])
+        self.assertIn("衆法-222-2", reasons[1])
+
+    def test_skip_does_not_touch_the_skipped_source(self):
+        run = daily_update.Run()
+        commands = []
+        with mock.patch.object(daily_update, "reachable", return_value=True), \
+                mock.patch.object(daily_update, "latest_session", return_value=222), \
+                mock.patch.object(run, "command", side_effect=lambda step, args, **kw: commands.append(args) or False):
+            daily_update.fetch(run, "2026-11-19", frozenset({"political-funds"}))
+        self.assertFalse(any("scripts/political_funds.py" in args for args in commands))
+        self.assertIn(("取得：政治資金収支報告書（総務省・都道府県選管、月1回）", "飛ばした"), [(s["step"], s["status"]) for s in run.steps])
+        self.assertTrue(any("scripts/fetch_fiscal.py" in args for args in commands))  # ほかの段は回す
 
 
 if __name__ == "__main__":
