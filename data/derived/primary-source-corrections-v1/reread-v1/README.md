@@ -17,7 +17,7 @@
    - それでも決まらない項目は Opus が3つの読みと一次資料を読んで裁定（2 項目）。`rulings.json`。
    - 経済に効くかを「制度」と決めた読みでも、制度と読んだどれかの記録が経済の理由に本法や附則を読めていない（「未読」「取得できず」）と書いたものは確定しない（4 本：衆法-180-21・閣法-176-6・閣法-155-41・閣法-183-62）。2系統が一致しても片方だけが未読を書くことがあるので、採った記録だけでなく制度と読んだ全部の理由を見る。「読めなかった資料」の欄は見ない（会議録が見つからない、本文の後半が切れたなどはほぼ毎回あり、経済の判断に効くなら理由に書かれる）。期限の延長などは延ばす本法の中身で決まるので、改正法だけで制度とは言えない（Codex の指摘）。「判定不能」として置く。
 3. 連鎖（`cascade.csv`、24 本）：1回目の反映で、類型を直した法律が新しく C の型に当たった（4 本）か、新しく効果なし（定例）になった（20 本）。読み直しは両方の項目を読んでいるので、同じ記録で経済に効くかも決めた（#208 の閣法-180-38・衆法-217-15 と同じ扱い：定型改正でも、続けなければ止まる補助や特例があれば経済に効くとして定例の規則 RT8 に当てない）。追加で読んだのは衆法-150-6 の Sonnet 1 件だけ。
-4. 決着：`python3 scripts/resolve_error_candidates.py`（AI は呼ばない。規則はスクリプトの冒頭）。出力は `../corrections.csv`（直した値。行ごとに理由・原文の引用・出典 URL・判定者・指示文の版）、`../confirmed.csv`（読み直してサイトの値が正しかった項目）、`resolutions.csv`（候補の全項目の決着）。`tests/test_primary_source_corrections.py` が、表の値が記録から決まる値と同じことを確かめる。
+4. 決着：`python3 scripts/resolve_error_candidates.py`（AI は呼ばない。規則はスクリプトの冒頭）。出力は `../corrections.csv`（直した値。行ごとに理由・原文の引用・出典 URL（記録が引用と URL の対応を持たないので、記録の出典 URL を全部 ; でつなぐ）・判定者・指示文の版）、`../confirmed.csv`（読み直してサイトの値が正しかった項目）、`resolutions.csv`（候補の全項目の決着）。`tests/test_primary_source_corrections.py` が、表の値が記録から決まる値と同じことを確かめる。
 5. 反映の順：`resolve_error_candidates.py` → `build_all_laws_outcomes.py` → `build_macro_amounts.py`（PYTHONPATH=.）→ `build_three_columns.py` → `build_evaluation_ledger.py build` → `resolve_sample_failures.py` → `build_evaluation_ledger.py build` → `report_verification.py` → `check_error_types.py` → `build_industry_year_gap.py` → `rebuild_public.py` → `generate_artifacts.py`。
 
 ## 結果（定義：候補 582 本、項目は類型 391・経済に効くか 255、行は corrections.csv に 598（うち判定不能 7）・confirmed.csv に 47）

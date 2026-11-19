@@ -137,7 +137,8 @@ def evidence(rec: dict, item: str, how: str) -> tuple[str, str, str]:
     quotes, urls = rec.get("引用") or [""], rec.get("出典URL") or [""]
     if item == "経済に効くか":  # 改正文の書き出し（「次のように改正する」）は経済の根拠にならないので、ほかの引用があればそちらを使う
         quotes = [q for q in quotes if "次のように改正" not in q] or quotes
-    return rec[FIELD[item][1]], quotes[0], urls[0]
+    # 記録は引用と出典URLの対応を持たないので、出典は全部を ; でつないで残す（会議録の引用に議案本文の URL だけが付かないように）
+    return rec[FIELD[item][1]], quotes[0], ";".join(dict.fromkeys(u for u in urls if u))
 
 
 def build() -> tuple[list[dict], list[dict], list[dict]]:
