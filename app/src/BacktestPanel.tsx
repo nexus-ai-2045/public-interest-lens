@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Info } from 'lucide-react';
+import { SCORING_CONSTANTS } from './scoring-constants';
 import { backtestUrl, foreignSignLabel, formatPercent, formatRate, parseBacktest, signLabel, type Backtest, type BacktestRun } from './backtest';
 
 function RunView({ run }: { run: BacktestRun }) {
@@ -65,7 +66,7 @@ export default function BacktestPanel() {
   }, []);
   return <section aria-labelledby="backtest">
     <h3 id="backtest">7. 精度（バックテスト）</h3>
-    <p>答えの分かっている事例（学術文献の事後評価で、原文と数値が一致した49件）を正解にして、今の計算の向きがどれだけ合うかを測っています。目標は95%以上です。結果は良く見えるように選ばず、届かないときは届かないと書きます。実装が一通り済んだら、同じ仕組みでもう一度測ります。</p>
+    <p>答えの分かっている事例（学術文献の事後評価で、原文と数値が一致した49件）を正解にして、今の計算の向きがどれだけ合うかを測っています。合格の線は{Math.round(SCORING_CONSTANTS.hitRateFloor * 100)}%以上です（固定の基準。過去の測定は、測った時点の線のまま載せています）。結果は良く見えるように選ばず、届かないときは届かないと書きます。実装が一通り済んだら、同じ仕組みでもう一度測ります。</p>
     <p className="fine-note"><Info size={14} /> 計算の「向き」は、法律ごとに全産業または産業の付加価値を比較国と比べた結果論で、その法律だけの効果ではありません。正解は特定の集団・指標への効果です。同じものを測っていない分も、合わなさに含まれます（定義と限界は<a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/adr/0020-backtest-accuracy-definition.md" target="_blank" rel="noopener noreferrer">設計決定0020</a>、全件の表は<a href="https://github.com/nexus-ai-2045/public-interest-lens/blob/main/docs/バックテスト.md" target="_blank" rel="noopener noreferrer">docs/バックテスト.md</a>）。</p>
     {error && <p className="empty-state">{error}</p>}
     {!data && !error && <p className="empty-state">読み込み中…</p>}
