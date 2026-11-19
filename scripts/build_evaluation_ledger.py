@@ -51,6 +51,16 @@ HEADER = ["id", "題名", "分類", "分類の方法", "類型", "経済に効�
           "額の方法", "額（円）", "付加価値の変化（円）", "付加価値の由来", "国の収支（億円）", "国の支出（円）", "採算（付加価値÷国の支出）", "確かさ", "公開可否", "概要の方法", "常識検査③", "頑健性④", "同型の誤り候補⑤", "ロジック検査", "検証状態", "検証メモ"]
 VERIFY_STATES = ("未検証", "分類を2系統で照合済み", "分類を第3判定で決着", "抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた")
 SAMPLED_STATES = ("抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた")
+RESOLVED_PASS = "合格に訂正"  # scripts/resolve_sample_failures.py が書く決着の語
+RESOLVED_DEMOTED = "参考に下げた"
+REDO_PASS_MEMO = "読み直しで合格に訂正："
+REDO_DEMOTED_MEMO = "読み直しで決着："
+REDO_STALE_MEMO = "読み直しの決着の後にサイトの値が変わった（読み直しをやり直す）："
+
+
+def site_key(row: dict) -> str:
+    """読み直しの決着が前提にしたサイトの値。決着の後にこれが変わったら、決着を使わない。"""
+    return "／".join(f"{k}={row.get(k, '')}" for k in ("類型", "分類", "到達点", "経済に効くか"))
 
 
 def read(path: Path) -> list[dict]:
@@ -75,6 +85,7 @@ def load():
         "pub": by_id(read(D / "publish-v1-triage-v2" / "publish.csv")),
         "ov": by_id(read(D / "law-overviews-v1" / "overviews.csv")),
         "sample": by_id(read(LEDGER_DIR / "sample-verdicts.csv")),
+        "resolved": by_id(read(LEDGER_DIR / "sample-resolutions.csv")),  # 不合格のまま残った法律の読み直しと決着
         "cols": by_id(read(D / "three-columns-v1" / "columns.csv")),  # 額の物差し三欄（設計決定0024）
     }
 
@@ -139,14 +150,22 @@ def sense_checks(rows_macro: dict[str, dict], title_of: dict[str, str]) -> dict[
     return out
 
 
-def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "") -> tuple[str, str]:
+def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "", resolved: dict | None = None, key: str = "") -> tuple[str, str]:
     s = sample.get(id_)
     if s:
         if s["判定"] == "合格":
             return "抜き取り検証で合格", s.get("食い違い", "")
-        # 不合格のうち額を参考値に下げたものは「参考に下げた」。分類を決め直す必要があるものは不合格のまま残す（隠さない）
+        # 不合格のうち額を参考値に下げたものは「参考に下げた」。額の無い法律は自動では下げず、不合格のまま残す（隠さない）
         if is_demoted(s["判定"], reach_, certainty):
             return STATE_DEMOTED, s.get("食い違い", "")
+        # 不合格のまま残った法律は、一次資料の読み直しで1本ずつ決着させたものだけ状態を変える（sample-resolutions.csv）
+        r = (resolved or {}).get(id_)
+        if r and r.get("判定時のサイトの値") != key:
+            return STATE_FAILED, f"{REDO_STALE_MEMO}{s.get('食い違い', '')}"
+        if r and r["決着"] == RESOLVED_PASS:
+            return "抜き取り検証で合格", f"{REDO_PASS_MEMO}{r['理由']}"
+        if r and r["決着"] == RESOLVED_DEMOTED:
+            return STATE_DEMOTED, f"{REDO_DEMOTED_MEMO}{r['理由']}"
         return STATE_FAILED, s.get("食い違い", "")
     if "第3" in cls_how or "Sonnet" in cls_how or "Opus" in cls_how or cls_how.startswith("2系統の食い違い"):
         return "分類を第3判定で決着", ""
@@ -173,11 +192,13 @@ def build_rows(src) -> list[dict]:
         pub = src["pub"].get(i)
         ov = src["ov"].get(i)
         certainty = o["確かさ"] or (m["結果"] and "参考" if m and m["結果"] == "額" else "")
-        state, memo = verify_state(i, how, src["sample"], reach_, certainty)
+        econ = f"{e['区分']}（{e['決め方']}）" if e else ""
+        key = site_key({"類型": o["種類"] or "", "分類": cls, "到達点": reach_, "経済に効くか": econ})
+        state, memo = verify_state(i, how, src["sample"], reach_, certainty, src.get("resolved"), key)
         col = src["cols"].get(i, {})
         rows.append({
             "id": i, "題名": o["題名"], "分類": cls, "分類の方法": how, "類型": o["種類"] or "",
-            "経済に効くか": (f"{e['区分']}（{e['決め方']}）" if e else ""),
+            "経済に効くか": econ,
             "分野": field, "分野の方法": field_how, "到達点": reach_, "向き": o["向き"],
             "額の方法": amt_how, "額（円）": amt,
             "付加価値の変化（円）": col.get("付加価値の変化（円）", ""), "付加価値の由来": col.get("付加価値の由来", ""),
@@ -226,16 +247,18 @@ def make_sample(rows: list[dict]) -> list[dict]:
     return sorted(out, key=lambda r: (stratum(r), r["id"]))
 
 
-def summarize(rows: list[dict]) -> dict:
+def summarize(rows: list[dict], first: dict[str, str] | None = None) -> dict:
+    """first は初回の判定（id→合格／不合格）。あれば、抜き取りの合格・不合格は初回の判定で数え、読み直しの訂正は別に数える。"""
     n = len(rows)
     c = lambda k: dict(Counter(r[k] for r in rows).most_common())
     samp = [r for r in rows if r["検証状態"] in SAMPLED_STATES]
-    ok = sum(r["検証状態"] == "抜き取り検証で合格" for r in samp)
+    ok = sum(first.get(r["id"]) == "合格" for r in samp) if first else sum(r["検証状態"] == "抜き取り検証で合格" for r in samp)
     by_reach: dict[str, dict] = {}
     for k in sorted({r["到達点"] for r in rows}):
         rs = [r for r in rows if r["到達点"] == k]
         ss = [r for r in rs if r["検証状態"] in SAMPLED_STATES]
-        by_reach[k] = {"本数": len(rs), "抜き取り": len(ss), "合格": sum(r["検証状態"] == "抜き取り検証で合格" for r in ss),
+        by_reach[k] = {"本数": len(rs), "抜き取り": len(ss),
+                       "合格": sum(first.get(r["id"]) == "合格" for r in ss) if first else sum(r["検証状態"] == "抜き取り検証で合格" for r in ss),
                        "うち額あり": sum(bool(r["額（円）"]) for r in rs),
                        "参考に下げた": sum(r["検証状態"] == STATE_DEMOTED for r in ss),
                        "不合格のまま": sum(r["検証状態"] == STATE_FAILED for r in ss)}
@@ -257,14 +280,17 @@ def summarize(rows: list[dict]) -> dict:
         },
         "sample": {"n": len(samp), "pass": ok, "fail": len(samp) - ok,
                    "demoted": sum(r["検証状態"] == STATE_DEMOTED for r in samp),
-                   "failed_kept": sum(r["検証状態"] == STATE_FAILED for r in samp)},
+                   "failed_kept": sum(r["検証状態"] == STATE_FAILED for r in samp),
+                   "now_pass": sum(r["検証状態"] == "抜き取り検証で合格" for r in samp),
+                   "redo_pass": sum(r.get("検証メモ", "").startswith(REDO_PASS_MEMO) for r in samp),
+                   "redo_demoted": sum(r.get("検証メモ", "").startswith(REDO_DEMOTED_MEMO) for r in samp)},
         "three_columns": {
             "付加価値の変化": dict(Counter(r["付加価値の由来"] for r in rows if r["付加価値の変化（円）"])),
             "国の収支（億円）": sum(bool(r["国の収支（億円）"]) for r in rows),
             "採算": sum(bool(r["採算（付加価値÷国の支出）"]) for r in rows),
             "合計": n,
         },
-        "rule": "分類の2系統照合は『分類』だけを確かめたもの。向き・類型・額まで確かめたのは抜き取り検証だけ。抜き取りで不合格だった法律のうち、額を順位・議員配分に使わない（参考値）ものは『参考に下げた』（額と根拠は参考値として出し続ける）、分類を決め直す必要があるものは『抜き取り検証で不合格』のまま数える。",
+        "rule": "分類の2系統照合は『分類』だけを確かめたもの。向き・類型・額まで確かめたのは抜き取り検証だけ。抜き取りで不合格だった法律のうち、額を順位・議員配分に使わない（参考値）ものは『参考に下げた』（額と根拠は参考値として出し続ける）、額の無いものは自動では下げず『抜き取り検証で不合格』のまま数える。不合格のまま残った法律は、一次資料を読み直して1本ずつ決着させる（`sample-resolutions.csv`、記録は `reverification-v1/`）：サイトに誤りが無かったものは『抜き取り検証で合格』に訂正し、サイトの値がまだ直っていないものは『参考に下げた』にして、サイトの値と読み直しの値を並べて出し続ける。",
     }
 
 
@@ -311,7 +337,7 @@ def main() -> int:
         w = csv.DictWriter(f, HEADER)
         w.writeheader()
         w.writerows(rows)
-    s = summarize(rows)
+    s = summarize(rows, {i: v["判定"] for i, v in src["sample"].items()})
     (ROOT / "app" / "public" / "distribution" / "ledger-summary.json").write_text(
         json.dumps(s, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     write_docs(s, ROOT / "docs" / "評価台帳.md")
