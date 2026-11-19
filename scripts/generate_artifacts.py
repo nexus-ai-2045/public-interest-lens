@@ -36,7 +36,11 @@ STEPS = [
     ("derived", DIST / "provisional.json", [PY, "scripts/build_provisional.py"]),
     ("derived", DIST / "unenacted.json", [PY, "scripts/build_public_unenacted.py"]),
     ("derived", DIST / "charts.json", [PY, "scripts/build_database.py"]),
+    # 評価台帳は全法律の結果（all-laws-v1）から作る。成立法が増えたとき（#207 の第222回）に作り直し漏れで台帳が欠けないよう、生成に入れる。
+    ("derived", DIST / "ledger-summary.json", [PY, "scripts/build_evaluation_ledger.py", "build"]),
 ]
+# 段の主出力のほかに、同じコマンドが data/ に書く出力。入力に数えると毎回作り直しになる
+SIDE_OUTPUTS = {ROOT / "data" / "derived" / "evaluation-ledger-v1" / "ledger.csv"}
 
 
 # 入力の置き場。取得の原本・データベース・キャッシュは見ない
@@ -49,7 +53,7 @@ SKIP_FILES = re.compile(r"\.test\.tsx?$|\.css$")
 def newest_input() -> float:
     newest = 0.0
     # 自分の出力（曝露ランキングは data/ の下に置く）は入力に数えない。数えると毎回いちばん新しい入力になり、全段を作り直してしまう
-    outputs = {str(output) for _, output, _ in STEPS}
+    outputs = {str(output) for _, output, _ in STEPS} | {str(p) for p in SIDE_OUTPUTS}
     for root in INPUT_ROOTS:
         for folder, dirs, files in os.walk(root):
             dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
