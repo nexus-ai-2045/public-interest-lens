@@ -57,6 +57,25 @@ def involved_law_ids(path: Path) -> set[str] | None:
 VERDICT_FAIL = "不合格"
 STATE_FAILED = "抜き取り検証で不合格"
 STATE_DEMOTED = "参考に下げた"
+# 当て直しまでの暫定の降格（interim-holds.csv）。抜き取り2回目で不合格の個別の額を、全件の当て直しが済むまで参考に下げる。
+# 初回の抜き取り（sample-verdicts.csv）の数え方を変えないよう、検証状態は別の語にする。当て直しで直ったら行を消して戻す。
+STATE_INTERIM_HELD = "当て直しまで参考に下げた"
+INTERIM_HOLDS = Path(__file__).resolve().parents[1] / "data" / "derived" / "evaluation-ledger-v1" / "interim-holds.csv"
+INTERIM_REASON_PREFIX = "抜き取り2回目で不合格（振り分けの当て直しまで参考）："
+
+
+def interim_holds(path: Path = INTERIM_HOLDS) -> dict[str, str]:
+    """当て直しまで参考に下げる法律と、その食い違い（id → 食い違い）。表が無いときは空。判定は不合格だけ。"""
+    if not path.exists():
+        return {}
+    with path.open(encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+    bad = [r["id"] for r in rows if r["判定"] != VERDICT_FAIL or not r["食い違い"].strip()]
+    if bad:
+        raise ValueError(f"interim-holds.csv は不合格と食い違いのある行だけ：{bad}")
+    return {r["id"]: r["食い違い"].strip() for r in rows}
+
+
 # 台帳の到達点が、額を順位・議員配分に使わない（参考額）か、そもそも評価対象外（額が出ていれば順位に混ざる）のもの
 DEMOTE_REACH_PREFIXES = ("参考額", "評価対象外", "額（個別")
 

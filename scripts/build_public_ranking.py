@@ -23,11 +23,23 @@ from pathlib import Path
 
 try:
     from scripts.build_all_laws_outcomes import crowded_ids, narrow_measure
-    from scripts.evaluation_rules import DEMOTED_ROUTES, VERDICT_FAIL, is_demoted
+    from scripts.evaluation_rules import (
+        DEMOTED_ROUTES,
+        INTERIM_REASON_PREFIX,
+        VERDICT_FAIL,
+        interim_holds,
+        is_demoted,
+    )
     from scripts.generation_provenance import generation_metadata
 except ModuleNotFoundError:
     from build_all_laws_outcomes import crowded_ids, narrow_measure
-    from evaluation_rules import DEMOTED_ROUTES, VERDICT_FAIL, is_demoted
+    from evaluation_rules import (
+        DEMOTED_ROUTES,
+        INTERIM_REASON_PREFIX,
+        VERDICT_FAIL,
+        interim_holds,
+        is_demoted,
+    )
     from generation_provenance import generation_metadata
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -375,11 +387,15 @@ def japan_value_added_max(raw: bytes | None = None) -> int:
 
 def verification_failed() -> dict[str, str]:
     """独立検証（抜き取り）で不合格と判定された法律と、その理由。判定表が無いときは空。
-    台帳の検証状態ではなく判定表（sample-verdicts.csv）を引く（台帳は降格後「参考に下げた」に変わるため）。"""
-    if not SAMPLE_VERDICTS.exists():
-        return {}
-    with SAMPLE_VERDICTS.open(encoding="utf-8", newline="") as f:
-        return {row["id"]: (row.get("食い違い") or "").strip() for row in csv.DictReader(f) if row["判定"] == VERDICT_FAIL}
+    台帳の検証状態ではなく判定表（sample-verdicts.csv）を引く（台帳は降格後「参考に下げた」に変わるため）。
+    当て直しまで参考に下げる法律（interim-holds.csv、抜き取り2回目の不合格）も、理由の頭に印を付けて加える。"""
+    failed: dict[str, str] = {}
+    if SAMPLE_VERDICTS.exists():
+        with SAMPLE_VERDICTS.open(encoding="utf-8", newline="") as f:
+            failed = {row["id"]: (row.get("食い違い") or "").strip() for row in csv.DictReader(f) if row["判定"] == VERDICT_FAIL}
+    for law_id, reason in interim_holds().items():
+        failed.setdefault(law_id, f"{INTERIM_REASON_PREFIX}{reason}")
+    return failed
 
 
 def demoted_basis(law: dict, covid_basis: str = "") -> str:

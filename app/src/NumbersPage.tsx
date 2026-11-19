@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { SiteShell } from './SiteHeader';
 import { useTone } from './site-tone';
 import { CountUp, Reveal, useInView } from './motion';
@@ -7,6 +7,8 @@ import {
   type Ledger, type PublicCharts, type Side,
 } from './numbers-view';
 import './numbers.css';
+import { InterimNotice } from './InterimNotice';
+import { INTERIM_DISPLAY, foldAllReference } from './interim-display';
 
 type Tip = { x: number; y: number; text: string } | null;
 
@@ -114,6 +116,15 @@ function Timeline({ data }: { data: PublicCharts['timeline'] }) {
   </div>;
 }
 
+/** 振り分けの当て直し中は、額のグラフ（参考の額が大半）を既定で畳む。切り替えが切れていればそのまま出す。 */
+function FoldWhilePaused({ children }: { children: ReactNode }) {
+  if (!foldAllReference()) return <>{children}</>;
+  return <details className="nc-fold">
+    <summary>額のグラフを開く（{INTERIM_DISPLAY.label}。参考の額が大半で、順位には使いません）</summary>
+    {children}
+  </details>;
+}
+
 export function NumbersPage() {
   useEffect(() => { document.title = '数字で見る｜国賊／国士ランキング'; }, []);
   const [tone] = useTone();
@@ -150,6 +161,8 @@ export function NumbersPage() {
           <div><strong><CountUp value={undetermined} format={n => `${Math.round(n)}`} /></strong><span>本：うち向き未確定（側に分けない）</span></div>
         </Reveal>
 
+        <InterimNotice />
+        <FoldWhilePaused>
         <section className="nc-section">
           <h3>1. 法律の額はどのくらいの大きさか</h3>
           <p>額の出た観測（同じ観測を共有する法律は1つ）を、中央値の桁ごとに数えました。多くは1兆〜100兆円の桁です。</p>
@@ -165,6 +178,7 @@ export function NumbersPage() {
           <h3>2. いつ施行された法律の額か</h3>
           <Timeline data={charts.timeline} />
         </section>
+        </FoldWhilePaused>
 
         <p className="fine-note">計算方法の版：{charts.spec}。入力の照合値 {charts.inputs.slice(0, 12)}…</p>
       </>}
