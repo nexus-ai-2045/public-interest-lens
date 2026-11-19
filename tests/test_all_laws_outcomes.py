@@ -27,6 +27,7 @@ class EmptyStages(ol.Stages):
     def __init__(self):
         self.agreement, self.impact, self.loss, self.benefit, self.publish = {}, {}, {}, {}, {}
         self.covid, self.institutional, self.crowded, self.fiscal = set(), {}, set(), {}
+        self.corrections = {}
 
 
 class LedgerTest(unittest.TestCase):
@@ -155,6 +156,26 @@ class DecideTest(unittest.TestCase):
         r = ol.decide({"題名": title}, fixed, "2020-04-01", st)
         self.assertNotEqual(r["経路"], "RT8")
         self.assertEqual((r["種類"], r["分野"], r["指標"]), ("新規", "金融", "貸出残高"))
+
+    def test_primary_source_corrections_override_the_triage_kind_and_econ(self):
+        """一次資料で直した類型・経済に効くか（primary-source-corrections-v1）が、振り分けの種類と経路より先に効く。"""
+        title = "地震対策緊急整備事業に係る国の財政上の特別措置に関する法律の一部を改正する法律案"
+        no_market = triage_row(結果="評価対象外", 分野=ol.NO_FIELD, 指標="", A_分野=ol.NO_FIELD, B_分野=ol.NO_FIELD)
+
+        def corr(**items):
+            return {"閣法-999-1": {k: {"直した値": v, "理由": "読み直しの理由"} for k, v in items.items()}}
+
+        st = EmptyStages()
+        st.corrections = corr(類型="定型改正")
+        r = ol.decide({"題名": title}, no_market, "", st)
+        self.assertEqual((r["種類"], r["経路"]), ("定型改正", "RT8"))  # 直した類型で定例の規則に当たる
+        st.corrections = corr(類型="定型改正", 経済に効くか="経済に効く")
+        r = ol.decide({"題名": title}, no_market, "", st)
+        self.assertNotIn(r["結果"], ("効果なし（定例）", "評価対象外"))  # 続けなければ止まる補助のある延長は定例にしない
+        st.corrections = corr(経済に効くか="制度")
+        r = ol.decide(self.law, triage_row(), "2020-04-01", st)  # 市場の経路があっても先に評価対象外
+        self.assertEqual((r["結果"], r["経路"]), ("評価対象外", ol.ROUTE_SOURCE_INSTITUTIONAL))
+        self.assertIn("読み直しの理由", r["理由"])
 
     def test_law_without_a_date_is_held(self):
         r = ol.decide(self.law, triage_row(), "", EmptyStages())

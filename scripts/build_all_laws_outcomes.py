@@ -30,6 +30,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 try:
+    from scripts import primary_source_corrections as corrections
     from scripts.evaluation_rules import (
         ROUTE_NO_CHAIN,
         ROUTE_SIGN_CONFLICT,
@@ -37,6 +38,7 @@ try:
         sign_conflict,
     )
 except ImportError:  # python3 scripts/build_all_laws_outcomes.py（scripts/ が検索路に入る）
+    import primary_source_corrections as corrections
     from evaluation_rules import (
         ROUTE_NO_CHAIN,
         ROUTE_SIGN_CONFLICT,
@@ -188,6 +190,8 @@ class Stages:
         self.fiscal = {r["id"]: r for r in read_csv(fiscal) if r["平年度_億円"] != ""} if fiscal.exists() else {}
         self.covid = {r["id"] for r in read_csv(covid) if r.get("コロナ対応") == "はい"} if covid.exists() else set()
         self.involved = involved_law_ids(derived / "allocation-v1" / "involvements.csv")
+        # 一次資料の読み直しで直した類型・経済に効くか（振り分けの記録は書き換えず、ここで上書きする）
+        self.corrections = corrections.load(derived / "primary-source-corrections-v1" / "corrections.csv")
 
 
 def no_market(t: dict[str, str]) -> bool:
@@ -249,6 +253,9 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     if tb2 and st.line_kind[side].get(t["id"]):  # TB2：第3の判定者が選んだ系統の種類を、v1 の A・B の種類の代わりに使う
         kind = st.line_kind[side][t["id"]]
         t = {**t, "種類": kind, "A_種類": kind, "B_種類": kind}
+    fixed_kind = corrections.value(st.corrections, t["id"], "類型")
+    if fixed_kind:  # 一次資料で直した類型を、振り分けの両系統の種類の代わりに使う
+        t = {**t, "種類": fixed_kind, "A_種類": fixed_kind, "B_種類": fixed_kind}
     kinds = (t["A_種類"], t["B_種類"])
     out = {c: "" for c in HEADER}
     out.update(id=t["id"], 題名=title, 施行日=date, 種類=t["種類"])
@@ -271,6 +278,13 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     if fx:
         out.update(結果="額あり", 経路="財政（税収見込み）", 確かさ="高", 損失または便益の額=fx["平年度_億円"], 単位="億円（国税の増減収見込み・平年度、マイナスは減収）",
                    理由=f"{fx['理由']}。順位・合計・議員への配分には使わない")
+        return out
+
+    # 0a') 一次資料の読み直しで「制度」（この法律だけでは経済の量が動かない）と分かった法律：市場の経路より先に評価対象外
+    if corrections.value(st.corrections, t["id"], "経済に効くか") == corrections.INSTITUTIONAL and t["id"] not in st.covid:
+        why = st.corrections[t["id"]]["経済に効くか"]["理由"]
+        out.update(結果="評価対象外", 経路=ROUTE_SOURCE_INSTITUTIONAL, 公開可否="公開不可",
+                   理由=f"一次資料の読み直しで、民間の売上・費用・給付・税・規制の負担を直接は変えない制度の法律と分かった（{why}）。経済に絞る方針の外")
         return out
 
     # 0a) 制度・名称整備の型：経済への直接効果は無い（題名の語だけで決める）
@@ -317,7 +331,10 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
         return out
 
     # 2) 定例の改正（題名の語）
-    rt = routine_rule(title, kinds)
+    # 一次資料の読み直しで「経済に効く」と分かった法律は、定例の規則（RT8 など）と種類による対象外に当てない。
+    # 期限の延長でも、続けなければ止まる補助や特例があれば経済の量が動く（読み直しの指示文 prompt-v1 の定義）
+    source_econ = corrections.value(st.corrections, t["id"], "経済に効くか") == corrections.ECON
+    rt = None if source_econ else routine_rule(title, kinds)
     if rt:
         out.update(結果="効果なし（定例）", 経路=rt[0], 分野=out["分野"] or NO_FIELD,
                    理由=f"{rt[1]}。毎年・毎回の定例の改正で、市場の産業への新たな効果を測る対象にしない")
@@ -357,7 +374,7 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
         out.update(結果="保留", 経路=sign, 指標=indicator, 確かさ=MACRO_CONFIDENCE, 指標の系列=macro_series(indicator),
                    理由=f"{label}（題名の語「{word}」）。代理指標「{indicator}」を機械的に割り当てた（確かさ：低）。{tail}")
         return out
-    if t["種類"] in OUT_KINDS or set(kinds) <= OUT_KINDS:
+    if not source_econ and (t["種類"] in OUT_KINDS or set(kinds) <= OUT_KINDS):
         out.update(結果="評価対象外", 経路="種類による対象外",
                    理由=f"種類が{t['種類'] or '／'.join(kinds)}で、振り分けの定義上評価の対象でない。題名の語から代理指標も決められない")
         return out
@@ -374,6 +391,9 @@ def build(root: Path = ROOT) -> list[dict[str, str]]:
     st = Stages(derived)
     rows = [decide(enacted[t["id"]], t, dates.get(t["id"], ""), st) for t in triage]
     return apply_exclusion_overrides(rows, read_csv(derived / "all-laws-v1" / "exclusion-overrides.csv") if (derived / "all-laws-v1" / "exclusion-overrides.csv").exists() else [])
+
+
+ROUTE_SOURCE_INSTITUTIONAL = "経済への直接効果なし（一次資料の読み直し）"
 
 
 REEXAMINED = "再判定（実質変更）"
