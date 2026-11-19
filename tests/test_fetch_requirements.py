@@ -64,6 +64,13 @@ class FetchRequirementsTest(unittest.TestCase):
         self.assertTrue(all("==" in line for line in REQUIREMENTS.read_text(encoding="utf-8").splitlines()
                             if line.strip() and not line.startswith("#")), "版を固定する")
 
+    def test_optional_runtime_dependencies_are_listed(self):
+        # import をたどっても見えない、部品が実行中にだけ求める部品（pypdf の暗号化 PDF → cryptography）
+        listed = REQUIREMENTS.read_text(encoding="utf-8")
+        external, _ = closure()
+        if "pypdf" in external:
+            self.assertRegex(listed, r"(?m)^cryptography==")
+
     def test_workflow_installs_the_list_and_the_commands(self):
         workflow = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("pip install --disable-pip-version-check -r scripts/requirements-fetch.txt", workflow)
