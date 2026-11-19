@@ -73,7 +73,9 @@ def find(outcomes: list[dict], ledger: dict[str, dict], v1: dict, l1: dict, l2: 
     rows = []
     for o in outcomes:
         i, title, kind = o["id"], o["題名"], o["種類"]
-        g = ledger.get(i, {})
+        g = ledger.get(i)
+        if g is None:  # 台帳に行が無い法律は数えない（台帳の作り直しが先）
+            continue
         reach, econ = g.get("到達点", ""), g.get("経済に効くか", "")
         measured = reach not in NO_EFFECT_REACHES
 

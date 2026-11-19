@@ -176,6 +176,16 @@ class DecideTest(unittest.TestCase):
         r = ol.decide(self.law, triage_row(), "2020-04-01", st)  # 市場の経路があっても先に評価対象外
         self.assertEqual((r["結果"], r["経路"]), ("評価対象外", ol.ROUTE_SOURCE_INSTITUTIONAL))
         self.assertIn("読み直しの理由", r["理由"])
+        st.corrections = corr(経済に効くか="経済に効く")  # 題名の型（整備法）・経済の区分の制度にも当てない
+        st.institutional = {"閣法-999-1": "AI の判定"}
+        r = ol.decide({"題名": "金融システム改革のための関係法律の整備等に関する法律案"}, no_market, "", st)
+        self.assertNotIn(r["結果"], ("効果なし（定例）", "評価対象外"))
+
+    def test_exclusion_overrides_do_not_undo_a_source_reading(self):
+        rows = [{"id": "a", "結果": "評価対象外", "経路": ol.ROUTE_SOURCE_INSTITUTIONAL, "理由": ""},
+                {"id": "b", "結果": "評価対象外", "経路": "種類による対象外", "理由": ""}]
+        out = ol.apply_exclusion_overrides(rows, [{"id": "a", "理由": "再判定"}, {"id": "b", "理由": "再判定"}])
+        self.assertEqual([r["結果"] for r in out], ["評価対象外", "保留"])
 
     def test_law_without_a_date_is_held(self):
         r = ol.decide(self.law, triage_row(), "", EmptyStages())

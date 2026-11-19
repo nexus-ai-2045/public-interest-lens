@@ -1,4 +1,5 @@
 """誤りの型の機械検査（scripts/check_error_types.py）の検査。"""
+import json
 import unittest
 
 from scripts import check_error_types as ce
@@ -41,6 +42,7 @@ class FindTest(unittest.TestCase):
     def test_committed_output_is_current(self):
         rows, summary = ce.build()
         self.assertEqual((ce.OUT_DIR / "candidates.csv").read_text(encoding="utf-8"), ce.render(rows))
+        self.assertEqual((ce.OUT_DIR / "counts.json").read_text(encoding="utf-8"), json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
         for code, t in summary["型"].items():
             self.assertEqual(t["本数"], len({r["id"] for r in rows if r["型"] == code}), code)
             self.assertIn(f"{summary['母数']:,}本中", t["表記"])

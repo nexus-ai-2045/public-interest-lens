@@ -153,6 +153,11 @@ def sense_checks(rows_macro: dict[str, dict], title_of: dict[str, str]) -> dict[
     return out
 
 
+def amount_demoted(verdict: str, reach: str, certainty: str) -> bool:
+    """不合格で、額のある到達点（参考額・個別の額）を自動で参考に下げる法律か。評価対象外は額が無いので含めない。"""
+    return is_demoted(verdict, reach, certainty) and reach != NO_AMOUNT_DEMOTED_REACH
+
+
 def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "", resolved: dict | None = None, key: str = "") -> tuple[str, str]:
     s = sample.get(id_)
     if s:
@@ -160,14 +165,16 @@ def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certain
             return "抜き取り検証で合格", s.get("食い違い", "")
         demoted = is_demoted(s["判定"], reach_, certainty)
         # 額のある法律（参考額・個別の額）の自動の降格は、読み直しの決着より先に当てる（決着で額の扱いを戻さない）
-        if demoted and reach_ != NO_AMOUNT_DEMOTED_REACH:
+        if amount_demoted(s["判定"], reach_, certainty):
             return STATE_DEMOTED, s.get("食い違い", "")
         # 一次資料の読み直しで1本ずつ決着させた法律は、その決着を使う（sample-resolutions.csv）。
         # 額の無い評価対象外は、サイトの値を直して評価対象外になった法律もここで決着させる。
         # 決着の後にサイトの値が変わっていれば使わず、不合格に戻す（読み直しをやり直す）
         r = (resolved or {}).get(id_)
-        if r and r.get("判定時のサイトの値") != key:
+        if r and r.get("判定時のサイトの値") != key and not demoted:
             return STATE_FAILED, f"{REDO_STALE_MEMO}{s.get('食い違い', '')}"
+        if r and r.get("判定時のサイトの値") != key:  # 古い決着は使わず、自動の降格に戻す
+            return STATE_DEMOTED, s.get("食い違い", "")
         if r and r["決着"] == RESOLVED_PASS:
             return "抜き取り検証で合格", f"{REDO_PASS_MEMO}{r['理由']}"
         if r and r["決着"] == RESOLVED_DEMOTED:

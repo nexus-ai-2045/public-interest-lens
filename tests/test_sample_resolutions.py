@@ -81,6 +81,11 @@ class ResolveRuleTest(unittest.TestCase):
         r = resolve(s, line("実質改正", "制度のみ"), line("実質改正", "制度のみ"), None, "")
         self.assertEqual(r["決着"], RESOLVED_DEMOTED)
 
+    def test_site_institutional_record_against_economic_reading_is_an_error(self):
+        s = site(分類="評価対象外", 到達点="保留", 経済に効くか="制度（一致）")
+        r = resolve(s, line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "")
+        self.assertEqual(r["決着"], RESOLVED_DEMOTED)
+
     def test_empty_site_kind_is_an_error(self):
         r = resolve(site(類型=""), line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "")
         self.assertEqual(r["決着"], RESOLVED_DEMOTED)
@@ -105,7 +110,8 @@ class ResolutionDataTest(unittest.TestCase):
         self.res = rows("sample-resolutions.csv")
 
     def test_every_remaining_failure_has_exactly_one_resolution(self):
-        reread = {x["id"] for x in json.loads((RV / "lineA.json").read_text(encoding="utf-8"))}
+        reread = ({x["id"] for x in json.loads((RV / "lineA.json").read_text(encoding="utf-8"))}
+                  & {x["id"] for x in json.loads((RV / "lineB.json").read_text(encoding="utf-8"))})
         self.assertEqual(sorted(r["id"] for r in self.res), targets(self.ledger, self.verdicts, reread))
 
     def test_rows_carry_reason_reference_and_sources(self):
@@ -165,6 +171,10 @@ class LedgerStateTest(unittest.TestCase):
         res = {"x": {"決着": RESOLVED_PASS, "理由": "わけ", "判定時のサイトの値": "k"}}
         self.assertEqual(verify_state("x", "", self.V, "評価対象外", "", res, "k")[0], "抜き取り検証で合格")
         self.assertEqual(verify_state("x", "", self.V, "評価対象外", "", {}, "k")[0], STATE_DEMOTED)
+
+    def test_stale_resolution_falls_back_to_the_automatic_demotion(self):
+        res = {"x": {"決着": RESOLVED_PASS, "理由": "わけ", "判定時のサイトの値": "古い値"}}
+        self.assertEqual(verify_state("x", "", self.V, "評価対象外", "", res, "新しい値")[0], STATE_DEMOTED)
 
     def test_stale_resolution_is_not_used(self):
         """決着の後にサイトの値が変わったら、決着を使わず不合格に戻す。"""

@@ -273,6 +273,18 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     pub = st.publish.get(t["id"])
     has_amount = bool(market and imp and loss and loss["損失または便益の額"].strip())
 
+    # 0a') 一次資料の読み直しで直した「経済に効くか」は、AI の判定と題名の規則より先に効く（primary-source-corrections-v1）。
+    #      制度（この法律だけでは経済の量が動かない）：税収見込み・コロナ対応・市場の経路より先に評価対象外。
+    #      経済に効く：題名の型（0a）・経済の区分の制度（4）・定例の規則（2）・種類による対象外（4）に当てない
+    source = getattr(st, "corrections", {})
+    source_econ = corrections.value(source, t["id"], "経済に効くか")
+    if source_econ == corrections.INSTITUTIONAL:
+        why = source[t["id"]]["経済に効くか"]["理由"]
+        out.update(結果="評価対象外", 経路=ROUTE_SOURCE_INSTITUTIONAL, 公開可否="公開不可",
+                   理由=f"一次資料の読み直しで、民間の売上・費用・給付・税・規制の負担を直接は変えない制度の法律と分かった（{why}）。経済に絞る方針の外")
+        return out
+    source_econ = source_econ == corrections.ECON
+
     # 00) 毎年の税制改正の法律：政府（財務省）の国税の増減収見込み。GDP への損失とは別の量なので、順位・合計・議員への配分には入れない
     fx = st.fiscal.get(t["id"])
     if fx:
@@ -280,15 +292,8 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
                    理由=f"{fx['理由']}。順位・合計・議員への配分には使わない")
         return out
 
-    # 0a') 一次資料の読み直しで「制度」（この法律だけでは経済の量が動かない）と分かった法律：市場の経路より先に評価対象外
-    if corrections.value(getattr(st, "corrections", {}), t["id"], "経済に効くか") == corrections.INSTITUTIONAL and t["id"] not in st.covid:
-        why = st.corrections[t["id"]]["経済に効くか"]["理由"]
-        out.update(結果="評価対象外", 経路=ROUTE_SOURCE_INSTITUTIONAL, 公開可否="公開不可",
-                   理由=f"一次資料の読み直しで、民間の売上・費用・給付・税・規制の負担を直接は変えない制度の法律と分かった（{why}）。経済に絞る方針の外")
-        return out
-
     # 0a) 制度・名称整備の型：経済への直接効果は無い（題名の語だけで決める）
-    if institutional_title(title) and not st.fiscal.get(t["id"]) and t["id"] not in st.covid:
+    if not source_econ and institutional_title(title) and not st.fiscal.get(t["id"]) and t["id"] not in st.covid:
         out.update(結果="評価対象外", 経路="経済への直接効果なし（制度・名称整備の型）", 公開可否="公開不可",
                    理由="題名が制度・名称整備の型（基本法・整備法・設置法・差押禁止など）。民間の売上・費用・給付・税・規制の負担を直接は変えない（独立検証で、2系統が同じ型で評価対象に誤っていた）。経済に絞る方針の外")
         return out
@@ -331,9 +336,7 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
         return out
 
     # 2) 定例の改正（題名の語）
-    # 一次資料の読み直しで「経済に効く」と分かった法律は、定例の規則（RT8 など）と種類による対象外に当てない。
     # 期限の延長でも、続けなければ止まる補助や特例があれば経済の量が動く（読み直しの指示文 prompt-v1 の定義）
-    source_econ = corrections.value(getattr(st, "corrections", {}), t["id"], "経済に効くか") == corrections.ECON
     rt = None if source_econ else routine_rule(title, kinds)
     if rt:
         out.update(結果="効果なし（定例）", 経路=rt[0], 分野=out["分野"] or NO_FIELD,
@@ -363,7 +366,7 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
 
     # 4) 市場の産業がない法律：マクロ指標の代理 → 評価対象外 → 測定できない
     out["分野"] = out["分野"] or NO_FIELD
-    if t["id"] in st.institutional and t["id"] not in st.covid:  # コロナ対応は費用便益の表に載せる
+    if not source_econ and t["id"] in st.institutional and t["id"] not in st.covid:  # コロナ対応は費用便益の表に載せる
         out.update(結果="評価対象外", 経路="経済への直接効果なし",
                    理由=f"国・自治体の制度の法律で、民間の売上・費用・給付・税・規制の負担を直接は変えない（AI 2系統の判定：{st.institutional[t['id']]}）。経済に絞る方針の外")
         return out
@@ -406,8 +409,8 @@ def apply_exclusion_overrides(rows: list[dict[str, str]], overrides: list[dict[s
     （規則の誤りを1本ずつ直さず、再判定の表 exclusion-overrides.csv を1か所の根拠にする）。
     """
     reason = {r["id"]: r["理由"] for r in overrides}
-    for out in rows:
-        if out["id"] in reason and out["結果"] in ("効果なし（定例）", "評価対象外"):
+    for out in rows:  # 一次資料の読み直しで制度と決めた行は、AI の再判定で戻さない
+        if out["id"] in reason and out["結果"] in ("効果なし（定例）", "評価対象外") and out["経路"] != ROUTE_SOURCE_INSTITUTIONAL:
             out.update(結果="保留", 経路=REEXAMINED, 理由=f"{reason[out['id']]}（旧：{out['結果']}・{out['経路']}）。実質的な制度変更を含むと再判定したので、全体指標の参考の額で測る")
     return rows
 

@@ -36,6 +36,7 @@ from scripts import primary_source_corrections as corrections
 from scripts.build_evaluation_ledger import (
     RESOLVED_DEMOTED,
     RESOLVED_PASS,
+    amount_demoted,
     site_key,
 )
 from scripts.evaluation_rules import VERDICT_FAIL, is_demoted
@@ -114,7 +115,10 @@ def resolve(site: dict, a: dict, b: dict, ruling: dict | None, first_memo: str, 
         causes.append(CAUSE_UNDECIDED)
         errors.append("経済に効くかは読み直しでも決められない")
     elif econ == "経済に効く":
-        if inst:
+        if site["経済に効くか"].startswith("制度"):
+            causes.append(CAUSE_ECON_OUT)
+            errors.append(f"分類：サイトは「{site['経済に効くか']}」と記録、読み直しは「経済に効く」")
+        elif inst:
             causes.append(CAUSE_ECON_OUT)
             errors.append(f"分類：サイトは到達点「{site['到達点']}」（制度だけの扱い）、読み直しは「経済に効く」")
         elif site["分類"] == "評価対象外":
@@ -159,9 +163,11 @@ def resolve(site: dict, a: dict, b: dict, ruling: dict | None, first_memo: str, 
 def targets(ledger: dict[str, dict], verdicts: list[dict], reread: set[str] = frozenset()) -> list[str]:
     """初回が不合格で、額を参考に下げる自動の規則（is_demoted）に当たらない法律と、一次資料で読み直した法律（reread）。
 
-    読み直した法律は、サイトの値を直した後に到達点が変わって自動の規則に当たっても、読み直しで決着させる。
+    読み直した法律は、サイトの値を直した後に到達点が評価対象外になって自動の規則に当たっても、読み直しで決着させる。
+    額のある到達点（参考額・個別の額）の自動の降格は、読み直しても決着で戻さない（台帳の verify_state と同じ）。
     """
     return sorted(v["id"] for v in verdicts if v["判定"] == VERDICT_FAIL
+                  and not amount_demoted(v["判定"], ledger[v["id"]]["到達点"], ledger[v["id"]]["確かさ"])
                   and (v["id"] in reread or not is_demoted(v["判定"], ledger[v["id"]]["到達点"], ledger[v["id"]]["確かさ"])))
 
 
