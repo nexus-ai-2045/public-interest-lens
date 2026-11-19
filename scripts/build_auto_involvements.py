@@ -8,7 +8,8 @@
 - 提出（decide）：衆法・参法は議案の提出者の欄（data/acquired/bill-census-full/enacted.csv）。提出者一覧があればその全員、
   無ければ「○○君」の1人だけのときに限る。提出者が決まらない法律（名前の分からない「外N名」・委員会提出）は足さない。
   閣法は内閣の提出なので、総理大臣1人に付けず、提出した回次の会期の最初から最後まで在任した閣僚（総理大臣を含む。設計確定 v2.1、
-  app/src/members-reference.ts の cabinetOf と同じ条件）の全員に付ける。総理大臣が会期中に替わる回次は、どの内閣の提出か決められないので足さない。
+  app/src/members-reference.ts の cabinetOf と同じ条件）の全員に付ける。総理大臣が会期中に替わる回次は、その法律の衆議院の付託日に在任した閣僚にする
+  （法律を丸ごと外すと参議院の賛成・反対の分まで消えるため。全議員の参考の表はこの回次の提出者の分を配らないので、ここだけ扱いが違う）。
   閣僚は国務大臣のこと。内閣官房副長官・総理府総務副長官・内閣法制局長官は官邸の名簿で閣僚の欄にあるが閣僚ではないので除く。閣法の提出者の分は役職の帳簿に入る。
   証拠は衆議院の議案の経過のページ。
 - 参議院本会議で賛成（vote）：成立した日の押しボタン投票のうち、題名が一致する1つ（members-reference.ts の pickVote と同じ）。証拠は投票の結果のページ。
@@ -58,6 +59,7 @@ OUT = DERIVED / "allocation-v1/involvements-auto.csv"
 OUT_VOTES = DERIVED / "allocation-v1/votes-auto.csv"
 VOTES_HEADER = ["法律ID", "投票ID", "日付", "賛成", "反対", "URL"]
 NOT_MINISTER = re.compile(r"副長官|法制局長官")
+PRIME_MINISTER = "内閣総理大臣"
 COMMITTEE = re.compile(r"(委員長|委員会|調査会長|審査会長)$")
 WAREKI = re.compile(r"(平成|令和)\s*(\d+|元)年\s*(\d+)月\s*(\d+)日")
 
@@ -118,39 +120,44 @@ def eligible() -> list[dict[str, str]]:
     return out
 
 
-def cabinets(enacted: list[dict[str, str]], cabinet: list[dict[str, str]]) -> dict[str, list[tuple[str, str]]]:
-    """閣法を出した内閣の閣僚（氏名・役職）を、提出した回次ごとに返す（app/src/members-reference.ts の cabinetOf と同じ条件）。
+def cabinets(enacted: list[dict[str, str]], cabinet: list[dict[str, str]]) -> dict[str, dict[str, list[tuple[str, str]]]]:
+    """閣法を出した内閣の閣僚（氏名・役職）を、提出した回次ごと・付託日ごとに返す。{"session": {回次: 閣僚}, "day": {日付: 閣僚}}。
 
-    提出日の列が無いので、提出した回次の会期中の衆議院の付託日（継続審査でない閣法のもの）の最初と最後の両方で在任した閣僚だけ。
-    途中で替わった閣僚は含めない。総理大臣が会期中に替わる回次は、どの内閣の提出か決められないので載せない。
+    回次ごと（app/src/members-reference.ts の cabinetOf と同じ条件）：提出日の列が無いので、提出した回次の会期中の衆議院の付託日
+    （継続審査でない閣法のもの）の最初と最後の両方で在任した閣僚だけ。途中で替わった閣僚は含めない。
+    総理大臣が会期中に替わる回次は、どの内閣の提出かを回次では決められないので載せない。その回次の法律は、付託日ごと（その法律の付託日に在任した閣僚）で引く。
+    氏名は官邸の名簿の脚注の印（*）や字体のゆれを寄せてから比べる（寄せないと、同じ人が別人になり、通して在任した閣僚が落ちる）。
+    兼務は1人に数え、役職は総理大臣を先頭に名簿の役職名の順で並べて「・」でつなぐ（名簿の行の順で変わらない）。
     """
-    ministers = [r for r in cabinet if r["区分"] == "閣僚" and r["就任日_西暦"] and not NOT_MINISTER.search(r["役職"])]
-    pms = [r for r in ministers if r["役職"] == "内閣総理大臣"]
+    ministers = [dict(r, _n=canonical(r["氏名"])) for r in cabinet if r["区分"] == "閣僚" and r["就任日_西暦"] and not NOT_MINISTER.search(r["役職"])]
 
-    def serving(date: str, rows: list[dict[str, str]]) -> list[dict[str, str]]:
-        return [r for r in rows if r["就任日_西暦"] <= date and (not r["退任日_西暦"] or date < r["退任日_西暦"])]
+    def serving(date: str) -> dict[str, list[str]]:
+        posts: dict[str, set[str]] = defaultdict(set)
+        for r in ministers:
+            if r["就任日_西暦"] <= date and (not r["退任日_西暦"] or date < r["退任日_西暦"]):
+                posts[r["_n"]].add(r["役職"])
+        return {name: sorted(roles, key=lambda role: (role != PRIME_MINISTER, role)) for name, roles in posts.items()}
 
-    def pm_on(date: str) -> str:
-        return next((norm(r["氏名"]) for r in serving(date, pms)), "")
+    def members(posts: dict[str, list[str]], keep: set[str]) -> list[tuple[str, str]]:
+        return sorted((name, "・".join(roles)) for name, roles in posts.items() if name in keep)
+
+    def pm_of(posts: dict[str, list[str]]) -> str:
+        return next((name for name, roles in sorted(posts.items()) if PRIME_MINISTER in roles), "")
 
     span: dict[str, list[str]] = {}
+    days: set[str] = set()
     for r in enacted:
         d = wareki(r["付託日_衆"]) if r["種別"] == "閣法" and r["回次"] == r["提出回次"] else ""
         if d:
+            days.add(d)
             s = span.setdefault(r["提出回次"], [d, d])
             s[0], s[1] = min(s[0], d), max(s[1], d)
-    out: dict[str, list[tuple[str, str]]] = {}
+    by_day = {d: serving(d) for d in days}
+    by_session: dict[str, list[tuple[str, str]]] = {}
     for session, (first, last) in span.items():
-        if not pm_on(first) or pm_on(first) != pm_on(last):
-            continue
-        until = {norm(r["氏名"]) for r in serving(last, ministers)}
-        roles: dict[str, str] = {}
-        for r in serving(first, ministers):
-            name = norm(r["氏名"])
-            if name in until and (name not in roles or r["役職"] == "内閣総理大臣"):
-                roles[name] = r["役職"]
-        out[session] = sorted(roles.items())
-    return out
+        if pm_of(by_day[first]) and pm_of(by_day[first]) == pm_of(by_day[last]):
+            by_session[session] = members(by_day[first], set(by_day[last]))
+    return {"session": by_session, "day": {d: members(posts, set(posts)) for d, posts in by_day.items() if pm_of(posts)}}
 
 
 def build() -> tuple[list[dict[str, str]], list[dict[str, str]]]:
@@ -188,9 +195,12 @@ def build() -> tuple[list[dict[str, str]], list[dict[str, str]]]:
         kind = b["種別"]
         proposers: list[tuple[str, str, str]] = []  # 氏名・肩書・立場区分
         if kind == "閣法":
-            # 閣法は内閣の提出。総理大臣1人に付けず、会期を通して在任した閣僚の全員に付ける（均等の重みは members-build.ts の組の扱いで決まる）。
-            proposers = [(name, "内閣総理大臣（閣議決定の長）" if role == "内閣総理大臣" else f"{role}（閣議決定に関わった閣僚）",
-                          "prime_minister" if role == "内閣総理大臣" else "minister_or_party_exec") for name, role in cabinet_of.get(b["提出回次"], [])]
+            # 閣法は内閣の提出。総理大臣1人に付けず、会期を通して在任した閣僚の全員に付ける（提出者の組の中の分け方は members-build.ts が決める）。
+            # 総理大臣が会期中に替わる回次は、その法律の衆議院の付託日に在任した閣僚にする（提出から付託までは数日。回次では内閣を決められない）。
+            referred = wareki(b["付託日_衆"]) if b["回次"] == b["提出回次"] else ""
+            cabinet = cabinet_of["session"].get(b["提出回次"]) or cabinet_of["day"].get(referred, [])
+            proposers = [(name, f"{role}（閣議決定の長）" if role.startswith(PRIME_MINISTER) else f"{role}（閣議決定に関わった閣僚）",
+                          "prime_minister" if role.startswith(PRIME_MINISTER) else "minister_or_party_exec") for name, role in cabinet]
         elif not COMMITTEE.search(norm(b["提出者"].split("外")[0])):
             if b["提出者一覧"]:
                 proposers = [(norm(n), "提出者", "other") for n in re.split(r"[;；、,]", b["提出者一覧"]) if norm(n)]
@@ -198,7 +208,8 @@ def build() -> tuple[list[dict[str, str]], list[dict[str, str]]]:
                 proposers = [(norm(b["提出者"]), "提出者", "other")]
         if not proposers:
             continue  # 提出者が決まらない法律（名前の分からない「外N名」・委員会提出・内閣を決められない閣法）は、配分のしくみに乗らないので足さない
-        house = "参議院" if kind == "参法" else "衆議院"
+        # 院は議案の種別で決まる提出者だけに書く。閣僚は参議院議員や民間人もいるので空にする（総理大臣だけは衆議院議員の慣行だが、名簿に院の列が無いので書かない）。
+        house = "" if kind == "閣法" else "参議院" if kind == "参法" else "衆議院"
         for name, title, position in proposers:
             pid, why = person(name)
             rows.append({**base, "氏名": name, "氏名_原表記": name, "院": house, "行動": "decide", "当時の肩書": title, "立場区分": position,
