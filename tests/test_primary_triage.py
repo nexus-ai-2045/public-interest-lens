@@ -40,6 +40,37 @@ class NeedsRulingTest(unittest.TestCase):
         self.assertEqual(pt.needs_ruling({**SITE, "主な産業分野": "医療・福祉"}, reader(主な産業分野="医療"), reader(主な産業分野="医療・福祉")), {})
 
 
+class DeepReadTest(unittest.TestCase):
+    def test_deep_read_law_always_goes_to_sonnet_for_econ(self):
+        self.assertEqual(pt.needs_ruling(SITE, reader(), reader(), deep=True), {"経済に効くか": pt.DEEP_REASON})
+        self.assertEqual(pt.needs_ruling(SITE, reader(類型="新規"), reader(), deep=True), {"経済に効くか": pt.DEEP_REASON, "類型": "割れ"})
+
+    def test_deep_read_laws_are_measured_targets(self):
+        path = pt.set_dir("all") / "targets.csv"
+        if not path.exists():
+            self.skipTest("all/targets.csv が無い")
+        ids = {r["id"] for r in pt.read_csv(path)}
+        self.assertLessEqual(set(pt.DEEP_READ), ids)
+
+    def test_decide_without_ruling_stops_for_deep_read(self):
+        with self.assertRaises(ValueError):
+            pt.decide(target(id="閣法-211-46"), reader(), reader(), None)
+
+
+class CompareTest(unittest.TestCase):
+    def test_compare_lines_up_sample_and_reruns_and_marks_missing(self):
+        ids = [{"id": "閣法-1-1", "判定": "不合格"}, {"id": "閣法-9-9", "判定": "割れ"}]
+        A = {"閣法-1-1": reader(主な産業分野="建設")}
+        B = {"閣法-1-1": reader(主な産業分野="建設")}
+        rulings = {"閣法-1-1": {"裁定": [{"項目": "主な産業分野", "値": "建設", "理由": "r"}]}}
+        labels = [{"id": "閣法-1-1", "項目": "分野", "直した値": "建設", "判定者": "Sonnet 裁定", "理由": "r", "引用": "q", "出典URL": "u"}]
+        rows = pt.compare_rows(ids, [target()], A, B, rulings, labels)
+        self.assertEqual(len(rows), 6)
+        field = next(r for r in rows if r["id"] == "閣法-1-1" and r["項目"] == "主な産業分野")
+        self.assertEqual((field["当て直しの値"], field["系統A"], field["裁定"], field["サイトの値"], field["標本_判定"]), ("建設", "建設", "建設", "金融", "不合格"))
+        self.assertTrue(all(r["当て直しの対象"].startswith("対象外") for r in rows if r["id"] == "閣法-9-9"))
+
+
 class DecideTest(unittest.TestCase):
     def test_rows_use_corrections_vocabulary(self):
         rows = pt.decide(target(), reader(経済に効くか="制度のみ"), reader(経済に効くか="制度のみ"),
