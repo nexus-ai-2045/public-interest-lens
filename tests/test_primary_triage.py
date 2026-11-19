@@ -57,6 +57,20 @@ class DeepReadTest(unittest.TestCase):
             pt.decide(target(id="閣法-211-46"), reader(), reader(), None)
 
 
+class CompareTest(unittest.TestCase):
+    def test_compare_lines_up_sample_and_reruns_and_marks_missing(self):
+        ids = [{"id": "閣法-1-1", "判定": "不合格"}, {"id": "閣法-9-9", "判定": "割れ"}]
+        A = {"閣法-1-1": reader(主な産業分野="建設")}
+        B = {"閣法-1-1": reader(主な産業分野="建設")}
+        rulings = {"閣法-1-1": {"裁定": [{"項目": "主な産業分野", "値": "建設", "理由": "r"}]}}
+        labels = [{"id": "閣法-1-1", "項目": "分野", "直した値": "建設", "判定者": "Sonnet 裁定", "理由": "r", "引用": "q", "出典URL": "u"}]
+        rows = pt.compare_rows(ids, [target()], A, B, rulings, labels)
+        self.assertEqual(len(rows), 6)
+        field = next(r for r in rows if r["id"] == "閣法-1-1" and r["項目"] == "主な産業分野")
+        self.assertEqual((field["当て直しの値"], field["系統A"], field["裁定"], field["サイトの値"], field["標本_判定"]), ("建設", "建設", "建設", "金融", "不合格"))
+        self.assertTrue(all(r["当て直しの対象"].startswith("対象外") for r in rows if r["id"] == "閣法-9-9"))
+
+
 class DecideTest(unittest.TestCase):
     def test_rows_use_corrections_vocabulary(self):
         rows = pt.decide(target(), reader(経済に効くか="制度のみ"), reader(経済に効くか="制度のみ"),

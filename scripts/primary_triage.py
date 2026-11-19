@@ -121,10 +121,31 @@ def target_row(r: dict) -> dict:
             "サイト_台帳の分野": r["分野"], "サイト_台帳の類型": r["類型"]}
 
 
-def cmd_targets(_: argparse.Namespace) -> int:
-    rows = measured(read_csv(LEDGER / "ledger.csv"))
+def read_ids(path: Path) -> list[dict]:
+    """id 列のある CSV（抜き取りの標本など）。id 以外の列は照合の表にそのまま写す。"""
+    rows = read_csv(path)
+    if not rows or "id" not in rows[0]:
+        raise ValueError(f"{path}：id 列が無い")
+    return rows
+
+
+def cmd_targets(a: argparse.Namespace) -> int:
+    """測る側を全件。--extra で、測る側でない法律（評価対象外など）も足せる（抜き取りの標本を照らし合わせるため）。"""
+    ledger = read_csv(LEDGER / "ledger.csv")
+    rows = measured(ledger)
+    if a.extra:
+        have = {r["id"] for r in rows}
+        by_id = {r["id"]: r for r in ledger}
+        want = [x["id"] for x in read_ids(Path(a.extra))]
+        missing = [i for i in want if i not in by_id]
+        if missing:
+            print("台帳に無い id：", missing)
+            return 1
+        added = [by_id[i] for i in dict.fromkeys(want) if i not in have]
+        rows += added
+        print(f"測る側でない法律を {len(added)} 本足した", [r["id"] for r in added])
     write_csv(set_dir("all") / "targets.csv", TARGET_HEADER, [target_row(r) for r in rows])
-    print(f"測る側 {len(rows)} 本", Counter(reach_group(r["到達点"]) for r in rows))
+    print(f"対象 {len(rows)} 本", Counter(reach_group(r["到達点"]) for r in rows))
     return 0
 
 
@@ -384,6 +405,47 @@ def cmd_apply(a: argparse.Namespace) -> int:
     return 0
 
 
+COMPARE_HEADER = ["id", "当て直しの対象", "項目", "当て直しの値", "判定者", "系統A", "系統B", "裁定", "裁定の理由", "サイトの値", "理由", "引用", "出典URL"]
+
+
+def compare_rows(ids: list[dict], targets: list[dict], A: dict, B: dict, rulings: dict, labels: list[dict]) -> list[dict]:
+    """抜き取りの標本（ids）と当て直しの結果を1本×3項目で並べる。標本の列は「標本_」を付けて右に写す。
+    当て直しの対象に無い法律や、まだ読んでいない法律も行に残す（照合できないことを見せる）。"""
+    tmap = {t["id"]: t for t in targets}
+    lab = {(r["id"], r["項目"]): r for r in labels}
+    out = []
+    for x in ids:
+        i = x["id"]
+        extra = {f"標本_{k}": v for k, v in x.items() if k != "id"}
+        t = tmap.get(i)
+        state = "対象外（targets --extra で足す）" if t is None else ("未実行" if i not in A or i not in B else "実行済み")
+        ruled = {r["項目"]: r for r in (rulings.get(i) or {}).get("裁定", [])}
+        site = site_of(t) if t else {}
+        for item in ITEMS:
+            name = "分野" if item == "主な産業分野" else item
+            row = lab.get((i, name), {})
+            r = ruled.get(item, {})
+            out.append({"id": i, "当て直しの対象": state, "項目": item, "当て直しの値": row.get("直した値", ""), "判定者": row.get("判定者", ""),
+                        "系統A": (A.get(i) or {}).get(item, ""), "系統B": (B.get(i) or {}).get(item, ""), "裁定": r.get("値", ""),
+                        "裁定の理由": r.get("理由", ""), "サイトの値": site.get(item, ""), "理由": row.get("理由", ""),
+                        "引用": row.get("引用", ""), "出典URL": row.get("出典URL", ""), **extra})
+    return out
+
+
+def cmd_compare(a: argparse.Namespace) -> int:
+    """抜き取りの標本の id 一覧（--ids CSV）について、当て直しの結果（2系統・裁定・labels.csv）を並べた表を書く。"""
+    d = set_dir(a.set)
+    ids = read_ids(Path(a.ids))
+    rp = d / "rulings.json"
+    rows = compare_rows(ids, read_csv(d / "targets.csv"), _load_line(d, "A"), _load_line(d, "B"),
+                        json.loads(rp.read_text(encoding="utf-8")) if rp.exists() else {}, read_csv(LABELS) if LABELS.exists() else [])
+    extra = [k for k in rows[0] if k not in COMPARE_HEADER] if rows else []
+    out = Path(a.out) if a.out else d / f"compare-{Path(a.ids).stem}.csv"
+    write_csv(out, COMPARE_HEADER + extra, rows)
+    print(f"{len(ids)} 本 → {out}", Counter(r["当て直しの対象"] for r in rows[::len(ITEMS)]))
+    return 0
+
+
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     if n == 0:
         return (0.0, 1.0)
@@ -479,7 +541,14 @@ def cmd_estimate(_: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("targets").set_defaults(fn=cmd_targets)
+    st = sub.add_parser("targets")
+    st.add_argument("--extra", help="測る側でなくても足す法律の id 一覧（id 列のある CSV）")
+    st.set_defaults(fn=cmd_targets)
+    sc = sub.add_parser("compare")
+    sc.add_argument("--set", default="all")
+    sc.add_argument("--ids", required=True, help="照らし合わせる法律の id 一覧（id 列のある CSV。ほかの列は「標本_」付きで写す）")
+    sc.add_argument("--out", help="出力先（既定 {組}/compare-{ids のファイル名}.csv）")
+    sc.set_defaults(fn=cmd_compare)
     sp = sub.add_parser("pilot")
     sp.add_argument("--n", type=int, default=10)
     sp.set_defaults(fn=cmd_pilot)
