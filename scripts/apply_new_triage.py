@@ -53,6 +53,11 @@ def write(path: Path, columns: list[str], rows: list[dict[str, str]]) -> None:
         writer.writerows(rows)
 
 
+def header(path: Path) -> list[str]:
+    with path.open(encoding="utf-8", newline="") as handle:
+        return next(csv.reader(handle), [])
+
+
 def append(path: Path, columns: list[str], rows: list[dict[str, str]]) -> None:
     """既存の行に触れず末尾に足す。改行はその表の最後の行と同じにする（既存の行の差分を作らない）。"""
     raw = path.read_bytes()
@@ -92,16 +97,47 @@ def combine(law: str, a: dict[str, str], b: dict[str, str]) -> dict[str, str]:
     return out
 
 
+# spec.md の「2. 分野」と「3. 指標」の語彙（指標は分野ごと）。
+V1_INDICATORS = {
+    "金融": {"不良債権比率", "貸出残高", "企業倒産件数"},
+    "交通・移動": {"旅客輸送の付加価値", "利用件数", "就業者数"},
+    "宿泊・観光": {"宿泊者数", "宿泊業の付加価値", "客室数"},
+    "通信・ネット": {"通信業の付加価値", "ブロードバンド普及率", "ネット企業の時価総額"},
+    "半導体・電子": {"世界輸出シェア", "生産額"},
+    "エネルギー": {"電力価格", "発電構成", "エネルギー効率"},
+    "労働市場": {"労働生産性", "賃金", "雇用の流動性"},
+    "行政のデジタル化": {"電子申請率", "行政手続きの時間"},
+}
+OUT_KINDS = {"定型改正", "組織手続"}
+
+
 def check_v1(rows: list[dict[str, str]], ids: list[str], name: str) -> None:
+    """spec.md の語彙と、4（判定）の決まりに合うか。迷いの「保留」は種類・分野・判定のどれにも書いてよい。"""
     if [r.get("id") for r in rows] != ids:
         raise ValueError(f"{name}：id の並びが input.csv と違う")
     for r in rows:
         if set(r) != set(V1_COLUMNS):
             raise ValueError(f"{name}：列が違う {r.get('id')}")
-        if r["種類"] not in KINDS | {HOLD} or r["判定"] not in VERDICTS | {HOLD} or not r["分野"] or not r["理由"].strip():
+        kind, field, indicator, verdict = r["種類"], r["分野"], r["指標"], r["判定"]
+        if kind not in KINDS | {HOLD} or verdict not in VERDICTS | {HOLD} or field not in {*V1_INDICATORS, NO_FIELD, HOLD} or not r["理由"].strip():
             raise ValueError(f"{name}：語彙にない値か、理由が空 {r['id']}")
-        if r["分野"] == NO_FIELD and r["指標"]:
-            raise ValueError(f"{name}：対応表なしに指標がある {r['id']}")
+        if indicator and indicator != HOLD and indicator not in V1_INDICATORS.get(field, set()):
+            raise ValueError(f"{name}：分野にない指標 {r['id']}")
+        if verdict == "評価対象" and not (kind in KINDS - OUT_KINDS and field in V1_INDICATORS and indicator in V1_INDICATORS[field] | {HOLD}):
+            raise ValueError(f"{name}：評価対象なのに、種類・分野・指標が評価対象の条件に合わない {r['id']}")
+        if verdict == "評価対象外" and not (kind in OUT_KINDS or field == NO_FIELD):
+            raise ValueError(f"{name}：評価対象外なのに、種類も分野も対象外の条件に当たらない {r['id']}")
+
+
+def check_independent(work: Path, models: dict[str, str]) -> None:
+    """2系統が別に付けたことの最低限の確かめ。同じファイル・同じ理由の写し・同じ実行の名前は通さない。"""
+    a, b = work / "lane-A" / "output.csv", work / "lane-B" / "output.csv"
+    if sha256(a) == sha256(b):
+        raise ValueError("lane-A と lane-B の output.csv が同じバイト（2系統の独立が確かめられない）")
+    if [r["理由"] for r in read(a)] == [r["理由"] for r in read(b)]:
+        raise ValueError("lane-A と lane-B の理由が全行同じ（写しの疑い）")
+    if len({models["lane-A"], models["lane-B"], models["lane-L2"]}) < 3:
+        raise ValueError("3系統の実行の名前（--model-*）は別々に書く（同じモデルなら別のセッションであることを書き分ける）")
 
 
 def check_line2(rows: list[dict[str, str]], inputs: list[dict[str, str]]) -> None:
@@ -133,7 +169,7 @@ def prepare(out: Path) -> int:
 def apply(work: Path, models: dict[str, str], today: str) -> int:
     inputs = read(work / "input.csv")
     ids = [r["id"] for r in inputs]
-    triage, labels = read(V1 / "triage.csv"), read(LINE2 / "labels.csv")
+    triage = read(V1 / "triage.csv")
     now = untriaged(read(ENACTED), {r["id"] for r in triage})
     if inputs != now:
         raise ValueError("input.csv が、いまの成立法の一覧と振り分けの表から作る入力と違う（prepare からやり直す）")
@@ -150,17 +186,27 @@ def apply(work: Path, models: dict[str, str], today: str) -> int:
     check_v1(a, ids, "lane-A")
     check_v1(b, ids, "lane-B")
     check_line2(line2, inputs)
+    check_independent(work, models)
     added = [combine(i, x, y) for i, x, y in zip(ids, a, b)]
-    if list(labels[0]) != LINE2_COLUMNS:
-        raise ValueError("bill-triage-v1-line2/labels.csv の列が想定と違う")
-    append(V1 / "triage.csv", list(triage[0]), added)
-    append(LINE2 / "labels.csv", LINE2_COLUMNS, line2)
-    keep = V1 / "additions" / today
-    keep.mkdir(parents=True, exist_ok=True)
+    if header(V1 / "triage.csv") != ["id", "結果", "種類", "分野", "指標", *(f"{x}_{k}" for x in "AB" for k in V1_COLUMNS[1:])] \
+            or header(LINE2 / "labels.csv") != LINE2_COLUMNS:
+        raise ValueError("triage.csv か bill-triage-v1-line2/labels.csv の列が想定と違う")
     files = {"input.csv": work / "input.csv", **{f"{lane}.csv": work / lane / "output.csv" for lane in SPECS},
              **{name: work / name for name in PROMPTS}}
+    for name, source in files.items():  # 表に書く前に、記録に残すものが全部そろっているか
+        if not source.is_file() or not source.read_text(encoding="utf-8").strip():
+            raise ValueError(f"記録に残す {name} が無いか空（{source}）")
+    for path in (V1 / "triage.csv", LINE2 / "labels.csv"):
+        if not path.read_bytes().endswith(b"\n"):
+            raise ValueError(f"{path.name} の末尾に改行が無い")
+    keep = V1 / "additions" / today
+    if keep.exists():
+        raise ValueError(f"{keep.relative_to(ROOT)} がもうある（同じ日の2回目は --date に別の名前を付ける。例 2026-11-19-2）")
+    keep.mkdir(parents=True)
     for name, source in files.items():
         shutil.copyfile(source, keep / name)
+    append(V1 / "triage.csv", header(V1 / "triage.csv"), added)
+    append(LINE2 / "labels.csv", LINE2_COLUMNS, line2)
     record = {
         "date": today, "laws": ids,
         "lanes": {"lane-A": {"model": models["lane-A"], "prompt": "prompt-v1.md"}, "lane-B": {"model": models["lane-B"], "prompt": "prompt-v1.md"},
