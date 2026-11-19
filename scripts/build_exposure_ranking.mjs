@@ -109,6 +109,14 @@ function checkPublic(label, p, minLaws) {
   return stats;
 }
 
+// 人物ID → 読み。本体に載る人で、台帳に読みがある人だけ（台帳に無い項目は足さない）。
+function personReadings(personsRows, people) {
+  const ids = new Set(people.map(p => p.actorId));
+  const out = {};
+  for (const r of personsRows) if (ids.has(r['人物ID']) && r['読み']) out[r['人物ID']] = r['読み'];
+  return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
+}
+
 // 順位相関（同順位は平均順位）。
 function ranks(values) {
   const idx = values.map((v, i) => [v, i]).sort((a, b) => a[0] - b[0]);
@@ -134,6 +142,7 @@ try {
   const { buildExposureInputs, withLedgerPeople } = await server.ssrLoadModule('/src/exposure-inputs.ts');
   const { buildExposureRanking, toPublicExposureRanking, DEFAULT_ROLE_RATIO } = await server.ssrLoadModule('/src/exposure-ranking.ts');
   const { SCORING_CONSTANTS } = await server.ssrLoadModule('/src/scoring-constants.ts');
+  const { parseCsv } = await server.ssrLoadModule('/src/impact-batch.ts');
   const text = Object.fromEntries(Object.entries(inputs).map(([k, p]) => [k, readFileSync(p, 'utf8')]));
   const ballotFiles = readdirSync(ballotsDir).filter(f => f.endsWith('.csv')).sort();
   const ballots = ballotFiles.map(f => readFileSync(join(ballotsDir, f), 'utf8'));
@@ -173,6 +182,8 @@ try {
     groups: groupRow(built.industry),
     counts: built.counts,
     coverage,
+    // 階層の中の並び（五十音）に使う読み。人物台帳（persons.csv、リポジトリで公開済み）の「読み」を、本体に載る人のうち読みのある人だけ出す。
+    personReadings: personReadings(parseCsv(text.persons), pub.people),
   };
   payload.generatedFrom = await generationMetadata(server, root, ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts'], ['scripts/build_exposure_ranking.mjs']);
   payload.inputs = Object.fromEntries(Object.entries(text).map(([k, v]) => [k, createHash('sha256').update(v).digest('hex')]));

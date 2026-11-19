@@ -75,9 +75,28 @@ describe('曝露ランキングの画面部品', () => {
     }
   });
 
+  it('読みがあれば、階層の中は読みの五十音順に並べます（読みの無い人は名前で）', () => {
+    const ranked = ranking.people.filter(p => p.tier !== null);
+    // 名前の順と逆になる読みを付ける。
+    const byName = orderWithinTiers(ranking.people, r => SAMPLE_PERSON_NAMES[r.actorId]);
+    const kana = 'あいうえおかきくけこさしすせそ';
+    const readings = Object.fromEntries(byName.map((r, i) => [r.actorId, kana[byName.length - 1 - i]]));
+    const html = renderToStaticMarkup(<ExposureRankingPanel ranking={toPanelExposureRanking(ranking)} personNames={SAMPLE_PERSON_NAMES} personReadings={readings} />);
+    const shown = blocks(html, '<li class="xr-row').map(b => /<span class="xr-name">([^<]*)</.exec(b)![1]);
+    const expected = orderWithinTiers(ranking.people, r => readings[r.actorId]).map(r => SAMPLE_PERSON_NAMES[r.actorId]);
+    // 読みの無い人は、読みのある人の後に名前の順で並ぶ。
+    const [first, ...rest] = byName;
+    const partial = Object.fromEntries(rest.map(r => [r.actorId, readings[r.actorId]]));
+    const html2 = renderToStaticMarkup(<ExposureRankingPanel ranking={toPanelExposureRanking(ranking)} personNames={SAMPLE_PERSON_NAMES} personReadings={partial} />);
+    const shown2 = blocks(html2, '<li class="xr-row').map(b => /<span class="xr-name">([^<]*)</.exec(b)![1]);
+    if (first.tier === byName[byName.length - 1].tier) expect(shown2[shown2.length - 1]).toBe(SAMPLE_PERSON_NAMES[first.actorId]);
+    expect(shown).toEqual(expected);
+    expect(ranked.length).toBeGreaterThan(1);
+  });
+
   it('階層が1つだけのときは、そう書きます', () => {
     const one: ExposureRanking = { ...ranking, people: ranking.people.map(p => (p.tier === null ? p : { ...p, tier: 1 })) };
-    expect(render(one)).toContain('階層は1つだけです。並びは名前（人物ID）の文字の順で、額の大きい順ではありません');
+    expect(render(one)).toContain('階層は1つだけです。並びは読みの五十音順（読みの無い人はその後に名前の文字の順）で、額の大きい順ではありません');
     expect(render()).not.toContain('階層は1つだけです');
   });
 

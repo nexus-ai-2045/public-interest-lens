@@ -180,7 +180,13 @@ export function parsePublicRanking(text: string): PublicRanking {
 
 
 /** 曝露ランキングの公開用データ（scripts/build_exposure_ranking.mjs が作る）。形と生成元を確かめる。 */
-export type PublicExposureDistribution = PublicExposureRanking & { generatedFrom: GenerationMetadata };
+export type PublicExposureDistribution = PublicExposureRanking & {
+  generatedFrom: GenerationMetadata;
+  /** 群（産業×年）の一覧。表示名は exposure-labels.ts で付ける。 */
+  groups?: { id: string; group: string; window: string }[];
+  /** 人物ID → 読み（人物台帳 persons.csv の「読み」。読みのある人だけ）。並びにだけ使う。 */
+  personReadings?: Record<string, string>;
+};
 export function parsePublicExposureRanking(text: string): PublicExposureDistribution {
   const data = JSON.parse(text) as PublicExposureDistribution;
   if (data.schema !== 'exposure-ranking/v1' || data.claim !== 'descriptive' || !Array.isArray(data.people) || !Array.isArray(data.parties) || !Array.isArray(data.unallocated)) throw new Error('曝露ランキングの形式が違います');
@@ -191,6 +197,8 @@ export function parsePublicExposureRanking(text: string): PublicExposureDistribu
   }
   // 未配分は群×役割の合計（reasons の配列つき）。古い形（laws・reason）のファイルは受け取らない。
   if (!data.unallocated.every(u => Array.isArray(u.reasons) && !('laws' in u))) throw new Error('曝露ランキングの未配分の形式が違います（古いデータ）');
+  if (data.groups !== undefined && !(Array.isArray(data.groups) && data.groups.every(g => typeof g.id === 'string' && typeof g.group === 'string' && typeof g.window === 'string'))) throw new Error('曝露ランキングの群の一覧が不正です');
+  if (data.personReadings !== undefined && !(data.personReadings && typeof data.personReadings === 'object' && !Array.isArray(data.personReadings) && Object.values(data.personReadings).every(v => typeof v === 'string'))) throw new Error('曝露ランキングの読みの表が不正です');
   return data;
 }
 
