@@ -181,7 +181,10 @@ export type ExposureRankingPanelProps = {
   initialTab?: ExposureTab;
 };
 
-export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, partyNames = {}, personReadings = {}, initialTab = 'people' }: ExposureRankingPanelProps) {
+const NO_GROUPS: readonly GroupLabel[] = Object.freeze([]);
+const NO_NAMES: Readonly<Record<string, string>> = Object.freeze({});
+
+export function ExposureRankingPanel({ ranking, groups = NO_GROUPS, personNames = NO_NAMES, partyNames = NO_NAMES, personReadings = NO_NAMES, initialTab = 'people' }: ExposureRankingPanelProps) {
   const [tab, setTab] = useState<ExposureTab>(initialTab);
   const [limit, setLimit] = useState(EXPOSURE_PAGE_SIZE);
   const [unrankedLimit, setUnrankedLimit] = useState(EXPOSURE_PAGE_SIZE);
@@ -226,7 +229,7 @@ export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, p
         <li>伸び損ね額は、産業×期間の群ごとに、OECD の同じ産業・同じ時期の中央値との差です。</li>
         <li>「伸び損ね側」は、伸び損ねた群に発議・賛成・閣議決定で関与した額です。「逆側」は、中央値を上回った群に関与した額か、伸び損ねた群に反対した額です。逆側は、群が上回ったという意味とは限りません。</li>
         <li>群の額を役割ごとの固定比率（取り決め）で配ります：{EXPOSURE_ROLES.map(role => `${ROLE_LABEL[role]} ${roleRatio[role]}`).join('・')}。反対は逆向きに配ります。</li>
-        <li>幅が重なる{unit}は同じ階層です。同じ階層の中は、人物台帳に読みのある{unit}を五十音順に、読みの無い{unit}をその後に名前の文字の順に並べます。並び順に、差の意味はありません。統計的な信頼集合ではなく、記述の階層です。</li>
+        <li>幅が重なる{unit}は同じ階層です。{tab === 'people' ? '同じ階層の中は、人物台帳に読みのある人を五十音順に、読みの無い人をその後に名前の文字の順に並べます。' : '同じ階層の中は名前の文字の順に並べます。'}並び順に、差の意味はありません。統計的な信頼集合ではなく、記述の階層です。</li>
         <li>関与した法律が{minLaws}本に満たない{unit}、上位3本の法律で額の{Math.round(ranking.params.topThreeShareCap * 100)}%を超える{unit}{noneNote}は、額を出さず、関与した群と本数と理由だけを出します。</li>
       </ul>
     </details>
@@ -242,7 +245,7 @@ export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, p
           <span><i className="xr-key-range" />細い線＝幅（低い値〜高い値）</span>
           {scale.min < 0 && <span><i className="xr-key-zero" />縦線＝0（左は逆側）</span>}
         </p>
-        <p className="fine-note" role="status">階層に入る{unit}は{ranked.length}{tab === 'people' ? '人' : '会派'}{limit < ranked.length && `（上から${limit}を表示）`}{tierSizes.size === 1 && `。いまは全員の幅が重なり、階層は1つだけです。並びは読みの五十音順（読みの無い人はその後に名前の文字の順）で、額の大きい順ではありません`}</p>
+        <p className="fine-note" role="status">階層に入る{unit}は{ranked.length}{tab === 'people' ? '人' : '会派'}{limit < ranked.length && `（上から${limit}を表示）`}{tierSizes.size === 1 && `。いまは全員の幅が重なり、階層は1つだけです。並びは${tab === 'people' ? '読みの五十音順（読みの無い人はその後に名前の文字の順）' : '名前の文字の順'}で、額の大きい順ではありません`}</p>
         {tiers.map(tier => <section key={tier.tier} className={`xr-tier ${tier.tier === 1 ? 'top' : ''}`} aria-label={`第${tier.tier}階層`}>
           <h3><span className="xr-tier-no">第{tier.tier}階層</span><small>幅が重なる{tierSizes.get(tier.tier)}{tab === 'people' ? '人' : '会派'}（並び順に差の意味なし）</small></h3>
           <ol className="xr-rows">{tier.rows.map(row => {

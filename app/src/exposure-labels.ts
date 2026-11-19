@@ -25,7 +25,7 @@ export const ISIC_SECTION_NAMES: Readonly<Record<string, string>> = Object.freez
 
 export const industryName = (code: string): string => ISIC_SECTION_NAMES[code] ?? code;
 
-/** 群の一覧（id・産業コード・年）から、画面部品の群ラベル（id → 産業名＋期間）を作る。産業コードだけの束（内訳）は「全期間の合計」。 */
+/** 群の一覧（id・産業コード・年）から、画面部品の群ラベル（id → 産業名＋期間）を作る。産業コードだけの束（内訳）は「各年の合計」。 */
 export function exposureGroupLabels(groups: readonly { id: string; group: string; window: string }[]): { id: string; group: string; window: string }[] {
   const labels = groups.map(g => ({ id: g.id, group: industryName(g.group), window: g.window }));
   for (const code of new Set(groups.map(g => g.group))) labels.push({ id: code, group: industryName(code), window: '各年の合計' });

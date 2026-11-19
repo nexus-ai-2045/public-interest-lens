@@ -197,7 +197,7 @@ export function parsePublicExposureRanking(text: string): PublicExposureDistribu
   }
   // 未配分は群×役割の合計（reasons の配列つき）。古い形（laws・reason）のファイルは受け取らない。
   if (!data.unallocated.every(u => Array.isArray(u.reasons) && !('laws' in u))) throw new Error('曝露ランキングの未配分の形式が違います（古いデータ）');
-  if (data.groups !== undefined && !(Array.isArray(data.groups) && data.groups.every(g => typeof g.id === 'string' && typeof g.group === 'string' && typeof g.window === 'string'))) throw new Error('曝露ランキングの群の一覧が不正です');
+  if (data.groups !== undefined && !(Array.isArray(data.groups) && data.groups.every(g => g !== null && typeof g === 'object' && typeof g.id === 'string' && typeof g.group === 'string' && typeof g.window === 'string'))) throw new Error('曝露ランキングの群の一覧が不正です');
   if (data.personReadings !== undefined && !(data.personReadings && typeof data.personReadings === 'object' && !Array.isArray(data.personReadings) && Object.values(data.personReadings).every(v => typeof v === 'string'))) throw new Error('曝露ランキングの読みの表が不正です');
   return data;
 }
