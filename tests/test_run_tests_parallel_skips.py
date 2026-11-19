@@ -20,6 +20,7 @@ class SkipGuardTest(unittest.TestCase):
     def test_listed_skips_are_known(self):
         allowed = runner.allowed_skips()
         self.assertIn("test_io_ripple.TestAgainstOfficial.test_matches_official_inverse", allowed)
+        self.assertIn("unittest.loader.ModuleSkipped.test_io_ripple", allowed)
         self.assertNotIn("test_x.A.test_a", allowed)
 
     def test_every_listed_id_has_a_reason(self):
