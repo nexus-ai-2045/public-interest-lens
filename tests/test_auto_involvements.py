@@ -1,20 +1,15 @@
 """自動の関与（scripts/build_auto_involvements.py）の閣法の提出者。
 
 閣法は内閣の提出なので、総理大臣1人に付けず、会期を通して在任した閣僚の全員に付ける（設計確定 v2.1）。
-条件は app/src/members-reference.ts の cabinetOf と同じで、実データで同じ顔ぶれになることを確かめる。
+条件は app/src/cabinet-members.ts の cabinetForBill と同じ（総理大臣が会期中に替わる回次は、交代より前に付託された閣法だけ付託日の閣僚、交代より後は閣僚を付けない）。
 """
-import csv
-import shutil
 import sys
-import tempfile
 import unittest
-from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from scripts import build_auto_involvements as auto
-from scripts import check_reference_members as crm
 
 
 def _bill(session: str, referred: str, kind: str = "閣法", held: str = "") -> dict[str, str]:
@@ -55,12 +50,13 @@ class CabinetsTest(unittest.TestCase):
         enacted = [_bill("151", "平成13年 2月 1日")]
         self.assertEqual([name for name, _ in auto.cabinets(enacted, CABINET)["session"]["151"]], ["丙山三郎", "乙川二郎", "壬生九郎", "甲野一郎"])
 
-    def test_session_where_prime_minister_changes_uses_the_cabinet_of_the_referral_day(self):
+    def test_session_where_prime_minister_changes_keeps_only_bills_referred_before_the_change(self):
         enacted = [_bill("154", "平成14年 5月 1日"), _bill("154", "平成14年 7月 1日")]
         got = auto.cabinets(enacted, CABINET)
         self.assertNotIn("154", got["session"])  # 回次では内閣を決められない
         self.assertEqual([name for name, _ in got["day"]["2002-05-01"]], ["丁田四郎", "乙川二郎", "壬生九郎", "甲野一郎"])
-        self.assertEqual(got["day"]["2002-07-01"], [("乙川二郎", "財務大臣"), ("辛島八郎", "内閣総理大臣")])
+        # 交代より後に付託された閣法は、どちらの内閣の提出か決められないので閣僚を付けない（未配分）。
+        self.assertNotIn("2002-07-01", got["day"])
 
     def test_span_ignores_carried_over_and_non_cabinet_bills(self):
         # 継続審査の閣法（回次が提出回次と違う）と衆法の付託日は、会期の幅に入れない
@@ -88,32 +84,18 @@ class CabinetsTest(unittest.TestCase):
             self.assertEqual({r["院"] for r in mine}, {""}, law)
 
 
-@unittest.skipUnless(shutil.which("node") and (ROOT / "app" / "node_modules" / "vite").exists(), "node か app の依存が無い")
-class CabinetSyncWithTypeScriptTest(unittest.TestCase):
-    def test_same_ministers_as_members_reference(self):
-        """TS（members-reference.ts）が閣法の提出者とした人（配った人と、向きが未確定で配らなかった人）と、法律ごとに同じ顔ぶれになる。
-
-        総理大臣が会期中に替わる回次だけ決まりが違う。TS は付託日が交代より前の法律だけを付託日の内閣に付け、交代より後に付託された法律は
-        どちらの内閣の提出か決められないので付けない。ここ（自動の関与）は付託日の内閣に付ける。TS が付けた法律では同じ顔ぶれになる。"""
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "attributions.csv"
-            crm.build_attributions(path)
-            with path.open(encoding="utf-8", newline="") as f:
-                rows = list(csv.DictReader(f))
-        ts: dict[str, set[str]] = defaultdict(set)
-        for r in rows:
-            if r["lawId"].startswith("閣法") and r["role"] == "proposer":
-                ts[r["lawId"]].add(auto.canonical(r["name"]))
-        enacted = {f"{r['種別']}-{r['提出回次']}-{r['番号']}": r for r in auto._read(auto.ENACTED)}
-        cabinets = auto.cabinets(list(enacted.values()), auto._read(auto.CABINET))
-        self.assertGreater(len({law.split("-")[1] for law in ts}), 10)  # 配る法律が減っても、配らなかった関わりの行で多くの回次を照らせる
-        for law, names in sorted(ts.items()):
-            bill = enacted[law]
-            referred = auto.wareki(bill["付託日_衆"]) if bill["回次"] == bill["提出回次"] else ""
-            expected = cabinets["session"].get(bill["提出回次"]) or cabinets["day"].get(referred, [])
-            self.assertEqual({name for name, _ in expected}, names, law)
-        # 名簿が会期の途中から脚注の印（*）つきで書く閣僚（第180回）も落ちない。
-        self.assertTrue(any("安住淳" in names for law, names in ts.items() if law.split("-")[1] == "180"))
+class CabinetBillAfterChangeTest(unittest.TestCase):
+    def test_bill_referred_after_the_change_has_no_minister_rows_and_keeps_the_rule_of_the_day_before(self):
+        """交代より後に付託された閣法は閣僚を付けない。実データでも、閣僚を付けた法律の付託日は交代より前になる。"""
+        enacted = auto._read(auto.ENACTED)
+        got = auto.cabinets(enacted, auto._read(auto.CABINET))
+        for day, members in got["day"].items():
+            self.assertEqual(sum(role.startswith(auto.PRIME_MINISTER) for _, role in members), 1, day)
+        sessions_changing = {r["提出回次"] for r in enacted if r["種別"] == "閣法" and r["回次"] == r["提出回次"]} - set(got["session"])
+        self.assertTrue(sessions_changing)  # 総理大臣が会期中に替わる回次が実データにある
+        for session in sessions_changing:
+            days = {auto.wareki(r["付託日_衆"]) for r in enacted if r["種別"] == "閣法" and r["回次"] == r["提出回次"] == session} - {""}
+            self.assertLess(len(days & set(got["day"])), len(days), session)
 
 
 if __name__ == "__main__":

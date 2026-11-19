@@ -1,7 +1,5 @@
 import { expect, it } from 'vitest';
 import { correctionIssueUrl, correctionListUrl, correctionMailUrl } from './correction-link';
-import { memberCorrectionTarget } from './MembersPage';
-import type { PublicMember, PublicMemberLaw } from './members-build';
 
 it('対象と画面の出典を Issue テンプレートの欄に入れる', () => {
   const url = new URL(correctionIssueUrl({ title: '旅館業法改正（閣法-1-1）', page: '/ranking#%E9%96%A3', sources: [{ label: '議案情報', url: 'https://www.shugiin.go.jp/a' }, { label: '重複', url: 'https://www.shugiin.go.jp/a' }] }));
@@ -21,15 +19,6 @@ it('出典が多すぎる時は URL が長くなりすぎないよう減らし�
 
 it('出典が無い時もそう書いて開く', () => {
   expect(new URL(correctionIssueUrl({ title: '乙', page: '/members', sources: [] })).searchParams.get('cited')).toBe('（この画面に出典の記載なし）');
-});
-
-it('議員の欄は、行動（額に入れていないものも）の一次資料・投票結果・議案情報を順に入れる', () => {
-  const law = { id: 'L1', title: '法A', source: 'https://www.shugiin.go.jp/L1', game: { voteUrl: 'https://www.sangiin.go.jp/v1' } } as unknown as PublicMemberLaw;
-  const member = { id: '丙', name: '丙', laws: [{ lawId: 'L1', evidence: [{ actionLabel: '提出', date: '2013-11-20', url: 'https://kokkai.ndl.go.jp/1' }], context: [{ actionLabel: '質疑', date: '2013-11-21', url: 'https://kokkai.ndl.go.jp/2' }] }] } as unknown as PublicMember;
-  const t = memberCorrectionTarget(member, new Map([['L1', law]]));
-  expect(t.page).toBe(`/members?name=${encodeURIComponent('丙')}`);
-  expect(t.sources.map(s => s.url)).toEqual(['https://kokkai.ndl.go.jp/1', 'https://kokkai.ndl.go.jp/2', 'https://www.sangiin.go.jp/v1', 'https://www.shugiin.go.jp/L1']);
-  expect(t.sources[0].label).toBe('法A・提出（2013-11-20）');
 });
 
 it('寄せられた反論・訂正の一覧は、ラベルと題名で絞った GitHub の検索を開く', () => {

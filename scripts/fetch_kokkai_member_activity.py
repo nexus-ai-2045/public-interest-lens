@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""議員ページの「国会での活動」用に、会議録 API から大臣・委員長としての発言数、出席した会議数、直近10件を取る。
+"""「国会での活動」（点数に使わない参考表示）用に、会議録 API から大臣・委員長としての発言数、出席した会議数、直近10件を取る。
 
 fetch_kokkai_member_counts.py の件数（2系統一致）と合わせ、
 data/derived/member-activity-v1/diet.json と同じ形（speeches・shugiin・sangiin・asMinister・asChair・meetings・first・recent[10]）で
-private-m2 側に書く。公開用の変換は「議員の実名ランキングを公開する」スレッドの scripts/build_member_activity.py が担当する。
+private-m2 側に書く。公開用の変換は scripts/build_member_activity.py が担当する。
+対象は曝露ランキング（data/derived/exposure-v1/exposure-ranking.json）で点がある（tier が null でない）人。氏名は人物台帳（persons.csv）で引く。
 asMinister は発言者の肩書に「大臣」を含む発言（副大臣を含む）、asChair は「委員長」を含む発言。
 
-使い方: python3 scripts/fetch_kokkai_member_activity.py [--counts .../members-speech-counts.csv] [--out .../diet-direct.json]
+使い方: python3 scripts/fetch_kokkai_member_activity.py [--exposure 曝露ランキング.json] [--counts .../members-speech-counts.csv] [--out .../diet-direct.json]
 """
 import argparse, csv, json, sys, time, urllib.parse, urllib.request
 from datetime import datetime, timezone
@@ -14,7 +15,7 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from person_ids import canonical  # noqa: E402
+from person_ids import EXPOSURE, canonical, ranked_people  # noqa: E402
 
 BASE = "https://kokkai.ndl.go.jp/api/"
 DIR = "/mnt/project-files/private-m2/kokkai-direct"
@@ -50,14 +51,14 @@ def activity(name, sleep):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--counts", default=f"{DIR}/members-speech-counts.csv")
-    ap.add_argument("--members", default="app/public/distribution/members.json")
+    ap.add_argument("--exposure", default=str(EXPOSURE), help="曝露ランキング。tier が null でない人が対象")
     ap.add_argument("--persons", default="data/derived/person-ids/persons.csv", help="人物台帳（同姓同名の判定に使う）")
     ap.add_argument("--out", default=f"{DIR}/diet-direct.json")
     ap.add_argument("--sleep", type=float, default=1.0)
     a = ap.parse_args()
-    people = [(m["id"], m["name"]) for m in json.load(open(a.members, encoding="utf-8"))["members"]]
+    people = ranked_people(Path(a.exposure), Path(a.persons))
     # 会議録 API は氏名で探すので、同姓同名の人物（人物IDが分かれた人）の発言は分けられない。取らずに理由を残す。
-    # 片方しか議員ページに載っていなくても、人物台帳で分かれていれば同姓同名として扱う。
+    # 片方しか曝露ランキングで点が付いていなくても、人物台帳で分かれていれば同姓同名として扱う。
     ledger = [r["氏名"] for r in csv.DictReader(open(a.persons, encoding="utf-8"))] if Path(a.persons).exists() else []
     listed, split = Counter(canonical(n) for _, n in people), Counter(canonical(n) for n in ledger)
     homonyms = {c for c in listed if max(listed[c], split[c]) > 1}

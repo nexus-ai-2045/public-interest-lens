@@ -10,7 +10,7 @@
 - 足すのは、関与の一覧（involvements.csv / involvements-auto.csv）に既にある法律だけ。人物IDは台帳で1人に決まるときだけ付け、
   複数に当たる同姓同名は算入=いいえ。すでに同じ法律・同じ人・同じ行動の行があれば足さない。
 出力：data/derived/allocation-v1/involvements-auto.csv に追記する（前回この表が足した行は先に外すので、何度流しても同じ。
-  順番は build_auto_involvements.py → このスクリプト → node scripts/build_public_members.mjs）。
+  順番は build_auto_involvements.py → このスクリプト → scripts/build_opposing_votes.py）。
 使い方：python3 scripts/build_committee_amend_involvements.py
 """
 from __future__ import annotations

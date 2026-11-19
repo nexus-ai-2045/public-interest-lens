@@ -10,25 +10,31 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import fetch_kokkai_member_activity as fka  # noqa: E402
 
 
+def _write_inputs(tmp, ranked, ledger):
+    """曝露ランキング（点あり＝tier が数）と人物台帳を架空の内容で書く。tier が null の人は対象外。"""
+    exposure = Path(tmp) / "exposure.json"
+    exposure.write_text(json.dumps({"people": [{"actorId": pid, "tier": tier} for pid, tier in ranked]}, ensure_ascii=False), encoding="utf-8")
+    persons = Path(tmp) / "persons.csv"
+    persons.write_text("人物ID,氏名\n" + "".join(f"{pid},{name}\n" for pid, name in ledger), encoding="utf-8")
+    return exposure, persons
+
+
 class FetchMemberActivityTest(unittest.TestCase):
     def test_keys_by_person_id_and_skips_namesakes(self):
         with tempfile.TemporaryDirectory() as tmp:
-            members = Path(tmp) / "members.json"
-            members.write_text(json.dumps({"members": [
-                {"id": "山田花", "name": "山田花"},
-                {"id": "森川空（衆・東京3）", "name": "森川空"},
-                {"id": "森川空（参・比例）", "name": "森川 空"},
-            ]}, ensure_ascii=False), encoding="utf-8")
+            exposure, persons = _write_inputs(
+                tmp, [("山田花", 1), ("森川空（衆・東京3）", 2), ("森川空（参・比例）", 3), ("未ランク太郎", None)],
+                [("山田花", "山田花"), ("森川空（衆・東京3）", "森川空"), ("森川空（参・比例）", "森川 空"), ("未ランク太郎", "未ランク太郎")])
             out = Path(tmp) / "out.json"
             # 同姓同名になる前に氏名で取った分が残っている。
             out.write_text(json.dumps({"members": {"森川空": {"recent": []}}}, ensure_ascii=False), encoding="utf-8")
             asked = []
             with mock.patch.object(fka, "activity", side_effect=lambda name, sleep: asked.append(name) or {"recent": []}), \
-                    mock.patch.object(sys, "argv", ["x", "--members", str(members), "--out", str(out), "--counts", str(Path(tmp) / "none.csv"),
-                                                  "--persons", str(Path(tmp) / "none.csv")]):
+                    mock.patch.object(sys, "argv", ["x", "--exposure", str(exposure), "--out", str(out), "--counts", str(Path(tmp) / "none.csv"),
+                                                  "--persons", str(persons)]):
                 fka.main()
             res = json.loads(out.read_text(encoding="utf-8"))["members"]
-        # 同姓同名の2人は氏名検索で分けられないので、API に聞かず理由を残す。
+        # 同姓同名の2人は氏名検索で分けられないので、API に聞かず理由を残す。点なしの人は対象外。
         self.assertEqual(asked, ["山田花"])
         self.assertEqual(sorted(res), sorted(["山田花", "森川空（衆・東京3）", "森川空（参・比例）"]))
         self.assertTrue(res["森川空（参・比例）"]["reason"].startswith("同姓同名"))
@@ -36,18 +42,14 @@ class FetchMemberActivityTest(unittest.TestCase):
 
     def test_namesake_in_ledger_only_is_held(self):
         with tempfile.TemporaryDirectory() as tmp:
-            members = Path(tmp) / "members.json"
-            # 議員ページには片方だけが載っているが、人物台帳では同姓同名が分かれている。
-            members.write_text(json.dumps({"members": [
-                {"id": "山田花", "name": "山田花"},
-                {"id": "森川空（参・比例）", "name": "森川空"},
-            ]}, ensure_ascii=False), encoding="utf-8")
-            persons = Path(tmp) / "persons.csv"
-            persons.write_text("人物ID,氏名\n山田花,山田花\n森川空,森川空\n森川空（参・比例）,森川空\n", encoding="utf-8")
+            # 曝露ランキングで点があるのは片方だけだが、人物台帳では同姓同名が分かれている。
+            exposure, persons = _write_inputs(
+                tmp, [("山田花", 1), ("森川空（参・比例）", 2)],
+                [("山田花", "山田花"), ("森川空", "森川空"), ("森川空（参・比例）", "森川空")])
             out = Path(tmp) / "out.json"
             asked = []
             with mock.patch.object(fka, "activity", side_effect=lambda name, sleep: asked.append(name) or {"recent": []}), \
-                    mock.patch.object(sys, "argv", ["x", "--members", str(members), "--out", str(out),
+                    mock.patch.object(sys, "argv", ["x", "--exposure", str(exposure), "--out", str(out),
                                                   "--counts", str(Path(tmp) / "none.csv"), "--persons", str(persons)]):
                 fka.main()
             res = json.loads(out.read_text(encoding="utf-8"))["members"]

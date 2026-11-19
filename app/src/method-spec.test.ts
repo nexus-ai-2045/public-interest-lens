@@ -22,11 +22,21 @@ describe('計算方法の仕様（method-spec）', () => {
     const { readFileSync } = await import('node:fs');
     const read = (name: string) => JSON.parse(readFileSync(new URL(`../public/distribution/${name}`, import.meta.url), 'utf8'));
     const adopted = new Set(SPEC_SECTIONS.filter(s => s.status === '採用').flatMap(s => [s.version, ...(s.alsoVersions ?? [])]));
-    const rules = [...read('members.json').rules, ...read('members-reference.json').rules, ...read('ranking.json').generatedFrom.rules] as string[];
+    const rules = read('ranking.json').generatedFrom.rules as string[];
     for (const rule of rules) expect(adopted.has(rule), rule).toBe(true);
   });
+  it('点数設計 v2.1 で撤回した版は、仕様にも公開データの rules にも残らない（method-spec-v3.0）', async () => {
+    const { readFileSync } = await import('node:fs');
+    const withdrawn = ['causal-shapley-v1', 'allocation-v1', 'observation-split-v1', 'reference-party-fallback-v1', 'reference-split-by-observation-v1'];
+    const versions = new Set(SPEC_SECTIONS.flatMap(s => [s.version, ...(s.alsoVersions ?? [])]));
+    for (const v of withdrawn) expect(versions.has(v), v).toBe(false);
+    const rules = JSON.parse(readFileSync(new URL('../public/distribution/ranking.json', import.meta.url), 'utf8')).generatedFrom.rules as string[];
+    for (const v of withdrawn) expect(rules, v).not.toContain(v);
+    expect(SPEC_SECTIONS.find(s => s.id === 'score-design')?.status).toBe('採用');
+    expect(SPEC_SECTIONS.some(s => s.lead.includes('置き換え予定'))).toBe(false);
+  });
   it('定番の手法は数を絞り、出典があり、仕様の節を指す', () => {
-    expect(STANDARD_METHODS.length).toBeLessThanOrEqual(6);
+    expect(STANDARD_METHODS.length).toBeLessThanOrEqual(5);
     const ids = new Set(SPEC_SECTIONS.map(s => s.id));
     for (const m of STANDARD_METHODS) {
       expect(m.refs.length, m.name).toBeGreaterThan(0);

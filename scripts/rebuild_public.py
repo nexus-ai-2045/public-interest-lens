@@ -1,22 +1,21 @@
 """公開サイトが読むデータ（app/public/distribution/）を、派生データから決まった順で全部作り直す入口。
 
 どのページも同じ最新データを出すように、作り直しはこの1本だけから行う（毎朝の自動更新 daily_update.py も、手で直すときも同じ）。
-途中を飛ばすと、ページごとに古い段階のデータが残る（例：額の表を変えたのに議員ページや一覧を作り直さない）。
+途中を飛ばすと、ページごとに古い段階のデータが残る（例：額の表を変えたのに曝露ランキングや一覧を作り直さない）。
 tests/test_public_sync.py が、公開データ同士の照合値（SHA-256）と件数がそろっていることを毎回確かめる。
 
 順番（前の出力が後の入力になる）：
   0. 人物ID の台帳 persons.csv と、関与の一覧への人物ID・役職の照合（scripts/person_ids.py --annotate-involvements）。
-     関与の一覧は氏名ではなく人物IDで数えるので、議員ページ（6.）より前に回す。関与の一覧そのものの作り直し（allocation_involvements.py）は
+     関与の一覧は氏名ではなく人物IDで数えるので、曝露ランキング（6.）より前に回す。関与の一覧そのものの作り直し（allocation_involvements.py）は
      非公開の作業データが要るので入口に含めない。そちらを回したときも、続けてこの入口を回せば人物IDがそろう
   1. 振り分け v2 系統2（scripts/triage_v2_line2.py）
   2. 判定ルール（app/scripts）：振り分け v2 系統1 → 影響 → 損失 → 便益と公開判定
   3. 税制改正の増減収見込み（scripts/build_tax_impact.py）→ 全法律の結果（scripts/build_all_laws_outcomes.py）
   4. コロナ対応の費用便益（scripts/build_covid_benefit.py）→ 税の帳簿（scripts/build_tax_ledger.py）→ 全体指標の参考の額（scripts/build_macro_amounts.py）→ 額の物差し三欄（scripts/build_three_columns.py、設計決定0024）
   5. 公開ランキング ranking.json と出典チェック（scripts/source_check.rebuild）
-  6. 閣法の所管の省庁（scripts/build_ministry_bills.py build）→ 団体の帳簿（scripts/build_org_ledger.py）→ 経済界の帳簿（scripts/build_business_ledger.py）→ 背後の力の結び付け（scripts/build_backing_forces.py）→ 自動の関与（scripts/build_auto_involvements.py）→ 修正案の提出者（scripts/build_committee_amend_involvements.py）→ 反対票の一覧（scripts/build_opposing_votes.py）→ 採決ごとの会派（scripts/build_vote_parties.py）→ 議員ページ members.json（scripts/build_public_members.mjs）→ もう一度出典チェック
-  7. 全議員の表 members-reference.json（参考の額を印つきの別の欄で配る。scripts/build_reference_members.mjs）
-  8. 法律の一覧 laws.json と laws-detail/、法律の「何をする」の一文の表 law-names.json（scripts/build_laws_catalog.py）→ 暫定評価 provisional.json（scripts/build_provisional.py）
-  9. 物価の換算表 price-index.json（scripts/build_price_index.py）→ データベース data/db/kokuzoku.sqlite（Git に入れない）と、グラフ用の集計 charts.json（scripts/build_database.py）。
+  6. 閣法の所管の省庁（scripts/build_ministry_bills.py build）→ 団体の帳簿（scripts/build_org_ledger.py）→ 経済界の帳簿（scripts/build_business_ledger.py）→ 背後の力の結び付け（scripts/build_backing_forces.py）→ 自動の関与（scripts/build_auto_involvements.py）→ 修正案の提出者（scripts/build_committee_amend_involvements.py）→ 反対票の一覧（scripts/build_opposing_votes.py）→ 採決ごとの会派（scripts/build_vote_parties.py）→ 曝露ランキング exposure-ranking.json（議員の側。scripts/build_exposure_ranking.mjs）
+  7. 法律の一覧 laws.json と laws-detail/、法律の「何をする」の一文の表 law-names.json（scripts/build_laws_catalog.py）→ 暫定評価 provisional.json（scripts/build_provisional.py）
+  8. 物価の換算表 price-index.json（scripts/build_price_index.py）→ データベース data/db/kokuzoku.sqlite（Git に入れない）と、グラフ用の集計 charts.json（scripts/build_database.py）。
      計算式の清書 docs/計算式.md が正本（app/src/method-spec.ts）と一致するかも確かめる
 
 使い方（リポジトリのルートで）：python3 scripts/rebuild_public.py
@@ -98,7 +97,7 @@ def rebuild(record: Record = _print) -> bool:
     if summary["heldOut"]:
         detail += "・公開から外した法律 " + "、".join(summary["heldOut"])
     record("出典チェック", "完了" if not summary["mismatch"] else "外した", detail)
-    # 議員ページは出典チェック後の公開ランキングと同じ派生データから作り、作り直したあとにもう一度照合する。
+    # 曝露ランキングは出典チェック後の公開ランキングと同じ派生データから作る。
     # 関与の一覧が無い法律の機械的な関与と、反対票の一覧（参議院の個人別の投票から）を先に作る（設計決定0014）。
     if not _command(record, "閣法の所管の省庁", [sys.executable, "scripts/build_ministry_bills.py", "build"]):
         return False
@@ -116,21 +115,10 @@ def rebuild(record: Record = _print) -> bool:
         return False
     if not _command(record, "採決ごとの会派", [sys.executable, "scripts/build_vote_parties.py"]):
         return False
-    if not _command(record, "議員ページ：members.json", ["node", "scripts/build_public_members.mjs"]):
+    # 議員の側は曝露ランキング（設計決定0027・0028）。法律ごとの配分はしない。
+    if not _command(record, "曝露ランキング：exposure-ranking.json", ["node", "scripts/build_exposure_ranking.mjs"]):
         return False
-    summary = source_check.rebuild(True, approved_at)
-    if summary.get("memberMismatch"):
-        record("出典チェック（議員ページ）", "失敗", f"不一致{summary['memberMismatch']}件。取り込まない")
-        return False
-    # 全議員の表は公開ランキングの参考の額から作る（確かな額の議員ページとは別のファイル）。
-    attributions = ROOT / ".local" / "reference-attributions.csv"
-    attributions.parent.mkdir(exist_ok=True)
-    if not _command(record, "全議員の表：members-reference.json", ["node", "scripts/build_reference_members.mjs", "--attributions", str(attributions)]):
-        return False
-    # 全議員の表の全員・全法律の配り先（提出者・参議院の賛成）を、別の実装で一次資料と照らし合わせる。合わなければ取り込まない。
-    if not _command(record, "出典チェック（全議員の表）", [py, "scripts/check_reference_members.py", "--attributions", str(attributions)]):
-        return False
-    # 全法律の一覧（/ranking）は、公開ランキングと議員ページを作り直したあとに並べ直す。
+    # 全法律の一覧（/ranking）は、公開ランキングを作り直したあとに並べ直す。
     if not _command(record, "法律の一覧：laws.json", [py, "scripts/build_laws_catalog.py"]):
         return False
     # 暫定評価（provisional-v1）。直近の法律の件数と政策カードを、laws.json に合わせて作り直す。

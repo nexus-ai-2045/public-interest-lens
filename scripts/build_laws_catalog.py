@@ -2,7 +2,7 @@
 
 成立した全法律（bill-census-full/enacted.csv）を1本ずつ並べる。額・確かさ・印・額が出ない理由は
 公開ランキング（ranking.json、public-ranking/v2）をそのまま使い、計算の流れは全法律の台帳
-（all-laws-v1/outcomes.csv）から付ける。関わった議員は members.json、政策は case.json から。
+（all-laws-v1/outcomes.csv）から付ける。政策は case.json から。議員への配分は持たない（議員は曝露ランキング exposure-ranking.json、設計決定0027・0028）。
 
 入力はリポジトリ内の派生データと公開済みの配布データだけ。中身は変えず、読み替えて並べるだけ。
 """
@@ -25,17 +25,16 @@ OUTPUT = DIST / "laws.json"
 DETAIL_DIR = DIST / "laws-detail"
 # 議員ページなど laws.json を読まない画面のための、法律の「何をする」の一文だけの表（id → 一文、無いものは理由の印）。
 NAMES_OUTPUT = DIST / "law-names.json"
-# 一覧の1行に要る項目。残り（因果の鎖・一次資料・関わった議員など）は開いた時に laws-detail/<束>.json から読む。
+# 一覧の1行に要る項目。残り（因果の鎖・一次資料など）は開いた時に laws-detail/<束>.json から読む。
 # laws.json で1本1行に並べる一覧（dump_one_per_line）。
 LINE_KEYS = ("laws", "policies")
-INDEX_KEYS = ("id", "kind", "title", "year", "field", "side", "amount", "certainty", "marks", "step", "what", "whatWithheld", "summary", "membersTotal", "href", "observation", "scale", "shared", "refReason", "refBasis")
+INDEX_KEYS = ("id", "kind", "title", "year", "field", "side", "amount", "certainty", "marks", "step", "what", "whatWithheld", "summary", "href", "observation", "scale", "shared", "refReason", "refBasis")
 
 INPUTS = {
     "enacted": ACQUIRED / "bill-census-full" / "enacted.csv",
     "outcomes": DERIVED / "all-laws-v1" / "outcomes.csv",
     "fieldEstimate": DERIVED / "field-expansion-estimate" / "estimate.csv",
     "ranking": DIST / "ranking.json",
-    "members": DIST / "members.json",
     "case": DIST / "case.json",
     # 会議録の全文（Mac にしか無い）から、概要が使う事実だけを取り出した表（scripts/build_speech_facts.py）。区別できない発言の判定もここに入っている
     "speechFacts": DERIVED / "law-overviews-v1" / "speech-facts.csv",
@@ -62,8 +61,6 @@ CERTAINTY = {
 }
 # 額が出ない法律の結果 → どこまで進んだか
 OUTCOME_STEP = {"評価対象外": "enacted", "保留（振り分け）": "enacted", "施行日が未確定": "evaluated", "保留（影響の判定）": "dated", "未測定（系列・比較群が足りない）": "staged", "額は未計算（コロナ対応・規模のみ記録）": "dated"}
-# 確かさ高・中の法律で、関わった議員の記録（提出・参議院の賛否）がまだそろわず議員ページに入っていないものの印。
-MEMBERS_PENDING = "関わった議員の記録を集めている途中（議員ランキングにはまだ入っていない）"
 STEPS = ["enacted", "evaluated", "dated", "staged", "amounted", "published"]
 
 
@@ -96,22 +93,6 @@ def first_clause(text: str, limit: int = 90) -> str:
     """理由の最初の一節だけを一言にする（全文は detail に残す）。"""
     head = re.split(r"[／。]", text or "", maxsplit=1)[0].strip()
     return head if len(head) <= limit else head[: limit - 1] + "…"
-
-
-def member_links(members: dict) -> dict[str, list[dict]]:
-    by_law: dict[str, list[dict]] = defaultdict(list)
-    for member in members["members"]:
-        for entry in member["laws"]:
-            by_law[entry["lawId"]].append({
-                "id": member["id"],
-                "name": member["name"],
-                "median": entry["share"]["median"],
-                "roles": sorted(entry.get("roles", {})),
-            })
-    for law_id, items in by_law.items():
-        items.sort(key=lambda item: -abs(item["median"]))
-    return by_law
-
 
 
 def source_links(urls: list[str]) -> list[dict[str, str]]:
@@ -317,9 +298,6 @@ def build() -> dict:
     shared_groups = {group["key"]: group for group in shared_ref["groups"]}
     shared_laws = {law["id"]: law for law in shared_ref["laws"]}
     value_added = japan_value_added()
-    members = _json("members")
-    linked = member_links(members)
-    member_law = {law["id"]: law for law in members["laws"]}
     speeches = {row["id"]: row for row in _rows("speechFacts")}
     written = {row["id"]: row for row in _rows("overviews")}
     # 1つの発言を2本以上の法案が材料にしていて、この法案の部分を切り出せなかったもの（どの法案の話か決められない）。判定は speech-facts.csv の「区別できない」列
@@ -354,8 +332,6 @@ def build() -> dict:
             "summary": "",
             "chain": outcome_chain(out, law["certainty"] if law else None),
             "sources": [],
-            "members": linked.get(law_id, [])[:12],
-            "membersTotal": len(linked.get(law_id, [])),
         }
         if census.get("経過URL", "").startswith("https://"):
             item["sources"].append({"label": "国会の議案情報（審議の経過）", "url": census["経過URL"]})
@@ -384,12 +360,8 @@ def build() -> dict:
             item["sources"] += [link for link in source_links(law["sources"]) if link["url"] not in known]
             if law_id in covid_benefit:
                 item["chain"].append(covid_chain_step(covid_benefit[law_id]))
-            if law_id in member_law and member_law[law_id].get("attributed"):
-                item["attributed"] = member_law[law_id]["attributed"]
-            if law["certainty"] in ("高", "中") and law_id not in member_law:
-                item["marks"].append(MEMBERS_PENDING)
         elif other and law_id in shared_laws:
-            # 共有額の参考：1本ごとの額は持たない（amount は None のまま）。順位・合計・議員配分に入れない。降格（検証で不合格）とは別の印
+            # 共有額の参考：1本ごとの額は持たない（amount は None のまま）。順位・合計に入れない。降格（検証で不合格）とは別の印
             ref, group = shared_laws[law_id], shared_groups[shared_laws[law_id]["key"]]
             shared = shared_fields(group, value_added)
             item["step"] = OUTCOME_STEP.get(other["outcome"], "enacted")

@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from scripts import check_design_consistency as design
 from scripts import release_check as rc
 
 
@@ -26,20 +27,53 @@ class ReleaseCheckTest(unittest.TestCase):
         self.assertEqual(rc.PASS, rc.backtest_step(_backtest("達成", "達成"))["status"])
         self.assertEqual(rc.FAIL, rc.backtest_step(_backtest("未達", "判定不能"))["status"])
 
-    def test_empty_members_is_vacuous_warning(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "members.json"
-            self.assertEqual(rc.WARN, rc.members_step(path)["status"])  # まだ無い
-            path.write_text(json.dumps({"members": [], "laws": []}), encoding="utf-8")
-            step = rc.members_step(path)
-            self.assertEqual(rc.WARN, step["status"])
-            self.assertIn("空振り", step["detail"])
-            path.write_text(json.dumps({"members": [{"name": "x"}], "laws": []}), encoding="utf-8")
-            self.assertEqual(rc.WARN, rc.members_step(path)["status"])  # 片側だけ0件も空振り
-            path.write_text(json.dumps({"members": [{"name": "x"}], "laws": [{"id": "a"}]}), encoding="utf-8")
-            self.assertEqual(rc.PASS, rc.members_step(path)["status"])
-            path.write_text("[]", encoding="utf-8")  # 形が違う
-            self.assertRaises(AttributeError, rc.members_step, path)
+    def test_members_step_checks_exposure_ranking(self):
+        persons_csv = "人物ID,氏名\n" + "\n".join(f"P{i},人{i}" for i in (1, 2)) + "\n"
+
+        def tree(root: Path, persons: str | None, exposure: dict | None) -> None:
+            if persons is not None:
+                path = root / "data" / "derived" / "person-ids" / "persons.csv"
+                path.parent.mkdir(parents=True)
+                path.write_text(persons, encoding="utf-8")
+            if exposure is not None:
+                path = root / design.EXPOSURE
+                path.parent.mkdir(parents=True)
+                path.write_text(json.dumps(exposure), encoding="utf-8")
+
+        full = {"people": [{"actorId": "P1", "tier": 3}, {"actorId": "P2", "tier": None, "unrankedReason": "関与なし"}],
+                "coverage": {"ledger": 2, "ranked": 1, "unrankedWithAmount": 0, "noInvolvement": 1}}
+        cases = [
+            ("出力が無ければ未測定", persons_csv, None, rc.WARN),
+            ("台帳が0人なら未測定（0件を合格にしない）", "人物ID,氏名\n", full, rc.WARN),
+            ("台帳が無ければ未測定", None, full, rc.WARN),
+            ("全員そろえば合格", persons_csv, full, rc.PASS),
+            ("1人欠ければ失敗", persons_csv, {**full, "people": full["people"][:1]}, rc.FAIL),
+            ("点なしで理由が空なら失敗", persons_csv, {**full, "people": [full["people"][0], {"actorId": "P2", "tier": None, "unrankedReason": ""}]}, rc.FAIL),
+            ("全員そろっても点ありが0人なら未測定", persons_csv,
+             {"people": [{"actorId": f"P{i}", "tier": None, "unrankedReason": "関与なし"} for i in (1, 2)],
+              "coverage": {"ledger": 2, "ranked": 0, "unrankedWithAmount": 0, "noInvolvement": 2}}, rc.WARN),
+        ]
+        for label, persons, exposure, want in cases:
+            with self.subTest(label), tempfile.TemporaryDirectory() as tmp:
+                tree(Path(tmp), persons, exposure)
+                self.assertEqual(want, rc.members_step(Path(tmp))["status"])
+
+    def test_members_step_imports_when_run_as_a_script(self):
+        # python3 scripts/release_check.py で起動すると sys.path[0] は scripts/。そのときも `from scripts import …` が読めること
+        import subprocess
+        import sys
+        code = "import runpy, sys; sys.path[:] = [p for p in sys.path if p not in ('', '.')]; " \
+               "g = runpy.run_path('scripts/release_check.py', run_name='not_main'); print(g['members_step']()['status'])"
+        out = subprocess.run([sys.executable, "-c", code], cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, check=False)
+        self.assertEqual(0, out.returncode, out.stderr)
+        self.assertNotIn("ModuleNotFoundError", out.stdout + out.stderr)
+
+    def test_exposure_ranking_is_not_in_the_public_directory(self):
+        # 曝露ランキング（人別の額）は、表示を解く（設計決定0008 の確認）まで公開ディレクトリに置かない。ビルドに乗ると公開サイトから取れる
+        public = Path(__file__).resolve().parents[1] / "app" / "public"
+        self.assertNotIn("app/public", str(design.EXPOSURE))
+        leaked = [str(p) for p in public.rglob("*.json") if "exposure-ranking" in p.name or '"actorKind"' in p.read_text(encoding="utf-8", errors="ignore")]
+        self.assertEqual([], leaked)
 
     def test_unreadable_result_becomes_failure_and_keeps_going(self):
         from unittest import mock

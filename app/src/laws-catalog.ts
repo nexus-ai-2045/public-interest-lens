@@ -48,7 +48,6 @@ export type CatalogItem = {
   /** what が無いときの理由（画面は題名から作らず、正式名だけを理由つきで出す）。 */
   whatWithheld?: WhatWithheld;
   summary: string;
-  membersTotal?: number;
   href?: string;
   /** 額のある法律だけ。同じ観測を共有する法律の数と、この行が代表かどうか。 */
   observation?: CatalogObservation;
@@ -110,8 +109,6 @@ export type CatalogDetail = {
   sharedBasis?: string;
   chain: ChainStep[];
   sources: { label: string; url: string }[];
-  members?: { id: string; name: string; median: number; roles: string[] }[];
-  attributed?: CatalogAmount;
   people?: { name: string; note: string }[];
   overview?: CatalogOverview;
 };
