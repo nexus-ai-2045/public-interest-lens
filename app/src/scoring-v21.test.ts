@@ -44,6 +44,15 @@ describe('v2.1 の型：群の差は法律へ配れない', () => {
     const e = makeLawEffect({ lawId: 'x', amountYen: { low: 1, median: 2, high: 3 }, certainty: '中', evidence });
     expect(e?.kind).toBe('law-effect');
   });
+  it('作った後に入力を書き換えても LawEffect は変わらない。source の欄が無い証拠は null', () => {
+    const input = { lawId: 'x', amountYen: { low: 1, median: 2, high: 3 }, certainty: '高', evidence: { ...evidence } };
+    const e = makeLawEffect(input)!;
+    input.amountYen.median = 99;
+    input.evidence.source = '';
+    expect(e.amountYen.median).toBe(2);
+    expect(e.evidence.source).toBe('出典');
+    expect(makeLawEffect({ lawId: 'x', amountYen: input.amountYen, certainty: '高', evidence: { rung: 'agency-estimate' } as never })).toBeNull();
+  });
   it('GroupDiff には法律の額の欄が無く、LawEffect としては受け取られない（型と実行時の両方）', () => {
     // @ts-expect-error GroupDiff は LawEffect に代入できない
     const asLaw: LawEffect = group;

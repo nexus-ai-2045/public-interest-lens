@@ -29,7 +29,7 @@ export type LawEffectInput = { lawId: string; amountYen: Range; certainty: strin
 /** 外部証拠が無い、または確かさが下限（中）未満なら作れない（null）。「測定できない」はここで表す。 */
 export function makeLawEffect(input: LawEffectInput): LawEffect | null {
   const e = input.evidence;
-  if (!e || !e.source.trim()) return null;
+  if (!e || typeof e.source !== 'string' || !e.source.trim()) return null;
   if (!meetsCertaintyFloor(input.certainty)) return null;
-  return Object.freeze({ kind: 'law-effect', lawId: input.lawId, amountYen: input.amountYen, certainty: input.certainty, evidence: e }) as unknown as LawEffect;
+  return Object.freeze({ kind: 'law-effect', lawId: input.lawId, amountYen: Object.freeze({ ...input.amountYen }), certainty: input.certainty, evidence: Object.freeze({ ...e }) }) as unknown as LawEffect;
 }
