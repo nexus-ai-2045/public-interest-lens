@@ -330,7 +330,10 @@ def _no_amount(
         if row["結果"] != "採用":
             return _other(law_id, title, "triage_hold", row["理由"])
         return _other(law_id, title, "excluded", "2系統とも評価対象外で一致（対応表なし）")
-    row = triage[law_id]
+    row = triage.get(law_id)
+    if row is None:
+        # 成立法の一覧に載ったが、AI 2系統の振り分けがまだ無い法律。落とさず、理由つきの保留として出す。
+        return _other(law_id, title, "triage_hold", "振り分け（AI 2系統）がまだ無い")
     result = row["結果"]
     if result == "評価対象外":
         return _other(law_id, title, "excluded", row["A_理由"] or "評価対象外")

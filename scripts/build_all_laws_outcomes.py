@@ -366,6 +366,25 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     return out
 
 
+ROUTE_UNTRIAGED = "振り分け待ち"
+UNTRIAGED_REASON = "振り分け（AI 2系統）がまだ無い。成立法の一覧には載ったが、種類と分野が付くまで評価に進めない"
+
+
+def untriaged_rows(enacted: dict[str, dict[str, str]], triaged: set[str], dates: dict[str, str]) -> list[dict[str, str]]:
+    """成立法の一覧にあって振り分けの表に無い法律。黙って落とさず、理由つきの保留として末尾に並べる（一覧の順）。
+
+    新しく成立した法律は、AI 2系統の振り分けが付くまでこの形で残る。分野・指標・額は付けない。
+    """
+    rows = []
+    for law, row in enacted.items():
+        if law in triaged:
+            continue
+        out = {c: "" for c in HEADER}
+        out.update(id=law, 題名=row["題名"], 施行日=dates.get(law, ""), 結果="保留", 経路=ROUTE_UNTRIAGED, 理由=UNTRIAGED_REASON)
+        rows.append(out)
+    return rows
+
+
 def build(root: Path = ROOT) -> list[dict[str, str]]:
     derived, acquired = root / "data" / "derived", root / "data" / "acquired"
     enacted = {law_id(r): r for r in read_csv(acquired / "bill-census-full" / "enacted.csv")}
@@ -373,6 +392,7 @@ def build(root: Path = ROOT) -> list[dict[str, str]]:
     dates = {r["id"]: r["施行日"].strip() for r in read_csv(acquired / "enforcement-dates" / "enforcement.csv")}
     st = Stages(derived)
     rows = [decide(enacted[t["id"]], t, dates.get(t["id"], ""), st) for t in triage]
+    rows += untriaged_rows(enacted, {t["id"] for t in triage}, dates)
     return apply_exclusion_overrides(rows, read_csv(derived / "all-laws-v1" / "exclusion-overrides.csv") if (derived / "all-laws-v1" / "exclusion-overrides.csv").exists() else [])
 
 

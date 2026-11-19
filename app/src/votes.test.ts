@@ -6,6 +6,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { BlocPanel, MemberSearch, MergerNote } from './VotesPage';
 import { BLOCS, blocStance, blocSummary, fromYear, lawYear, memberIdsOf, memberPageHref, noLawsByMember, parseVotes, shuSpan, type VoteLaw } from './votes';
+import { blocOf } from './members-build';
 
 const data = parseVotes(readFileSync(new URL('../public/distribution/votes.json', import.meta.url), 'utf8'));
 
@@ -126,8 +127,11 @@ describe('新しい会派の系統と、他ページとのつながり', () => {
       expect(BLOCS).toContain(b);
       expect(recent.some(l => blocStance(l, b).shu !== 'none'), b).toBe(true);
     }
-    const shuOthers = recent.filter(l => l.shu && [...l.shu.yes, ...l.shu.no].some(p => /中道改革|チームみらい/.test(p)) && blocStance(l, 'その他').shu !== 'none');
-    expect(shuOthers).toEqual([]);
+    // 会派名で確かめる。同じ採決に別の小会派（第222回の「志士の会」など）がいて「その他」に賛否が付くのは正しい。
+    const names = new Set(recent.flatMap(l => l.shu ? [...l.shu.yes, ...l.shu.no] : []));
+    expect([...names].filter(p => /中道|チームみらい/.test(p) && blocOf(p) === 'その他')).toEqual([]);
+    expect(blocOf('中道')).toBe('中道改革連合');
+    expect(blocOf('志士の会')).toBe('その他');
   });
   it('立憲・公明の衆院会派の記録は合流前で切れ、中道改革連合は合算しない', () => {
     const ritsu = shuSpan(data.laws, '立憲'), chudo = shuSpan(data.laws, '中道改革連合');

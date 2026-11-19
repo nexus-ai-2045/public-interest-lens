@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-19",
+  "lanes": {
+    "lane-A": {
+      "model": "Claude Sonnet（サブエージェント、model=sonnet）",
+      "prompt": "prompt-v1.md"
+    },
+    "lane-B": {
+      "model": "Claude Opus（サブエージェント、model=opus）",
+      "prompt": "prompt-v1.md"
+    },
+    "lane-L2": {
+      "model": "Claude Sonnet（サブエージェント、model=sonnet、系統A・Bとは別のセッション）",
+      "prompt": "prompt-line2.md"
+    }
+  },
+  "laws": [
+    "衆法-222-2",
+    "閣法-222-2",
+    "閣法-222-3",
+    "閣法-222-4",
+    "閣法-222-5",
+    "閣法-222-6",
+    "閣法-222-7",
+    "閣法-222-9",
+    "閣法-222-10",
+    "閣法-222-14",
+    "閣法-222-16"
+  ],
+  "material": "題名と付託委員会（衆／参）だけ。各系統は自分のフォルダの input.csv と基準書だけを読み、互いの結果を見ない",
+  "results": {
+    "衆法-222-2": "評価対象外",
+    "閣法-222-10": "評価対象外",
+    "閣法-222-14": "評価対象外",
+    "閣法-222-16": "評価対象外",
+    "閣法-222-2": "評価対象外",
+    "閣法-222-3": "評価対象外",
+    "閣法-222-4": "評価対象外",
+    "閣法-222-5": "評価対象外",
+    "閣法-222-6": "評価対象外",
+    "閣法-222-7": "評価対象外",
+    "閣法-222-9": "評価対象外"
+  },
+  "sha256": {
+    "criteria-v2-fields.md": "db7e5418221b09cb35fdc9afa04364e294016eadbd778e2f619ba161649a67b1",
+    "criteria.md": "ae25baf9f2743f87994bb5d560f09c7cb66e0c3b7ad6a913199403770525af50",
+    "input.csv": "4a462e055685f956337c175c62187713b06d1ed7bf62394bc8ac3d9740c3aa93",
+    "lane-A.csv": "8069e9b5b93aa7fe9a9ed05383b5bc3c42764f87892b9fec1b9b66590e72bd65",
+    "lane-B.csv": "8f6a013e5690c956c6c0835362256ef9415289b5af84f6576d2df07b1849ea24",
+    "lane-L2.csv": "e0158d264998f6f01a29a28d9b5389f1f515568cb4c686630e512f6fbe132f11",
+    "prompt-line2.md": "017faa4f9682b6d8666415071c6f24c08162286b48fadaf906a03c61f7f23a33",
+    "prompt-v1.md": "5a3ccac468365e77584e0b51fa8a09267248dad5f3805fde3602c4f38af04fca",
+    "spec.md": "d37b5089f0a9b2d9926230a772f4439bebde46e889badd788504db023b85bb80"
+  }
+}

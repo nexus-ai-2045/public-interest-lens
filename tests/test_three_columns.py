@@ -39,8 +39,8 @@ class ColumnsTest(unittest.TestCase):
     def test_table_is_complete_and_columns_are_separate(self):
         with COLUMNS.open(encoding="utf-8", newline="") as f:
             rows = list(csv.DictReader(f))
-        self.assertEqual(len(rows), 3415)
-        self.assertEqual(len({r["id"] for r in rows}), 3415)
+        self.assertEqual(len(rows), 3426)
+        self.assertEqual(len({r["id"] for r in rows}), 3426)
         for r in rows:
             # 順位に使うのは個別の因果の鎖の付加価値だけ。国の収支・参考の額は使わない
             if r["順位に使う"] == "はい":
