@@ -93,7 +93,7 @@ def load():
         "sample2": resample.load_record(),  # 抜き取り検証の2回目（sample-v2/）。初回とは別に数える
         "resolved": by_id(read(LEDGER_DIR / "sample-resolutions.csv")),  # 不合格のまま残った法律の読み直しと決着
         "cols": by_id(read(D / "three-columns-v1" / "columns.csv")),  # 額の物差し三欄（設計決定0024）
-        "corr": corrections.load(D / "primary-source-corrections-v1" / "corrections.csv"),  # 一次資料で直した類型・経済に効くか
+        "corr": corrections.load_layered(D / "primary-source-corrections-v1" / "corrections.csv", D / "primary-triage-v1" / "labels.csv"),  # 一次資料で直した類型・経済に効くか（訂正表＞当て直し）
     }
 
 
@@ -201,9 +201,10 @@ def site_values(o: dict, src) -> dict:
     econ = f"{e['区分']}（{e['決め方']}）" if e else ""
     fixed_econ = corrections.value(src.get("corr", {}), i, "経済に効くか")
     if fixed_econ:  # 一次資料の読み直しで直した値（AI の区分の記録は書き換えない）
-        econ = f"{fixed_econ}（{corrections.METHOD}）"
+        by = corrections.method(src.get("corr", {}), i, "経済に効くか")
+        econ = f"{fixed_econ}（{by}）"
         if fixed_econ == corrections.INSTITUTIONAL:
-            cls, how = "評価対象外", f"{corrections.METHOD}（制度）"
+            cls, how = "評価対象外", f"{by}（制度）"
     return {
         "類型": o["種類"] or "", "分類": cls, "分類の方法": how, "到達点": reach_, "額の方法": amt_how, "額（円）": amt,
         "分野": (m["分野"] if m else None) or o["分野"] or (f["分野"] if f else ""),
