@@ -77,7 +77,7 @@ describe('曝露ランキングの画面部品', () => {
 
   it('階層が1つだけのときは、そう書きます', () => {
     const one: ExposureRanking = { ...ranking, people: ranking.people.map(p => (p.tier === null ? p : { ...p, tier: 1 })) };
-    expect(render(one)).toContain('階層は1つだけです。並びは名前の順で、額の大きい順ではありません');
+    expect(render(one)).toContain('階層は1つだけです。並びは名前（人物ID）の文字の順で、額の大きい順ではありません');
     expect(render()).not.toContain('階層は1つだけです');
   });
 
@@ -109,7 +109,7 @@ describe('曝露ランキングの画面部品', () => {
   it('理由の種類は末尾の「（○本）」を外して数えます', () => {
     expect(reasonKind('関与した法律が5本に満たない（3本）')).toBe('関与した法律が5本に満たない');
     expect(reasonKind('上位3本の占有率が50.0%を超える（61.2%）')).toBe('上位3本の占有率が50.0%を超える');
-    expect(reasonKind('産業別の群への関与の記録が無い（全産業の別欄にある）')).toBe('産業別の群への関与の記録が無い');
+    expect(reasonKind('産業別の群への関与の記録が無い（全産業の別欄にある）')).toBe('産業別の群への関与の記録が無い（全産業の別欄にある）');
     expect(reasonKind('群に属する法律への関与の記録が無い')).toBe('群に属する法律への関与の記録が無い');
   });
 
@@ -184,7 +184,7 @@ describe('曝露ランキングの画面部品', () => {
     for (const u of ranking.unallocated) expect(items).toContain(u.reason);
     expect(items).not.toContain('本ぶんの枠');
     expect(items).toContain('全役割');
-    expect(items).toContain(`関与した法律が${ranking.params.minLaws}本に満たない群（まとめ）`);
+    expect(items).toContain('本数の少ない群×役割（まとめ）');
   });
 
   it('検算が合えば「一致」、合わなければ警告を出します', () => {

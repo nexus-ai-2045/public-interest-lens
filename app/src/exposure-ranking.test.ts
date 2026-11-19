@@ -418,10 +418,12 @@ describe('公開用への変換（法律1本ぶんの額を出さない）', () 
     const s = summarizeUnallocated(rows, 5);
     expect(s).toEqual([
       { groupId: 'g1', role: 'yes', reasons: ['参議院の賛否の記録が無い法律の枠', '衆議院の賛否の記録が無い法律の枠'].sort(), exposureYen: r(13) },
-      { groupId: null, role: null, reasons: ['関与した法律が5本に満たない群をまとめた合計', 'この群の法律のうち関与の記録が無い法律の枠'], exposureYen: r(4) },
-      { groupId: null, role: 'yes', reasons: ['関与した法律が5本に満たない群をまとめた合計', ...['参議院の賛否の記録が無い法律の枠', '衆議院の賛否の記録が無い法律の枠'].sort()], exposureYen: r(12) },
+      { groupId: null, role: null, reasons: ['本数の少ない群×役割（3件）をまとめた合計', ...['この群の法律のうち関与の記録が無い法律の枠', '参議院の賛否の記録が無い法律の枠', '衆議院の賛否の記録が無い法律の枠'].sort()], exposureYen: r(16) },
     ]);
-    expect(s.reduce((n, u) => n + u.exposureYen.median, 0)).toBe(rows.reduce((n, u) => n + u.exposureYen.median, 0));
+    // まとめるものが1つだけなら、まとめ行の額も伏せる（1つの群×役割の額そのものになるため）。
+    const one = summarizeUnallocated([rows[0], rows[2]], 5);
+    expect(one[1]).toEqual({ groupId: null, role: null, reasons: ['本数の少ない群×役割（1件）をまとめた合計', '衆議院の賛否の記録が無い法律の枠'], exposureYen: null });
+    expect(s.reduce((n, u) => n + u.exposureYen!.median, 0)).toBe(rows.reduce((n, u) => n + u.exposureYen.median, 0));
     expect(JSON.stringify(s)).not.toContain('laws');
   });
 

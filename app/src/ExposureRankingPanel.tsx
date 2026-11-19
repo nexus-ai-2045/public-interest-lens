@@ -9,7 +9,7 @@ import './exposure.css';
  *
  * 見せ方の決まり：
  * 1. 最上部に「因果ではなく記述」を必ず出す（集計器の disclaimer をそのまま使う）。
- * 2. 順位は1位・2位ではなく階層で出す。幅が重なる人は同じ階層で、階層の中は名前の順に並べる（額の順にしない。先頭を目立たせる演出も付けない）。
+ * 2. 順位は1位・2位ではなく階層で出す。幅が重なる人は同じ階層で、階層の中は表示名の文字の順に並べる（額の順にしない。先頭を目立たせる演出も付けない）。
  * 3. 関与した法律が下限に満たない人・会派は、額を出さない。関与した群と本数だけを出す。
  * 4. 配らなかった額（未配分）と検算を、畳んだ欄で必ず見られるようにする。
  * 5. 法律ごとの額は出さない（入力の型にも無い）。内訳に本数が下限に満たない群×役割が1つでもある人は、内訳の額を全部伏せる（1つだけ伏せても、合計からの引き算で読めてしまうため）。
@@ -68,13 +68,13 @@ export function exposureScale(rows: readonly { exposureYen: Range }[]): { min: n
   return { min, max, position: value => Math.max(0, Math.min(100, (value - min) / span * 100)) };
 }
 
-/** 階層の中の並び：階層の昇順、同じ階層の中は名前の順（日本語の並び。同じなら ID 順）。額の順にしない（階層の中の差に意味が無いため）。 */
+/** 階層の中の並び：階層の昇順、同じ階層の中は表示名の文字の順（読みの五十音順ではない。同じなら ID 順）。額の順にしない（階層の中の差に意味が無いため）。 */
 export function orderWithinTiers(rows: readonly ExposureRow[], nameOf: (row: ExposureRow) => string): ExposureRow[] {
   return rows.filter(r => r.tier !== null).sort((a, b) => (a.tier! - b.tier!) || nameOf(a).localeCompare(nameOf(b), 'ja') || a.actorId.localeCompare(b.actorId));
 }
 
-/** 理由の末尾の「（○本）」「（○%）」を外した、理由の種類。 */
-export const reasonKind = (reason: string): string => reason.replace(/（[^（）]*）$/, '');
+/** 理由の末尾の数だけの「（○本）」「（○%）」を外した、理由の種類。 */
+export const reasonKind = (reason: string): string => reason.replace(/（[\d.,]+(?:本|%)）$/, '');
 
 /** 額を出さない行の、理由の種類ごとの件数（多い順、同じなら理由の順）。 */
 export function unrankedBreakdown(rows: readonly ExposureRow[]): { reason: string; count: number }[] {
@@ -203,7 +203,8 @@ export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, p
   const unit = tab === 'people' ? '人' : '会派';
   const { roleRatio, minLaws } = ranking.params;
   let index = 0;
-  const unallocatedGroup = (u: UnallocatedSummary) => (u.groupId === null ? `関与した法律が${minLaws}本に満たない群（まとめ）` : labels.group(u.groupId));
+  const unallocatedGroup = (u: UnallocatedSummary) => (u.groupId === null ? '本数の少ない群×役割（まとめ）' : labels.group(u.groupId));
+  const noneNote = tab === 'people' ? `、関与の記録が無い${unit}` : '';
   return <section className="exposure-panel" aria-labelledby="exposure-title">
     <h2 id="exposure-title">曝露ランキング <span className="xr-claim">因果ではなく記述</span></h2>
     <p className="xr-disclaimer" role="note"><strong>これは「関与していた産業群がどれだけ伸び損ねたか」の記述です。</strong>{ranking.disclaimer}</p>
@@ -214,8 +215,8 @@ export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, p
         <li>伸び損ね額は、産業×期間の群ごとに、OECD の同じ産業・同じ時期の中央値との差です。</li>
         <li>「伸び損ね側」は、伸び損ねた群に発議・賛成・閣議決定で関与した額です。「逆側」は、中央値を上回った群に関与した額か、伸び損ねた群に反対した額です。逆側は、群が上回ったという意味とは限りません。</li>
         <li>群の額を役割ごとの固定比率（取り決め）で配ります：{EXPOSURE_ROLES.map(role => `${ROLE_LABEL[role]} ${roleRatio[role]}`).join('・')}。反対は逆向きに配ります。</li>
-        <li>幅が重なる{unit}は同じ階層です。同じ階層の中は名前の順に並べます。並び順に、差の意味はありません。統計的な信頼集合ではなく、記述の階層です。</li>
-        <li>関与した法律が{minLaws}本に満たない{unit}、上位3本の法律で額の{Math.round(ranking.params.topThreeShareCap * 100)}%を超える{unit}、関与の記録が無い{unit}は、額を出さず、関与した群と本数と理由だけを出します。</li>
+        <li>幅が重なる{unit}は同じ階層です。同じ階層の中は名前（人物ID）の文字の順に並べます。並び順に、差の意味はありません。統計的な信頼集合ではなく、記述の階層です。</li>
+        <li>関与した法律が{minLaws}本に満たない{unit}、上位3本の法律で額の{Math.round(ranking.params.topThreeShareCap * 100)}%を超える{unit}{noneNote}は、額を出さず、関与した群と本数と理由だけを出します。</li>
       </ul>
     </details>
     <div className="xr-tabs" role="group" aria-label="表示を切り替える">
@@ -230,7 +231,7 @@ export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, p
           <span><i className="xr-key-range" />細い線＝幅（低い値〜高い値）</span>
           {scale.min < 0 && <span><i className="xr-key-zero" />縦線＝0（左は逆側）</span>}
         </p>
-        <p className="fine-note" role="status">階層に入る{unit}は{ranked.length}{tab === 'people' ? '人' : '会派'}{limit < ranked.length && `（上から${limit}を表示）`}{tierSizes.size === 1 && `。いまは全員の幅が重なり、階層は1つだけです。並びは名前の順で、額の大きい順ではありません`}</p>
+        <p className="fine-note" role="status">階層に入る{unit}は{ranked.length}{tab === 'people' ? '人' : '会派'}{limit < ranked.length && `（上から${limit}を表示）`}{tierSizes.size === 1 && `。いまは全員の幅が重なり、階層は1つだけです。並びは名前（人物ID）の文字の順で、額の大きい順ではありません`}</p>
         {tiers.map(tier => <section key={tier.tier} className={`xr-tier ${tier.tier === 1 ? 'top' : ''}`} aria-label={`第${tier.tier}階層`}>
           <h3><span className="xr-tier-no">第{tier.tier}階層</span><small>幅が重なる{tierSizes.get(tier.tier)}{tab === 'people' ? '人' : '会派'}（並び順に差の意味なし）</small></h3>
           <ol className="xr-rows">{tier.rows.map(row => {
@@ -242,7 +243,7 @@ export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, p
       </>}
     {unranked.length > 0 && <details className="xr-unranked">
       <summary>額を出さない{unit}（理由つき）：{unranked.length}{tab === 'people' ? '人' : '会派'}（{breakdown.map(b => `${b.reason} ${b.count}`).join('・')}）</summary>
-      <p className="fine-note">関与した法律が{minLaws}本に満たない、または上位3本の法律で額の大半が決まる{unit}は、1本の法律で額が決まってしまうため、額も階層も出しません。関与の記録が無い{unit}も載せます。どれも関与した群と本数、理由だけを出します。</p>
+      <p className="fine-note">関与した法律が{minLaws}本に満たない、または上位3本の法律で額の大半が決まる{unit}は、1本の法律で額が決まってしまうため、額も階層も出しません。{tab === 'people' && '関与の記録が無い人も載せます。'}どれも関与した群と本数、理由だけを出します。</p>
       <ul className="xr-unranked-list">{unranked.slice(0, unrankedLimit).map(row => <UnrankedRow key={`${tab}-${row.actorId}`} row={row} labels={labels} />)}</ul>
       {unrankedLimit < unranked.length && <p className="xr-more"><button type="button" onClick={() => setUnrankedLimit(n => n + EXPOSURE_PAGE_SIZE)}>さらに表示（残り{unranked.length - unrankedLimit}）</button></p>}
     </details>}
@@ -251,10 +252,10 @@ export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, p
       {ranking.unallocated.length === 0
         ? <p className="fine-note">未配分はありません。</p>
         : <>
-          <p className="fine-note">群（産業）×役割ごとの合計だけを出します。法律1本ぶんの額は出しません。関与した法律が{minLaws}本に満たない群は、役割ごとに1行へまとめます。</p>
+          <p className="fine-note">群（産業×年）×役割ごとの合計だけを出します。法律1本ぶんの額は出しません。関与した法律が少ない（{minLaws}本未満と数えた）群×役割は、1行にまとめます。まとめるものが1つだけのときは、その額も出しません。</p>
           <ul className="xr-unallocated-list">{ranking.unallocated.slice(0, unallocatedLimit).map((u, i) => <li key={`${u.groupId ?? 'few'}-${u.role ?? 'all'}-${i}`}>
             <span className="xr-cell-group">{unallocatedGroup(u)}</span>
-            <span>{u.role ? ROLE_LABEL[u.role] : '全役割'}：{exposureYen(u.exposureYen.median)}<small>（{exposureRange(u.exposureYen)}）</small></span>
+            <span>{u.role ? ROLE_LABEL[u.role] : '全役割'}：{u.exposureYen ? <>{exposureYen(u.exposureYen.median)}<small>（{exposureRange(u.exposureYen)}）</small></> : '額は出しません'}</span>
             <small className="xr-reason">理由：{u.reasons.join('・')}</small>
           </li>)}</ul>
           {unallocatedLimit < ranking.unallocated.length && <p className="xr-more"><button type="button" onClick={() => setUnallocatedLimit(n => n + EXPOSURE_PAGE_SIZE)}>さらに表示（残り{ranking.unallocated.length - unallocatedLimit}）</button></p>}

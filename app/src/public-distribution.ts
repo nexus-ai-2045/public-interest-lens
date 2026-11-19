@@ -189,6 +189,8 @@ export function parsePublicExposureRanking(text: string): PublicExposureDistribu
   for (const row of [...data.people, ...data.parties]) {
     if ((row.tier === null) !== (row.exposureYen === null)) throw new Error('曝露ランキングの額の伏せ方が不正です');
   }
+  // 未配分は群×役割の合計（reasons の配列つき）。古い形（laws・reason）のファイルは受け取らない。
+  if (!data.unallocated.every(u => Array.isArray(u.reasons) && !('laws' in u))) throw new Error('曝露ランキングの未配分の形式が違います（古いデータ）');
   return data;
 }
 
@@ -200,12 +202,12 @@ const ZERO = { low: 0, median: 0, high: 0 };
  */
 export function panelExposureRanking(data: PublicExposureRanking): PanelExposureRanking {
   const { totals } = data;
-  if (!totals.people || !totals.parties || !totals.unallocated || !totals.expected || data.unallocated.some(u => u.exposureYen === null)) throw new Error('合計を伏せた曝露ランキングは画面に出せません');
+  if (!totals.people || !totals.parties || !totals.unallocated || !totals.expected) throw new Error('合計を伏せた曝露ランキングは画面に出せません');
   const row = (r: PublicExposureRanking['people'][number]) => ({ ...r, exposureYen: r.exposureYen ?? ZERO, cells: r.cells.map(c => ({ ...c, exposureYen: c.exposureYen ?? ZERO })) });
   return {
     schema: data.schema, claim: data.claim, disclaimer: data.disclaimer, params: data.params,
     people: data.people.map(row), parties: data.parties.map(row),
-    unallocated: data.unallocated.map(u => ({ ...u, exposureYen: u.exposureYen ?? ZERO })),
+    unallocated: data.unallocated,
     totals: { people: totals.people, parties: totals.parties, unallocated: totals.unallocated, expected: totals.expected },
   };
 }
