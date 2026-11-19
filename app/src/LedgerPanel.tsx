@@ -8,7 +8,7 @@ type Summary = {
   by_field_method: Counts;
   by_amount_method: Counts;
   by_verify_state: Counts;
-  sample: { n: number; pass: number; fail: number };
+  sample: { n: number; pass: number; fail: number; demoted?: number; failed_kept?: number; now_pass?: number; redo_pass?: number; redo_demoted?: number };
   angles: { [key: string]: Counts | number };
   rule: string;
 };
@@ -52,6 +52,7 @@ export default function LedgerPanel() {
         <tbody>{Object.entries(data.by_reach).map(([k, v]) => <tr key={k}><td>{k}</td><td>{v.本数.toLocaleString()}</td><td>{v.うち額あり.toLocaleString()}</td><td>{v.抜き取り}</td><td>{v.合格}</td></tr>)}</tbody>
       </table>
       <p>独立な抜き取り検証：{data.sample.n}本のうち合格 {data.sample.pass}、不合格 {data.sample.fail}。</p>
+      {data.sample.now_pass !== undefined && <p>不合格の扱いの今：合格 {data.sample.now_pass}（うち一次資料の読み直しで合格に訂正 {data.sample.redo_pass}）、参考に下げた {data.sample.demoted}（うち読み直しで下げた {data.sample.redo_demoted}）、不合格のまま {data.sample.failed_kept}。</p>}
       <CountTable title="検証の状態" counts={data.by_verify_state} total={data.total} />
       <CountTable title="分類の方法" counts={data.by_classification_method} total={data.total} />
       <CountTable title="分野の方法" counts={data.by_field_method} total={data.total} />

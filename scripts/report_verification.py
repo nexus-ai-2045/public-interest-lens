@@ -7,6 +7,14 @@ import math
 from collections import Counter, defaultdict
 from pathlib import Path
 
+if __package__ in (None, ""):
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.build_evaluation_ledger import (
+    REDO_DEMOTED_MEMO,
+    REDO_PASS_MEMO,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
 L = ROOT / "data" / "derived" / "evaluation-ledger-v1"
 CAUSE = {
@@ -32,11 +40,12 @@ def redo_section(v: dict, led: dict) -> list[str]:
     path = L / "sample-resolutions.csv"
     if not path.exists():
         return []
-    res = list(csv.DictReader(path.read_text(encoding="utf-8").splitlines()))
+    used = {i for i in v if led[i]["検証メモ"].startswith((REDO_PASS_MEMO, REDO_DEMOTED_MEMO))}
+    res = [r for r in csv.DictReader(path.read_text(encoding="utf-8").splitlines()) if r["id"] in used]
     state = Counter(led[i]["検証状態"] for i in v)
     n = len(v)
-    fixed = sum(r["決着"] == "合格に訂正" for r in res)
-    lowered = sum(r["決着"] == "参考に下げた" for r in res)
+    fixed = sum(led[i]["検証メモ"].startswith(REDO_PASS_MEMO) for i in used)
+    lowered = sum(led[i]["検証メモ"].startswith(REDO_DEMOTED_MEMO) for i in used)
     auto = state["参考に下げた"] - lowered
     out = ["", "## やり直しの結果（不合格のまま残った法律の読み直し）", "",
            "初回と同じ抜き取り（同じ本数・同じ法律）を、今の台帳に当て直した。新しく抜き取り直してはいない。",

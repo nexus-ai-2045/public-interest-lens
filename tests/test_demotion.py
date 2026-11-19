@@ -94,7 +94,7 @@ class LedgerStateTest(unittest.TestCase):
                     "国の収支（億円）": "", "採算（付加価値÷国の支出）": ""}
         rows = [row("抜き取り検証で合格", "r"), row(STATE_DEMOTED, "r"), row(STATE_FAILED, "r"), row("未検証", "r")]
         s = summarize(rows)
-        self.assertEqual(s["sample"], {"n": 3, "pass": 1, "fail": 2, "demoted": 1, "failed_kept": 1})
+        self.assertEqual(s["sample"], {"n": 3, "pass": 1, "fail": 2, "demoted": 1, "failed_kept": 1, "now_pass": 1, "redo_pass": 0, "redo_demoted": 0})
         self.assertEqual(s["by_reach"]["r"]["抜き取り"], 3)
         self.assertEqual(s["by_reach"]["r"]["参考に下げた"], 1)
         self.assertEqual(s["by_verify_state"][STATE_DEMOTED], 1)

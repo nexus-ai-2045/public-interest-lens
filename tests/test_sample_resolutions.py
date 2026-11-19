@@ -11,12 +11,14 @@ from typing import ClassVar
 from scripts.build_evaluation_ledger import (
     RESOLVED_DEMOTED,
     RESOLVED_PASS,
+    site_key,
     verify_state,
 )
 from scripts.evaluation_rules import STATE_DEMOTED, STATE_FAILED
 from scripts.resolve_sample_failures import (
     HEADER,
     RV,
+    SAMPLED_AT,
     reading_allowed,
     resolve,
     targets,
@@ -65,6 +67,26 @@ class ResolveRuleTest(unittest.TestCase):
         self.assertEqual(r["決着"], RESOLVED_DEMOTED)
 
 
+    def test_site_econ_record_against_institutional_reading_is_an_error(self):
+        """読み直しが制度のみなら、サイトが自分で「経済に効く」と記録した対象外の法律もサイトの誤り（どちらの向きでも同じ読み方）。"""
+        s = site(分類="評価対象外", 到達点="保留", 経済に効くか="経済に効く（一致）")
+        r = resolve(s, line("実質改正", "制度のみ"), line("実質改正", "制度のみ"), None, "", reading_ok=True)
+        self.assertEqual(r["決着"], RESOLVED_DEMOTED)
+
+    def test_empty_site_kind_is_an_error(self):
+        r = resolve(site(類型=""), line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "")
+        self.assertEqual(r["決着"], RESOLVED_DEMOTED)
+
+    def test_state_budget_reach_is_not_read_as_holding(self):
+        s = site(分類="評価対象外", 到達点="国の収支の額（GDP とは別欄）", 経済に効くか="経済に効く（一致）")
+        r = resolve(s, line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "", reading_ok=True)
+        self.assertEqual(r["決着"], RESOLVED_DEMOTED)
+
+    def test_reading_ruling_applies_only_to_named_laws(self):
+        rulings = {"照合の読み方": {"裁定": "合格に訂正してよい", "3本それぞれの扱い": {"a": "合格に訂正。理由", "b": "不合格のまま"}}}
+        self.assertEqual(reading_allowed(rulings), {"a"})
+        self.assertEqual(reading_allowed({"照合の読み方": {"裁定": "不合格のままにすべき", "3本それぞれの扱い": {"a": "合格に訂正"}}}), set())
+
     def test_excluded_law_with_site_econ_record_passes_only_with_a_ruling(self):
         s = site(分類="評価対象外", 到達点="保留", 経済に効くか="経済に効く（一致）")
         args = (s, line("実質改正", "経済に効く"), line("実質改正", "経済に効く"), None, "分類：サイト対象外／独立判定経済に効く")
@@ -95,9 +117,15 @@ class ResolutionDataTest(unittest.TestCase):
         b = {x["id"]: x for x in json.loads((RV / "lineB.json").read_text(encoding="utf-8"))}
         rulings = json.loads((RV / "rulings.json").read_text(encoding="utf-8"))
         memo = {v["id"]: v["食い違い"] for v in self.verdicts}
+        allowed = reading_allowed(rulings)
+        sampled = {r["id"]: r["到達点"] for r in rows(SAMPLED_AT.relative_to(L).as_posix())}
         for r in self.res:
             i = r["id"]
-            self.assertEqual(r, resolve(self.ledger[i], a[i], b[i], rulings.get(i), memo[i], reading_allowed(rulings)), i)
+            self.assertEqual(r, resolve(self.ledger[i], a[i], b[i], rulings.get(i), memo[i], i in allowed, sampled.get(i, "")), i)
+
+    def test_resolutions_were_made_against_todays_site_values(self):
+        for r in self.res:
+            self.assertEqual(r["判定時のサイトの値"], site_key(self.ledger[r["id"]]), r["id"])
 
     def test_ledger_has_no_remaining_failure(self):
         sampled = {v["id"] for v in self.verdicts}
@@ -118,13 +146,19 @@ class LedgerStateTest(unittest.TestCase):
 
     def test_resolution_moves_state_and_keeps_reason(self):
         for word, state in ((RESOLVED_PASS, "抜き取り検証で合格"), (RESOLVED_DEMOTED, STATE_DEMOTED)):
-            got, memo = verify_state("x", "", self.V, "保留", "", {"x": {"決着": word, "理由": "わけ"}})
+            got, memo = verify_state("x", "", self.V, "保留", "", {"x": {"決着": word, "理由": "わけ", "判定時のサイトの値": "k"}}, "k")
             self.assertEqual(got, state)
             self.assertIn("わけ", memo)
 
     def test_resolution_never_overrides_a_pass_or_an_automatic_demotion(self):
-        res = {"x": {"決着": RESOLVED_PASS, "理由": "わけ"}}
+        res = {"x": {"決着": RESOLVED_PASS, "理由": "わけ", "判定時のサイトの値": "k"}}
         self.assertEqual(verify_state("x", "", self.V, "参考額（産業の付加価値の差）", "参考", res)[0], STATE_DEMOTED)
+
+
+    def test_stale_resolution_is_not_used(self):
+        """決着の後にサイトの値が変わったら、決着を使わず不合格に戻す。"""
+        res = {"x": {"決着": RESOLVED_PASS, "理由": "わけ", "判定時のサイトの値": "古い値"}}
+        self.assertEqual(verify_state("x", "", self.V, "保留", "", res, "新しい値")[0], STATE_FAILED)
 
 
 if __name__ == "__main__":

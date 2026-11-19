@@ -14,7 +14,9 @@
   類型           サイトの類型と読み直しの値が同じなら食い違いなし。違えばサイトの誤り。
   分類           読み直しが「経済に効く」のとき：サイトが自分でも「経済に効く」と記録し、額を付けずに保留・測定できない・
                  国の収支の別欄に置いているなら食い違いなし（初回は振り分けの「評価対象外」を「制度のみ」と読み替えていた）。
-                 この読み方は、裁定（rulings.json の「照合の読み方」）が認めたときだけ使う。
+                 この読み方は、裁定（rulings.json の「照合の読み方」）が法律を名指しで認めたときだけ使う。名指しが無ければ決めない。
+                 読み直しが「制度のみ」のとき：サイトが評価の対象（または保留）に置いているか、サイト自身が「経済に効く」と
+                 記録していればサイトの誤り。サイトの類型が空なら、それもサイトの誤りとして数える。
                  読み直しが「制度のみ」のとき：サイトが評価の対象（または保留）に置いていればサイトの誤り。
   決着           サイトの誤りが1つも残らない → 合格に訂正。
                  残る、または決められない → 参考に下げた（サイトの値は直っていない。順位・議員配分には使わない。
@@ -32,22 +34,26 @@ sys.path.insert(0, str(ROOT))
 from scripts.build_evaluation_ledger import (
     RESOLVED_DEMOTED,
     RESOLVED_PASS,
+    site_key,
 )
 from scripts.evaluation_rules import VERDICT_FAIL, is_demoted
 
 L = ROOT / "data" / "derived" / "evaluation-ledger-v1"
 RV = L / "reverification-v1"
 OUT = L / "sample-resolutions.csv"
-HEADER = ["id", "決着", "原因の区分", "理由", "参考値", "根拠URL", "記録"]
+HEADER = ["id", "決着", "原因の区分", "理由", "参考値", "根拠URL", "判定時のサイトの値", "抜き取り時の到達点", "記録"]
+SAMPLED_AT = RV / "sampling-time-ledger.csv"  # 抜き取り時（#133、275620d）の台帳から対象の行だけを写したもの
 RESOLUTIONS = (RESOLVED_PASS, RESOLVED_DEMOTED)
 UNDECIDED = "決められない"
 NO_ANSWER = ("判定不能", "", None)
-HOLD_REACHES = ("保留", "測定できない", "国の収支の額（GDP とは別欄）")
+HOLD_REACHES = ("保留", "測定できない")
 CAUSE_READING = "照合の読み替え（サイトの誤りではない）"
 CAUSE_FIRST = "初回の独立判定の誤り"
 CAUSE_KIND = "サイトの類型の誤り"
 CAUSE_CLASS = "サイトの分類の誤り（制度だけの法律を評価の対象に置いた）"
 CAUSE_UNDECIDED = "一次資料が足りず決められない"
+CAUSE_NO_RULING = "照合の読み方の裁定がこの法律に無い"
+CAUSE_ECON = "サイトの分類の誤り（経済に効くと記録した法律が制度だけだった）"
 READING_KEY = "照合の読み方"
 READING_OK = "合格に訂正してよい"
 RECORD = "data/derived/evaluation-ledger-v1/reverification-v1/"
@@ -73,11 +79,14 @@ def site_is_institutional(site: dict) -> bool:
     return site["分類"] == "評価対象外" or site["到達点"] == "効果なし（定例）"
 
 
-def resolve(site: dict, a: dict, b: dict, ruling: dict | None, first_memo: str, reading_ok: bool = False) -> dict:
+def resolve(site: dict, a: dict, b: dict, ruling: dict | None, first_memo: str, reading_ok: bool = False, sampled_reach: str = "") -> dict:
     kind, econ = agreed(a, b, "類型", ruling), agreed(a, b, "経済に効くか", ruling)
     causes, errors, notes = [], [], []
     # 類型
-    if site["類型"]:
+    if not site["類型"]:
+        causes.append(CAUSE_KIND)
+        errors.append(f"類型：サイトは空、読み直し「{kind}」")
+    else:
         if kind == UNDECIDED:
             causes.append(CAUSE_UNDECIDED)
             errors.append("類型は読み直しでも決められない")
@@ -94,9 +103,13 @@ def resolve(site: dict, a: dict, b: dict, ruling: dict | None, first_memo: str, 
         causes.append(CAUSE_UNDECIDED)
         errors.append("経済に効くかは読み直しでも決められない")
     elif econ == "経済に効く":
-        if reading_ok and inst and says_econ and site["到達点"] in HOLD_REACHES:
-            causes.append(CAUSE_READING)
-            notes.append(f"分類：サイトは「{site['経済に効くか']}」と記録し、到達点は「{site['到達点']}」。振り分けの「評価対象外」は市場の対応表に無いという意味で、制度だけという主張ではない")
+        if inst and says_econ and site["到達点"] in HOLD_REACHES:
+            if reading_ok:
+                causes.append(CAUSE_READING)
+                notes.append(f"分類：サイトは「{site['経済に効くか']}」と記録し、到達点は「{site['到達点']}」。振り分けの「評価対象外」は市場の対応表に無いという意味で、制度だけという主張ではない")
+            else:
+                causes.append(CAUSE_NO_RULING)
+                errors.append(f"分類：サイトは評価対象外に置きつつ「{site['経済に効くか']}」と記録（到達点「{site['到達点']}」）。この読み方を認める裁定がこの法律に無いので決めない")
         elif inst:
             causes.append("サイトの分類の誤り（経済に効く法律を対象外に置いた）")
             errors.append("分類：サイトは評価対象外、読み直しは「経済に効く」")
@@ -104,7 +117,10 @@ def resolve(site: dict, a: dict, b: dict, ruling: dict | None, first_memo: str, 
             causes.append(CAUSE_FIRST)
             notes.append("分類は読み直しでサイトと同じ「経済に効く」")
     else:  # 制度のみ
-        if not inst:
+        if says_econ:
+            causes.append(CAUSE_ECON)
+            errors.append(f"分類：サイトは「{site['経済に効くか']}」と記録、読み直しは「制度のみ」")
+        elif not inst:
             causes.append(CAUSE_CLASS)
             errors.append(f"分類：サイトは「{site['分類']}」（到達点「{site['到達点']}」）、読み直しは「制度のみ」")
         elif "分類：" in first_memo:
@@ -117,6 +133,8 @@ def resolve(site: dict, a: dict, b: dict, ruling: dict | None, first_memo: str, 
         reference.append(f"国の収支 {site['国の収支（億円）']} 億円（別欄。順位・配分に使わない）")
     if not site["額（円）"]:
         reference.append("付加価値の額は無い")
+    if sampled_reach and sampled_reach != site["到達点"]:
+        notes.append(f"抜き取り時の到達点は「{sampled_reach}」で、今は「{site['到達点']}」。決着は今の台帳に対するもの")
     why = "；".join(errors + notes)
     if decided == RESOLVED_DEMOTED:
         why += "。サイトの値はまだ直っていないので参考に下げる"
@@ -126,12 +144,16 @@ def resolve(site: dict, a: dict, b: dict, ruling: dict | None, first_memo: str, 
             if u.startswith("http") and u not in urls:
                 urls.append(u)
     return {"id": site["id"], "決着": decided, "原因の区分": "／".join(dict.fromkeys(causes)) or CAUSE_FIRST, "理由": why,
-            "参考値": "；".join(reference), "根拠URL": " ".join(urls), "記録": RECORD}
+            "参考値": "；".join(reference), "根拠URL": " ".join(urls),
+            "判定時のサイトの値": site_key(site), "抜き取り時の到達点": sampled_reach, "記録": RECORD}
 
 
-def reading_allowed(rulings: dict) -> bool:
-    """照合の読み替えを訂正してよいという裁定があるか。無ければ、対象外に置かれた「経済に効く」法律はサイトの誤りとして残す。"""
-    return rulings.get(READING_KEY, {}).get("裁定") == READING_OK
+def reading_allowed(rulings: dict) -> set[str]:
+    """照合の読み替えを認める裁定が、法律ごとに名指しで「合格に訂正」としている法律。裁定が全体として認めても、名指しの無い法律には使わない。"""
+    r = rulings.get(READING_KEY, {})
+    if r.get("裁定") != READING_OK:
+        return set()
+    return {i for i, v in r.get("3本それぞれの扱い", {}).items() if str(v).startswith("合格に訂正")}
 
 
 def targets(ledger: dict[str, dict], verdicts: list[dict]) -> list[str]:
@@ -152,7 +174,9 @@ def main() -> int:
     if missing:
         print(f"読み直しの記録が無い：{'、'.join(missing)}", file=sys.stderr)
         return 1
-    rows = [resolve(ledger[i], line_a[i], line_b[i], rulings.get(i), memo[i], reading_allowed(rulings)) for i in ids]
+    allowed = reading_allowed(rulings)
+    sampled = {r["id"]: r["到達点"] for r in read_csv(SAMPLED_AT)} if SAMPLED_AT.exists() else {}
+    rows = [resolve(ledger[i], line_a[i], line_b[i], rulings.get(i), memo[i], i in allowed, sampled.get(i, "")) for i in ids]
     with OUT.open("w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, HEADER)
         w.writeheader()
