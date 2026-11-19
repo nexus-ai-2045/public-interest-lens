@@ -13,7 +13,7 @@
   data/derived/publish-v1-triage-v2/publish.csv  公開可否
   data/derived/law-overviews-v1/overviews.csv    概要の作り方
   data/derived/evaluation-ledger-v1/sample-verdicts.csv  抜き取り検証の結果（あれば）
-  data/derived/evaluation-ledger-v1/interim-holds.csv    抜き取り2回目で不合格の額を、当て直しまで参考に下げる表（あれば）
+  data/derived/evaluation-ledger-v1/sample-v2/            抜き取り検証の2回目（2系統の判定と裁定。今のサイトの値で判定し直す）
 
 出力：
   data/derived/evaluation-ledger-v1/ledger.csv
@@ -37,13 +37,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts import primary_source_corrections as corrections
+from scripts import resample_verification as resample
 from scripts.evaluation_rules import (
-    INTERIM_REASON_PREFIX,
     STATE_DEMOTED,
     STATE_FAILED,
-    STATE_INTERIM_HELD,
     VERDICT_FAIL,
-    interim_holds,
+    amount_demoted,
     is_demoted,
     narrow_whole_economy,
 )
@@ -55,13 +54,12 @@ SAMPLE_TARGET = 100
 
 HEADER = ["id", "題名", "分類", "分類の方法", "類型", "経済に効くか", "分野", "分野の方法", "到達点", "向き",
           "額の方法", "額（円）", "付加価値の変化（円）", "付加価値の由来", "国の収支（億円）", "国の支出（円）", "採算（付加価値÷国の支出）", "確かさ", "公開可否", "概要の方法", "常識検査③", "頑健性④", "同型の誤り候補⑤", "ロジック検査", "検証状態", "検証メモ"]
-VERIFY_STATES = ("未検証", "分類を2系統で照合済み", "分類を第3判定で決着", "抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた", STATE_INTERIM_HELD)
+VERIFY_STATES = ("未検証", "分類を2系統で照合済み", "分類を第3判定で決着", "抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた")
 SAMPLED_STATES = ("抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた")
 RESOLVED_PASS = "合格に訂正"  # scripts/resolve_sample_failures.py が書く決着の語
 RESOLVED_DEMOTED = "参考に下げた"
 REDO_PASS_MEMO = "読み直しで合格に訂正："
 REDO_DEMOTED_MEMO = "読み直しで決着："
-NO_AMOUNT_DEMOTED_REACH = "評価対象外"  # 自動の降格の規則に入っているが、額が無い到達点
 REDO_STALE_MEMO = "読み直しの決着の後にサイトの値が変わった（読み直しをやり直す）："
 
 
@@ -92,7 +90,7 @@ def load():
         "pub": by_id(read(D / "publish-v1-triage-v2" / "publish.csv")),
         "ov": by_id(read(D / "law-overviews-v1" / "overviews.csv")),
         "sample": by_id(read(LEDGER_DIR / "sample-verdicts.csv")),
-        "interim": interim_holds(),  # 当て直しまで参考に下げる法律（抜き取り2回目の不合格。初回の抜き取りとは別に数える）
+        "sample2": resample.load_record(),  # 抜き取り検証の2回目（sample-v2/）。初回とは別に数える
         "resolved": by_id(read(LEDGER_DIR / "sample-resolutions.csv")),  # 不合格のまま残った法律の読み直しと決着
         "cols": by_id(read(D / "three-columns-v1" / "columns.csv")),  # 額の物差し三欄（設計決定0024）
         "corr": corrections.load(D / "primary-source-corrections-v1" / "corrections.csv"),  # 一次資料で直した類型・経済に効くか
@@ -159,21 +157,8 @@ def sense_checks(rows_macro: dict[str, dict], title_of: dict[str, str]) -> dict[
     return out
 
 
-def amount_demoted(verdict: str, reach: str, certainty: str) -> bool:
-    """不合格で、額のある到達点（参考額・個別の額）を自動で参考に下げる法律か。評価対象外は額が無いので含めない。"""
-    return is_demoted(verdict, reach, certainty) and reach != NO_AMOUNT_DEMOTED_REACH
-
-
-def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "", resolved: dict | None = None, key: str = "", interim: dict | None = None) -> tuple[str, str]:
+def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certainty: str = "", resolved: dict | None = None, key: str = "") -> tuple[str, str]:
     s = sample.get(id_)
-    held = (interim or {}).get(id_)
-    if held is not None and s:
-        raise ValueError(f"{id_} は初回の抜き取りと interim-holds.csv の両方にある（1つの事実は1か所）")
-    if held is not None:
-        # 公開ランキング（verification_failed）は表の全 id を降格する。台帳が黙って別の状態にならないよう、額の無い到達点なら止める
-        if not is_demoted(VERDICT_FAIL, reach_, certainty):
-            raise ValueError(f"{id_} は interim-holds.csv にあるが、到達点「{reach_}」は参考に下げる額が無い（表から外すか到達点を確かめる）")
-        return STATE_INTERIM_HELD, f"{INTERIM_REASON_PREFIX}{held}"
     if s:
         if s["判定"] == "合格":
             return "抜き取り検証で合格", s.get("食い違い", "")
@@ -204,6 +189,44 @@ def verify_state(id_: str, cls_how: str, sample: dict, reach_: str = "", certain
     return "未検証", ""
 
 
+def site_values(o: dict, src) -> dict:
+    """1本の法律について、サイトが出している値（分類・類型・到達点・額・分野・確かさ・経済に効くか）。
+    台帳（build_rows）と、公開ランキングが読む標本2の判定し直し（sample2_states）が同じ値を使う。"""
+    i = o["id"]
+    a, t, m = src["agree"].get(i), src["tie"].get(i), src["macro"].get(i)
+    cls, how = classification(o, a, t)
+    reach_, amt_how, amt = reach(o, m)
+    e = src["econ"].get(i)
+    f = src["field"].get(i)
+    econ = f"{e['区分']}（{e['決め方']}）" if e else ""
+    fixed_econ = corrections.value(src.get("corr", {}), i, "経済に効くか")
+    if fixed_econ:  # 一次資料の読み直しで直した値（AI の区分の記録は書き換えない）
+        econ = f"{fixed_econ}（{corrections.METHOD}）"
+        if fixed_econ == corrections.INSTITUTIONAL:
+            cls, how = "評価対象外", f"{corrections.METHOD}（制度）"
+    return {
+        "類型": o["種類"] or "", "分類": cls, "分類の方法": how, "到達点": reach_, "額の方法": amt_how, "額（円）": amt,
+        "分野": (m["分野"] if m else None) or o["分野"] or (f["分野"] if f else ""),
+        "分野の方法": m["分野の由来"] if m else ("AI 2系統" if f else ("題名の語の規則" if o["分野"] else "")),
+        "確かさ": o["確かさ"] or (m["結果"] and "参考" if m and m["結果"] == "額" else ""),
+        "経済に効くか": econ,
+    }
+
+
+def sample2_state(o: dict, src, v: dict | None = None) -> tuple[str, str]:
+    """抜き取り2回目の法律の検証状態を、今のサイトの値で判定し直して決める。"""
+    i = o["id"]
+    if i in src["sample"]:
+        raise ValueError(f"{i} は初回と2回目の両方の抜き取りにある（1つの事実は1か所）")
+    return resample.ledger_state(v or site_values(o, src), src["sample2"][i])
+
+
+def sample2_states(src=None) -> dict[str, tuple[str, str]]:
+    """標本2の全法律の（検証状態, 検証メモ）。ledger.csv を読まずに今の入力から決める（公開ランキングが台帳より先に作られても食い違わない）。"""
+    src = src or load()
+    return {o["id"]: sample2_state(o, src) for o in src["out"] if o["id"] in src["sample2"]}
+
+
 def build_rows(src) -> list[dict]:
     sys.path.insert(0, str(ROOT / "scripts"))
     import check_evaluation_logic as logic
@@ -212,24 +235,15 @@ def build_rows(src) -> list[dict]:
     sc = sense_checks(src["macro"], {o["id"]: o["題名"] for o in src["out"]})
     for o in src["out"]:
         i = o["id"]
-        a, t, m = src["agree"].get(i), src["tie"].get(i), src["macro"].get(i)
-        cls, how = classification(o, a, t)
-        reach_, amt_how, amt = reach(o, m)
-        e = src["econ"].get(i)
-        f = src["field"].get(i)
-        field = (m["分野"] if m else None) or o["分野"] or (f["分野"] if f else "")
-        field_how = m["分野の由来"] if m else ("AI 2系統" if f else ("題名の語の規則" if o["分野"] else ""))
+        v = site_values(o, src)
+        cls, how, reach_, amt_how, amt = v["分類"], v["分類の方法"], v["到達点"], v["額の方法"], v["額（円）"]
+        field, field_how, certainty, econ = v["分野"], v["分野の方法"], v["確かさ"], v["経済に効くか"]
         pub = src["pub"].get(i)
         ov = src["ov"].get(i)
-        certainty = o["確かさ"] or (m["結果"] and "参考" if m and m["結果"] == "額" else "")
-        econ = f"{e['区分']}（{e['決め方']}）" if e else ""
-        fixed_econ = corrections.value(src.get("corr", {}), i, "経済に効くか")
-        if fixed_econ:  # 一次資料の読み直しで直した値（AI の区分の記録は書き換えない）
-            econ = f"{fixed_econ}（{corrections.METHOD}）"
-            if fixed_econ == corrections.INSTITUTIONAL:
-                cls, how = "評価対象外", f"{corrections.METHOD}（制度）"
-        key = site_key({"類型": o["種類"] or "", "分類": cls, "到達点": reach_, "経済に効くか": econ})
-        state, memo = verify_state(i, how, src["sample"], reach_, certainty, src.get("resolved"), key, src.get("interim"))
+        key = site_key(v)
+        state, memo = verify_state(i, how, src["sample"], reach_, certainty, src.get("resolved"), key)
+        if i in src.get("sample2", {}):  # 抜き取り2回目：今のサイトの値で判定し直す（訂正されれば合格に戻る）
+            state, memo = sample2_state(o, src, v)
         col = src["cols"].get(i, {})
         rows.append({
             "id": i, "題名": o["題名"], "分類": cls, "分類の方法": how, "類型": o["種類"] or "",
@@ -282,16 +296,27 @@ def make_sample(rows: list[dict]) -> list[dict]:
     return sorted(out, key=lambda r: (stratum(r), r["id"]))
 
 
+def is_sample2(r: dict) -> bool:
+    return r.get("検証メモ", "").startswith(resample.MEMO)
+
+
+def sample2_first(r: dict, first: dict[str, str]) -> str:
+    """抜き取り2回目の初回の判定（verdicts.csv、裁定のあと・訂正の前）。"""
+    return first.get(r["id"], "")
+
+
 def summarize(rows: list[dict], first: dict[str, str] | None = None) -> dict:
     """first は初回の判定（id→合格／不合格）。あれば、抜き取りの合格・不合格は初回の判定で数え、読み直しの訂正は別に数える。"""
     n = len(rows)
     c = lambda k: dict(Counter(r[k] for r in rows).most_common())
-    samp = [r for r in rows if r["検証状態"] in SAMPLED_STATES]
+    samp = [r for r in rows if r["検証状態"] in SAMPLED_STATES and not is_sample2(r)]
+    samp2 = [r for r in rows if is_sample2(r)]
+    first2 = {i: rec[2].get("初回", "") for i, rec in resample.load_record().items()} if samp2 else {}
     ok = sum(first.get(r["id"]) == "合格" for r in samp) if first else sum(r["検証状態"] == "抜き取り検証で合格" for r in samp)
     by_reach: dict[str, dict] = {}
     for k in sorted({r["到達点"] for r in rows}):
         rs = [r for r in rows if r["到達点"] == k]
-        ss = [r for r in rs if r["検証状態"] in SAMPLED_STATES]
+        ss = [r for r in rs if r["検証状態"] in SAMPLED_STATES and not is_sample2(r)]
         by_reach[k] = {"本数": len(rs), "抜き取り": len(ss),
                        "合格": sum(first.get(r["id"]) == "合格" for r in ss) if first else sum(r["検証状態"] == "抜き取り検証で合格" for r in ss),
                        "うち額あり": sum(bool(r["額（円）"]) for r in rs),
@@ -319,6 +344,12 @@ def summarize(rows: list[dict], first: dict[str, str] | None = None) -> dict:
                    "now_pass": sum(r["検証状態"] == "抜き取り検証で合格" for r in samp),
                    "redo_pass": sum(r.get("検証メモ", "").startswith(REDO_PASS_MEMO) for r in samp),
                    "redo_demoted": sum(r.get("検証メモ", "").startswith(REDO_DEMOTED_MEMO) for r in samp)},
+        "sample2": {"n": len(samp2), "pass": sum(sample2_first(r, first2) == "合格" for r in samp2),
+                    "fail": sum(sample2_first(r, first2) == VERDICT_FAIL for r in samp2),
+                    "demoted": sum(r["検証状態"] == STATE_DEMOTED for r in samp2),
+                    "failed_kept": sum(r["検証状態"] == STATE_FAILED for r in samp2),
+                    "now_pass": sum(r["検証状態"] == "抜き取り検証で合格" for r in samp2),
+                    "fixed_pass": sum(r.get("検証メモ", "").endswith("（訂正で合格）") for r in samp2)},
         "three_columns": {
             "付加価値の変化": dict(Counter(r["付加価値の由来"] for r in rows if r["付加価値の変化（円）"])),
             "国の収支（億円）": sum(bool(r["国の収支（億円）"]) for r in rows),
