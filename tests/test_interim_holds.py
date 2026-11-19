@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from scripts import build_public_ranking
+from scripts import primary_source_corrections as corrections
 from scripts.build_evaluation_ledger import SAMPLED_STATES, VERIFY_STATES, verify_state
 from scripts.evaluation_rules import (
     INTERIM_HOLDS,
@@ -32,13 +33,22 @@ class InterimHolds(unittest.TestCase):
 
     def test_ledger_marks_held_and_individual_failures_leave_ranking(self):
         rows = {r["id"]: r for r in read(LEDGER / "ledger.csv")}
+        fixed = corrections.load()
         for law_id, reason in interim_holds().items():
-            self.assertTrue(rows[law_id]["到達点"].startswith("額（個別"), law_id)
+            if fixed.get(law_id, {}).get("経済に効くか", {}).get("直した値") == corrections.INSTITUTIONAL:
+                # 訂正表で制度と直した法律は評価対象外に移る（暫定の降格より先に、訂正が値そのものを直す）
+                self.assertTrue(rows[law_id]["到達点"].startswith("評価対象外"), law_id)
+            elif "分野" in fixed.get(law_id, {}):
+                # 訂正表で分野を直した法律は、個別の額（旧い分野で計算）を外し、直した分野の参考額に移る
+                self.assertTrue(rows[law_id]["到達点"].startswith("参考額"), law_id)
+            else:
+                self.assertTrue(rows[law_id]["到達点"].startswith("額（個別"), law_id)
             self.assertEqual(rows[law_id]["検証状態"], STATE_INTERIM_HELD)
             self.assertEqual(rows[law_id]["検証メモ"], f"{INTERIM_REASON_PREFIX}{reason}")
         individual = [r for r in rows.values() if r["到達点"].startswith("額（個別")]
         failed = [r["id"] for r in individual if r["検証状態"] in ("参考に下げた", STATE_INTERIM_HELD)]
-        self.assertEqual(sorted(failed), ["衆法-185-2", "衆法-189-20", "閣法-193-61", "閣法-196-2"])
+        # 衆法-189-20 は制度と直して評価対象外、閣法-193-61・閣法-196-2 は分野を直して参考額へ移り、個別の額に残らない
+        self.assertEqual(sorted(failed), ["衆法-185-2"])
 
     def test_interim_state_is_not_counted_as_first_sample(self):
         self.assertIn(STATE_INTERIM_HELD, VERIFY_STATES)

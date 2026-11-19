@@ -182,9 +182,9 @@ class PublicRankingTests(unittest.TestCase):
     def test_covid_overlap_and_unmeasured_notes(self):
         by_id = {law["id"]: law for law in self.payload["laws"]}
         self.assertIn("コロナ期と重なる", by_id["衆法-189-20"]["notes"])
-        # 閣法-196-2 は一次資料で分野を直したので、直した分野で計算し直すまで額を付けない（保留へ）
-        self.assertNotIn("閣法-196-2", by_id)
-        self.assertIn("閣法-196-2", {item["id"] for item in self.payload["others"]})
+        # 閣法-196-2 は一次資料で分野を直した（宿泊・観光→交通・移動）。旧い分野の個別の額を外し、直した分野の参考額で出す
+        self.assertEqual((by_id["閣法-196-2"]["certainty"], by_id["閣法-196-2"]["field"]), ("参考", "交通・移動"))
+        self.assertNotIn("コロナ期と重なる", by_id["閣法-196-2"]["notes"])
         # 閣法-189-27 は向きと額の符号が逆で法律の額を付けない（全法律の結果と同じ判断）。損失表の額は議員にも配らない
         self.assertNotIn("便益側の一部が未測定", by_id.get("閣法-189-27", {"notes": []})["notes"])
         self.assertIn("閣法-189-27", self.payload["generatedFrom"]["parameters"]["noAmount"])

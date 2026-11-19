@@ -1313,6 +1313,15 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-208-14,額の下端,96000000000,96000000000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
 閣法-208-14,額の中央値,136000000000,136000000000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
 閣法-208-14,額の上端,176000000000,176000000000,一致,費用便益：支出の規模×帰属×乗数（公開した式から計算し直し）
+閣法-196-2,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC6D1E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC6D1E.htm,一致,
+閣法-196-2,出典URL,https://laws.e-gov.go.jp/law/430AC0000000016,https://laws.e-gov.go.jp/law/430AC0000000016,一致,
+閣法-196-2,題名,国際観光旅客税法案,国際観光旅客税法案,一致,
+閣法-196-2,施行日,2019-01-07,2019-01-07,一致,
+閣法-196-2,施行期日の原文,あり,あり,一致,
+閣法-196-2,公布日との順序,2019-01-07,2018-04-18,一致,
+閣法-196-2,公布日,2018-04-18,2018-04-18,一致,施行日台帳と議案台帳
+閣法-196-2,名目付加価値（開始前最後の年）,15197300百万円,15197300百万円,一致,OECD 表6 JPN I V 2018年
+閣法-196-2,再計算,75683518091,計算できない,不一致,比較国か年の観測が足りない
 衆法-197-6,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCAA4E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DCAA4E.htm,一致,
 衆法-197-6,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214094.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19720181214094.htm,一致,
 衆法-197-6,題名,研究開発システムの改革の推進等による研究開発能力の強化及び研究開発等の効率的推進等に関する法律の一部を改正する法律案,研究開発システムの改革の推進等による研究開発能力の強化及び研究開発等の効率的推進等に関する法律の一部を改正する法律案,一致,
@@ -17979,15 +17988,6 @@ id,項目,公開値,一次資料の値,結果,備考
 閣法-196-18,額の下端,1612405124610,1612405124610,一致,OECD 表6 F LR、比較国12か国
 閣法-196-18,額の中央値,3929046786868,3929046786868,一致,OECD 表6 F LR、比較国12か国
 閣法-196-18,額の上端,5048175024033,5048175024033,一致,OECD 表6 F LR、比較国12か国
-閣法-196-2,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC6D1E.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC6D1E.htm,一致,
-閣法-196-2,出典URL,https://laws.e-gov.go.jp/law/430AC0000000016,https://laws.e-gov.go.jp/law/430AC0000000016,一致,
-閣法-196-2,題名,国際観光旅客税法案,国際観光旅客税法案,一致,
-閣法-196-2,施行日,2019-01-07,2019-01-07,一致,
-閣法-196-2,施行期日の原文,あり,あり,一致,
-閣法-196-2,公布日との順序,2019-01-07,2018-04-18,一致,
-閣法-196-2,公布日,2018-04-18,2018-04-18,一致,施行日台帳と議案台帳
-閣法-196-2,名目付加価値（開始前最後の年）,15197300百万円,15197300百万円,一致,OECD 表6 JPN I V 2018年
-閣法-196-2,再計算,75683518091,計算できない,不一致,比較国か年の観測が足りない
 閣法-196-20,出典URL,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC7D86.htm,https://www.shugiin.go.jp/internet/itdb_gian.nsf/html/gian/keika/1DC7D86.htm,一致,
 閣法-196-20,出典URL,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180608044.htm,https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/housei/19620180608044.htm,一致,
 閣法-196-20,題名,生活困窮者等の自立を促進するための生活困窮者自立支援法等の一部を改正する法律案,生活困窮者等の自立を促進するための生活困窮者自立支援法等の一部を改正する法律案,一致,
