@@ -17,7 +17,7 @@ import './exposure.css';
  */
 
 export type ExposureSide = 'loss' | 'benefit' | 'none';
-export type GroupLabel = Pick<ExposureGroup, 'id' | 'industry' | 'period'>;
+export type GroupLabel = Pick<ExposureGroup, 'id' | 'group' | 'window'>;
 export type ExposureTab = 'people' | 'parties';
 
 export const ROLE_LABEL: Readonly<Record<ExposureRole, string>> = { proposer: '発議', yes: '賛成', no: '反対（逆向き）', cabinet: '閣議決定' };
@@ -162,7 +162,7 @@ export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, p
   const [unrankedLimit, setUnrankedLimit] = useState(EXPOSURE_PAGE_SIZE);
   const switchTab = (next: ExposureTab) => { setTab(next); setLimit(EXPOSURE_PAGE_SIZE); setUnrankedLimit(EXPOSURE_PAGE_SIZE); };
   const labels = useMemo<Labels>(() => {
-    const byId = new Map(groups.map(g => [g.id, `${g.industry}（${g.period}）`]));
+    const byId = new Map(groups.map(g => [g.id, `${g.group}（${g.window}）`]));
     return {
       group: id => byId.get(id) ?? id,
       actor: row => (row.actorKind === 'person' ? personNames : partyNames)[row.actorId] ?? row.actorId,

@@ -389,7 +389,7 @@ def _ledger_condition(d: Path) -> dict:
     neither = len(ledger) - with_amount - with_reason
     missing = len(target - listed)
     persons = d / "person-ids" / "persons.csv"
-    people = f"（人物台帳は {len(read_csv(persons)):,} 人）" if persons.is_file() else ""
+    people = f"（人物台帳は {sum(1 for r in read_csv(persons) if r['人物ID']):,} 人。人物IDが空の行は数えない）" if persons.is_file() else ""
     laws_ok = not missing and not neither and len(listed) == len(ledger)
     return {
         "state": "一部達成" if laws_ok else "未達",
