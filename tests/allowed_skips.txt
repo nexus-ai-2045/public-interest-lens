@@ -25,4 +25,4 @@ test_treaty_census.CommittedOutcomesTest.test_most_titles_match_a_rule	treaty-ce
 test_triage_v2.FieldExpansionTest.test_typescript_and_python_agree_on_every_enacted_title	node が無い
 test_triage_v2.LargeAmountRulesTest.test_exclusion_tables_are_the_same_in_both_implementations	node が無い
 test_unenacted_direction.OutputTest.test_output_consistent	direction.csv 未生成
-unittest.loader.ModuleSkipped.test_io_ripple	numpy・openpyxl が無い（CI の verify には入れていないので、CI では産業連関の試験は1本も走らない）
+unittest.loader.ModuleSkipped.test_io_ripple	numpy・openpyxl が無い手元の環境だけ（CI の verify では入れて走らせる）
