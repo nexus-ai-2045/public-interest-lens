@@ -43,6 +43,8 @@ export type CatalogItem = {
   year: number | null;
   field: string;
   side: CatalogSide | null;
+  /** 向き未確定の法律だけ。計算が出した差の符号の記録（法律の向きではない）。画面は読まず、バックテストが読む。 */
+  gapSide?: 'loss' | 'benefit';
   amount: CatalogAmount | null;
   certainty?: '高' | '中' | '低' | '参考';
   marks: string[];

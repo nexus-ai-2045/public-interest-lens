@@ -3,7 +3,8 @@
 
 正解   data/evidence/backtest_cases.json   事例集の「照合＝一致」49件。識別・指標・便益の向きは2系統が一致したラベルだけ使う
 対応表 data/evidence/backtest_mapping.json 政策グループ → 現行の計算の法律（結果を見る前に固定）
-予測   app/public/distribution/laws.json   法律ごとの向き（side：loss＝国賊側／benefit＝国士側）と参考の額
+予測   app/public/distribution/laws.json   法律ごとの向き（side：loss＝国賊側／benefit＝国士側）と参考の額。
+       side が undetermined（向き未確定）の法律は、計算が出した差の符号 gapSide を予測の向きとして使う（画面は側に分けないが、計算の向きの当たり外れは測る）
 定義   docs/adr/0020-backtest-accuracy-definition.md（v1・v1.1）、docs/adr/0021-backtest-transplant-v2.md（v2：外国の研究から日本の向きを当てる）
 
 使い方:
@@ -70,10 +71,16 @@ def spec_version() -> str:
     return m.group(1) if m else "不明"
 
 
+def computed_side(law: dict) -> str | None:
+    """計算が出した向き。向き未確定の法律は差の符号（gapSide）を使う。"""
+    return law.get("gapSide") if law.get("side") == "undetermined" else law.get("side")
+
+
 def matched_laws(group: str | None, mapping: dict, laws: list[dict]) -> list[dict]:
     spec = mapping["groups"].get(group or "")
     if not spec:
         return []
+    laws = [{**x, "side": computed_side(x)} for x in laws]
     return [x for x in laws if x.get("side") in ("loss", "benefit") and x["year"] in spec["law_years"] and any(w in x["title"] for w in spec["title_any"])]
 
 

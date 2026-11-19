@@ -1,5 +1,5 @@
 /**
- * /numbers（数字で見る）のデータ charts.json（public-charts/v1）の型と、グラフに直す計算。
+ * /numbers（数字で見る）のデータ charts.json（public-charts/v2）の型と、グラフに直す計算。
  * charts.json は scripts/build_database.py がデータベースから作る。ここでは並べ替え・目盛り・単位だけを扱い、額は作らない。
  */
 import { formatYen } from './laws-catalog';

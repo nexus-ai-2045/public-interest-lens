@@ -36,7 +36,7 @@ NAMES_OUTPUT = DIST / "law-names.json"
 # 一覧の1行に要る項目。残り（因果の鎖・一次資料など）は開いた時に laws-detail/<束>.json から読む。
 # laws.json で1本1行に並べる一覧（dump_one_per_line）。
 LINE_KEYS = ("laws", "policies")
-INDEX_KEYS = ("id", "kind", "title", "year", "field", "side", "amount", "certainty", "marks", "step", "what", "whatWithheld", "summary", "href", "observation", "scale", "shared", "refReason", "refBasis")
+INDEX_KEYS = ("id", "kind", "title", "year", "field", "side", "gapSide", "amount", "certainty", "marks", "step", "what", "whatWithheld", "summary", "href", "observation", "scale", "shared", "refReason", "refBasis")
 
 INPUTS = {
     "enacted": ACQUIRED / "bill-census-full" / "enacted.csv",
@@ -365,6 +365,9 @@ def build() -> dict:
                 "benefitStatus": law["benefitStatus"],
             })
             item.update(ref_fields(law))
+            if item["side"] == UNDETERMINED:
+                # 差の符号の記録（法律の向きではない）。画面は読まない。バックテスト（scripts/backtest.py）が「計算の向き」として読む
+                item["gapSide"] = law["side"]
             if item["side"] == UNDETERMINED and item["step"] == "published":
                 raise ValueError(f"向き未確定の額が確かな額になっています: {law_id}")
             if law["amountLowYen"] < 0 < law["amountHighYen"]:

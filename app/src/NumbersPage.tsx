@@ -98,7 +98,7 @@ function Timeline({ data }: { data: PublicCharts['timeline'] }) {
       {values.map((v, i) => {
         const x = L + slot * i + 2;
         const text = oneSided
-          ? `${v.year}年施行（額のある法律${v.laws}本）：${SIDE_LABEL.undetermined}の差の大きさ ${yen(v.up)}`
+          ? `${v.year}年施行：${SIDE_LABEL.undetermined}の差の大きさ ${yen(v.up)}`
           : `${v.year}年施行（${v.laws}本）：${SIDE_LABEL.benefit} ${yen(v.up)}・${SIDE_LABEL.loss} ${yen(v.down)}`;
         return <g key={v.year}>
           <rect className={`nc-bar ${oneSided ? 'undetermined' : 'benefit'} grow-up`} x={x} y={mid - scale(v.up) - 1} width={bw} height={Math.max(0, scale(v.up))} rx={3} style={{ transitionDelay: `${i * 25}ms` }} />
