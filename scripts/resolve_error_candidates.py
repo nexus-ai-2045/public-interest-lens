@@ -12,6 +12,7 @@
       2. 割れたら Sonnet（C、議案本文の条文・附則と会議録を読む）。C が A か B と同じ値 → その値（3つのうち2つ）。
       3. それでも決まらなければ Opus が一次資料で裁定（R）。裁定の値（判定不能でない）→ その値。
       4. 裁定も判定不能 → 決められない（候補のまま残す。サイトの値は直さない）。
+      5. 経済に効くかを制度と決めても、制度と読んだ記録の判断が読めていない本法・条文・附則に懸かる（unread()）→ 決められない。
   決まった値の使い方
       類型：サイトの類型と同じ → confirmed.csv（誤りなし）。違う（空を含む）→ corrections.csv（直す）。
       経済に効くか：決まったら corrections.csv（C1 の「経済に効く」はサイトの区分と同じ語でも、到達点の扱いを直すので行を置く）。
@@ -19,6 +20,7 @@
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import io
 import json
@@ -235,12 +237,16 @@ def render(header: list[str], rows: list[dict]) -> str:
 
 
 def main(argv: list[str]) -> int:
-    if argv[:1] == ["collect"]:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("command", nargs="?", choices=["collect"], help="collect：生の記録を records/ にまとめる")
+    parser.add_argument("--check", action="store_true", help="出力が今の入力から作り直したものと同じか確かめる")
+    args = parser.parse_args(argv)
+    if args.command == "collect":
         return collect()
     corr, conf, res = build()
     files = {OUT / "corrections.csv": render(CORR_HEADER, corr), OUT / "confirmed.csv": render(CONF_HEADER, conf),
              REC / "resolutions.csv": render(RES_HEADER, res)}
-    if "--check" in argv:
+    if args.check:
         stale = [p.name for p, t in files.items() if not p.exists() or p.read_text(encoding="utf-8") != t]
         print("一致" if not stale else f"出力が古い：{stale}")
         return 1 if stale else 0
