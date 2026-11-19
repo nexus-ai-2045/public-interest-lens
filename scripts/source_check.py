@@ -424,6 +424,10 @@ def rebuild(approve_all: bool, approved_at: str, ranking_path: Path = RANKING, w
     if write:
         write_report(rows, summary)
         ranking_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    else:
+        # 書き換えないときは、手元の ranking.json が入力から作り直したものと同じかも確かめる（書き換えられた公開データを合格にしない）
+        on_disk = json.loads(ranking_path.read_text(encoding="utf-8")) if ranking_path.is_file() else None
+        summary["rankingStale"] = on_disk != payload
     return summary
 
 
@@ -443,6 +447,9 @@ def main() -> int:
     approved_at = current["approval"]["approvedAt"] or ""
     summary = rebuild(approve_all, approved_at, args.ranking, write=not args.dry_run)
     print(json.dumps(summary, ensure_ascii=False))
+    if summary.get("rankingStale"):
+        print(f"失敗: {args.ranking} が入力から作り直したものと違う（古いか、手で書き換えられている）。python3 scripts/generate_artifacts.py で作り直す", file=sys.stderr)
+        return 1
     return 1 if summary["mismatch"] else 0
 
 
