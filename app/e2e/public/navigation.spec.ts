@@ -31,6 +31,15 @@ test.describe('全ページ共通の導線', () => {
     await expect(page.locator('main#main')).toHaveCount(1);
   });
 
+  test('どのページも最上部に「ジョークサイトです」が見える（#78。変異テストで外しても通っていた、2026-11-19）', async ({ page }) => {
+    for (const path of ['/', ...PAGES]) {
+      await page.goto(path);
+      const banner = page.getByRole('note').filter({ hasText: 'ジョークサイトです' });
+      await expect(banner, path).toBeVisible();
+      await expect(banner, `${path} で最上部`).toBeInViewport();
+    }
+  });
+
   test('全ページ末尾の訂正リンクは訂正用テンプレートを指定している', async ({ page }) => {
     for (const path of PAGES) {
       await page.goto(path);

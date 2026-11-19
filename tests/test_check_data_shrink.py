@@ -27,6 +27,21 @@ class JudgeTests(unittest.TestCase):
         finding = guard.judge("data/a.csv", table(100), table(100, filled=False))
         self.assertIn("中身のあるセル 200 → 100", finding.reason)
 
+    def test_one_column_blanked_in_a_wide_table_is_found(self):
+        # 12列の表で1列だけ空になっても、全体のセル数は 1/12 しか減らない。列ごとに見て拾う（2026-11-19 の変異テスト）
+        def wide(url: bool) -> bytes:
+            head = ",".join([f"c{i}" for i in range(11)] + ["証拠URL"]) + "\n"
+            return (head + "".join(",".join(["x"] * 11 + ["https://a" if url else ""]) + "\n" for _ in range(100))).encode("utf-8")
+        finding = guard.judge("data/a.csv", wide(True), wide(False))
+        self.assertEqual(finding.reason, "列「証拠URL」の中身のあるセル 100 → 0")
+
+    def test_dropped_column_is_found_and_sparse_columns_are_not_judged(self):
+        before = ("id,値,備考\n" + "".join(f"{i},x,{'m' if i < 10 else ''}\n" for i in range(100))).encode("utf-8")
+        self.assertIsNone(guard.judge("data/a.csv", before, before.replace(b",m\n", b",\n")))  # 備考は 10 セルだけなので見ない
+        wide = ",".join(f"c{i}" for i in range(12)) + "\n" + ("x," * 11 + "x\n") * 100
+        narrow = ",".join(f"c{i}" for i in range(11)) + "\n" + ("x," * 10 + "x\n") * 100
+        self.assertEqual(guard.judge("data/a.csv", wide.encode(), narrow.encode()).reason, "列「c11」が消えた（中身のあるセル 100）")
+
     def test_blank_rows_do_not_count_as_rows(self):
         blanked = "id,値\n".encode("utf-8") + b"\n" * 60 + b",\n" * 40
         self.assertEqual(guard.judge("data/a.csv", table(100), blanked).reason, "行数 100 → 0")
