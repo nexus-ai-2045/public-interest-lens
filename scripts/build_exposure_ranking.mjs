@@ -119,7 +119,8 @@ function personReadings(personsRows, kokkaiRows, people) {
   for (const r of personsRows) {
     if (!ids.has(r['人物ID'])) continue;
     // 台帳の読みは姓と名の間に空白がある（会議録の読みには無い）。混ぜて並べるので空白を除いてそろえる。
-    const reading = (r['読み'] || kokkai.get(r['人物ID']) || '').replace(/\s+/g, '');
+    const squash = v => (v || '').replace(/\s+/g, '');
+    const reading = squash(r['読み']) || squash(kokkai.get(r['人物ID']));
     if (reading) out[r['人物ID']] = reading;
   }
   return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
