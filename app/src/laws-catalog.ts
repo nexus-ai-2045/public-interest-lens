@@ -28,16 +28,21 @@ export const isOutlierMark = (mark: string) => mark.startsWith('額が日本の�
  * 1本ごとの額は持たず、共有された合計 median の一部（0〜median）としてだけ見せる。順位・合計・議員配分には入れない。
  * 検証で降格した法律（refReason）とは別の印。ratio は median が日本の付加価値（baseYear 年）の何倍か。
  */
-export type CatalogShared = { key: string; size: number; median: number; low: number; high: number; side: 'loss' | 'benefit'; whole: boolean; ratio?: number; baseYear?: number };
+export type CatalogShared = { key: string; size: number; median: number; low: number; high: number; side: CatalogSide; whole: boolean; ratio?: number; baseYear?: number };
 /** 共有額が日本の付加価値1年分のこの割合以上なら「1年分の○%」を添える。 */
 export const SHARED_RATIO_FLOOR = 0.1;
+/**
+ * 額の向き。undetermined は向き未確定（産業と比較国の差の符号しか無く、法律の効果の向きの証拠が無い参考の額）。
+ * 国賊側・国士側に分けず、損失順・便益順の並びや側の絞り込みにも入れない（リリース前レビュー指摘1・4）。
+ */
+export type CatalogSide = 'loss' | 'benefit' | 'undetermined';
 export type CatalogItem = {
   id: string;
   kind: string;
   title: string;
   year: number | null;
   field: string;
-  side: 'loss' | 'benefit' | null;
+  side: CatalogSide | null;
   amount: CatalogAmount | null;
   certainty?: '高' | '中' | '低' | '参考';
   marks: string[];
@@ -138,14 +143,14 @@ export function parseLawsCatalog(text: string): LawsCatalog {
     if (item.shared) {
       const { shared } = item;
       const finite = [shared.median, shared.low, shared.high].every(Number.isFinite);
-      if (item.amount || !finite || !(shared.size >= 2) || !(shared.low <= shared.median && shared.median <= shared.high) || !['loss', 'benefit'].includes(shared.side) || typeof shared.whole !== 'boolean' || (shared.ratio !== undefined && !(shared.ratio >= 0))) throw new Error(`共有額の形が違います: ${item.id}`);
+      if (item.amount || !finite || !(shared.size >= 2) || !(shared.low <= shared.median && shared.median <= shared.high) || !['loss', 'benefit', 'undetermined'].includes(shared.side) || typeof shared.whole !== 'boolean' || (shared.ratio !== undefined && !(shared.ratio >= 0))) throw new Error(`共有額の形が違います: ${item.id}`);
     }
     if (item.amount && !(item.amount.low <= item.amount.median && item.amount.median <= item.amount.high)) throw new Error(`額の幅が中央値を挟んでいません: ${item.id}`);
   }
   return data;
 }
 
-export type SideFilter = 'all' | 'confirmed' | 'loss' | 'benefit' | 'amount' | 'shared' | 'none';
+export type SideFilter = 'all' | 'confirmed' | 'loss' | 'benefit' | 'undetermined' | 'amount' | 'shared' | 'none';
 export type SortKey = 'amount' | 'loss' | 'benefit' | 'newest' | 'oldest' | 'progress';
 export type CatalogQuery = { text: string; side: SideFilter; field: string; kind: string; sort: SortKey };
 export const DEFAULT_QUERY: CatalogQuery = { text: '', side: 'all', field: '', kind: '', sort: 'amount' };
@@ -160,6 +165,7 @@ export function filterCatalog(items: CatalogItem[], query: CatalogQuery): Catalo
     if (query.kind && item.kind !== query.kind) return false;
     if (query.side === 'loss' && item.side !== 'loss') return false;
     if (query.side === 'benefit' && item.side !== 'benefit') return false;
+    if (query.side === 'undetermined' && item.side !== 'undetermined') return false;
     if (query.side === 'amount' && !item.amount) return false;
     if (query.side === 'confirmed' && item.step !== 'published') return false;
     if (query.side === 'shared' && !item.shared) return false;
@@ -218,7 +224,7 @@ export function readQuery(search: string): CatalogQuery {
   const sort = params.get('sort') as SortKey | null;
   return {
     text: params.get('q') ?? '',
-    side: side && ['all', 'confirmed', 'loss', 'benefit', 'amount', 'shared', 'none'].includes(side) ? side : 'all',
+    side: side && ['all', 'confirmed', 'loss', 'benefit', 'undetermined', 'amount', 'shared', 'none'].includes(side) ? side : 'all',
     field: params.get('field') ?? '',
     kind: params.get('kind') ?? '',
     sort: sort && ['amount', 'loss', 'benefit', 'newest', 'oldest', 'progress'].includes(sort) ? sort : 'amount',
@@ -238,5 +244,5 @@ export function writeQuery(query: CatalogQuery, keepSort = false): string {
 }
 
 export function sideLabel(side: CatalogItem['side']): string {
-  return side === 'loss' ? '国賊側（損失）' : side === 'benefit' ? '国士側（便益）' : '額なし';
+  return side === 'loss' ? '国賊側（損失）' : side === 'benefit' ? '国士側（便益）' : side === 'undetermined' ? '向き未確定' : '額なし';
 }
