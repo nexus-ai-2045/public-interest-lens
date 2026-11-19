@@ -254,7 +254,7 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     if not field:
         return out
     shown = NO_FIELD if field.startswith("経済全体") else field
-    if out["結果"] == "額あり" and out["分野"] != shown:
+    if out["結果"] == "額あり" and out["経路"].startswith("市場") and out["分野"] != shown:  # 税収見込みの額は産業に依らない
         out.update(結果="保留", 経路=ROUTE_SOURCE_FIELD, 損失または便益の額="", 単位="", 確かさ="", 公開可否="公開不可",
                    理由=f"一次資料の読み直しで、主な産業は「{field}」と分かった（振り分けは「{out['分野']}」）。額は振り分けの分野の産業で計算してあるので、直した分野で計算し直すまで付けない")
     out["分野"] = shown

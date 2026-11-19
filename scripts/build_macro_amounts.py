@@ -130,12 +130,13 @@ SOURCE_ORIGIN = "一次資料の読み直し"
 
 
 def source_fields(picks: dict[str, tuple[str, str, str]]) -> dict[str, tuple[str, str, str]]:
-    """一次資料で直した分野（primary-source-corrections-v1 の「分野」）を (分野, 由来, 産業コード) にする。産業の節が無い分野は全産業。"""
+    """一次資料で直した分野（primary-source-corrections-v1 の「分野」）を (分野, 由来, 産業コード) にする。
+    産業の節が無い分野（労働市場・行政のデジタル化など）は全産業（_T）で測るので、分野の欄も経済全体にする（額と産業を食い違わせない）。"""
     out = {}
     for law_id, items in corrections.load().items():
         field = corrections.value({law_id: items}, law_id, "分野")
         if field and law_id in picks:
-            out[law_id] = (field, SOURCE_ORIGIN, INDUSTRY.get(field, "_T")) if field in INDUSTRY else (WHOLE if field.startswith(WHOLE) else field, SOURCE_ORIGIN, "_T")
+            out[law_id] = (field, SOURCE_ORIGIN, INDUSTRY[field]) if field in INDUSTRY else (WHOLE, SOURCE_ORIGIN, "_T")
     return out
 
 

@@ -262,6 +262,7 @@ def merge_sample(rows: list[dict], conf: list[dict], res: list[dict]) -> tuple[l
     index = {(r["id"], r["項目"]): r for r in rows}
     confirmed = {(r["id"], r["項目"]): r for r in conf}
     out, overruled = list(rows), set()
+    pos = {(r["id"], r["項目"]): n for n, r in enumerate(out)}  # 同じ (id, 項目) の候補が2つあっても置き換え先を見失わない
     for cand in cands:
         k, v = (cand["id"], cand["項目"]), cand["直した値"]
         prev = index.get(k)
@@ -275,12 +276,14 @@ def merge_sample(rows: list[dict], conf: list[dict], res: list[dict]) -> tuple[l
                         "Sonnet": v, "Opus 裁定": r["値"], "決めた値": r["値"], "決め方": "裁定（候補を退けた）", "決着": "誤りなし"})
             continue
         if prev is not None and prev["直した値"] != v:  # 2つの読み直しが割れた：Opus の裁定
+            if k in index and index[k]["記録"] != RECORD:  # 手で置いた行（#208 など）は毎回作り直さないので、ここで書き換えると次の回に消える
+                raise SystemExit(f"{k}：手で置いた行（{index[k]['記録']}）と抜き取り検証2回目（{v}）が割れた。その行の記録で直す")
             if not r:
                 raise SystemExit(f"{k}：読み直し（{prev['直した値']}）と抜き取り検証2回目（{v}）が割れていて、{SAMPLE_RULINGS.name} に裁定が無い")
             row = {**(index.get(k) or cand), "直した値": r["値"], "理由": r["理由"], "引用": r["引用"], "出典URL": r["出典URL"],
                    "判定者": "読み直しと抜き取り検証2回目が割れ、Opus が一次資料で裁定", "記録": f"{RECORD}・{SAMPLE_RECORD}"}
             if k in index:
-                out[out.index(index[k])] = row
+                out[pos[k]] = index[k] = row
             else:
                 out.append(row)
                 overruled.add(k)
@@ -288,8 +291,8 @@ def merge_sample(rows: list[dict], conf: list[dict], res: list[dict]) -> tuple[l
                         "Sonnet": v, "Opus 裁定": r["値"], "決めた値": r["値"], "決め方": "裁定（読み直しと割れた）", "決着": "直した"})
             continue
         if prev is not None:  # 同じ値：独立な2回目の読みとして判定者に書き足す
-            if k in index:
-                out[out.index(index[k])] = {**index[k], "判定者": f"{index[k]['判定者']}／{SAMPLE_JUDGE}"}
+            if k in index and SAMPLE_JUDGE not in index[k]["判定者"]:  # 手で置いた行は持ち越すので、書き足しは1回だけ
+                out[pos[k]] = index[k] = {**index[k], "判定者": f"{index[k]['判定者']}／{SAMPLE_JUDGE}"}
             continue
         if k[1] == "経済に効くか" and v == "制度":
             key = SAMPLE_KEY[k[1]]
