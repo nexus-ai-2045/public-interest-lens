@@ -1,5 +1,6 @@
 import type { PanelExposureRanking, PublicExposureRanking } from './exposure-ranking';
 import { validGenerationMetadata, type GenerationMetadata } from './generation-metadata';
+import { normalizeReading } from './exposure-labels';
 /** コロナ対応の費用便益（covid-benefit-v1）の観測グループ。比較国を持たない。 */
 export const COVID_BENEFIT_GROUP = '全体指標-コロナ費用便益';
 /** コロナ対応の費用便益（支出×帰属×乗数）のグループか。法律ごとに「-<法律id>」が付く。 */
@@ -180,17 +181,28 @@ export function parsePublicRanking(text: string): PublicRanking {
 
 
 /** 曝露ランキングの公開用データ（scripts/build_exposure_ranking.mjs が作る）。形と生成元を確かめる。 */
-export type PublicExposureDistribution = PublicExposureRanking & { generatedFrom: GenerationMetadata };
+/** groups は産業×年の群（表示名に使う）、personReadings は人物ID → 読み（並びだけに使う。読みの無い人は載らない）。 */
+export type PublicExposureDistribution = PublicExposureRanking & {
+  generatedFrom: GenerationMetadata;
+  groups: { id: string; group: string; window: string }[];
+  personReadings: Record<string, string>;
+};
 export function parsePublicExposureRanking(text: string): PublicExposureDistribution {
   const data = JSON.parse(text) as PublicExposureDistribution;
   if (data.schema !== 'exposure-ranking/v1' || data.claim !== 'descriptive' || !Array.isArray(data.people) || !Array.isArray(data.parties) || !Array.isArray(data.unallocated)) throw new Error('曝露ランキングの形式が違います');
-  if (!validGenerationMetadata(data.generatedFrom, ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts', 'scripts/build_exposure_ranking.mjs'])) throw new Error('曝露ランキングの生成元が不正です');
+  if (!validGenerationMetadata(data.generatedFrom, ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts', 'app/src/exposure-labels.ts', 'scripts/build_exposure_ranking.mjs'])) throw new Error('曝露ランキングの生成元が不正です');
   // 法律1本ぶんの額を出さない決まり（設計決定0028）：階層に入らない行に額があれば受け取らない。
   for (const row of [...data.people, ...data.parties]) {
     if ((row.tier === null) !== (row.exposureYen === null)) throw new Error('曝露ランキングの額の伏せ方が不正です');
   }
   // 未配分は群×役割の合計（reasons の配列つき）。古い形（laws・reason）のファイルは受け取らない。
   if (!data.unallocated.every(u => Array.isArray(u.reasons) && !('laws' in u))) throw new Error('曝露ランキングの未配分の形式が違います（古いデータ）');
+  // 表示名と並びの材料。読みはひらがなだけ、載っている人物ID は people にいる人だけ。
+  if (!Array.isArray(data.groups) || !data.groups.every(g => g && [g.id, g.group, g.window].every(v => typeof v === 'string' && v.length > 0 && v.length <= 100))) throw new Error('曝露ランキングの群の形式が違います');
+  const readings = data.personReadings;
+  const people = new Set(data.people.map(p => p.actorId));
+  if (!readings || typeof readings !== 'object' || Array.isArray(readings)
+    || !Object.entries(readings).every(([id, r]) => people.has(id) && typeof r === 'string' && normalizeReading(r) === r && r !== '')) throw new Error('曝露ランキングの読みの形式が違います');
   return data;
 }
 

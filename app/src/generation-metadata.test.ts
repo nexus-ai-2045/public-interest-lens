@@ -19,7 +19,7 @@ describe('生成方法とソースの来歴', () => {
     const { createServer } = await import('vite');
     const server = await createServer({ root: join(root, 'app'), logLevel: 'silent', server: { middlewareMode: true, hmr: false }, appType: 'custom' });
     try {
-      const entries = ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts'];
+      const entries = ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts', 'app/src/exposure-labels.ts'];
       for (const entry of entries) await server.ssrLoadModule('/' + entry.replace('app/', ''));
       const expected = await generationMetadata(server, root, entries, ['scripts/build_exposure_ranking.mjs']);
       const actual = JSON.parse(readFileSync(join(root, 'data/derived/exposure-v1/exposure-ranking.json'), 'utf8'));
@@ -29,12 +29,15 @@ describe('生成方法とソースの来歴', () => {
 
   it('曝露ランキングでは旧形式・未記録・未知の方法・伏せ方の破れを受け入れない', () => {
     const metadata = good();
-    for (const name of ['app/src/exposure-inputs.ts', 'app/src/scoring-constants.ts', 'scripts/build_exposure_ranking.mjs', 'scripts/generation_provenance.mjs', 'scripts/path_guard.mjs', 'app/package-lock.json']) metadata.codeHashes[name] = 'c'.repeat(64);
-    const payload = { schema: 'exposure-ranking/v1', claim: 'descriptive', people: [{ tier: null, exposureYen: null }], parties: [], unallocated: [], generatedFrom: metadata };
+    for (const name of ['app/src/exposure-inputs.ts', 'app/src/scoring-constants.ts', 'app/src/exposure-labels.ts', 'scripts/build_exposure_ranking.mjs', 'scripts/generation_provenance.mjs', 'scripts/path_guard.mjs', 'app/package-lock.json']) metadata.codeHashes[name] = 'c'.repeat(64);
+    const payload = { schema: 'exposure-ranking/v1', claim: 'descriptive', people: [{ actorId: '甲', tier: null, exposureYen: null }], parties: [], unallocated: [], generatedFrom: metadata,
+      groups: [{ id: 'A|1998', group: 'A', window: '1998年' }], personReadings: { 甲: 'こう' } };
     expect(parsePublicExposureRanking(JSON.stringify(payload)).people).toHaveLength(1);
     for (const delta of [{ schema: 'public-members/v3' }, { claim: 'causal' }, { generatedFrom: undefined },
       { generatedFrom: { ...metadata, methodSpecVersion: 'method-spec-v999.0' } },
-      { people: [{ tier: null, exposureYen: { low: 1, median: 1, high: 1 } }] }, { people: [{ tier: 1, exposureYen: null }] }]) {
+      { people: [{ actorId: '甲', tier: null, exposureYen: { low: 1, median: 1, high: 1 } }] }, { people: [{ actorId: '甲', tier: 1, exposureYen: null }] },
+      // 群と読みが無い古い形、読みがひらがなでない・空白入り・台帳にいない人の読み
+      { groups: undefined }, { personReadings: undefined }, { personReadings: { 甲: 'コウ' } }, { personReadings: { 甲: 'こ う' } }, { personReadings: { 乙: 'おつ' } }]) {
       expect(() => parsePublicExposureRanking(JSON.stringify({ ...payload, ...delta }))).toThrow();
     }
   });

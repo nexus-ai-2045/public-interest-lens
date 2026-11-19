@@ -2,13 +2,13 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { EXPOSURE_DISCLAIMER, summarizeUnallocated, toPanelExposureRanking, type ExposureRanking } from './exposure-ranking';
-import { ExposureRankingPanel, ROLE_LABEL, canShowCellAmounts, exposureRange, exposureScale, exposureYen, groupByTier, orderWithinTiers, reasonKind, totalsCheck, totalsOfRanked, unrankedBreakdown } from './ExposureRankingPanel';
+import { ExposureRankingPanel, ROLE_LABEL, canShowCellAmounts, compareActors, groupNamesOf, exposureRange, exposureScale, exposureYen, groupByTier, orderWithinTiers, reasonKind, totalsCheck, totalsOfRanked, unrankedBreakdown } from './ExposureRankingPanel';
 import { SAMPLE_GROUPS, SAMPLE_PARTY_NAMES, SAMPLE_PERSON_NAMES, sampleExposureRanking } from './exposure-ranking-sample';
 import { formatYen } from './laws-catalog';
 
 const ranking = sampleExposureRanking();
 const render = (r: ExposureRanking = ranking, tab: 'people' | 'parties' = 'people') =>
-  renderToStaticMarkup(<ExposureRankingPanel ranking={toPanelExposureRanking(r)} groups={SAMPLE_GROUPS} personNames={SAMPLE_PERSON_NAMES} partyNames={SAMPLE_PARTY_NAMES} initialTab={tab} />);
+  renderToStaticMarkup(<ExposureRankingPanel ranking={toPanelExposureRanking(r)} groupNames={groupNamesOf(SAMPLE_GROUPS)} personNames={SAMPLE_PERSON_NAMES} partyNames={SAMPLE_PARTY_NAMES} initialTab={tab} />);
 /** 開始タグから次の同じ開始タグまでを切り出す（行ごとの中身を調べる）。 */
 const blocks = (html: string, open: string) => html.split(open).slice(1);
 
@@ -65,7 +65,7 @@ describe('曝露ランキングの画面部品', () => {
 
   it('同じ階層の中は名前の順に並べ、額の順にしません', () => {
     const nameOf = (r: { actorId: string }) => SAMPLE_PERSON_NAMES[r.actorId];
-    const ordered = orderWithinTiers(ranking.people, nameOf);
+    const ordered = orderWithinTiers(ranking.people, r => ({ reading: '', name: nameOf(r) }));
     const html = render();
     const shown = blocks(html, '<li class="xr-row').map(b => /<span class="xr-name">([^<]*)</.exec(b)![1]);
     expect(shown).toEqual(ordered.map(nameOf));
@@ -77,7 +77,7 @@ describe('曝露ランキングの画面部品', () => {
 
   it('階層が1つだけのときは、そう書きます', () => {
     const one: ExposureRanking = { ...ranking, people: ranking.people.map(p => (p.tier === null ? p : { ...p, tier: 1 })) };
-    expect(render(one)).toContain('階層は1つだけです。並びは名前（人物ID）の文字の順で、額の大きい順ではありません');
+    expect(render(one)).toContain('階層は1つだけです。並びは読みの五十音順（読みが分からない人はその後に名前の文字の順）で、額の大きい順ではありません');
     expect(render()).not.toContain('階層は1つだけです');
   });
 
@@ -231,5 +231,32 @@ describe('曝露ランキングの画面部品', () => {
     expect(scale.position(scale.max * 2)).toBe(100);
     const flat = exposureScale([]);
     expect(Number.isFinite(flat.position(0))).toBe(true);
+  });
+  it('人は読みの五十音順に並べ、読みの無い人はその後に名前の文字の順にします（額を出さない人も同じ）', () => {
+    const ids = ranking.people.map(p => p.actorId);
+    // 名前の文字の順とは逆になる読みを、最後の1人を除いて付ける。
+    const readings = Object.fromEntries(ids.slice(0, -1).map((id, i) => [id, `${'あいうえおかきくけこ'[ids.length - i]} よみ`]));
+    const one: ExposureRanking = { ...ranking, people: ranking.people.map(p => (p.tier === null ? p : { ...p, tier: 1 })) };
+    const html = renderToStaticMarkup(<ExposureRankingPanel ranking={toPanelExposureRanking(one)} personNames={SAMPLE_PERSON_NAMES} personReadings={readings} />);
+    const shown = blocks(html, '<li class="xr-row').map(b => /<span class="xr-name">([^<]*)</.exec(b)![1]);
+    const key = (id: string) => ({ reading: (readings[id] ?? '').replace(/\s+/g, ''), name: SAMPLE_PERSON_NAMES[id] });
+    const expected = one.people.filter(p => p.tier !== null).sort((a, b) => compareActors(a, b, r => key(r.actorId))).map(p => SAMPLE_PERSON_NAMES[p.actorId]);
+    expect(shown).toEqual(expected);
+    const withReading = one.people.filter(p => p.tier !== null && readings[p.actorId]).map(p => SAMPLE_PERSON_NAMES[p.actorId]);
+    expect(shown.slice(0, withReading.length).sort()).toEqual([...withReading].sort());
+    // 読みの順と名前の順が違うことを確かめる（読みで並んでいる証拠）。
+    expect(shown.slice(0, withReading.length)).not.toEqual([...shown.slice(0, withReading.length)].sort((a, b) => a.localeCompare(b, 'ja')));
+  });
+
+  it('会派の欄は名前の文字の順と書き、読みの順とは書きません', () => {
+    const html = render(ranking, 'parties');
+    expect(html).toContain('同じ階層の中は名前の文字の順に並べます');
+    expect(html).not.toContain('五十音');
+  });
+
+  it('群の表示名を渡すと、内訳に記号ではなく名前を出します', () => {
+    const html = renderToStaticMarkup(<ExposureRankingPanel ranking={toPanelExposureRanking(ranking)} groupNames={{ 'G-info-2001': '情報通信' }} personNames={SAMPLE_PERSON_NAMES} />);
+    expect(html).toContain('<span class="xr-cell-group">情報通信</span>');
+    expect(html).not.toContain('<span class="xr-cell-group">G-info-2001</span>');
   });
 });

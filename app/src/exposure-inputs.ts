@@ -30,6 +30,7 @@ import { cabinetForBill, normName } from './cabinet-members';
 import { COMMITTEE, parseProposer, pickVote, warekiDate } from './diet-records';
 import { parseCsv } from './impact-batch';
 import { PersonLedger } from './person-id';
+import { normalizeReading } from './exposure-labels';
 
 export type ExposureSources = {
   macro: string; industryYear: string; enacted: string; cabinet: string; persons: string; roster: string;
@@ -319,4 +320,16 @@ export function withLedgerPeople(ranking: ExposureRanking, personsCsv: string, w
     outsideLedger: ranking.people.length - inLedger.length,
   };
   return { ranking: { ...ranking, people: [...ranking.people, ...added] }, coverage };
+}
+
+/** 人物ID → 読み（画面の並びだけに使う）。ids に含まれる人だけを返す（台帳 → 会議録の順）。 */
+export function personReadingsOf(personsCsv: string, kokkaiCsv: string, ids: Iterable<string>): Record<string, string> {
+  const ledger = new Map(parseCsv(personsCsv).filter(r => r['人物ID']).map(r => [r['人物ID'], normalizeReading(r['読み'])]));
+  const kokkai = new Map(parseCsv(kokkaiCsv).filter(r => r['人物ID']).map(r => [r['人物ID'], normalizeReading(r['読み'])]));
+  const out: Record<string, string> = {};
+  for (const id of ids) {
+    const reading = ledger.get(id) || kokkai.get(id) || '';
+    if (reading) out[id] = reading;
+  }
+  return out;
 }

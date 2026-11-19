@@ -57,6 +57,8 @@ const inputs = {
   cabinet: join(root, 'data/acquired/office-holders/cabinet.csv'),
   persons: join(root, 'data/derived/person-ids/persons.csv'),
   roster: join(root, 'data/acquired/diet-roster/current.csv'),
+  // 並びに使う読みの補い（台帳に読みが無い人。scripts/fetch_person_readings.py）。額には使わない。
+  readingsKokkai: join(root, 'data/acquired/diet-roster/readings-kokkai.csv'),
   // 賛成・反対は投票の一次資料から取る（参議院は個人票、衆議院は enacted.csv の会派）。
   votesIndex: join(root, 'data/acquired/sangiin-votes/votes_index.csv'),
   sangiinMembers: join(root, 'data/acquired/sangiin-votes/members.csv'),
@@ -131,7 +133,7 @@ function spearman(a, b) {
 }
 
 try {
-  const { buildExposureInputs, withLedgerPeople } = await server.ssrLoadModule('/src/exposure-inputs.ts');
+  const { buildExposureInputs, withLedgerPeople, personReadingsOf } = await server.ssrLoadModule('/src/exposure-inputs.ts');
   const { buildExposureRanking, toPublicExposureRanking, DEFAULT_ROLE_RATIO } = await server.ssrLoadModule('/src/exposure-ranking.ts');
   const { SCORING_CONSTANTS } = await server.ssrLoadModule('/src/scoring-constants.ts');
   const text = Object.fromEntries(Object.entries(inputs).map(([k, p]) => [k, readFileSync(p, 'utf8')]));
@@ -171,10 +173,12 @@ try {
     ...pub,
     wholeEconomy: { groups: groupRow(built.wholeEconomy), people: pubWhole.people, parties: pubWhole.parties, hidden: pubWhole.hidden, unallocated: pubWhole.unallocated, totals: pubWhole.totals },
     groups: groupRow(built.industry),
+    // 人物ID → 読み（画面の並びだけに使う。台帳 → 会議録の順。どちらにも無い人は載せない）。
+    personReadings: personReadingsOf(text.persons, text.readingsKokkai, pub.people.map(p => p.actorId)),
     counts: built.counts,
     coverage,
   };
-  payload.generatedFrom = await generationMetadata(server, root, ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts'], ['scripts/build_exposure_ranking.mjs']);
+  payload.generatedFrom = await generationMetadata(server, root, ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts', 'app/src/exposure-labels.ts'], ['scripts/build_exposure_ranking.mjs']);
   payload.inputs = Object.fromEntries(Object.entries(text).map(([k, v]) => [k, createHash('sha256').update(v).digest('hex')]));
   // 個人別の賛否（ballots_*.csv）は、ファイル名と中身を順に並べた1つの照合値にする。
   const ballotHash = createHash('sha256');

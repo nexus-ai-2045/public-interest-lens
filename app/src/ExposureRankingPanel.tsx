@@ -9,7 +9,7 @@ import './exposure.css';
  *
  * 見せ方の決まり：
  * 1. 最上部に「因果ではなく記述」を必ず出す（集計器の disclaimer をそのまま使う）。
- * 2. 順位は1位・2位ではなく階層で出す。幅が重なる人は同じ階層で、階層の中は表示名の文字の順に並べる（額の順にしない。先頭を目立たせる演出も付けない）。
+ * 2. 順位は1位・2位ではなく階層で出す。幅が重なる人は同じ階層で、階層の中は読みの五十音順に並べる（読みが無い人・会派はその後に名前の文字の順。額の順にしない。先頭を目立たせる演出も付けない）。
  * 3. 関与した法律が下限に満たない人・会派は、額を出さない。関与した群と本数だけを出す。
  * 4. 配らなかった額（未配分）と検算を、畳んだ欄で必ず見られるようにする。
  * 5. 法律ごとの額は出さない（入力の型にも無い）。内訳に本数が下限に満たない群×役割が1つでもある人は、内訳の額を全部伏せる（1つだけ伏せても、合計からの引き算で読めてしまうため）。
@@ -21,6 +21,8 @@ import './exposure.css';
 
 export type ExposureSide = 'loss' | 'benefit' | 'none';
 export type GroupLabel = Pick<ExposureGroup, 'id' | 'group' | 'window'>;
+/** 群の ID → 表示名（「産業（期間）」）。 */
+export const groupNamesOf = (groups: readonly GroupLabel[]): Record<string, string> => Object.fromEntries(groups.map(g => [g.id, `${g.group}（${g.window}）`]));
 export type ExposureTab = 'people' | 'parties';
 
 export const ROLE_LABEL: Readonly<Record<ExposureRole, string>> = { proposer: '発議', yes: '賛成', no: '反対（逆向き）', cabinet: '閣議決定' };
@@ -68,9 +70,17 @@ export function exposureScale(rows: readonly { exposureYen: Range }[]): { min: n
   return { min, max, position: value => Math.max(0, Math.min(100, (value - min) / span * 100)) };
 }
 
-/** 階層の中の並び：階層の昇順、同じ階層の中は表示名の文字の順（読みの五十音順ではない。同じなら ID 順）。額の順にしない（階層の中の差に意味が無いため）。 */
-export function orderWithinTiers(rows: readonly ExposureRow[], nameOf: (row: ExposureRow) => string): ExposureRow[] {
-  return rows.filter(r => r.tier !== null).sort((a, b) => (a.tier! - b.tier!) || nameOf(a).localeCompare(nameOf(b), 'ja') || a.actorId.localeCompare(b.actorId));
+/** 並びの鍵：読み（空白を除く。無ければ空）と表示名。 */
+export type ActorSortKey = { reading: string; name: string };
+/** 名前の並び：読みのある行が先で読みの五十音順、読みの無い行はその後に表示名の文字の順。同じなら ID 順。 */
+export function compareActors(a: ExposureRow, b: ExposureRow, keyOf: (row: ExposureRow) => ActorSortKey): number {
+  const ka = keyOf(a), kb = keyOf(b);
+  return (Number(!ka.reading) - Number(!kb.reading)) || ka.reading.localeCompare(kb.reading, 'ja') || ka.name.localeCompare(kb.name, 'ja') || a.actorId.localeCompare(b.actorId);
+}
+
+/** 階層の中の並び：階層の昇順、同じ階層の中は名前の並び（compareActors）。額の順にしない（階層の中の差に意味が無いため）。 */
+export function orderWithinTiers(rows: readonly ExposureRow[], keyOf: (row: ExposureRow) => ActorSortKey): ExposureRow[] {
+  return rows.filter(r => r.tier !== null).sort((a, b) => (a.tier! - b.tier!) || compareActors(a, b, keyOf));
 }
 
 /** 理由の末尾の数だけの「（○本）」「（○%）」を外した、理由の種類。 */
@@ -104,7 +114,7 @@ function cellsByGroup(cells: readonly ExposureCell[]): { groupId: string; cells:
   return [...map].map(([groupId, list]) => ({ groupId, cells: list }));
 }
 
-type Labels = { group: (id: string) => string; actor: (row: ExposureRow) => string };
+type Labels = { group: (id: string) => string; actor: (row: ExposureRow) => string; sortKey: (row: ExposureRow) => ActorSortKey };
 
 /** 内訳の額を出してよいか。本数が下限に満たない内訳が1つでもあれば、全部伏せる（合計との引き算で復元させない）。 */
 export const canShowCellAmounts = (row: Pick<ExposureRow, 'cells'>, minLaws: number): boolean => row.cells.every(cell => cell.laws >= minLaws);
@@ -168,30 +178,33 @@ function UnrankedRow({ row, labels }: { row: ExposureRow; labels: Labels }) {
 export type ExposureRankingPanelProps = {
   /** 未配分は群×役割の合計（toPanelExposureRanking か公開用データ）。 */
   ranking: PanelExposureRanking;
-  /** 群の表示名（産業と期間）。無い群は ID をそのまま出す。 */
-  groups?: readonly GroupLabel[];
+  /** 群の ID → 表示名（産業名、未配分は「産業（年）」）。無い群は ID をそのまま出す。 */
+  groupNames?: Readonly<Record<string, string>>;
   /** ID → 表示名。無ければ ID をそのまま出す。 */
   personNames?: Readonly<Record<string, string>>;
+  /** 人物ID → 読み（ひらがな）。並びに使う。無い人は読みのある人の後に名前の文字の順。 */
+  personReadings?: Readonly<Record<string, string>>;
   partyNames?: Readonly<Record<string, string>>;
   initialTab?: ExposureTab;
 };
 
-export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, partyNames = {}, initialTab = 'people' }: ExposureRankingPanelProps) {
+export function ExposureRankingPanel({ ranking, groupNames = {}, personNames = {}, personReadings = {}, partyNames = {}, initialTab = 'people' }: ExposureRankingPanelProps) {
   const [tab, setTab] = useState<ExposureTab>(initialTab);
   const [limit, setLimit] = useState(EXPOSURE_PAGE_SIZE);
   const [unrankedLimit, setUnrankedLimit] = useState(EXPOSURE_PAGE_SIZE);
   const [unallocatedLimit, setUnallocatedLimit] = useState(EXPOSURE_PAGE_SIZE);
   const switchTab = (next: ExposureTab) => { setTab(next); setLimit(EXPOSURE_PAGE_SIZE); setUnrankedLimit(EXPOSURE_PAGE_SIZE); };
   const labels = useMemo<Labels>(() => {
-    const byId = new Map(groups.map(g => [g.id, `${g.group}（${g.window}）`]));
+    const actor = (row: ExposureRow) => (row.actorKind === 'person' ? personNames : partyNames)[row.actorId] ?? row.actorId;
     return {
-      group: id => byId.get(id) ?? id,
-      actor: row => (row.actorKind === 'person' ? personNames : partyNames)[row.actorId] ?? row.actorId,
+      group: id => groupNames[id] ?? id,
+      actor,
+      sortKey: row => ({ reading: row.actorKind === 'person' ? (personReadings[row.actorId] ?? '').replace(/\s+/g, '') : '', name: actor(row) }),
     };
-  }, [groups, personNames, partyNames]);
+  }, [groupNames, personNames, personReadings, partyNames]);
   const rows = tab === 'people' ? ranking.people : ranking.parties;
-  const ranked = useMemo(() => orderWithinTiers(rows, labels.actor), [rows, labels]);
-  const unranked = useMemo(() => rows.filter(r => r.tier === null), [rows]);
+  const ranked = useMemo(() => orderWithinTiers(rows, labels.sortKey), [rows, labels]);
+  const unranked = useMemo(() => rows.filter(r => r.tier === null).sort((a, b) => compareActors(a, b, labels.sortKey)), [rows, labels]);
   const scale = useMemo(() => exposureScale(ranked), [ranked]);
   const tiers = useMemo(() => groupByTier(ranked.slice(0, limit)), [ranked, limit]);
   const tierSizes = useMemo(() => new Map(groupByTier(ranked).map(t => [t.tier, t.rows.length])), [ranked]);
@@ -205,6 +218,8 @@ export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, p
   let index = 0;
   const unallocatedGroup = (u: UnallocatedSummary) => (u.groupId === null ? '本数の少ない群×役割（まとめ）' : labels.group(u.groupId));
   const noneNote = tab === 'people' ? `、関与の記録が無い${unit}` : '';
+  // 会派には読みの表が無いので、名前の文字の順。
+  const orderNote = tab === 'people' ? '読みの五十音順（読みが分からない人はその後に名前の文字の順）' : '名前の文字の順';
   return <section className="exposure-panel" aria-labelledby="exposure-title">
     <h2 id="exposure-title">曝露ランキング <span className="xr-claim">因果ではなく記述</span></h2>
     <p className="xr-disclaimer" role="note"><strong>これは「関与していた産業群がどれだけ伸び損ねたか」の記述です。</strong>{ranking.disclaimer}</p>
@@ -215,7 +230,7 @@ export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, p
         <li>伸び損ね額は、産業×期間の群ごとに、OECD の同じ産業・同じ時期の中央値との差です。</li>
         <li>「伸び損ね側」は、伸び損ねた群に発議・賛成・閣議決定で関与した額です。「逆側」は、中央値を上回った群に関与した額か、伸び損ねた群に反対した額です。逆側は、群が上回ったという意味とは限りません。</li>
         <li>群の額を役割ごとの固定比率（取り決め）で配ります：{EXPOSURE_ROLES.map(role => `${ROLE_LABEL[role]} ${roleRatio[role]}`).join('・')}。反対は逆向きに配ります。</li>
-        <li>幅が重なる{unit}は同じ階層です。同じ階層の中は名前（人物ID）の文字の順に並べます。並び順に、差の意味はありません。統計的な信頼集合ではなく、記述の階層です。</li>
+        <li>幅が重なる{unit}は同じ階層です。同じ階層の中は{orderNote}に並べます。並び順に、差の意味はありません。統計的な信頼集合ではなく、記述の階層です。</li>
         <li>関与した法律が{minLaws}本に満たない{unit}、上位3本の法律で額の{Math.round(ranking.params.topThreeShareCap * 100)}%を超える{unit}{noneNote}は、額を出さず、関与した群と本数と理由だけを出します。</li>
       </ul>
     </details>
@@ -231,7 +246,7 @@ export function ExposureRankingPanel({ ranking, groups = [], personNames = {}, p
           <span><i className="xr-key-range" />細い線＝幅（低い値〜高い値）</span>
           {scale.min < 0 && <span><i className="xr-key-zero" />縦線＝0（左は逆側）</span>}
         </p>
-        <p className="fine-note" role="status">階層に入る{unit}は{ranked.length}{tab === 'people' ? '人' : '会派'}{limit < ranked.length && `（上から${limit}を表示）`}{tierSizes.size === 1 && `。いまは全員の幅が重なり、階層は1つだけです。並びは名前（人物ID）の文字の順で、額の大きい順ではありません`}</p>
+        <p className="fine-note" role="status">階層に入る{unit}は{ranked.length}{tab === 'people' ? '人' : '会派'}{limit < ranked.length && `（上から${limit}を表示）`}{tierSizes.size === 1 && `。いまは全員の幅が重なり、階層は1つだけです。並びは${orderNote}で、額の大きい順ではありません`}</p>
         {tiers.map(tier => <section key={tier.tier} className={`xr-tier ${tier.tier === 1 ? 'top' : ''}`} aria-label={`第${tier.tier}階層`}>
           <h3><span className="xr-tier-no">第{tier.tier}階層</span><small>幅が重なる{tierSizes.get(tier.tier)}{tab === 'people' ? '人' : '会派'}（並び順に差の意味なし）</small></h3>
           <ol className="xr-rows">{tier.rows.map(row => {
