@@ -78,6 +78,9 @@ SAMPLE_KEY = {"類型": "類型", "経済に効くか": "経済に効くか", "�
 SAMPLE_JUDGE = "抜き取り検証2回目（sample-v2）でも同じ値"
 # 訂正で到達点が変わり、抜き取り検証2回目の記録で新しく照合した項目（2系統が一致した値を使う）
 SAMPLE_CASCADE = OUT / "sample-v2-cascade.csv"
+# 抜き取り検証2回目の訂正候補の写し（#223 の 2026-11-19 の決着、49本・60項目）。sample-v2 の correction-candidates.csv は
+# 「今のサイトの値でまだ合わない項目だけ」に作り直されるので、それを読むと訂正が入るたびに候補が消え、訂正も消える（循環）。
+SAMPLE_CANDIDATES = OUT / "sample-v2-candidates.csv"
 
 
 def read_csv(path: Path) -> list[dict]:
@@ -242,7 +245,7 @@ def build() -> tuple[list[dict], list[dict], list[dict]]:
 
 def merge_sample(rows: list[dict], conf: list[dict], res: list[dict]) -> tuple[list[dict], set]:
     """抜き取り検証2回目の訂正候補を足す。読み直しの行と同じ値ならその行の判定者に書き足し、割れたら Opus の裁定で決める。"""
-    cands = read_csv(SAMPLE / "correction-candidates.csv") if (SAMPLE / "correction-candidates.csv").exists() else []
+    cands = read_csv(SAMPLE_CANDIDATES)
     if not cands:
         return rows, set()
     lines = {}

@@ -14,7 +14,7 @@
 
 1. #208 の6本：`evaluation-ledger-v1/reverification-v1/`。
 2. 誤りの型の全件検査の候補 582 本の読み直し：`reread-v1/`（README に手順と結果）。規則 K2 の 88 本は `error-type-check-v1/README.md（K2）`。
-3. 抜き取り検証の2回目（`evaluation-ledger-v1/sample-v2/`、#223）の訂正候補 49 本（60 項目）。決め方（Haiku 2系統→Sonnet の裁定→Opus）は `scripts/resample_verification.py` の resolve にあり、ここでは繰り返さない。`scripts/resolve_error_candidates.py` の `merge_sample` が足すのは次の3つ：
+3. 抜き取り検証の2回目（`evaluation-ledger-v1/sample-v2/`、#223）の訂正候補 49 本（60 項目）。読むのは写しの `sample-v2-candidates.csv`（#223 の決着の時点）。`sample-v2/correction-candidates.csv` は今のサイトの値でまだ合わない項目だけに作り直されるので、それを読むと訂正が入るたびに候補と訂正が一緒に消える。決め方（Haiku 2系統→Sonnet の裁定→Opus）は `scripts/resample_verification.py` の resolve にあり、ここでは繰り返さない。`scripts/resolve_error_candidates.py` の `merge_sample` が足すのは次の3つ：
    - 読み直し（2）と重なる 19 項目の突き合わせ。18 項目は同じ値で、行の「判定者」に「抜き取り検証2回目でも同じ値」を書き足した（独立な2回目の読み）。閣法-183-7 の類型だけが割れた（読み直し 新規、2回目 組織手続）ので、Opus が一次資料で組織手続と裁定した（`sample-v2-rulings.json`）。
    - 制度と決めた項目への `unread()`（読み直しと同じ規則）。制度と読んだ記録の判断が読めていない条文に懸かる 5 項目は「判定不能」にした（閣法-183-7・閣法-155-46・衆法-197-6・閣法-171-44・閣法-211-46）。
    - 連鎖（`sample-v2-cascade.csv`）：類型の訂正で効果なし（定例）から参考額に移り、新しく分野を照合した 2 本（衆法-163-21・閣法-216-1）。2系統が一致した値（労働市場）を使う。

@@ -108,11 +108,12 @@ class LedgerIntegration(unittest.TestCase):
             self.assertTrue(r["検証メモ"].startswith(MEMO), i)
 
     def test_individual_amount_failures_are_demoted_in_ledger_and_ranking(self):
-        # #229 の暫定表（interim-holds.csv）の3本は、標本2の判定から台帳と公開ランキングの両方で参考に下げる
+        # #229 の暫定表（interim-holds.csv）の3本は、訂正表（primary-source-corrections-v1）で値が直り、標本2を今のサイトの値で
+        # 判定し直すと合格になる（衆法-189-20 は制度、閣法-193-61・閣法-196-2 は分野）。公開ランキングでも参考に下げる理由から外れる
         failed = build_public_ranking.verification_failed()
         for i in ("衆法-189-20", "閣法-193-61", "閣法-196-2"):
-            self.assertEqual(self.ledger[i]["検証状態"], "参考に下げた", i)
-            self.assertTrue(failed[i].startswith(SAMPLE2_REASON_PREFIX), i)
+            self.assertEqual(self.ledger[i]["検証状態"], "抜き取り検証で合格", i)
+            self.assertFalse(failed.get(i, "").startswith(SAMPLE2_REASON_PREFIX), i)
         self.assertFalse((L / "interim-holds.csv").exists())
 
     def test_ranking_drops_laws_the_ledger_now_passes(self):

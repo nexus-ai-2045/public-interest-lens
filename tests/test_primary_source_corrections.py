@@ -31,7 +31,7 @@ class CorrectionsTest(unittest.TestCase):
         cls.a = {x["id"]: x for x in json.loads((RV / "lineA.json").read_text(encoding="utf-8"))}
         cls.b = {x["id"]: x for x in json.loads((RV / "lineB.json").read_text(encoding="utf-8"))}
         cls.rulings = json.loads((RV / "rulings.json").read_text(encoding="utf-8"))
-        with (reread.SAMPLE / "correction-candidates.csv").open(encoding="utf-8", newline="") as f:
+        with reread.SAMPLE_CANDIDATES.open(encoding="utf-8", newline="") as f:
             cls.sample = {(r["id"], r["項目"]): r for r in csv.DictReader(f)}
         cls.sample_rulings = json.loads(reread.SAMPLE_RULINGS.read_text(encoding="utf-8"))
         with reread.SAMPLE_CASCADE.open(encoding="utf-8", newline="") as f:
