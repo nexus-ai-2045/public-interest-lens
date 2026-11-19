@@ -235,7 +235,7 @@ describe('曝露ランキングの画面部品', () => {
   it('人は読みの五十音順に並べ、読みの無い人はその後に名前の文字の順にします（額を出さない人も同じ）', () => {
     const ids = ranking.people.map(p => p.actorId);
     // 名前の文字の順とは逆になる読みを、最後の1人を除いて付ける。
-    const readings = Object.fromEntries(ids.slice(0, -1).map((id, i) => [id, `${'あいうえおかきくけこ'[ids.length - i]} よみ`]));
+    const readings = Object.fromEntries(ids.slice(0, -1).map((id, i) => [id, `${String.fromCharCode(0x3042 + 2 * (ids.length - i))} よみ`]));
     const one: ExposureRanking = { ...ranking, people: ranking.people.map(p => (p.tier === null ? p : { ...p, tier: 1 })) };
     const html = renderToStaticMarkup(<ExposureRankingPanel ranking={toPanelExposureRanking(one)} personNames={SAMPLE_PERSON_NAMES} personReadings={readings} />);
     const shown = blocks(html, '<li class="xr-row').map(b => /<span class="xr-name">([^<]*)</.exec(b)![1]);

@@ -4,13 +4,13 @@
 使い道：議員ページの曝露ランキングで、同じ階層の中を読みの五十音順に並べるため（表示の並びだけ。額・人物IDの決め方には使わない）。
 persons.csv の読みは「現職の名簿に載った人」の印も兼ねる（scripts/person_ids.py）ので、そこには書き足さず、別の表に置く。
 
-確かめ方（一次資料）：会議録 API で 1986-07 以降の発言を発言者名（氏名、無ければ台帳の別表記）の完全一致で引き（API は部分一致なので、返った行を完全一致で絞る）、
+確かめ方（一次資料）：会議録 API で 1986-07 以降の発言を発言者名（氏名、無ければ台帳の別表記）の完全一致で引き（API は部分一致なので、返った行を完全一致で絞り、完全一致が100件そろうまで最大10ページ読む。読み切れないときは最も古い発言も1件足す）、
 一致した発言の読みが1通りのとき（濁点の有無だけの違いは同じとみなし、多い方を採る）だけ読みを入れる。
 読みが2通り以上（同姓同名の疑い）や一致なしは、読みを空にして理由を書く（推測しない）。
 院と選挙区を付けて分けた人物ID（「鬼木誠（衆・福岡2）」など）は、同姓同名がいると分かっている人なので引かずに理由を書く。
 
 出力：data/acquired/diet-roster/readings-kokkai.csv（人物ID,氏名,読み,一致した発言数,理由,出典URL,取得日時）
-再開できる：取得済みの人物IDは引き直さない（--refresh で全部引き直す）。
+再開できる：取得済みの人物IDは引き直さない（--refresh で全部引き直す）。API が応答しなかった人は理由を書いて残し、次の実行で引き直す。
 
 使い方：python3 scripts/fetch_person_readings.py [--workers 4] [--sleep 0.2] [--limit N] [--dry-run] [--refresh]
 """
@@ -53,22 +53,53 @@ def no_dakuten(y: str) -> str:
     return unicodedata.normalize("NFC", unicodedata.normalize("NFD", y).replace("゙", "").replace("゚", ""))
 
 
+RETRY_REASON = "API が応答しなかった"
+PAGES = 10  # 部分一致の結果を何ページ（100件ずつ）まで読むか
+
+
+def source_url(spelled: str) -> str:
+    return API + "?" + urllib.parse.urlencode({"speaker": spelled, "from": "1986-07-01", "maximumRecords": "100", "recordPacking": "json"})
+
+
+def exact_records(spelled: str, sleep: float) -> list[dict]:
+    """発言者名の完全一致の発言。API の speaker は部分一致なので、長い名前の発言で先頭100件が埋まっても、
+    最大 PAGES ページまで読み進める（新しい順）。同姓同名の別人を見落とさないよう、いちばん古い発言も1件足す。"""
+    base = {"speaker": spelled, "from": "1986-07-01", "maximumRecords": "100"}
+    out: list[dict] = []
+    start, total = 1, None
+    for _ in range(PAGES):
+        d = call({**base, "startRecord": str(start)})
+        time.sleep(sleep)
+        total = int(d.get("numberOfRecords", 0))
+        out += [r for r in d.get("speechRecord", []) if nospace(r.get("speaker", "")) == spelled]
+        nxt = d.get("nextRecordPosition")
+        if len(out) >= 100 or not nxt:
+            break
+        start = int(nxt)
+    if out and total and total > start + 99:
+        # 読み切っていない：いちばん古い発言（部分一致の最後）が同じ名前なら足す
+        last = call({**base, "startRecord": str(total), "maximumRecords": "1"}).get("speechRecord", [])
+        time.sleep(sleep)
+        out += [r for r in last if nospace(r.get("speaker", "")) == spelled]
+    return out
+
+
 def look_up(pid: str, name: str, aliases: list[str], sleep: float) -> dict[str, str]:
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     row = {"人物ID": pid, "氏名": name, "読み": "", "一致した発言数": "0", "理由": "", "出典URL": "", "取得日時": now}
     if SPLIT_ID.search(pid):
         return {**row, "理由": "同姓同名を院と選挙区で分けた人物（発言者名だけでは決まらない）"}
     recs: list[dict] = []
-    spelled = nospace(name)
-    tries = [s for n in [name, *aliases] for s in spellings(nospace(n))]
-    for spelled in dict.fromkeys(tries):
-        d = call({"speaker": spelled, "from": "1986-07-01", "maximumRecords": "100"})
-        time.sleep(sleep)
-        recs = [r for r in d.get("speechRecord", []) if nospace(r.get("speaker", "")) == spelled]
-        if recs:
-            break
-    url = API + "?" + urllib.parse.urlencode({"speaker": spelled, "from": "1986-07-01", "maximumRecords": "100", "recordPacking": "json"})
-    row["出典URL"] = url
+    tries = list(dict.fromkeys(s for n in [name, *aliases] for s in spellings(nospace(n))))
+    try:
+        for spelled in tries:
+            recs = exact_records(spelled, sleep)
+            if recs:
+                break
+    except RuntimeError as e:  # API が応答しない人は空にして理由を書く（他の人の結果は残す。次の実行で引き直す）
+        return {**row, "理由": f"{RETRY_REASON}（{e}）"}
+    # 出典：一致した表記の問い合わせ。一致なしなら、試した表記の問い合わせを全部。
+    row["出典URL"] = " ".join(source_url(t) for t in ([spelled] if recs else tries))
     yomi = Counter(nospace(r.get("speakerYomi") or "") for r in recs if r.get("speakerYomi"))
     row["一致した発言数"] = str(sum(yomi.values()))
     if not yomi:
@@ -87,7 +118,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--refresh", action="store_true", help="取得済みの人も引き直す")
     a = ap.parse_args(argv)
     want = targets()
-    done = {} if a.refresh else {r["人物ID"]: r for r in read(OUT)}
+    done = {} if a.refresh else {r["人物ID"]: r for r in read(OUT) if not r["理由"].startswith(RETRY_REASON)}
     todo = [t for t in want if t[0] not in done]
     if a.limit:
         todo = todo[: a.limit]
