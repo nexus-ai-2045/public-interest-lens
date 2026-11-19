@@ -15,7 +15,7 @@
   類型・経済に効くか・（額のある法律だけ）分野、（参考額だけ）範囲。2系統が一致した項目だけでサイトと比べる。
   範囲は参考額（産業全体の差）だけに当てる。個別の額は法律ごとの推定なので、初回と違い範囲を問わない。
   分野が「コロナ対応」の参考額は、産業ではなく費用便益の群なので、分野・範囲を照合しない。
-  サイトの「制度だけ」は到達点で読む（resolve_sample_failures.site_is_institutional。初回の読み直しで決めた規則）。
+  サイトの「制度だけ」は到達点で読む（evaluation_rules.site_is_institutional。初回の読み直しで決めた規則）。
   割れた項目が合否を左右するときは「割れ」として裁定待ちに出す（rulings.json を置けば反映）。
 """
 from __future__ import annotations
@@ -31,7 +31,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 from scripts.compare_verification import norm_field
-from scripts.resolve_sample_failures import site_is_institutional
+from scripts.evaluation_rules import (
+    STATE_DEMOTED,
+    STATE_FAILED,
+    VERDICT_FAIL,
+    is_demoted,
+    site_is_institutional,
+)
 
 SEED_V2 = 20261119
 LEDGER = ROOT / "data" / "derived" / "evaluation-ledger-v1"
@@ -202,50 +208,63 @@ def _value(a: dict, b: dict, ruling: dict, item: str) -> tuple[str, str, str, st
     return a[item], reason, (a.get("引用") or [""])[0], "Haiku 2系統（系統A 議案本文から・系統B 会議録から）が一致"
 
 
+RES_FIXED = "サイトの訂正で合格"
+
+
+def _causes(diffs: list[str], site_kind: str, reach: str) -> list[tuple[str, str]]:
+    """食い違いから（原因, 直す項目）。直す項目は 範囲 なら空。"""
+    out = []
+    for d in diffs:
+        head = d.split("：")[0]
+        if head == "範囲":
+            out.append((CAUSES["範囲"], ""))
+        elif head == "類型":
+            out.append((CAUSES["類型空" if not site_kind else "類型"], "類型"))
+        elif head == "経済に効くか":
+            out.append((CAUSES["経済定例" if reach == "効果なし（定例）" else "経済"], "経済に効くか"))
+        elif head == "分野":
+            out.append((CAUSES["分野"], "主な産業分野"))
+    return out
+
+
 def cmd_resolve() -> int:
     """不合格を原因で分け、決着を決める（AI は呼ばない）。サイトの値は直さない（訂正は primary-source-corrections-v1 の担当）。
-    範囲だけの不合格：参考額を参考に下げた（すでに順位・議員配分に使っていない）。
-    それ以外：直す値を correction-candidates.csv に出して訂正候補に回した。額のある法律は、直るまで額を参考に下げた扱い。"""
+    原因は裁定のあとの記録（verdicts.csv）の食い違いで分ける。決着と訂正候補は、今の台帳（ledger.csv）のサイトの値で判定し直して決める：
+      合格に戻った → サイトの訂正で合格。範囲だけ → 参考に下げた（すでに順位・議員配分に使っていない）。
+      それ以外 → 直す値を correction-candidates.csv に出して訂正候補に回した（額のある法律は直るまで額を参考に下げる）。"""
     A = {x["id"]: x for x in json.loads((OUT / "lineA.json").read_text(encoding="utf-8"))}
     B = {x["id"]: x for x in json.loads((OUT / "lineB.json").read_text(encoding="utf-8"))}
     rulings = json.loads((OUT / "rulings.json").read_text(encoding="utf-8"))
+    ledger = {r["id"]: r for r in read_csv(LEDGER / "ledger.csv")}
     res, cands = [], []
     for r in read_csv(OUT / "verdicts.csv"):
         if r["判定"] != "不合格":
             continue
-        i, ru = r["id"], rulings.get(r["id"], {})
-        diffs = [d for d in r["食い違い"].split("／") if d]
-        causes, items = [], []
-        for d in diffs:
-            head = d.split("：")[0]
-            if head == "範囲":
-                causes.append(CAUSES["範囲"])
-            elif head == "類型":
-                causes.append(CAUSES["類型空" if not r["サイト_類型"] else "類型"])
-                items.append(("類型", r["サイト_類型"]))
-            elif head == "経済に効くか":
-                causes.append(CAUSES["経済定例" if r["サイト_到達点"] == "効果なし（定例）" else "経済"])
-                items.append(("経済に効くか", r["サイト_経済に効くか"] or f"（到達点 {r['サイト_到達点']}）"))
-            elif head == "分野":
-                causes.append(CAUSES["分野"])
-                items.append(("主な産業分野", r["サイト_分野"]))
+        i, ru, cur = r["id"], rulings.get(r["id"], {}), ledger[r["id"]]
+        causes = [c for c, _ in _causes([d for d in r["食い違い"].split("／") if d], r["サイト_類型"], r["サイト_到達点"])]
+        v, now_diffs, _ = judge(cur, A[i], B[i], ru.get("値"))
+        now = _causes(now_diffs, cur["類型"], cur["到達点"])
+        items = [item for _, item in now if item]
         url = (A[i].get("出典URL") or [""])[0]
-        for item, before in items:
-            v, why, quote, who = _value(A[i], B[i], ru, item)
-            cands.append({"id": i, "項目": "分野" if item == "主な産業分野" else item, "直した値": v.replace("制度のみ", "制度"),
-                          "直す前の値": before, "理由": why, "引用": quote, "出典URL": url, "判定者": who,
+        before = {"類型": cur["類型"], "経済に効くか": cur["経済に効くか"] or f"（到達点 {cur['到達点']}）", "主な産業分野": cur["分野"]}
+        for item in items:
+            val, why, quote, who = _value(A[i], B[i], ru, item)
+            cands.append({"id": i, "項目": "分野" if item == "主な産業分野" else item, "直した値": val.replace("制度のみ", "制度"),
+                          "直す前の値": before[item], "理由": why, "引用": quote, "出典URL": url, "判定者": who,
                           "指示文": "sample-v2/prompt-v2.md（版 v2）" + ("・prompt-adjudicate-v1.md" if ru else ""),
                           "記録": "data/derived/evaluation-ledger-v1/sample-v2/"})
-        has_amount = r["サイト_到達点"].startswith(("参考額", "額", "国の収支"))
-        if items:
+        has_amount = cur["到達点"].startswith(("参考額", "額", "国の収支"))
+        if v == "合格":
+            how = RES_FIXED
+        elif items:
             how = RES_CANDIDATE + ("（額は直るまで参考に下げた扱い）" if has_amount else "")
         else:
             how = RES_DEMOTED
         res.append({"id": i, "層": r["層"], "原因": "／".join(dict.fromkeys(causes)), "決着": how,
-                    "理由": "／".join(diffs), "サイトの到達点": r["サイト_到達点"], "参考値（額・円）": r["サイト_額（円）"],
-                    "サイトの確かさ": r["サイト_確かさ"]})
+                    "理由": r["食い違い"], "今の食い違い": "／".join(now_diffs), "サイトの到達点": cur["到達点"],
+                    "参考値（額・円）": cur["額（円）"], "サイトの確かさ": cur["確かさ"]})
     with (OUT / "resolutions.csv").open("w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, ["id", "層", "原因", "決着", "理由", "サイトの到達点", "参考値（額・円）", "サイトの確かさ"])
+        w = csv.DictWriter(f, ["id", "層", "原因", "決着", "理由", "今の食い違い", "サイトの到達点", "参考値（額・円）", "サイトの確かさ"])
         w.writeheader()
         w.writerows(res)
     with (OUT / "correction-candidates.csv").open("w", encoding="utf-8", newline="") as f:
@@ -278,7 +297,7 @@ def cmd_report() -> int:
     t = Counter(r["判定"] for r in rows)
     fail = t["不合格"]
     lo, hi = wilson(fail, n)
-    no_scope = sum(1 for r in rows if r["判定"] == "不合格" and res[r["id"]]["決着"] != RES_DEMOTED)
+    no_scope = sum(1 for r in res.values() if any(not c.startswith("仕組み") for c in r["原因"].split("／")))
     lo2, hi2 = wilson(no_scope, n)
     who = Counter(x["正しい側"] for v in rulings.values() for x in v["裁定"])
     by_reach: dict[str, Counter] = {}
@@ -316,22 +335,26 @@ def load_record() -> dict[str, tuple[dict, dict, dict]]:
     return {i: (a, B[i], {**rulings.get(i, {}), "初回": first.get(i, "")}) for i, a in A.items() if i in B}
 
 
-STATE_PASS, STATE_FAILED, STATE_DEMOTED = "抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた"
+STATE_PASS = "抜き取り検証で合格"
 MEMO = "標本2（sample-v2）："
 
 
 def ledger_state(site: dict, rec: tuple[dict, dict, dict]) -> tuple[str, str]:
-    """標本2の法律の検証状態を、今のサイトの値で判定し直して決める（AI は呼ばない）。
-    サイトの値が訂正されて読み直しの値と合えば合格。範囲だけの不合格は参考に下げた（参考額は産業全体の差）。
-    それ以外の不合格は、訂正されるまで不合格のまま（訂正候補は correction-candidates.csv）。"""
+    """標本2の法律の検証状態を、今のサイトの値で判定し直して決める（AI は呼ばない）。site は 類型・分類・到達点・分野・確かさ。
+    合格：サイトの値が読み直しと合う（訂正されて合った法律はメモに「訂正で合格」）。
+    参考に下げた：不合格で、額のある到達点（初回と同じ自動の降格の規則 is_demoted）か、範囲だけの不合格。
+    不合格のまま：額の無い法律で、サイトの値が訂正されるまで（訂正候補は correction-candidates.csv）。"""
     a, b, ru = rec
     v, diffs, _ = judge(site, a, b, ru.get("値"))
     if v == "合格":
         fixed = "（訂正で合格）" if ru.get("初回") == "不合格" else ""
         return STATE_PASS, f"{MEMO}合格{fixed}"
+    reason = "／".join(diffs) or "裁定待ち"
     if v == "不合格" and all(d.startswith("範囲") for d in diffs):
-        return STATE_DEMOTED, f"{MEMO}{'／'.join(diffs)}"
-    return STATE_FAILED, f"{MEMO}訂正待ち：{'／'.join(diffs) or '裁定待ち'}"
+        return STATE_DEMOTED, f"{MEMO}{reason}"
+    if is_demoted(VERDICT_FAIL, site["到達点"], site.get("確かさ", "")):
+        return STATE_DEMOTED, f"{MEMO}訂正待ち（額は参考に下げた）：{reason}"
+    return STATE_FAILED, f"{MEMO}訂正待ち：{reason}"
 
 
 def main() -> int:

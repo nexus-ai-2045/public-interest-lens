@@ -226,7 +226,7 @@ class CompletionTest(unittest.TestCase):
         self.assertEqual(status[2]["state"], "未達")
         self.assertIn("計 2 本", status[2]["now"])
         self.assertEqual(status[3]["state"], "達成")  # 不合格は参考に下げてあり、不合格のままは0
-        self.assertIn("参考に下げた 1 本、読み直しで合格に訂正 0 本、不合格のまま 0 本", status[3]["now"])
+        self.assertIn("不合格のうち 参考に下げた 1・訂正（読み直し）で合格 0・不合格のまま 0", status[3]["now"])
         self.assertEqual(status[4]["state"], "未達")
         self.assertIn("CI と同じ検査", status[4]["now"])
 
@@ -283,7 +283,19 @@ class CompletionTest(unittest.TestCase):
             d + "sample-verdicts.csv": "id,判定,食い違い\nA,不合格,向き\nA,合格,\nB,,\n",  # A はやり直しで2行、B は空欄、C は行が無い
         })
         self.assertEqual(status[3]["state"], "未達")
-        self.assertIn("判定済み 1 本（合格 1、不合格 0）、判定なし 2 本", status[3]["now"])
+        self.assertIn("3 本中 合格 1・不合格 0・判定なし 2", status[3]["now"])
+
+    def test_second_sample_is_counted_separately(self):
+        d = "data/derived/evaluation-ledger-v1/"
+        status = self.status({
+            d + "ledger.csv": LEDGER_HEAD + "A,測定できない,,,抜き取り検証で合格\nB,測定できない,,,抜き取り検証で合格\nC,測定できない,,,抜き取り検証で不合格\n",
+            d + "sample.csv": "層,id,題名\nx,A,a\n",
+            d + "sample-verdicts.csv": "id,判定,食い違い\nA,合格,\n",
+            d + "sample-v2/sample.csv": "層,id,題名\nx,B,b\nx,C,c\n",
+            d + "sample-v2/verdicts.csv": "id,判定,食い違い\nB,不合格,類型\nC,不合格,類型\n",
+        })
+        self.assertEqual(status[3]["state"], "未達")  # 標本2に不合格のままが1本
+        self.assertIn("標本2（新しい標本、種 20261119）：2 本中 合格 0・不合格 2・判定なし 0。不合格のうち 参考に下げた 0・訂正（読み直し）で合格 1・不合格のまま 1", status[3]["now"])
 
     def test_completion_does_not_change_the_verdict(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -55,23 +55,36 @@ def involved_law_ids(path: Path) -> set[str] | None:
 VERDICT_FAIL = "不合格"
 STATE_FAILED = "抜き取り検証で不合格"
 STATE_DEMOTED = "参考に下げた"
-# 当て直しまでの暫定の降格（interim-holds.csv）。抜き取り2回目で不合格の個別の額を、全件の当て直しが済むまで参考に下げる。
-# 初回の抜き取り（sample-verdicts.csv）の数え方を変えないよう、検証状態は別の語にする。当て直しで直ったら行を消して戻す。
-STATE_INTERIM_HELD = "当て直しまで参考に下げた"
-INTERIM_HOLDS = Path(__file__).resolve().parents[1] / "data" / "derived" / "evaluation-ledger-v1" / "interim-holds.csv"
-INTERIM_REASON_PREFIX = "抜き取り2回目で不合格（振り分けの当て直しまで参考）："
+# 抜き取り検証の2回目（新しい標本、data/derived/evaluation-ledger-v1/sample-v2/）。初回（sample-verdicts.csv）とは別に数える。
+# 判定は scripts/resample_verification.py が2系統の独立判定と裁定から機械的に出す（verdicts.csv）。サイトの値が直れば判定し直して合格に戻る。
+SAMPLE2_VERDICTS = Path(__file__).resolve().parents[1] / "data" / "derived" / "evaluation-ledger-v1" / "sample-v2" / "verdicts.csv"
+SAMPLE2_REASON_PREFIX = "抜き取り2回目で不合格（サイトの値の訂正まで参考）："
+# サイトの主張を到達点で読む：この到達点なら「制度だけ（経済の量は動かない）」、それ以外は「経済に効く」
+INSTITUTIONAL_REACHES = ("評価対象外", "効果なし（定例）")
 
 
-def interim_holds(path: Path = INTERIM_HOLDS) -> dict[str, str]:
-    """当て直しまで参考に下げる法律と、その食い違い（id → 食い違い）。表が無いときは空。判定は不合格だけ。"""
+def site_is_institutional(site: dict) -> bool:
+    """サイトが「制度だけ（経済の量は動かない）」と扱っているか。到達点で読む（振り分けの分類では読まない）。"""
+    return site["到達点"] in INSTITUTIONAL_REACHES
+
+
+def sample2_failures(path: Path = SAMPLE2_VERDICTS, ledger: Path | None = None) -> dict[str, str]:
+    """抜き取り2回目で不合格の法律と、その食い違い（id → 食い違い）。表が無いときは空。
+    verdicts.csv は裁定のあとの記録で書き換えない。サイトの値が訂正されて、台帳（今のサイトの値で判定し直す）が
+    「抜き取り検証で合格」にした法律は外す。"""
     if not path.exists():
         return {}
     with path.open(encoding="utf-8", newline="") as f:
         rows = list(csv.DictReader(f))
-    bad = [r["id"] for r in rows if r["判定"] != VERDICT_FAIL or not r["食い違い"].strip()]
+    bad = [r["id"] for r in rows if r["判定"] == VERDICT_FAIL and not r["食い違い"].strip()]
     if bad:
-        raise ValueError(f"interim-holds.csv は不合格と食い違いのある行だけ：{bad}")
-    return {r["id"]: r["食い違い"].strip() for r in rows}
+        raise ValueError(f"sample-v2/verdicts.csv の不合格に食い違いが無い：{bad}")
+    ledger = ledger or path.parents[1] / "ledger.csv"
+    passed: set[str] = set()
+    if ledger.exists():
+        with ledger.open(encoding="utf-8", newline="") as f:
+            passed = {r["id"] for r in csv.DictReader(f) if r["検証状態"] == "抜き取り検証で合格"}
+    return {r["id"]: r["食い違い"].strip() for r in rows if r["判定"] == VERDICT_FAIL and r["id"] not in passed}
 
 
 # 台帳の到達点が、額を順位・議員配分に使わない（参考額）か、そもそも評価対象外（額が出ていれば順位に混ざる）のもの
