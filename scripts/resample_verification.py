@@ -30,7 +30,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
-from scripts import build_evaluation_ledger as bel
 from scripts.compare_verification import norm_field
 from scripts.resolve_sample_failures import site_is_institutional
 
@@ -49,6 +48,10 @@ def read_csv(p: Path) -> list[dict]:
 
 
 def cmd_sample() -> int:
+    from scripts import (
+        build_evaluation_ledger as bel,  # 台帳の作り方が、この表（判定）を読むので遅れて読む
+    )
+
     rows = bel.build_rows(bel.load())
     first = {r["id"] for r in read_csv(LEDGER / "sample.csv")}
     pool = [r for r in rows if r["id"] not in first]
@@ -301,13 +304,43 @@ def cmd_report() -> int:
     return 0
 
 
+def load_record() -> dict[str, tuple[dict, dict, dict]]:
+    """台帳が読む：{id: (系統A, 系統B, 裁定)}。記録が無ければ空。"""
+    if not (OUT / "lineA.json").is_file():
+        return {}
+    A = {x["id"]: x for x in json.loads((OUT / "lineA.json").read_text(encoding="utf-8"))}
+    B = {x["id"]: x for x in json.loads((OUT / "lineB.json").read_text(encoding="utf-8"))}
+    p = OUT / "rulings.json"
+    rulings = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    first = {r["id"]: r["判定"] for r in read_csv(OUT / "verdicts.csv")} if (OUT / "verdicts.csv").exists() else {}
+    return {i: (a, B[i], {**rulings.get(i, {}), "初回": first.get(i, "")}) for i, a in A.items() if i in B}
+
+
+STATE_PASS, STATE_FAILED, STATE_DEMOTED = "抜き取り検証で合格", "抜き取り検証で不合格", "参考に下げた"
+MEMO = "標本2（sample-v2）："
+
+
+def ledger_state(site: dict, rec: tuple[dict, dict, dict]) -> tuple[str, str]:
+    """標本2の法律の検証状態を、今のサイトの値で判定し直して決める（AI は呼ばない）。
+    サイトの値が訂正されて読み直しの値と合えば合格。範囲だけの不合格は参考に下げた（参考額は産業全体の差）。
+    それ以外の不合格は、訂正されるまで不合格のまま（訂正候補は correction-candidates.csv）。"""
+    a, b, ru = rec
+    v, diffs, _ = judge(site, a, b, ru.get("値"))
+    if v == "合格":
+        fixed = "（訂正で合格）" if ru.get("初回") == "不合格" else ""
+        return STATE_PASS, f"{MEMO}合格{fixed}"
+    if v == "不合格" and all(d.startswith("範囲") for d in diffs):
+        return STATE_DEMOTED, f"{MEMO}{'／'.join(diffs)}"
+    return STATE_FAILED, f"{MEMO}訂正待ち：{'／'.join(diffs) or '裁定待ち'}"
+
+
 def main() -> int:
-    cmd = sys.argv[1] if len(sys.argv) > 1 else ""
-    fn = {"sample": cmd_sample, "fetch": cmd_fetch, "compare": cmd_compare, "resolve": cmd_resolve, "report": cmd_report}.get(cmd)
-    if fn is None:
-        print(__doc__)
-        return 2
-    return fn()
+    import argparse
+
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("cmd", choices=["sample", "fetch", "compare", "resolve", "report"])
+    cmd = ap.parse_args().cmd
+    return {"sample": cmd_sample, "fetch": cmd_fetch, "compare": cmd_compare, "resolve": cmd_resolve, "report": cmd_report}[cmd]()
 
 
 if __name__ == "__main__":
