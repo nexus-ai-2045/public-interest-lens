@@ -32,6 +32,32 @@ class PreflightTest(unittest.TestCase):
         self.assertTrue(items)
         self.assertEqual({"注意"}, {i.status for i in items})
 
+    def _permissions_with_push_error(self, stderr):
+        import subprocess
+
+        def fake(args, cwd=preflight.ROOT, timeout=120):
+            self.assertNotIn("--no-verify", args)  # push 前のフックは飛ばさない（AGENTS.md）
+            if args[:2] == ["git", "ls-remote"]:
+                return subprocess.CompletedProcess(args, 0, "abc\trefs/heads/main\n", "")
+            if args[:2] == ["git", "push"]:
+                return subprocess.CompletedProcess(args, 1, "", stderr)
+            return subprocess.CompletedProcess(args, 0, "true\n", "")
+
+        with mock.patch.object(preflight, "_run", side_effect=fake):
+            return preflight.permissions(offline=False)
+
+    def test_hook_stop_is_not_reported_as_missing_permission(self):
+        """フックが止めたときは「権限が無い」と言わず、権限は未確認（注意）、フックの項目を失敗として分けて出す。"""
+        items = self._permissions_with_push_error("失敗: 1c9d234d: 差分に大きすぎる中身\nerror: failed to push some refs to 'x'")
+        self.assertEqual([("権限", "注意"), ("push 前フック", "失敗")], [(i.check, i.status) for i in items])
+        self.assertIn("unshallow", items[1].detail)
+
+    def test_auth_denial_fails_permission_item(self):
+        for stderr in ("remote: Permission to a/b.git denied to someone.\nfatal: unable to access 'x': The requested URL returned error: 403",
+                       "fatal: Authentication failed for 'https://github.com/a/b'"):
+            items = self._permissions_with_push_error(stderr)
+            self.assertEqual([("権限", "失敗")], [(i.check, i.status) for i in items], stderr)
+
     def test_missing_script_fails(self):
         missing = preflight.ROOT / "scripts" / "no_such_script.py"
         self.assertEqual(["失敗"], [i.status for i in preflight.dry_run([missing])])

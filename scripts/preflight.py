@@ -139,10 +139,23 @@ def permissions(offline: bool) -> list[Item]:
     read = _run(["git", "ls-remote", "--heads", "origin", "main"], timeout=60)
     if read.returncode != 0 or "refs/heads/main" not in read.stdout:
         return [Item("権限", "失敗", f"GitHub のリポジトリを読めない：{read.stderr.strip()[:200]}")]
-    # 書き込みは --dry-run で確かめる（受け側の認証まで通すが、何も送らない）。
-    write = _run(["git", "push", "--dry-run", "origin", "HEAD:refs/heads/claude/preflight-probe"], timeout=60)
-    return [Item("権限", "合格" if write.returncode == 0 else "失敗",
-                 "GitHub のリポジトリを読めて、push できる" if write.returncode == 0 else f"push の権限が無い：{write.stderr.strip()[-200:]}")]
+    # 書き込みは --dry-run で確かめる（受け側の認証まで通すが、何も送らない）。push 前のフックは飛ばさない（AGENTS.md）。
+    # 失敗したときは、git の出力で「認証・権限で断られた」と「フックが止めた」を分けて出す（フックが止めたなら権限は確かめられていない）。
+    write = _run(["git", "push", "--dry-run", "origin", "HEAD:refs/heads/claude/preflight-probe"], timeout=120)
+    if write.returncode == 0:
+        return [Item("権限", "合格", "GitHub のリポジトリを読めて、push できる")]
+    err = write.stderr.strip()
+    if AUTH_DENIED.search(err):
+        return [Item("権限", "失敗", f"push の権限が無いか、届かない：{err[-200:]}")]
+    shallow = _run(["git", "rev-parse", "--is-shallow-repository"]).stdout.strip() == "true"
+    hint = "（浅い clone だと端のコミットが大きな差分に見えて止まる。git fetch --unshallow origin のあと回し直す）" if shallow else ""
+    return [Item("権限", "注意", "読めるが、push 前のフックが先に止めたので書き込みの権限は確かめられていない"),
+            Item("push 前フック", "失敗", f"push 前のフックが止めた{hint}：{err[-200:]}")]
+
+
+# 認証・権限で断られたときに git が出す文言（https と ssh）。これに当たれば、フックの出力より優先して「権限なし」とする。
+AUTH_DENIED = re.compile(r"(?i)\b403\b|permission (to \S+ )?denied|authentication failed|could not read username|"
+                         r"unable to access|repository not found|denied to")
 
 
 def vercel_quota(offline: bool) -> list[Item]:

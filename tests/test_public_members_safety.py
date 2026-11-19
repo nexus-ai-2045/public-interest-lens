@@ -9,6 +9,7 @@
 """
 
 import json
+import sys
 import unittest
 from pathlib import Path
 from urllib.parse import urlparse
@@ -350,6 +351,10 @@ class PublicMembersSafetyTest(unittest.TestCase):
     def setUpClass(cls):
         cls.members = json.loads((DIST / "members.json").read_text(encoding="utf-8"))
         cls.ranking = json.loads((DIST / "ranking.json").read_text(encoding="utf-8"))
+        # 議員か法律が0件のときは、その側の検査は通っても何も確かめていない。合格と区別できるように出す（失敗にはしない）。
+        people, laws = len(cls.members.get("members") or []), len(cls.members.get("laws") or [])
+        if people == 0 or laws == 0:
+            print(f"注意  議員ページの安全検査は空振り：members.json の議員 {people} 人・法律 {laws} 本", file=sys.stderr)
 
     def test_only_public_record_fields(self):
         extra = _paths(self.members, "", set()) - ALLOWED_PATHS
