@@ -4,14 +4,17 @@ import { CHARACTER_LABEL, CHARACTER_SHORT, characterOf } from './law-character';
 import { plainLawName } from './law-name';
 import type { CatalogItem } from './laws-catalog';
 import { formatYen } from './laws-catalog';
+import { rankingPaused } from './interim-display';
 
 const STANCE = { yes: '賛成', no: '反対', split: '割れ', none: '—' } as const;
 const dateOf = (law: VoteLaw) => law.promulgated ?? law.shu?.date ?? law.san?.date ?? '';
 
 export type StanceRow = { law: VoteLaw; info?: CatalogItem; character: ReturnType<typeof characterOf>; title: string };
 
-/** 明らかな悪法：確かな額で損失側と出たものだけ（参考の額は目立たせない）。 */
-export const isClearlyBad = (info?: CatalogItem) => !!info && info.side === 'loss' && info.step === 'published' && !!info.amount;
+/** 明らかな悪法：確かな額で損失側と出たものだけ（参考の額は目立たせない）。振り分けの当て直し中（paused）は印を付けない。 */
+export const isClearlyBad = (info?: CatalogItem, paused = rankingPaused()) => !paused && !!info && info.side === 'loss' && info.step === 'published' && !!info.amount;
+/** 確かな額で便益側のもの。当て直し中は額の印を出さない。 */
+export const isClearlyGood = (info?: CatalogItem, paused = rankingPaused()) => !paused && !!info && info.side === 'benefit' && info.step === 'published' && !!info.amount;
 
 export function StanceList({ rows, blocs, limit: initial = 30 }: { rows: StanceRow[]; blocs: readonly Bloc[]; limit?: number }) {
   const [limit, setLimit] = useState(initial);
@@ -29,7 +32,7 @@ export function StanceList({ rows, blocs, limit: initial = 30 }: { rows: StanceR
           <span className={`stance-tag char-${character}`} title={`${CHARACTER_LABEL[character]}（題名・要約のことばからの暫定分類）`}>{CHARACTER_SHORT[character]}</span>
           {info?.field && <span className="stance-tag">{info.field}</span>}
           {bad && info?.amount && <span className="stance-tag loss">損失 {formatYen(info.amount.median)}</span>}
-          {info?.side === 'benefit' && info.step === 'published' && info.amount && <span className="stance-tag">便益 {formatYen(info.amount.median)}</span>}
+          {isClearlyGood(info) && info?.amount && <span className="stance-tag">便益 {formatYen(info.amount.median)}</span>}
         </div>
         <div className="stance-chips">{blocs.map(bloc => {
           const s = blocStance(law, bloc);

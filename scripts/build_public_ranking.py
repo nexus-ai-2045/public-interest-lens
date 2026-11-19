@@ -23,11 +23,23 @@ from pathlib import Path
 
 try:
     from scripts.build_all_laws_outcomes import crowded_ids, narrow_measure
-    from scripts.evaluation_rules import DEMOTED_ROUTES, VERDICT_FAIL, is_demoted
+    from scripts.evaluation_rules import (
+        DEMOTED_ROUTES,
+        INTERIM_REASON_PREFIX,
+        VERDICT_FAIL,
+        interim_holds,
+        is_demoted,
+    )
     from scripts.generation_provenance import generation_metadata
 except ModuleNotFoundError:
     from build_all_laws_outcomes import crowded_ids, narrow_measure
-    from evaluation_rules import DEMOTED_ROUTES, VERDICT_FAIL, is_demoted
+    from evaluation_rules import (
+        DEMOTED_ROUTES,
+        INTERIM_REASON_PREFIX,
+        VERDICT_FAIL,
+        interim_holds,
+        is_demoted,
+    )
     from generation_provenance import generation_metadata
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -265,6 +277,11 @@ def _law(row: dict[str, str], loss_row: dict[str, str], sources: list[str], enfo
     }
 
 
+# macro.csv の「分野の由来」→ 指標の欄に出す文言。由来を足したら、ここにも足す（知らない由来は分かる文で止める）。
+FIELD_ORIGINS = {"振り分け": "振り分けの分野", "AI 2系統": "AI 2系統の分野", "対応表なし": "対応表なしのため全産業", "同じ題名にそろえた": "同じ法律の改正の分野にそろえた",
+                 COVID_ORIGIN: "", "AI 3段の再判定": "AI 3段の再判定による産業", "一次資料の読み直し": "一次資料の読み直しで直した分野"}
+
+
 def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
     """macro-v1 の行。元の値は正が損失・負が便益なので、中央値の符号を side に写し、側ごとの大きさで出す。
 
@@ -283,7 +300,9 @@ def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
         notes.append(f"施行日は{ESTIMATED}")
     if int(row["施行日"][:4]) >= 2020:
         notes.append("コロナ期と重なる")
-    origin = {"振り分け": "振り分けの分野", "AI 2系統": "AI 2系統の分野", "対応表なし": "対応表なしのため全産業", "同じ題名にそろえた": "同じ法律の改正の分野にそろえた", COVID_ORIGIN: "", "AI 3段の再判定": "AI 3段の再判定による産業"}[row["分野の由来"]]
+    if row["分野の由来"] not in FIELD_ORIGINS:
+        raise ValueError(f"{row['id']}：分野の由来「{row['分野の由来']}」を知らない。FIELD_ORIGINS に表示の文言を足す")
+    origin = FIELD_ORIGINS[row["分野の由来"]]
     return {
         "id": row["id"],
         "title": row["題名"],
@@ -368,11 +387,15 @@ def japan_value_added_max(raw: bytes | None = None) -> int:
 
 def verification_failed() -> dict[str, str]:
     """独立検証（抜き取り）で不合格と判定された法律と、その理由。判定表が無いときは空。
-    台帳の検証状態ではなく判定表（sample-verdicts.csv）を引く（台帳は降格後「参考に下げた」に変わるため）。"""
-    if not SAMPLE_VERDICTS.exists():
-        return {}
-    with SAMPLE_VERDICTS.open(encoding="utf-8", newline="") as f:
-        return {row["id"]: (row.get("食い違い") or "").strip() for row in csv.DictReader(f) if row["判定"] == VERDICT_FAIL}
+    台帳の検証状態ではなく判定表（sample-verdicts.csv）を引く（台帳は降格後「参考に下げた」に変わるため）。
+    当て直しまで参考に下げる法律（interim-holds.csv、抜き取り2回目の不合格）も、理由の頭に印を付けて加える。"""
+    failed: dict[str, str] = {}
+    if SAMPLE_VERDICTS.exists():
+        with SAMPLE_VERDICTS.open(encoding="utf-8", newline="") as f:
+            failed = {row["id"]: (row.get("食い違い") or "").strip() for row in csv.DictReader(f) if row["判定"] == VERDICT_FAIL}
+    for law_id, reason in interim_holds().items():
+        failed.setdefault(law_id, f"{INTERIM_REASON_PREFIX}{reason}")
+    return failed
 
 
 def demoted_basis(law: dict, covid_basis: str = "") -> str:

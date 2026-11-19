@@ -405,6 +405,9 @@ def build() -> dict:
             item["chain"].append({"step": "税収の見込み", "result": item["summary"], "note": tax["理由"] + "。出典：" + tax["出典URL"]})
             item["sources"] += [{"label": "財務省 税制改正の概要", "url": u} for u in tax["出典URL"].split()]
         columns = three_columns(columns_by_id.get(law_id))
+        if columns and "valueAdded" in columns and item.get("refReason"):
+            # 検証で参考に下げた法律（初回の抜き取り・当て直しまでの暫定の降格）の付加価値は、順位に使わない
+            columns["valueAdded"]["ranked"] = False
         if columns and item.get("shared"):
             # 共有額の法律は1本ごとの額を持たない。三欄の付加価値（共有額そのもの）と、それから作る採算は出さない（国の収支は別の量なので残す）
             for key in ("valueAdded", "spendYen", "profitability", "profitabilityNote"):
