@@ -48,11 +48,13 @@ SKIP_FILES = re.compile(r"\.test\.tsx?$|\.css$")
 
 def newest_input() -> float:
     newest = 0.0
+    # 自分の出力（曝露ランキングは data/ の下に置く）は入力に数えない。数えると毎回いちばん新しい入力になり、全段を作り直してしまう
+    outputs = {str(output) for _, output, _ in STEPS}
     for root in INPUT_ROOTS:
         for folder, dirs, files in os.walk(root):
             dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
             for name in files:
-                if SKIP_FILES.search(name):
+                if SKIP_FILES.search(name) or os.path.join(folder, name) in outputs:
                     continue
                 newest = max(newest, os.stat(os.path.join(folder, name)).st_mtime)
     return newest
