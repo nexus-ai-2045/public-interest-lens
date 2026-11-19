@@ -59,6 +59,10 @@ MACRO_GROUP = "全体指標"
 COVID_BENEFIT_GROUP = "全体指標-コロナ費用便益-"
 ESTIMATED = "推定（公布日）"
 MACRO_NOTE = "全体指標で測った参考の額（影響の段階を経ていない。結果論の差）"
+# 向きの根拠（設計確定 v2.1：向きを産業の差の符号で決めない）。全体指標の行の side は「日本の産業と比較国の差がどちら側か」という符号で、
+# その法律が損失・便益のどちらを生んだかの証拠ではない。外部の証拠が無いので向きは未確定とし、side を人への配分や順位の向きに使わせない。
+# ranking.json の法律の項目は app/src/public-distribution.ts が固定しているので、項目は足さず印（notes）で渡す。印の文言が機械的な目印を兼ねる。
+MACRO_DIRECTION_NOTE = "向きは未確定（損失・便益の区別は産業と比較国の差の符号で、この法律の効果の向きを示す証拠ではない）"
 # コロナ対応の法律（covid-benefit-v1）の額。全体指標の差ではなく、支出の規模（一次資料）×帰属×乗数の費用便益。
 COVID_ORIGIN = "コロナ対応の費用便益"
 COVID_NOTE = "コロナ対応の費用便益で出した参考の額（支出の規模は官公庁の一次資料、帰属と乗数は仮定の幅。財源調達の超過負担は未控除。議員への配分に使わない）"
@@ -255,7 +259,10 @@ def _law(row: dict[str, str], loss_row: dict[str, str], sources: list[str], enfo
 
 
 def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
-    """macro-v1 の行。元の値は正が損失・負が便益なので、中央値の符号で側を決め、側ごとの大きさで出す。"""
+    """macro-v1 の行。元の値は正が損失・負が便益なので、中央値の符号を side に写し、側ごとの大きさで出す。
+
+    全体指標の行の side は産業の差の符号で、法律の向きの証拠ではない（印 MACRO_DIRECTION_NOTE で明示する）。
+    コロナ対応の行は支出の一次資料からの費用便益なので、符号がそのまま向きの根拠になる。"""
     values = [int(row["中央値"]), int(row["第1四分位"]), int(row["第3四分位"])]
     side = "loss" if values[0] > 0 else "benefit"
     if side == "benefit":
@@ -264,7 +271,7 @@ def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
     if median <= 0:
         raise ValueError(f"全体指標の額が0です: {row['id']}")
     covid = row["分野の由来"] == COVID_ORIGIN
-    notes = [COVID_NOTE if covid else MACRO_NOTE]
+    notes = [COVID_NOTE] if covid else [MACRO_NOTE, MACRO_DIRECTION_NOTE]
     if row.get("施行日の由来", "") == ESTIMATED:
         notes.append(f"施行日は{ESTIMATED}")
     if int(row["施行日"][:4]) >= 2020:
