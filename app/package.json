@@ -14,19 +14,19 @@
     "prebuild": "python3 ../scripts/generate_artifacts.py --stage inputs && node ../scripts/build_public_members.mjs && node ../scripts/build_reference_members.mjs --attributions node_modules/.reference-attributions.csv && python3 ../scripts/source_check.py --members-only && python3 ../tests/test_public_members_safety.py && python3 ../scripts/check_reference_members.py --attributions node_modules/.reference-attributions.csv && python3 ../scripts/generate_artifacts.py --stage derived"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "^6.1.2",
+    "@vitejs/plugin-react": "^6.2.1",
     "gsap": "3.15.0",
     "katex": "0.19.0",
     "lucide-react": "^1.61.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "vite": "^8.3.3"
+    "vite": "^8.3.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   }
 }
