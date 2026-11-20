@@ -25,6 +25,16 @@ ROUTE_NO_CHAIN = "市場（議員の関与の出典なし）"
 ROUTE_SOURCE_FIELD = "市場（一次資料で分野を直した）"
 DEMOTED_ROUTES = frozenset({ROUTE_SIGN_CONFLICT, ROUTE_NO_CHAIN, ROUTE_SOURCE_FIELD})
 
+# ADR 0008 の確かさの印。段階語（段階1/2/3）は印ではない。
+# 印を決めるのはこの関数だけ。出す側（台帳の site_values、三欄、公開ランキング）は額の種類を渡す。
+CERTAINTY_MARKS = ("高", "中", "低", "参考")
+KIND_REFERENCE = "参考額"
+KIND_CONFIRMED = "確かな額"
+KIND_FISCAL = "国の収支"
+KIND_NONE = "額なし"
+# 確かな額の段階 → 印。参考額は段階を見ない（計算式の確かさの式と同じ対応）。
+STAGE_TO_MARK = {"段階3": "高", "段階2": "中", "段階1": "低"}
+
 
 def narrow_whole_economy(title: str, industry: str, field: str) -> bool:
     """L2：狭い題名の法律に、経済全体の額を当てていないか。"""
@@ -42,6 +52,38 @@ def sign_conflict(direction: str, amount_text: str) -> str | None:
             or (side == "便益" and bad and value > 0) or (side == "損失" and good and value > 0):
         return side
     return None
+
+
+def amount_kind_of(reach: str) -> str:
+    """到達点から額の種類を決める。印の語はここでは決めない。"""
+    if reach.startswith("参考額"):
+        return KIND_REFERENCE
+    if reach.startswith("額（個別"):
+        return KIND_CONFIRMED
+    if reach.startswith("国の収支"):
+        return KIND_FISCAL
+    return KIND_NONE
+
+
+def certainty_mark(amount_kind: str, stage: str = "") -> str:
+    """額の種類から ADR 0008 の確かさ印を出す。
+
+    参考額は段階に関わらず「参考」。確かな額は段階3/2/1を高/中/低にする。
+    国の収支（税制改正の増減収見込み）は段階を持たず「高」。額がない行は印を付けない（空）。
+    段階語や表示文を受け取って書き換えない。
+    """
+    if amount_kind == KIND_REFERENCE:
+        return "参考"
+    if amount_kind == KIND_FISCAL:
+        return "高"
+    if amount_kind == KIND_NONE:
+        return ""
+    if amount_kind == KIND_CONFIRMED:
+        try:
+            return STAGE_TO_MARK[stage]
+        except KeyError:
+            raise ValueError(f"確かな額の段階が印に対応しません: {stage!r}") from None
+    raise ValueError(f"額の種類が不明です: {amount_kind!r}")
 
 
 def involved_law_ids(path: Path) -> set[str] | None:

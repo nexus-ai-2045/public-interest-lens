@@ -5,6 +5,7 @@ from pathlib import Path
 
 from scripts import build_three_columns as tc
 from scripts import evaluation_rules as rules
+from scripts.evaluation_rules import CERTAINTY_MARKS, KIND_CONFIRMED, KIND_REFERENCE, certainty_mark
 
 ROOT = Path(__file__).resolve().parents[1]
 COLUMNS = ROOT / "data" / "derived" / "three-columns-v1" / "columns.csv"
@@ -56,6 +57,27 @@ class ColumnsTest(unittest.TestCase):
                 self.assertEqual((r["国の収支（億円）"], r["順位に使う"]), ("60", "いいえ"))
             if r["採算（付加価値÷国の支出）"]:
                 self.assertTrue(r["国の支出（円）"] and r["付加価値の変化（円）"], r["id"])
+
+    def test_built_marks_follow_amount_kind(self) -> None:
+        """保存済み CSV は再生成しない。作り直したときの印が、額の種類から ADR 0008 の語になること。"""
+        rows = tc.build()
+        outcomes = {r["id"]: r for r in tc.read(tc.D / "all-laws-v1" / "outcomes.csv")}
+        seen_chain = seen_reference = False
+        for r in rows:
+            mark = r["付加価値の確かさ"]
+            if not r["付加価値の変化（円）"]:
+                self.assertEqual(mark, "", r["id"])
+                continue
+            self.assertIn(mark, CERTAINTY_MARKS, r["id"])
+            self.assertFalse(mark.startswith("段階"), r["id"])
+            if r["付加価値の由来"] == tc.ORIGIN_CHAIN:
+                seen_chain = True
+                self.assertEqual(mark, certainty_mark(KIND_CONFIRMED, outcomes[r["id"]]["段階"]), r["id"])
+            if r["付加価値の由来"] in (tc.ORIGIN_MACRO, tc.ORIGIN_COVID):
+                seen_reference = True
+                self.assertEqual(mark, certainty_mark(KIND_REFERENCE), r["id"])
+        self.assertTrue(seen_chain)
+        self.assertTrue(seen_reference)
 
 
 if __name__ == "__main__":

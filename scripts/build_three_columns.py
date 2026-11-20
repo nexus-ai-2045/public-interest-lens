@@ -18,6 +18,11 @@ import re
 from collections import Counter
 from pathlib import Path
 
+try:
+    from scripts.evaluation_rules import KIND_CONFIRMED, KIND_REFERENCE, certainty_mark
+except ImportError:  # python3 scripts/build_three_columns.py（scripts/ が検索路に入る）
+    from evaluation_rules import KIND_CONFIRMED, KIND_REFERENCE, certainty_mark
+
 ROOT = Path(__file__).resolve().parents[1]
 D = ROOT / "data" / "derived"
 OUT = D / "three-columns-v1" / "columns.csv"
@@ -69,17 +74,20 @@ def build() -> list[dict[str, str]]:
         if o["結果"] == "額あり" and o["経路"] != "財政（税収見込み）":
             value = signed_median(o["損失または便益の額"])
             if value is not None:
-                row.update({"付加価値の変化（円）": str(value), "付加価値の由来": ORIGIN_CHAIN, "付加価値の確かさ": o["確かさ"], "順位に使う": "はい"})
+                row.update({"付加価値の変化（円）": str(value), "付加価値の由来": ORIGIN_CHAIN,
+                            "付加価値の確かさ": certainty_mark(KIND_CONFIRMED, o.get("段階") or ""), "順位に使う": "はい"})
         elif i in covid:
             c = covid[i]
-            row.update({"付加価値の変化（円）": c["中央値"], "付加価値の由来": ORIGIN_COVID, "付加価値の確かさ": "参考", "順位に使う": "いいえ"})
+            row.update({"付加価値の変化（円）": c["中央値"], "付加価値の由来": ORIGIN_COVID,
+                        "付加価値の確かさ": certainty_mark(KIND_REFERENCE), "順位に使う": "いいえ"})
             spend = middle(c["支出の規模（円）"])
             if spend:
                 row["国の支出（円）"] = str(spend)
                 row["採算（付加価値÷国の支出）"] = f"{int(c['中央値']) / spend:.4f}"
                 row["採算の注記"] = COVID_NOTE
         elif i in macro and i not in fiscal:  # 税制改正は付加価値の本線に入れず、国の収支の欄だけに額を置く
-            row.update({"付加価値の変化（円）": macro[i]["中央値"], "付加価値の由来": ORIGIN_MACRO, "付加価値の確かさ": "参考", "順位に使う": "いいえ"})
+            row.update({"付加価値の変化（円）": macro[i]["中央値"], "付加価値の由来": ORIGIN_MACRO,
+                        "付加価値の確かさ": certainty_mark(KIND_REFERENCE), "順位に使う": "いいえ"})
         if i in fiscal:
             row.update({"国の収支（億円）": fiscal[i]["平年度_億円"], "国の収支の由来": ORIGIN_FISCAL})
         elif i in other_tax and other_tax[i]["初年度_億円"]:
