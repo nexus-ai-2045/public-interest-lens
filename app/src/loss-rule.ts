@@ -105,7 +105,7 @@ export type Allocation = { personId: string; weight: number; shareYen: { low: nu
 /**
  * 損失額 × 帰属率 を、確認できた行動の重み × 立場の重みで按分する。
  * 1人が複数の行動をした場合は最大の行動だけを数える。一次資料（URL）の無い行動は数えない。
- * 個人の配分の合計は、損失額 × 帰属率 を超えない（残りは組織・未帰属）。
+ * 各人の額は独立に四捨五入する。丸め前の理論配分の合計は損失額 × 帰属率だが、丸め後の合計は超えうる（残りは組織・未帰属の想定。docs/hyoka-engine-suuchi-setsumei.md の P1）。
  */
 export function allocateLoss(lossYen: NonNullable<LossResult['lossYen']>, involvements: Involvement[], attributionRate = 0.5): Allocation[] {
   if (!(attributionRate >= 0 && attributionRate <= 1)) throw new Error('帰属率は0〜1です');

@@ -92,4 +92,31 @@ describe('文書の計算境界（挙動を変えない特性）', () => {
     expect(a[1].shareYen.median).toBe(9);
     expect(a.reduce((s, x) => s + x.shareYen.median, 0)).toBe(100);
   });
+
+  it('個人配分は各人を独立に丸めるため、合計が損失×帰属率を超えうる（P1）', () => {
+    // 損失2・帰属0.5・同じ重み2人 → 各人 round(2*0.5*0.5)=round(0.5)=1、合計2 > 理論上限1
+    const a = allocateLoss({ low: 2, median: 2, high: 2 }, [
+      { personId: 'A', action: 'vote', position: 'other', evidenceUrl: 'https://example.go.jp/a' },
+      { personId: 'B', action: 'vote', position: 'other', evidenceUrl: 'https://example.go.jp/b' },
+    ]);
+    expect(a.map(x => x.shareYen.median)).toEqual([1, 1]);
+    const cap = 2 * 0.5;
+    expect(a.reduce((s, x) => s + x.shareYen.median, 0)).toBeGreaterThan(cap);
+  });
+
+  it('影響段階の分岐は排他：経済全体通過後、傾きか規模が欠ければ段階2、そろえば段階3', () => {
+    const years = (gaps: number[], from = 1995): ImpactPoint[] =>
+      gaps.map((g, i) => ({ asOf: `${from + i}-03-31`, treated: 10 + g, control: 10 }));
+    // 開始前ほぼ0、開始後に差が開く（基本通過）。低いほど良い → 負の効果が貢献。
+    const clear = [0, 0.1, -0.1, 0.05, 0, -0.5, -3, -3, -3.1, -3];
+    const economy = { definition: '特性', better: 'higher' as const, points: years(clear.map(g => -g)) };
+    expect(judgeImpact({
+      definition: '特性', start: '1999-10-01', better: 'lower', target: years(clear),
+      economy, sectorGdpShare: null,
+    }).stage).toBe(2);
+    expect(judgeImpact({
+      definition: '特性', start: '1999-10-01', better: 'lower', target: years(clear),
+      economy, sectorGdpShare: 0.05,
+    }).stage).toBe(3);
+  });
 });
