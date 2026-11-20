@@ -3,7 +3,7 @@
  * 依存に fast-check は無いので、固定種の LCG で網羅する。
  * 反例 C1（階層が入力順に依る）は、加算列を符号点順に固定して通常の試験にした。
  */
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import {
   DEFAULT_ROLE_RATIO,
   assignTiers,
@@ -80,6 +80,7 @@ function lcg(seed: number) {
   };
 }
 
+/** 有効入力だけを返す。lawCount を記録本数未満にしない。例外を握りつぶすための逃げ道は持たない。 */
 function randomCase(seed: number): { groups: ExposureGroup[]; invs: Involvement[] } {
   const rnd = lcg(seed);
   const roles: Involvement['role'][] = ['proposer', 'yes', 'no', 'cabinet'];
@@ -111,44 +112,45 @@ function randomCase(seed: number): { groups: ExposureGroup[]; invs: Involvement[
   return { groups: fixed, invs };
 }
 
+/** 失敗時に種を報告する。例外は握りつぶさず再送出する。 */
+function withSeed<T>(seed: number, run: () => T): T {
+  try {
+    return run();
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : String(e);
+    throw new Error(`種 ${seed} で失敗: ${detail}`, { cause: e });
+  }
+}
+
 describe('曝露ランキングの性質（I1・I4・I5・境界）', () => {
   it('乱数800種：合計の保存・決定論・幅の順序・期待値の式', () => {
-    let ran = 0;
     for (let seed = 0; seed < 800; seed++) {
-      const { groups, invs } = randomCase(seed);
-      let out: ExposureRanking;
-      try {
-        out = buildExposureRanking(groups, invs, P);
-      } catch {
-        continue;
-      }
-      ran++;
-      conserved(out);
-      const again = buildExposureRanking(groups, invs, P);
-      expect(JSON.stringify(again)).toBe(JSON.stringify(out));
-      for (const row of out.people.concat(out.parties)) {
-        expect(row.exposureYen.low).toBeLessThanOrEqual(row.exposureYen.median + 1e-9);
-        expect(row.exposureYen.median).toBeLessThanOrEqual(row.exposureYen.high + 1e-9);
-      }
-      const signed = 0.4 + 0.2 - 0.2 + 0.2;
-      const want = groups.reduce((s, g) => s + g.diff.median * signed, 0);
-      expect(out.totals.expected.median).toBeCloseTo(want, 6);
+      withSeed(seed, () => {
+        const { groups, invs } = randomCase(seed);
+        const out = buildExposureRanking(groups, invs, P);
+        conserved(out);
+        const again = buildExposureRanking(groups, invs, P);
+        expect(JSON.stringify(again)).toBe(JSON.stringify(out));
+        for (const row of out.people.concat(out.parties)) {
+          expect(row.exposureYen.low).toBeLessThanOrEqual(row.exposureYen.median + 1e-9);
+          expect(row.exposureYen.median).toBeLessThanOrEqual(row.exposureYen.high + 1e-9);
+        }
+        const signed = 0.4 + 0.2 - 0.2 + 0.2;
+        const want = groups.reduce((s, g) => s + g.diff.median * signed, 0);
+        expect(out.totals.expected.median).toBeCloseTo(want, 6);
+      });
     }
-    expect(ran).toBeGreaterThan(700);
   });
 
   it('乱数800種：額（中央値を丸めた鍵）は入力順に依らない', () => {
     for (let seed = 0; seed < 800; seed++) {
-      const { groups, invs } = randomCase(seed);
-      let a: ExposureRanking;
-      try {
-        a = buildExposureRanking(groups, invs, P);
-      } catch {
-        continue;
-      }
-      const b = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
-      expect(amountKey(b)).toBe(amountKey(a));
-      conserved(b);
+      withSeed(seed, () => {
+        const { groups, invs } = randomCase(seed);
+        const a = buildExposureRanking(groups, invs, P);
+        const b = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
+        expect(amountKey(b)).toBe(amountKey(a));
+        conserved(b);
+      });
     }
   });
 
@@ -193,12 +195,19 @@ describe('反例 C1（同じ関与集合なら階層は一つ）', () => {
     inv('A1', 'Lg0-3', 'yes', 0.12505898475646973, 'g0', 'party', 'lower'),
   ];
 
+  let forward: ExposureRanking;
+  let reversed: ExposureRanking;
+
+  // 集計の例外は階層の不一致と混ぜない。ここで投げれば通常の失敗になる。
+  beforeAll(() => {
+    forward = buildExposureRanking(groups, invs, P);
+    reversed = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
+  });
+
   it('額の合計は順でも逆でも保存される（I1は維持）', () => {
-    const a = buildExposureRanking(groups, invs, P);
-    const b = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
-    conserved(a);
-    conserved(b);
-    expect(amountKey(a)).toBe(amountKey(b));
+    conserved(forward);
+    conserved(reversed);
+    expect(amountKey(forward)).toBe(amountKey(reversed));
   });
 
   it('階層規則は中央値の差を許容誤差で吸収しない（1e-14 で leaderLow が変わり後続の tier が変わる）', () => {
@@ -218,14 +227,12 @@ describe('反例 C1（同じ関与集合なら階層は一つ）', () => {
   });
 
   it('階層（tier）も入力順に依らない', () => {
-    const a = buildExposureRanking(groups, invs, P);
-    const b = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
-    expect(actorKey(b)).toBe(actorKey(a));
-    expect(JSON.stringify(b)).toBe(JSON.stringify(a));
+    expect(actorKey(reversed)).toBe(actorKey(forward));
+    expect(JSON.stringify(reversed)).toBe(JSON.stringify(forward));
   });
 
   it('並び替え：同じ関与集合なら出力そのものが一致する', () => {
-    const base = JSON.stringify(buildExposureRanking(groups, invs, P));
+    const base = JSON.stringify(forward);
     const rnds = [1, 2, 99, 266, 20261120].map(lcg);
     for (const rnd of rnds) {
       const out = buildExposureRanking(shuffle(groups, rnd), shuffle(invs, rnd), P);
@@ -236,24 +243,18 @@ describe('反例 C1（同じ関与集合なら階層は一つ）', () => {
 
 describe('加算列の全順序（並び替えで額が変わらない）', () => {
   it('乱数200種×並び替え2通り：群と関与の並びに出力が依らない', () => {
-    let ran = 0;
     for (let seed = 0; seed < 200; seed++) {
-      const { groups, invs } = randomCase(seed);
-      let base: ExposureRanking;
-      try {
-        base = buildExposureRanking(groups, invs, P);
-      } catch {
-        continue;
-      }
-      ran++;
-      const rnd = lcg(10_000 + seed);
-      const frozen = JSON.stringify(base);
-      for (let k = 0; k < 2; k++) {
-        const out = buildExposureRanking(shuffle(groups, rnd), shuffle(invs, rnd), P);
-        expect(JSON.stringify(out)).toBe(frozen);
-      }
+      withSeed(seed, () => {
+        const { groups, invs } = randomCase(seed);
+        const base = buildExposureRanking(groups, invs, P);
+        const rnd = lcg(10_000 + seed);
+        const frozen = JSON.stringify(base);
+        for (let k = 0; k < 2; k++) {
+          const out = buildExposureRanking(shuffle(groups, rnd), shuffle(invs, rnd), P);
+          expect(JSON.stringify(out)).toBe(frozen);
+        }
+      });
     }
-    expect(ran).toBeGreaterThan(150);
   });
 
   it('未配分の束ね：同じ行の集合なら額は並びに依らない', () => {

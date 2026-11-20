@@ -1,8 +1,8 @@
 """評価エンジンの数え方の不変条件（性質テスト）。
 
 hypothesis は依存に無いので、規則の直積・固定種の乱数・現行データ照合で網羅する。
-C2（参考額の確かさに段階語が残る）は、額の種類から印を出す関数で直す。
-保存済みの台帳は再生成しないので、現行データの観測は残る。
+C1・C3 の修正は別 PR（docs/reports/評価エンジン_不変条件と性質テスト_2026-11-20.md）。
+C2 は額の種類から印を出す関数で直し、expectedFailure を通常の試験にした。保存済みの台帳は再生成しない。
 """
 from __future__ import annotations
 
@@ -12,7 +12,6 @@ import unittest
 from itertools import product
 from pathlib import Path
 
-from scripts.build_evaluation_ledger import site_values
 from scripts.evaluation_rules import (
     CERTAINTY_MARKS,
     KIND_CONFIRMED,
@@ -29,9 +28,13 @@ from scripts.evaluation_rules import (
     sign_conflict,
 )
 from scripts import build_macro_amounts as macro
+from scripts.build_evaluation_ledger import site_values
 
 ROOT = Path(__file__).resolve().parents[1]
 D = ROOT / "data" / "derived"
+
+# ADR 0008 の確かさ印の語彙（公開方針の正本）
+ADR0008_CERTAINTY = frozenset({"高", "中", "低", "参考"})
 
 
 def _read(path: Path) -> list[dict]:
@@ -101,7 +104,7 @@ class SignAndNarrowBoundaryTest(unittest.TestCase):
 
 
 class DataInvariantsTest(unittest.TestCase):
-    """I2：評価対象外が額の行に入らない（現行データ）。I3 の語彙ずれは C2 として数えるだけ。"""
+    """I2：評価対象外が額の行に入らない（現行データ）。"""
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -134,17 +137,8 @@ class DataInvariantsTest(unittest.TestCase):
         macro_amt = {r["id"] for r in self.macro if r["結果"] == "額"}
         self.assertEqual(individual & macro_amt, set())
 
-    def test_c2_live_ledger_still_has_stage_certainty_on_reference_amounts(self) -> None:
-        # 保存済み台帳には C2 が残っている（この変更では再生成しない。0 なら台帳を作り直したか確かめる）
-        n = sum(
-            1
-            for r in self.ledger
-            if r["到達点"].startswith("参考額") and str(r.get("確かさ", "")).startswith("段階")
-        )
-        self.assertGreater(n, 0, "C2 が消えた。正規化が入ったかデータを確認する")
 
-
-class CounterexampleC2RootCauseTest(unittest.TestCase):
+class CounterexampleC2DesiredPropertyTest(unittest.TestCase):
     """C2：参考額の印は、outcomes の確かさ欄（段階語・代理の注記）ではなく額の種類から決める。"""
 
     def _site(self, certainty: str, *, result: str = "保留", stage: str = "", route: str = "市場",
@@ -181,11 +175,13 @@ class CounterexampleC2RootCauseTest(unittest.TestCase):
             v = self._site(word)
             self.assertEqual(v["到達点"], "参考額（産業の付加価値の差）", word)
             self.assertEqual(v["確かさ"], "参考", word)
+            self.assertIn(v["確かさ"], ADR0008_CERTAINTY, word)
 
-    def test_c2_desired_reference_amount_certainty_is_reference(self) -> None:
+    def test_c2_desired_reference_amount_certainty_is_adr0008_vocabulary(self) -> None:
         v = self._site("段階1")
         self.assertEqual(v["到達点"], "参考額（産業の付加価値の差）")
         self.assertEqual(v["確かさ"], "参考")
+        self.assertIn(v["確かさ"], ADR0008_CERTAINTY)
 
     def test_confirmed_amount_mark_follows_stage(self) -> None:
         for stage, mark in STAGE_TO_MARK.items():
@@ -214,6 +210,9 @@ class CertaintyMarkVocabularyTest(unittest.TestCase):
         self.assertEqual(amount_kind_of("国の収支の額（GDP とは別欄）"), KIND_FISCAL)
         for reach in ("保留", "測定できない", "効果なし（定例）", "評価対象外", ""):
             self.assertEqual(amount_kind_of(reach), KIND_NONE, reach)
+
+    def test_function_vocabulary_matches_adr_0008(self) -> None:
+        self.assertEqual(frozenset(CERTAINTY_MARKS), ADR0008_CERTAINTY)
 
     def test_marks_stay_inside_adr_0008(self) -> None:
         cases = [
