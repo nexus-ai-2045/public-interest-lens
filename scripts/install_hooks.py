@@ -2,9 +2,10 @@
 """git フックを入れる（新しいクラウドのセッションごとに1回。何度回しても同じ）。
 
 入れるもの（.git/hooks。Git に入らず、core.hooksPath は替えない）：
-- prepare-commit-msg：scripts/strip_commit_trace.py で、Claude の共著者行・セッション行などを自動で取り除く。
 - commit-msg・pre-commit・pre-push：リポジトリの .repo-preflight/hooks/ の共通フックをそのまま呼ぶ（検査の写しは持たない）。
   REPO_PREFLIGHT_HOME は未設定ならこのリポジトリの隣の repo-preflight。
+- 前に入れていた prepare-commit-msg（共著者行・セッション行を取り除くフック）は、このスクリプトが書いたものなら消す。
+  2026-11-20 に所有者が、開発道具の共著者行・セッション行・署名を禁止しないと決めたため。
 - gitleaks が無ければ repo-preflight の固定版を ~/.local/bin に入れる（pre-commit が要る）。
 
 使い方：python3 scripts/install_hooks.py [--check]
@@ -23,6 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 COMMON = ("commit-msg", "pre-commit", "pre-push")
+OBSOLETE = ("prepare-commit-msg",)
 ENV = 'export REPO_PREFLIGHT_HOME="${REPO_PREFLIGHT_HOME:-$ROOT/../repo-preflight}"\nexport PATH="$HOME/.local/bin:$PATH"'
 HEADER = '#!/bin/sh\n# scripts/install_hooks.py が書いたフック。手で直さず、スクリプトを直して入れ直す。\nROOT="$(git rev-parse --show-toplevel)"\n' + ENV + "\n"
 
@@ -43,7 +45,7 @@ SHARED_MESSAGE = "フック：置き場がこのリポジトリの外（core.hoo
 
 
 def bodies() -> dict[str, str]:
-    out = {"prepare-commit-msg": HEADER + 'python3 "$ROOT/scripts/strip_commit_trace.py" "$1"\nexit 0\n'}
+    out = {}
     for name in COMMON:
         out[name] = HEADER + f'exec "$ROOT/.repo-preflight/hooks/{name}" "$@"\n'
     return out
@@ -59,6 +61,11 @@ def missing(directory: Path | None = None) -> list[str]:
 def install(directory: Path | None = None) -> list[str]:
     d = directory or hooks_dir()
     d.mkdir(parents=True, exist_ok=True)
+    # このスクリプトが前に書いた、もう使わないフックを消す（人が書いたフックには触らない）
+    for name in OBSOLETE:
+        old = d / name
+        if old.is_file() and old.read_text(encoding="utf-8").startswith(HEADER):
+            old.unlink()
     todo = missing(d)
     for name in todo:
         (d / name).write_text(bodies()[name], encoding="utf-8")

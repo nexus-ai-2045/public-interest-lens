@@ -36,7 +36,7 @@ class HelpGuardTest(unittest.TestCase):
             shutil.rmtree(sub)
 
     def test_entry_with_parser_keeps_its_own_help(self):
-        p = self.run_m("check_pr_text", "--help")
+        p = self.run_m("new_script", "--help")
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertIn("usage:", p.stdout)
 

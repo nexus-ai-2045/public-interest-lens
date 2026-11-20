@@ -4,7 +4,7 @@ updates:
     directory: /app
     schedule:
       interval: weekly
-    # 題名を日本語で始める（scripts/check_pr_text.py が英語だけの題名を落とす）
+    # 題名を日本語で始める（repo-preflight の必須の検査が英語だけの題名を落とす）
     commit-message:
       prefix: "依存の更新"
     open-pull-requests-limit: 3
