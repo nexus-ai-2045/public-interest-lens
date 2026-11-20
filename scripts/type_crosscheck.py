@@ -127,7 +127,9 @@ def fetch_egov(r: dict) -> dict:
 def cmd_fetch(a: argparse.Namespace) -> int:
     LOCAL.mkdir(parents=True, exist_ok=True)
     rows = list(csv.DictReader(ENACTED.open(encoding="utf-8")))
-    have_h, have_e = read_jsonl(HONBUN), read_jsonl(EGOV)
+    # 取れなかった記録（本文が空・照会の失敗）は持っていない扱いにして、次の fetch で取り直す
+    have_h = {k for k, o in read_jsonl(HONBUN).items() if o.get("text")}
+    have_e = {k for k, o in read_jsonl(EGOV).items() if not str(o.get("how", "")).startswith("照会の失敗")}
     n = 0
     with HONBUN.open("a", encoding="utf-8") as fh, EGOV.open("a", encoding="utf-8") as fe:
         for r in rows:
@@ -138,17 +140,20 @@ def cmd_fetch(a: argparse.Namespace) -> int:
                 url = honbun_url(key)
                 try:
                     text = re.sub("<[^>]+>", "", _get(url, "shift_jis")) if url else ""
-                except Exception as e:  # noqa: BLE001 取れなかったことを記録して先へ進む
+                except Exception as e:  # noqa: BLE001 書かずに先へ進む（次の fetch で取り直す）
                     text = ""
                     print(f"本文を取れない {key}: {e}", file=sys.stderr)
-                fh.write(json.dumps({"id": key, "url": url, "text": text}, ensure_ascii=False) + "\n")
+                if text:
+                    fh.write(json.dumps({"id": key, "url": url, "text": text}, ensure_ascii=False) + "\n")
                 n += 1
                 time.sleep(SLEEP)
             if key not in have_e:
                 try:
                     o = fetch_egov(r)
-                except Exception as e:  # noqa: BLE001
-                    o = {"law_id": egov_law_id(r), "bases": [], "how": f"照会の失敗: {e}"}
+                except Exception as e:  # noqa: BLE001 書かずに先へ進む（次の fetch で取り直す）
+                    print(f"改正元を照会できない {key}: {e}", file=sys.stderr)
+                    time.sleep(SLEEP)
+                    continue
                 fe.write(json.dumps({"id": key, **o}, ensure_ascii=False) + "\n")
                 time.sleep(SLEEP)
     print(f"取得 {n} 本（本文）。置き場 {LOCAL.relative_to(ROOT)}")
@@ -210,15 +215,15 @@ def status(site: str, rule: str) -> str:
 def cmd_build(a: argparse.Namespace) -> int:
     rows = list(csv.DictReader(ENACTED.open(encoding="utf-8")))
     hon, eg = read_jsonl(HONBUN), read_jsonl(EGOV)
-    missing = [law_key(r) for r in rows if law_key(r) not in hon]
+    missing = [law_key(r) for r in rows if not hon.get(law_key(r), {}).get("text")]
     if missing:
-        print(f"本文を取っていない法律が {len(missing)} 本ある。先に fetch を回す", file=sys.stderr)
-        return 1
+        # 本文ページが無い法律（番号の欠け・未掲載）は「照合できない（本文なし）」として出す
+        print(f"本文の無い法律が {len(missing)} 本（照合できないとして出す）。取り直すなら fetch を回す", file=sys.stderr)
     site = site_types()
     out = []
     for r in rows:
         key = law_key(r)
-        h, e = hon[key], eg.get(key, {"bases": [], "how": "未照会"})
+        h, e = hon.get(key, {"url": honbun_url(key), "text": ""}), eg.get(key, {"bases": [], "how": "未照会"})
         cats = [b["category"] for b in e.get("bases", []) if b.get("category")]
         rt, ev = rule_type(h["text"], r["新規か改正か"] != "改正", cats)
         s = site.get(key, "")
