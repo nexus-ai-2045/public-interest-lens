@@ -1,4 +1,5 @@
 """Excel(xls/xlsx)読み込みの共通関数。run: python -I scripts/dstat_xl.py FILE [max_sheets] [max_rows] で中身を表示"""
+import argparse
 import sys
 
 
@@ -20,6 +21,7 @@ def sheets(path):
 
 
 if __name__ == '__main__':
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_known_args()
     s = sheets(sys.argv[1])
     ns = int(sys.argv[2]) if len(sys.argv) > 2 else 1
     nr = int(sys.argv[3]) if len(sys.argv) > 3 else 15

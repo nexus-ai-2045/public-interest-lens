@@ -10,6 +10,7 @@ scripts/local_verify.py と scripts/preflight.py が測る。
 
 from __future__ import annotations
 
+import argparse
 import re
 import subprocess
 import sys
@@ -82,4 +83,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     sys.exit(main())

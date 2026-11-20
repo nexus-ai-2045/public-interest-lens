@@ -15,6 +15,7 @@ PR 本文にも同じ型が効く（CI の名義検査が claude.ai の URL を�
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import os
 import re
@@ -78,4 +79,5 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_known_args()
     sys.exit(main(sys.argv))

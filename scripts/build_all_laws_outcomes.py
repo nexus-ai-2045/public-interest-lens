@@ -23,6 +23,7 @@ data/derived/all-laws-v1/spec.md が同じ内容。
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import re
 from collections import Counter
@@ -463,6 +464,7 @@ def write(rows: list[dict[str, str]], path: Path = OUT) -> None:
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     result = build()
     write(result)
     count = Counter(r["結果"] for r in result)

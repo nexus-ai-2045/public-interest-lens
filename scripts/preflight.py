@@ -39,8 +39,8 @@ from scripts import daily_update  # noqa: E402
 
 REPO = "nexus-ai-2045/public-interest-lens"
 PUBLIC_SITE = "kokuzoku.nexusai2045.com"
-# --help で起動できることを確かめる入口（python -m で呼ぶ）。--help を解釈しない入口（rebuild_public・build_laws_catalog・
-# build_all_laws_outcomes など）は本番の処理が走って生成物を書き換えるので入れない（ドライランの構文検査で見る）。
+# --help で起動できることを実際に確かめる主要な入口（python -m で呼ぶ）。全入口が --help を解釈することは
+# tests/test_scripts_parse_help.py が静的に縛る（2026-11-20 に例外0）。
 HELP_MODULES = ["scripts.daily_update", "scripts.build_price_index", "scripts.build_public_ranking", "scripts.eval_loop", "scripts.preflight", "scripts.person_ids",
                 "scripts.fetch_enforcement_old_egov", "scripts.fetch_r3_series", "scripts.build_old_laws_triage",
                 "scripts.build_old_laws_outcomes", "scripts.political_funds", "scripts.fetch_fiscal",

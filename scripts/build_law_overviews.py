@@ -28,6 +28,7 @@
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 import json
@@ -242,6 +243,7 @@ def main(folder: str, segment_folder: str, verify_folder: str) -> int:
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_known_args()
     if len(sys.argv) != 4:
         print(__doc__)
         sys.exit(2)

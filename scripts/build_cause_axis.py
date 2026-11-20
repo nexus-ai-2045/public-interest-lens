@@ -17,6 +17,7 @@
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import math
@@ -325,6 +326,7 @@ def build(src: Path = SRC, dst: Path = DST, app_json: Path | None = APP_JSON) ->
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     s = build()
     for i in s["industries"]:
         print(i["code"], i["name"], i["trillionYen"], f'{i["rank"]}/{i["of"]}', i["certainty"], i["direction"])

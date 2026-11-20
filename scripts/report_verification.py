@@ -1,6 +1,7 @@
 """抜き取り検証の結果（sample-verdicts.csv・verification-raw/）から docs/評価の独立検証.md を作る。手で直さない。"""
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import math
@@ -121,4 +122,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     raise SystemExit(main())
