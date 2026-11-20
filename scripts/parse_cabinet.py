@@ -6,6 +6,7 @@
 data/acquired/office-holders/cabinet-gaiji.csv（画像を目で読んで起こした氏名と、その出典）で氏名を引く。
 対応表に無い画像、読みが対応表と合わない行、取得した画像が対応表の sha256 と違うもの、氏名が空の行が1つでもあれば、CSV を書かずに止まる。
 """
+import argparse
 import csv
 import hashlib
 import os
@@ -219,4 +220,5 @@ def main():
 
 
 if __name__ == '__main__':
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     main()
