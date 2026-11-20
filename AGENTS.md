@@ -46,7 +46,7 @@
 | 試験の skip は一覧にあるものだけ | `tests/allowed_skips.txt` と `tests/test_run_tests_parallel_skips.py` | pytest |
 | 固定定数・撤回した方式・完了の条件が文書と実装でそろう | `scripts/check_design_consistency.py --strict` | CI の verify |
 | CI と同じ順で検査する | `scripts/local_verify.py`（verify.yml を読む） | 手元 |
-| 本番配信は所有者の「リリース」で1回 | `vercel.json` の `git.deploymentEnabled: false`（Git からの自動配信を止めてある） | 配信されない |
+| 本番配信は所有者の「リリース」で1回 | `app/vercel.json` の `git.deploymentEnabled: false`（Git からの自動配信を止めてある） | 配信されない |
 | open PR は8本まで、同じ作業の PR を2本出さない | なし（同じ題名の PR が #257/#260、#259/#262 で2本ずつ出た。強制のしかたは所有者の判断待ち） | — |
 | PR 本文に道具の自動フッターを残さない（進め方 3章10） | `scripts/check_pr_text.py`。作成のときにサーバーが付けるので、作ったあと本文を更新して外す（更新では付け直されない） | CI の pr-text |
 

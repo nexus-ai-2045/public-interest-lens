@@ -10,14 +10,16 @@ import unittest
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
-ENTRY = re.compile(r"^if __name__ == ['\"]__main__['\"]:", re.M)
+ENTRY = re.compile(r"^\s*if\s+(__name__\s*==\s*['\"]__main__['\"]|['\"]__main__['\"]\s*==\s*__name__)", re.MULTILINE)
+# 自前で --help を扱う入口（例：fetch_law_source.py の argv[0] in ("-h", "--help")）。文字列に触れるだけのものは数えない
+OWN_HELP = re.compile(r"argv.{0,40}['\"]--help['\"]")
 
 
 def ignores_help(text: str) -> bool:
     """直接実行の入口なのに、argparse も --help の自前の扱いも無い。"""
     if not ENTRY.search(text):
         return False
-    return "ArgumentParser" not in text and '"--help"' not in text and "'--help'" not in text
+    return "ArgumentParser" not in text and not OWN_HELP.search(text)
 
 
 class ParseHelpTest(unittest.TestCase):
@@ -33,6 +35,8 @@ class ParseHelpTest(unittest.TestCase):
 
     def test_detects_entry_without_parser(self):
         self.assertTrue(ignores_help('"""x"""\ndef main():\n    pass\n\n\nif __name__ == "__main__":\n    main()\n'))
+        self.assertTrue(ignores_help("if __name__=='__main__': main()\n"))
+        self.assertTrue(ignores_help('"""--help は無い"""\nif __name__ == "__main__":\n    main()\n'))
         self.assertFalse(ignores_help("# python -m は入口を __main__ としても読む\n"))
 
 

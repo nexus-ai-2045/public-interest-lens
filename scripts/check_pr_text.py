@@ -21,18 +21,23 @@ import sys
 from pathlib import Path
 
 JAPANESE = re.compile(r"[぀-ヿ㐀-鿿ｦ-ﾟ]")
-FENCE = re.compile(r"^\s*(```|~~~)")
+FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
 HEADING = re.compile(r"^\s{0,3}#{1,6}\s+\S")
-FOOTER = re.compile(r"Generated (by|with) \[Claude Code\]")
+FOOTER = re.compile(r"Generated (by|with) \[?Claude Code\]?")
 
 
 def headings(body: str) -> list[str]:
-    out, fenced = [], False
+    out, fence = [], ""
     for line in body.splitlines():
-        if FENCE.match(line):
-            fenced = not fenced
+        m = FENCE.match(line)
+        if m:
+            mark = m.group(1)
+            if not fence:
+                fence = mark
+            elif mark[0] == fence[0] and len(mark) >= len(fence):
+                fence = ""
             continue
-        if not fenced and HEADING.match(line):
+        if not fence and HEADING.match(line):
             out.append(line.strip())
     return out
 
