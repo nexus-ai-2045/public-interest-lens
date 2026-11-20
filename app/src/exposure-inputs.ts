@@ -11,10 +11,11 @@
  * - 衆法・参法の提出者 → proposer。enacted.csv から diet-records.ts の読み方で取る（involvements*.csv は使わない）：
  *   委員会提出（COMMITTEE）は置かない／「提出者一覧」があれば全員（normName）を weight 1／無ければ parseProposer(提出者) の代表者を weight 1、
  *   名前の分からない「外N名」は actorKind 'none'・weight N（その分は未配分。理由「名前の分からない提出者（外N名）」）。
- *   人は ledger.resolve(名前, 衆法なら 衆議院・参法なら 参議院)。同姓同名で結べなければ 'none'（理由「同姓同名で人物台帳に結べない提出者」）。
+ *   人は ledger.resolve(名前, 衆法なら 衆議院・参法なら 参議院, 議決日か付託日)。在任期間で1人に決まればその人。
+ *   同姓同名で結べなければ 'none'（理由「同姓同名で人物台帳に結べない提出者」。在任で外れたときはその未結合の理由）。
  * - 賛成・反対は投票の一次資料から取る。
  *   参議院：votes_index.csv の、議決日（enacted.csv の 議決日_参）の投票から pickVote（diet-records.ts）で1つに決まったものの
- *   ballots の賛否（Y → yes、N → no。棄権など Y・N 以外は置かない）。人は 議員ID → members.csv の氏名 → PersonLedger.resolve(氏名, '参議院')。
+ *   ballots の賛否（Y → yes、N → no。棄権など Y・N 以外は置かない）。人は 議員ID → members.csv の氏名 → PersonLedger.resolve(氏名, '参議院', 投票日)。
  *   同姓同名で結べない人は actorKind: 'none'（重みだけ枠に入れ、その分は未配分に積む。ほかの人へ寄せない）。
  *   衆議院：enacted.csv の 賛成会派_衆・反対会派_衆（「; 」区切り）を会派（party）に、weight 1 で均等に置く。
  *   議席数の表が無いための取り決めで、会派の大きさを無視する限界がある。会派名は記録の表記のまま。
@@ -195,6 +196,7 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
   }
   const enactedById = new Map(enactedRows.map(r => [`${r['種別']}-${r['提出回次']}-${r['番号']}`, r]));
   const voteOf = new Map<string, string>();
+  const voteDay = new Map<string, string>();
   for (const lawId of [...grouped].sort()) {
     const b = enactedById.get(lawId);
     if (!b) continue;
@@ -202,7 +204,7 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
     if (!day) { counts.votesNoDate++; continue; }
     counts.votesLaws++;
     const vote = pickVote(b['題名'], byDay.get(day) ?? []);
-    if (vote) { counts.votesMatched++; voteOf.set(lawId, vote['投票ID']); } else counts.votesNotFound++;
+    if (vote) { counts.votesMatched++; voteOf.set(lawId, vote['投票ID']); voteDay.set(vote['投票ID'], vote['投票日'] || day); } else counts.votesNotFound++;
   }
   const needed = new Set(voteOf.values());
   const ballotsOf = new Map<string, { id: string; yes: boolean }[]>();
@@ -218,12 +220,16 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
     for (const b of voteId ? ballotsOf.get(voteId) ?? [] : []) {
       const role: ExposureRole = b.yes ? 'yes' : 'no';
       const who = idName.get(b.id);
-      const found = who ? ledger.resolve(who.name, '参議院') : null;
-      // 人物ID が空（氏名が空など）の解決は人に置かず、配り先なし（理由つき）へ回す。
+      const found = who ? ledger.resolve(who.name, '参議院', voteId ? voteDay.get(voteId) ?? '' : '') : null;
+      // 人物ID が空（氏名が空、在任の外、同姓同名）の解決は人に置かず、配り先なし（理由つき）へ回す。
       const res = found && found.id ? found : null;
+      const noneReason = !found || found.id ? undefined
+        : found.reason.startsWith('未結合') ? found.reason
+        : found.reason ? undefined
+        : '氏名から人物IDが決まらない票（氏名が空など）';
       const placed = res
         ? place(lawId, role, 'person', res.id, res.id, 'upper')
-        : place(lawId, role, 'none', '', `未特定:${b.id}`, 'upper', { noneReason: found ? '氏名から人物IDが決まらない票（氏名が空など）' : undefined });
+        : place(lawId, role, 'none', '', `未特定:${b.id}`, 'upper', { noneReason });
       if (!placed) continue;
       if (role === 'yes') counts.yesRows++; else counts.noRows++;
       if (!res) counts.unresolvedVoteRows++;
@@ -256,10 +262,12 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
       unnamed = p.others;
     }
     let any = false;
+    const on = warekiDate(e['議決日_参']) || warekiDate(e['付託日_衆']) || '';
     for (const { name, weight } of named) {
-      const found = ledger.resolve(name, house);
-      const res = found && found.id ? found : null;
-      const placed = res ? place(lawId, 'proposer', 'person', res.id, res.id, undefined, { weight }) : place(lawId, 'proposer', 'none', '', `未特定:${name}`, undefined, { weight, noneReason: unresolvedReason });
+      const found = ledger.resolve(name, house, on);
+      const res = found.id ? found : null;
+      const why = found.reason.startsWith('未結合') ? found.reason : unresolvedReason;
+      const placed = res ? place(lawId, 'proposer', 'person', res.id, res.id, undefined, { weight }) : place(lawId, 'proposer', 'none', '', `未特定:${name}`, undefined, { weight, noneReason: why });
       if (!placed) continue;
       any = true;
       if (res) counts.proposerRows++; else counts.unresolvedProposerRows++;
@@ -274,9 +282,10 @@ export function buildExposureInputs(src: ExposureSources): ExposureInputs {
   for (const lawId of cabinetLawIds) {
     counts.cabinetLaws++;
     const bill = enactedById.get(lawId);
-    const all = bill ? cabinetOf(bill).names : [];
+    const cabinet = bill ? cabinetOf(bill) : { key: '', names: [] as string[], on: '' };
+    const all = cabinet.names;
     if (all.length === 0) { counts.cabinetLawsUndetermined++; continue; }
-    const resolved = all.map(n => ledger.resolve(normName(n), '')?.id ?? '');
+    const resolved = all.map(n => ledger.resolve(normName(n), '', cabinet.on).id);
     const missing = resolved.filter(x => !x).length;
     if (missing > 0) { counts.cabinetUnresolvedMinisters += missing; counts.cabinetLawsUnresolved++; continue; }
     const ids = [...new Set(resolved)];
