@@ -9,7 +9,9 @@ persons.csv の読みは「現職の名簿に載った人」の印も兼ねる�
 読みが2通り以上（同姓同名の疑い）や一致なしは、読みを空にして理由を書く（推測しない）。
 院と選挙区を付けて分けた人物ID（「鬼木誠（衆・福岡2）」など）は、同姓同名がいると分かっている人なので引かずに理由を書く。
 
-出力：data/acquired/diet-roster/readings-kokkai.csv（人物ID,氏名,読み,一致した発言数,理由,出典URL,取得日時）
+出力：data/acquired/diet-roster/readings-kokkai.csv（人物ID,氏名,読み,一致した発言数,理由,出典URL,取得日時,外部資料ID）
+原本：API の応答は1回ごとに scripts/register_external_material.py の register_once で
+.local/external-materials/person-readings-kokkai/ に登録し（AGENTS.md）、その material_id を「外部資料ID」列に空白区切りで書く。
 再開できる：取得済みの人物IDは引き直さない（--refresh で全部引き直す）。API が応答しなかった人は理由を書いて残し、次の実行で引き直す。
 
 使い方：python3 scripts/fetch_person_readings.py [--workers 4] [--sleep 0.2] [--limit N] [--dry-run] [--refresh]
@@ -18,12 +20,16 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
+import json
 import re
 import sys
 import time
 import unicodedata
 import urllib.parse
+import urllib.request
 from collections import Counter
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -31,11 +37,14 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.fetch_roster_kokkai import API, call, nospace, spellings
+from scripts.fetch_roster_kokkai import API, nospace, spellings
 
 PERSONS = ROOT / "data/derived/person-ids/persons.csv"
 OUT = ROOT / "data/acquired/diet-roster/readings-kokkai.csv"
-FIELDS = ["人物ID", "氏名", "読み", "一致した発言数", "理由", "出典URL", "取得日時"]
+FIELDS = ["人物ID", "氏名", "読み", "一致した発言数", "理由", "出典URL", "取得日時", "外部資料ID"]
+TASK_ID = "person-readings-kokkai"
+MATERIALS = ROOT / ".local" / "external-materials"
+WORK = ROOT / ".local" / "work" / TASK_ID
 SPLIT_ID = re.compile(r"（[^）]*）$")
 
 
@@ -61,9 +70,43 @@ def source_url(spelled: str) -> str:
     return API + "?" + urllib.parse.urlencode({"speaker": spelled, "from": "1986-07-01", "maximumRecords": "100", "recordPacking": "json"})
 
 
-def exact_records(spelled: str, sleep: float) -> list[dict]:
+def fetch_raw(url: str) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": "public-interest-lens-research/1.0"})
+    for i in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=40) as r:
+                return r.read()
+        except Exception:  # noqa: BLE001
+            time.sleep(2 * (i + 1))
+    raise RuntimeError("API が応答しない")
+
+
+def keep_material(url: str, raw: bytes, observed: str, storage: Path) -> str:
+    """API の応答の原本を外部資料として登録し、その material_id を返す（同じ日・同じ URL・同じ中身は登録し直さない）。"""
+    from scripts.register_external_material import register_once
+
+    WORK.mkdir(parents=True, exist_ok=True)
+    path = WORK / f"{hashlib.sha256(raw).hexdigest()}.json"
+    path.write_bytes(raw)
+    return register_once(input_path=path, source_url=url, task_id=TASK_ID, title="国会会議録 API の発言検索の応答",
+                         purpose="人物台帳で読みが空の人の読み（speakerYomi）の根拠を残す", storage_root=storage, observed_at=observed)
+
+
+def call_kept(params: dict[str, str], materials: list[str], get=fetch_raw, storage: Path = MATERIALS) -> dict:
+    """会議録 API を引き、応答の原本を登録して material_id を materials に足し、応答を返す。"""
+    url = API + "?" + urllib.parse.urlencode({**params, "recordPacking": "json"})
+    observed = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    raw = get(url)
+    materials.append(keep_material(url, raw, observed, storage))
+    return json.loads(raw)
+
+
+def exact_records(spelled: str, sleep: float, materials: list[str] | None = None, call=None) -> list[dict]:
     """発言者名の完全一致の発言。API の speaker は部分一致なので、長い名前の発言で先頭100件が埋まっても、
-    最大 PAGES ページまで読み進める（新しい順）。同姓同名の別人を見落とさないよう、いちばん古い発言も1件足す。"""
+    最大 PAGES ページまで読み進める（新しい順）。同姓同名の別人を見落とさないよう、いちばん古い発言も1件足す。
+    応答の原本は1回ごとに登録し、material_id を materials に足す。"""
+    materials = [] if materials is None else materials
+    call = call or (lambda params: call_kept(params, materials))
     base = {"speaker": spelled, "from": "1986-07-01", "maximumRecords": "100"}
     out: list[dict] = []
     start, total = 1, None
@@ -86,18 +129,20 @@ def exact_records(spelled: str, sleep: float) -> list[dict]:
 
 def look_up(pid: str, name: str, aliases: list[str], sleep: float) -> dict[str, str]:
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    row = {"人物ID": pid, "氏名": name, "読み": "", "一致した発言数": "0", "理由": "", "出典URL": "", "取得日時": now}
+    row = {"人物ID": pid, "氏名": name, "読み": "", "一致した発言数": "0", "理由": "", "出典URL": "", "取得日時": now, "外部資料ID": ""}
     if SPLIT_ID.search(pid):
         return {**row, "理由": "同姓同名を院と選挙区で分けた人物（発言者名だけでは決まらない）"}
     recs: list[dict] = []
+    materials: list[str] = []
     tries = list(dict.fromkeys(s for n in [name, *aliases] for s in spellings(nospace(n))))
     try:
         for spelled in tries:
-            recs = exact_records(spelled, sleep)
+            recs = exact_records(spelled, sleep, materials)
             if recs:
                 break
     except RuntimeError as e:  # API が応答しない人は空にして理由を書く（他の人の結果は残す。次の実行で引き直す）
-        return {**row, "理由": f"{RETRY_REASON}（{e}）"}
+        return {**row, "理由": f"{RETRY_REASON}（{e}）", "外部資料ID": " ".join(dict.fromkeys(materials))}
+    row["外部資料ID"] = " ".join(dict.fromkeys(materials))
     # 出典：一致した表記の問い合わせ。一致なしなら、試した表記の問い合わせを全部。
     row["出典URL"] = " ".join(source_url(t) for t in ([spelled] if recs else tries))
     yomi = Counter(nospace(r.get("speakerYomi") or "") for r in recs if r.get("speakerYomi"))
@@ -133,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     rows = sorted((r for pid, r in got.items() if pid in keep), key=lambda r: r["人物ID"])
     OUT.parent.mkdir(parents=True, exist_ok=True)
     with open(OUT, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, FIELDS, lineterminator="\n")
+        w = csv.DictWriter(f, FIELDS, lineterminator="\n", restval="")
         w.writeheader()
         w.writerows(rows)
     filled = sum(bool(r["読み"]) for r in rows)
