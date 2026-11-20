@@ -40,6 +40,14 @@ class JudgeRules(unittest.TestCase):
         self.assertEqual(judge(SITE, READ, dict(READ), flip)[0], "割れ")
         self.assertNotEqual(judge(SITE, READ, dict(READ), flip, ("経済に効くか",))[0], "割れ")
 
+    def test_new_value_on_a_split_waits_for_another_reader(self):
+        # 2系統が割れた項目で、裁定がどちらとも違う値を出したら、別の読み手の確認まで保留（#248 の Codex の指摘）
+        b = {**READ, "主な産業分野": "労働市場"}
+        new = {"主な産業分野": "医療・福祉"}
+        self.assertEqual(overriding(READ, b, new), ["主な産業分野"])
+        self.assertEqual(overriding(READ, b, {"主な産業分野": "労働市場"}), [])
+        self.assertEqual(overriding(READ, b, new, ("主な産業分野",)), [])
+
     def test_agree_and_match_passes(self):
         self.assertEqual(judge(SITE, READ, dict(READ))[0], "合格")
 
@@ -181,6 +189,20 @@ class ConfirmationRecord(unittest.TestCase):
             for item in ru.get("確認", []):
                 self.assertEqual(ru["値"][item], next(c["値"] for c in ru["確認の記録"] if c["項目"] == item), i)
 
+
+    def test_new_value_is_confirmed_by_a_reader_other_than_the_adjudicator(self):
+        # 2系統のどちらとも違う値を採るなら、裁定者と別のモデルの盲検の確認が要る（同じモデルの判定を2回置いても一致にならない）
+        rulings = json.loads((V2 / "rulings.json").read_text(encoding="utf-8"))
+        a = {x["id"]: x for x in json.loads((V2 / "lineA.json").read_text(encoding="utf-8"))}
+        b = {x["id"]: x for x in json.loads((V2 / "lineB.json").read_text(encoding="utf-8"))}
+        family = lambda who: who.split("（")[0].lower().replace("claude-", "")
+        for i, ru in rulings.items():
+            for item, v in ru.get("値", {}).items():
+                if v in (a[i].get(item), b[i].get(item)) or item not in ru.get("確認", []):
+                    continue
+                judges = {family(r.get("裁定者", ru.get("裁定者", ""))) for r in ru.get("裁定", []) if r["項目"] == item and r["値"] == v}
+                readers = {family(c["確認者"]) for c in ru["確認の記録"] if c["項目"] == item and c["値"] == v}
+                self.assertTrue(readers - judges, f"{i} {item}：裁定者と別の読み手の確認が無い")
 
 if __name__ == "__main__":
     unittest.main()
