@@ -441,26 +441,38 @@ def _logic_condition(root: Path, logic_counts) -> dict:
 
 
 def _sampling_condition(d: Path) -> dict:
-    """3. 抜き取り検証で不合格のままの法律が0。抜き取った全件に判定があること。"""
+    """3. 抜き取り検証で不合格のままの法律が0。標本1（初回）と標本2（sample-v2、新しい標本）のそれぞれで、抜き取った全件に判定があること。"""
     base = d / "evaluation-ledger-v1"
     if not all((base / n).is_file() for n in ("sample.csv", "sample-verdicts.csv", "ledger.csv")):
         raise NotMeasured("抜き取りか判定の記録が無い")
-    sample = {r["id"] for r in read_csv(base / "sample.csv")}
-    if not sample:
-        raise NotMeasured("抜き取りが0本")
-    # 同じ法律の判定が2行あれば後の行（やり直し）を採る。空欄や知らない語は判定として数えない
-    verdict_of = {r["id"]: r["判定"] for r in read_csv(base / "sample-verdicts.csv") if r["id"] in sample and r["判定"] in ("合格", "不合格")}
-    tally = Counter(verdict_of.values())
-    state = Counter(r["検証状態"] for r in read_csv(base / "ledger.csv") if r["id"] in sample)
-    still_failed, demoted = state["抜き取り検証で不合格"], state["参考に下げた"]
-    unjudged = len(sample) - len(verdict_of)
-    # 不合格の判定のうち、台帳で「参考に下げた」でも「不合格のまま」でもないもの＝一次資料の読み直しで合格に訂正した法律
-    ledger_state = {r["id"]: r["検証状態"] for r in read_csv(base / "ledger.csv") if r["id"] in sample}
-    reread = sum(1 for i, v in verdict_of.items() if v == "不合格" and ledger_state.get(i) not in ("参考に下げた", "抜き取り検証で不合格"))
+    ledger_state = {r["id"]: (r["検証状態"], r.get("検証メモ", "")) for r in read_csv(base / "ledger.csv")}
+    parts, ok = [], True
+    for name, sample_csv, verdict_csv in (("標本1（初回、種 20261030）", base / "sample.csv", base / "sample-verdicts.csv"),
+                                          ("標本2（新しい標本、種 20261119）", base / "sample-v2" / "sample.csv", base / "sample-v2" / "verdicts.csv")):
+        if not sample_csv.is_file() or not verdict_csv.is_file():
+            if "sample-v2" in str(sample_csv) and not sample_csv.parent.exists():
+                continue  # 標本2の記録が丸ごと無い木（検査用の架空の木など）は標本1だけで数える
+            raise NotMeasured(f"{name} の抜き取りか判定の記録が無い")
+        sample = {r["id"] for r in read_csv(sample_csv)}
+        if not sample:
+            raise NotMeasured(f"{name} の抜き取りが0本")
+        # 同じ法律の判定が2行あれば後の行（やり直し）を採る。空欄や知らない語は判定として数えない
+        verdict_of = {r["id"]: r["判定"] for r in read_csv(verdict_csv) if r["id"] in sample and r["判定"] in ("合格", "不合格")}
+        tally = Counter(verdict_of.values())
+        state = Counter(ledger_state.get(i, ("", ""))[0] for i in sample)
+        still_failed, demoted = state["抜き取り検証で不合格"], state["参考に下げた"]
+        unjudged = len(sample) - len(verdict_of)
+        # 不合格の判定のうち、台帳で「抜き取り検証で合格」になったもの＝読み直し・訂正で合格になった法律
+        fixed = sum(1 for i, v in verdict_of.items() if v == "不合格" and ledger_state.get(i, ("", ""))[0] == "抜き取り検証で合格")
+        missing = sorted(sample - set(ledger_state))  # 台帳から消えた抜き取りの法律は合格に数えない
+        ok = ok and unjudged == 0 and still_failed == 0 and not missing
+        parts.append(f"{name}：{len(sample):,} 本中 合格 {tally['合格']:,}・不合格 {tally['不合格']:,}・判定なし {unjudged:,}。"
+                     f"不合格のうち 参考に下げた {demoted:,}・訂正（読み直し）で合格 {fixed:,}・不合格のまま {still_failed:,}"
+                     + (f"。台帳に無い {len(missing):,} 本（{'、'.join(missing[:5])}）" if missing else ""))
     return {
-        "state": "達成" if unjudged == 0 and still_failed == 0 else "未達",
-        "now": f"抜き取り {len(sample):,} 本中、判定済み {len(verdict_of):,} 本（合格 {tally['合格']:,}、不合格 {tally['不合格']:,}）、判定なし {unjudged:,} 本。不合格のうち参考に下げた {demoted:,} 本、読み直しで合格に訂正 {reread:,} 本、不合格のまま {still_failed:,} 本",
-        "how": "sample.csv・sample-verdicts.csv と台帳の検証状態。やり直しの有無は判定の中身からは分からない",
+        "state": "達成" if ok else "未達",
+        "now": "／".join(parts),
+        "how": "標本ごとの sample.csv と判定（sample-verdicts.csv、sample-v2/verdicts.csv）と台帳の検証状態。標本2の不合格のままは、サイトの値の訂正（sample-v2/correction-candidates.csv）が入ると台帳が判定し直して減る",
     }
 
 

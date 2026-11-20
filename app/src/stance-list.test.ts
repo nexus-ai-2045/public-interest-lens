@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { characterStances, isClearlyBad, type StanceRow } from './StanceList';
+import { characterStances, isClearlyBad, isClearlyGood, type StanceRow } from './StanceList';
 import type { VoteLaw } from './votes';
 import type { CatalogItem } from './laws-catalog';
 
@@ -19,8 +19,13 @@ describe('characterStances', () => {
 describe('isClearlyBad', () => {
   const base = { id: 'x', kind: '閣法', title: 'x', year: 2000, field: 'f', marks: [], summary: '' } as unknown as CatalogItem;
   it('確かな額で損失側のときだけ', () => {
-    expect(isClearlyBad({ ...base, side: 'loss', step: 'published', amount: { median: 1, low: 0, high: 2 } })).toBe(true);
-    expect(isClearlyBad({ ...base, side: 'loss', step: 'amounted', amount: { median: 1, low: 0, high: 2 } })).toBe(false);
-    expect(isClearlyBad(undefined)).toBe(false);
+    expect(isClearlyBad({ ...base, side: 'loss', step: 'published', amount: { median: 1, low: 0, high: 2 } }, false)).toBe(true);
+    expect(isClearlyBad({ ...base, side: 'loss', step: 'amounted', amount: { median: 1, low: 0, high: 2 } }, false)).toBe(false);
+    expect(isClearlyBad(undefined, false)).toBe(false);
+  });
+  it('振り分けの当て直し中（順位の一時停止）は、確かな額でも損失・便益の印を付けない', () => {
+    expect(isClearlyBad({ ...base, side: 'loss', step: 'published', amount: { median: 1, low: 0, high: 2 } }, true)).toBe(false);
+    expect(isClearlyGood({ ...base, side: 'benefit', step: 'published', amount: { median: 1, low: 0, high: 2 } }, true)).toBe(false);
+    expect(isClearlyGood({ ...base, side: 'benefit', step: 'published', amount: { median: 1, low: 0, high: 2 } }, false)).toBe(true);
   });
 });
