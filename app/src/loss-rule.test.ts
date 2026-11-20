@@ -56,4 +56,11 @@ describe('個人への配分', () => {
     expect(a.reduce((s, x) => s + x.shareYen.median, 0)).toBeLessThanOrEqual(100);
     expect(a[0].shareYen.median).toBe(91);
   });
+  // 既知の不具合。関数のコメント「合計は損失額×帰属率を超えない」が、端数の四捨五入で破れる。直すとこのテストは成功し、it.fails のままでは赤になる。
+  it.fails('端数を四捨五入しても、個人の合計は損失額×帰属率を超えない', () => {
+    const loss = { low: 2, median: 2, high: 2 };
+    const people = ['A', 'B', 'C'].map(personId => ({ personId, action: 'vote' as const, position: 'other' as const, evidenceUrl: 'https://example.go.jp/a' }));
+    const allocated = allocateLoss(loss, people, 1);
+    expect(allocated.reduce((sum, row) => sum + row.shareYen.median, 0)).toBeLessThanOrEqual(2);
+  });
 });

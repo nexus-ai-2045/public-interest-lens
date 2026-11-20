@@ -39,6 +39,13 @@ describe('行動から人物への評価契約', () => {
     expect(actionMatchesView(action, { ...policy, domain: 'technology' }, defaults)).toBe(false);
     expect(actionMatchesView({ ...action, actionDate: '2000-01-01' }, policy, { ...defaults, period: 'cumulative' })).toBe(true);
   });
+  // 既知の不具合。2024-02-29 から2年戻すと 2022-03-01 になり、2022-02-28 の行動が期間外になる。直すとこのテストは成功し、it.fails のままでは赤になる。
+  it.fails('うるう日の起点から戻した期間は、存在しない日を翌日に送らない', () => {
+    const data = fixture();
+    const action = data.involvements.find(item => item.personId === 'fiction-a')!;
+    const policy = data.policies.find(item => item.id === action.policyId)!;
+    expect(actionMatchesView({ ...action, actionDate: '2022-02-28' }, policy, { ...defaults, period: 2, asOf: '2024-02-29' })).toBe(true);
+  });
 
   it('表示条件は保留・参考行動も含み、総合では全分野を含む', () => {
     const data = fixture();

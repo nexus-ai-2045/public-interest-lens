@@ -50,6 +50,15 @@ describe('便益の状態（measureBenefit は impact-rule-v1 をそのまま使
     expect(m.state).toBe('円換算済み');
     expect(m.yen!.median).toBe(-60000);
   });
+  it('円は開始後1年目から、損失額と同じ年数だけ足す', () => {
+    // 段階の判定は開始後1年目を除く（impact-rule）。累積額は損失額と同じく開始年を1年目に含める（便益ルール-v1 の 3-1）。
+    const input = series([200, 110, 110, 110, 110], { yen: 1, source: '人工' }, 'higher');
+    input.maxYears = 5;
+    const measured = measureBenefit(input);
+    // 1年目100件 + 2〜5年目各10件。単価1円。
+    expect(measured.state).toBe('円換算済み');
+    expect(measured.yen?.median).toBe(140);
+  });
 });
 
 describe('便益の合計と二重計上', () => {

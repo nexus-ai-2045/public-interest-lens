@@ -16,6 +16,11 @@ describe('法律ランキングの表示の決まり', () => {
     expect(confirmed.map(item => item.id)).toEqual(['c', 'e', 'b']);
     expect(reference.map(item => item.id)).toEqual(['d', 'a']);
   });
+  // 既知の不具合。method-spec-v3.0 と設計決定0027 の確かさ下限（中）と R41 は、低を確かな額に入れない。直すとこのテストは成功し、it.fails のままでは赤になる。上のテストはいまの分類を固定している。
+  it.fails('確かさ「低」は確かな額に入れない', () => {
+    const { confirmed } = splitLaws([law('low', '低', 5), law('mid', '中', 3), law('high', '高', 1)]);
+    expect(confirmed.map(item => item.id)).toEqual(['mid', 'high']);
+  });
   it('全体指標の額は参考とも別の組にし、側と検索語で絞れる', () => {
     const { reference, macro } = splitLaws([law('a', '参考', 9), law('m1', '参考', 3, '全体指標-_T'), law('m2', '参考', 7, '全体指標-K')]);
     expect(reference.map(item => item.id)).toEqual(['a']);
