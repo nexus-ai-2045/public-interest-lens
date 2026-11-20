@@ -57,6 +57,8 @@ const inputs = {
   cabinet: join(root, 'data/acquired/office-holders/cabinet.csv'),
   persons: join(root, 'data/derived/person-ids/persons.csv'),
   roster: join(root, 'data/acquired/diet-roster/current.csv'),
+  // 台帳に読みが無い人の読みの補い（国会会議録の発言者の読み。scripts/fetch_person_readings.py）。並びだけに使う。
+  readingsKokkai: join(root, 'data/acquired/diet-roster/readings-kokkai.csv'),
   // 賛成・反対は投票の一次資料から取る（参議院は個人票、衆議院は enacted.csv の会派）。
   votesIndex: join(root, 'data/acquired/sangiin-votes/votes_index.csv'),
   sangiinMembers: join(root, 'data/acquired/sangiin-votes/members.csv'),
@@ -124,11 +126,18 @@ function checkPublic(label, p, minLaws, internal, restMin) {
   return stats;
 }
 
-// 人物ID → 読み。本体に載る人で、台帳に読みがある人だけ（台帳に無い項目は足さない）。
-function personReadings(personsRows, people) {
+// 人物ID → 読み。本体に載る人で、読みが分かる人だけ。人物台帳の読みを先に使い、空なら国会会議録の発言者の読み（readings-kokkai.csv）で補う。
+function personReadings(personsRows, kokkaiRows, people) {
   const ids = new Set(people.map(p => p.actorId));
+  const kokkai = new Map(kokkaiRows.filter(r => r['人物ID'] && r['読み']).map(r => [r['人物ID'], r['読み']]));
   const out = {};
-  for (const r of personsRows) if (ids.has(r['人物ID']) && r['読み']) out[r['人物ID']] = r['読み'];
+  for (const r of personsRows) {
+    if (!ids.has(r['人物ID'])) continue;
+    // 台帳の読みは姓と名の間に空白がある（会議録の読みには無い）。混ぜて並べるので空白を除いてそろえる。
+    const squash = v => (v || '').replace(/\s+/g, '');
+    const reading = squash(r['読み']) || squash(kokkai.get(r['人物ID']));
+    if (reading) out[r['人物ID']] = reading;
+  }
   return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
 }
 
@@ -197,8 +206,8 @@ try {
     groups: groupRow(built.industry),
     counts: built.counts,
     coverage,
-    // 階層の中の並び（五十音）に使う読み。人物台帳（persons.csv、リポジトリで公開済み）の「読み」を、本体に載る人のうち読みのある人だけ出す。
-    personReadings: personReadings(parseCsv(text.persons), pub.people),
+    // 階層の中の並び（五十音）に使う読み。人物台帳（persons.csv）の「読み」、空なら会議録の発言者の読み（readings-kokkai.csv）を、本体に載る人のうち読みの分かる人だけ出す。
+    personReadings: personReadings(parseCsv(text.persons), parseCsv(text.readingsKokkai), pub.people),
   };
   payload.generatedFrom = await generationMetadata(server, root, ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts'], ['scripts/build_exposure_ranking.mjs']);
   payload.inputs = Object.fromEntries(Object.entries(text).map(([k, v]) => [k, createHash('sha256').update(v).digest('hex')]));
