@@ -43,6 +43,8 @@ from scripts.evaluation_rules import (
     STATE_FAILED,
     VERDICT_FAIL,
     amount_demoted,
+    amount_kind_of,
+    certainty_mark,
     is_demoted,
     narrow_whole_economy,
 )
@@ -209,7 +211,7 @@ def site_values(o: dict, src) -> dict:
         "類型": o["種類"] or "", "分類": cls, "分類の方法": how, "到達点": reach_, "額の方法": amt_how, "額（円）": amt,
         "分野": (m["分野"] if m else None) or o["分野"] or (f["分野"] if f else ""),
         "分野の方法": m["分野の由来"] if m else ("AI 2系統" if f else ("題名の語の規則" if o["分野"] else "")),
-        "確かさ": o["確かさ"] or (m["結果"] and "参考" if m and m["結果"] == "額" else ""),
+        "確かさ": certainty_mark(amount_kind_of(reach_), o.get("段階") or ""),
         "経済に効くか": econ,
     }
 

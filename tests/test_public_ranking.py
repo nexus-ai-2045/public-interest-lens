@@ -29,6 +29,23 @@ class EnforcementDateSourceTest(unittest.TestCase):
         self.assertEqual(egov, ["https://laws.e-gov.go.jp/law/410AC0000000029"])
 
 
+class CertaintyFromAmountKindTest(unittest.TestCase):
+    """印は表示文の先頭を採らない。参考フラグと段階（額の種類）から決める。"""
+
+    def test_stage_word_in_the_label_does_not_become_the_mark(self) -> None:
+        publish = {"id": "閣法-0-0", "確かさ": "段階1"}
+        loss = {"id": "閣法-0-0", "参考フラグ": "", "段階": "段階1", "確かさ": "段階1"}
+        self.assertEqual(builder.certainty(publish, loss), "低")
+        loss = {**loss, "参考フラグ": "参考", "確かさ": "段階3", "段階": "段階3"}
+        self.assertEqual(builder.certainty(publish, loss), "参考")
+
+    def test_display_label_is_not_the_source(self) -> None:
+        # 表示文が段階と食い違っても、印は段階と参考フラグから出る（文字列の先頭は見ない）。
+        publish = {"id": "閣法-0-0", "確かさ": "高（段階3）"}
+        loss = {"id": "閣法-0-0", "参考フラグ": "", "段階": "段階2", "確かさ": "高（段階3）"}
+        self.assertEqual(builder.certainty(publish, loss), "中")
+
+
 @requires_data("industry_va")
 class PublicRankingTests(unittest.TestCase):
     @classmethod

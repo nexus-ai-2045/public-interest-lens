@@ -253,7 +253,7 @@ export const SPEC_SECTIONS: SpecSection[] = [
     title: '確かさの印',
     version: 'certainty-v1',
     status: '採用',
-    code: ['scripts/build_public_ranking.py（certainty）'],
+    code: ['scripts/evaluation_rules.py（certainty_mark）', 'scripts/build_public_ranking.py（certainty）'],
     lead: '額の横に付ける確かさは、段階と参考の区別で機械的に決まります。段階が3・2でも、コロナ期と分離できない法律は参考に下げます。',
     formulas: [
       { tex: '\\text{確かさ}(i) = \\begin{cases} \\text{高} & \\text{段階3} \\\\ \\text{中} & \\text{段階2} \\\\ \\text{低} & \\text{段階1} \\\\ \\text{参考} & \\text{貸出残高の機械的仮定・代理の指標・全体指標（macro-v1）、または判定表 R3・コロナ対応の法律（段階に関わらず）} \\end{cases}' },

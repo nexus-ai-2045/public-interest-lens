@@ -24,9 +24,13 @@ from pathlib import Path
 try:
     from scripts.build_all_laws_outcomes import crowded_ids, narrow_measure
     from scripts.evaluation_rules import (
+        KIND_CONFIRMED,
+        KIND_REFERENCE,
+        CERTAINTY_MARKS,
         DEMOTED_ROUTES,
         SAMPLE2_REASON_PREFIX,
         VERDICT_FAIL,
+        certainty_mark,
         is_demoted,
         sample2_failures,
     )
@@ -34,9 +38,13 @@ try:
 except ModuleNotFoundError:
     from build_all_laws_outcomes import crowded_ids, narrow_measure
     from evaluation_rules import (
+        KIND_CONFIRMED,
+        KIND_REFERENCE,
+        CERTAINTY_MARKS,
         DEMOTED_ROUTES,
         SAMPLE2_REASON_PREFIX,
         VERDICT_FAIL,
+        certainty_mark,
         is_demoted,
         sample2_failures,
     )
@@ -93,7 +101,7 @@ UNIT_WINDOW = re.compile(r"開始後(\d+)年の累積、名目は開始前最後
 COUNTRIES = re.compile(r"比較国：\d+か国（([A-Z・]+)）")
 APPROVAL_NOTE = "法律単位の結果を全件公開（2026-10-17 ユーザー承認、議員の実名は別承認）"
 APPROVAL_SCOPE = "all-laws"
-CERTAINTY = ("高", "中", "低", "参考")
+CERTAINTY = CERTAINTY_MARKS  # ADR 0008。正本は evaluation_rules.certainty_mark
 # 判定表の行に応じた、額の読み方の注意（機械的に付ける）。
 ROW_NOTES = {
     "R3": "コロナ期と重なる",
@@ -214,17 +222,19 @@ def _short(text: str, limit: int = REASON_LIMIT) -> str:
     return out
 
 
-def certainty(publish_row: dict[str, str], loss_row: dict[str, str]) -> str:
-    """確かさ。CSV に 確かさ 列があればその先頭の語、無ければ 参考フラグ と 段階 から決める。"""
-    for row in (publish_row, loss_row):
-        label = (row.get("確かさ") or "").strip()
-        if label:
-            if label[0] == "参" or label[0] in CERTAINTY[:3]:
-                return "参考" if label[0] == "参" else label[0]
-            raise ValueError(f"確かさの値が不明です: {publish_row['id']} {label}")
-    if loss_row["参考フラグ"] == "参考":
-        return "参考"
-    return {"段階3": "高", "段階2": "中", "段階1": "低"}[loss_row["段階"]]
+def certainty(_publish_row: dict[str, str], loss_row: dict[str, str]) -> str:
+    """確かさの印。参考フラグなら参考額、そうでなければ確かな額の段階から決める。
+
+    損失表の「確かさ」列は表示文（高（段階3）など）なので、先頭の文字は使わない。
+    第1引数は公開表の行（呼び出しの形は保つ。表示文は印の決定に使わない）。
+    """
+    if loss_row.get("参考フラグ") == "参考":
+        mark = certainty_mark(KIND_REFERENCE)
+    else:
+        mark = certainty_mark(KIND_CONFIRMED, loss_row.get("段階") or "")
+    if mark not in CERTAINTY:
+        raise ValueError(f"確かさの印が ADR 0008 の外です: {loss_row.get('id', '')} {mark}")
+    return mark
 
 
 def _law(row: dict[str, str], loss_row: dict[str, str], sources: list[str], enforced: str, covid_ids: frozenset[str] | None = None) -> dict:
@@ -253,7 +263,7 @@ def _law(row: dict[str, str], loss_row: dict[str, str], sources: list[str], enfo
         raise ValueError(f"比較国を読めません: {row['id']}")
     notes = [ROW_NOTES[row["判定表の行"]]] if row["判定表の行"] in ROW_NOTES else []
     if row["判定表の行"] == "R3" or row["id"] in (covid_response() if covid_ids is None else covid_ids):
-        level = "参考"
+        level = certainty_mark(KIND_REFERENCE)
         notes.append(COVID_HELD)
     return {
         "id": row["id"],
@@ -308,7 +318,7 @@ def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
         "id": row["id"],
         "title": row["題名"],
         "side": side,
-        "certainty": "参考",
+        "certainty": certainty_mark(KIND_REFERENCE),
         "notes": notes,
         "field": row["分野"],
         "indicator": "支出の規模（一次資料）×帰属×乗数" if covid else f"{row['計算式の要素'].split('（')[0].removeprefix('OECD 表6 JPN ')}の実質付加価値（{origin}）",
@@ -428,7 +438,7 @@ def hide_unreliable(laws: list[dict], failed: dict[str, str] | set[str], ceiling
     kept, moved = [], []
     for law in laws:
         if demoted(law):
-            law["certainty"] = "参考"
+            law["certainty"] = certainty_mark(KIND_REFERENCE)
             law["demotedReason"] = reasons[law["id"]] or "独立検証の抜き取りで不合格"
             law["demotedBasis"] = demoted_basis(law, covid_basis.get(law["id"], ""))
             kept.append(law)
