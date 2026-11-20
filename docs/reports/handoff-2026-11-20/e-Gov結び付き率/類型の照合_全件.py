@@ -1,7 +1,9 @@
 import sys,os,csv,re,json,time,collections,urllib.request
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+import bridgelib
+bridgelib.load()
 from bridgelib import *
-S=os.environ.get('EGOV_WORKDIR',os.path.dirname(os.path.abspath(__file__)))+'/'  # 入力（econ_labels.csv・honbun.json など）を置く作業フォルダ
+S = D
 def rd(n): return list(csv.DictReader(open(D+n)))
 v=rd('data_derived_evaluation-ledger-v1_sample-v2_verdicts.csv')
 cand=rd('data_derived_evaluation-ledger-v1_sample-v2_correction-candidates.csv')

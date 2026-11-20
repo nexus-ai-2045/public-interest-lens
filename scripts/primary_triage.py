@@ -8,7 +8,7 @@
   python3 scripts/primary_triage.py apply --set pilot       2系統と裁定（{set}/rulings.json）から labels.csv の行を作る（同じ id の行は置き換える）
   python3 scripts/primary_triage.py estimate                試走の実測（pilot/usage.json）から全件の費用と所要時間を見積もる → pilot/estimate.json
 
-根本原因（/mnt/project-files/analysis/抜き取り不合格の根本原因_2026-11-19.md の 1-2）に対する直し：
+根本原因（docs/reports/handoff-2026-11-20/抜き取り不合格の根本原因_2026-11-19.md の 1-2）に対する直し：
   入力：題名だけ → 議案本文＋会議録（系統Aは本文を先に、系統Bは会議録を先に。入力の読み順を分けて独立に近づける）。
   一致の取り方：割れ・判定不能・確信が低い・サイトの値を変える項目は、空や経済全体に倒さず Sonnet が裁定する。
   定義：類型・経済に効くかは読み直しの指示文（reverification-v1/prompt-v1.md）にそろえる（税法の年度改正は実質改正）。

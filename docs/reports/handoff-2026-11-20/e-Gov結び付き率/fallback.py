@@ -1,6 +1,9 @@
-import csv,json,re,sys,time,urllib.request,urllib.parse
-r=[x for x in csv.DictReader(open('result.csv')) if x['err']=='' and x['新規か改正か']=='改正' and x['改正元の数']=='0']
-w=csv.writer(open('fallback.csv','w',newline='')); w.writerow(['id','題名','名前','形','一致数','category'])
+import csv,json,re,sys,time,urllib.request,urllib.parse,os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import bridgelib
+D = bridgelib.require_egov_workdir()
+r=[x for x in csv.DictReader(open(D+'result.csv')) if x['err']=='' and x['新規か改正か']=='改正' and x['改正元の数']=='0']
+w=csv.writer(open(D+'fallback.csv','w',newline='')); w.writerow(['id','題名','名前','形','一致数','category'])
 for x in r:
     t=re.sub(r'案$','',x['題名'])
     m=re.match(r'^(.+?)(等)?の一部を改正する法律$',t)
