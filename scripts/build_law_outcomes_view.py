@@ -27,6 +27,10 @@ WITHHELD = "1本ごとの額は公開ランキングで出していない（{out
 RESULT_OF_OUTCOME = {
     OUTCOMES["excluded"]: "評価対象外",
     OUTCOMES["no_series"]: "測定できない",
+    OUTCOMES["no_effect"]: "効果なし（定例）",
+    OUTCOMES["unmeasurable"]: "測定できない",
+    OUTCOMES["ledger_hold"]: "保留",
+    OUTCOMES["fiscal"]: "保留",  # 国の収支の額は GDP とは別欄。この一覧では額を出さず保留にし、理由に台帳の結果を書く
     **{OUTCOMES[key]: "保留" for key in ("pending", "source", "triage_hold", "undated", "impact_hold", "amount_hold", "covid_scale",
                                          "hidden_failed", "hidden_shared", "hidden_oversize")},
 }

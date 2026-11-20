@@ -119,7 +119,14 @@ OUTCOMES = {
     "hidden_failed": "額は出さない（検証で不合格）",  # 降格の導入後は使わない（不合格は参考値に下げて額を残す）
     "hidden_shared": "共有額の参考（1本ごとの額は出さない）",
     "hidden_oversize": "額は出さない（桁外れ）",
+    # 振り分けだけ見ると評価対象外でも、全法律の結果（outcomes.csv）が先へ進めた法律は、台帳と同じ結果名で出す（再査読 N1）
+    "no_effect": "効果なし（定例）",
+    "unmeasurable": "測定できない",
+    "ledger_hold": "保留",
+    "fiscal": "国の収支の額（順位に入れない）",
 }
+# outcomes.csv の結果 → 上の結果名。経路が財政（税収見込み）の「額あり」は GDP とは別欄なので fiscal にする
+LEDGER_RESULTS = {"効果なし（定例）": "no_effect", "測定できない": "unmeasurable", "保留": "ledger_hold"}
 HIDDEN_REASONS = {
     "hidden_failed": "独立検証の抜き取りで不合格だったため、額を出さない",
     "hidden_shared": "同じ額を共有する法律の1つ。産業全体の差を法律ごとに分けていないので、1本ごとの額は出さず、共有された合計の一部（0〜合計）としてだけ見せる（sharedReference）",
@@ -376,6 +383,14 @@ def _no_amount(
     return _other(law_id, title, "triage_hold", f"{result}：系統1は{row['A_種類']}・{row['A_判定']}、系統2は{row['B_種類']}・{row['B_判定']}")
 
 
+def _ledger_other(law_id: str, title: str, row: dict[str, str]) -> dict | None:
+    """振り分けでは評価対象外でも、全法律の結果が先へ進めた法律の結果（台帳と画面で同じ法律の結果を食い違わせない）。"""
+    if row["結果"] == "額あり" and row["経路"].startswith("財政"):
+        return _other(law_id, title, "fiscal", row["理由"] or row["経路"])
+    key = LEDGER_RESULTS.get(row["結果"])
+    return _other(law_id, title, key, row["理由"] or row["経路"]) if key else None
+
+
 def japan_value_added_max(raw: bytes | None = None) -> int:
     """日本の全産業の名目付加価値1年分の最大値。計算時は捕捉済み入力を使う。"""
     raw = INPUTS["industryVa"].read_bytes() if raw is None else raw
@@ -431,6 +446,10 @@ def hide_unreliable(laws: list[dict], failed: dict[str, str] | set[str], ceiling
             law["certainty"] = "参考"
             law["demotedReason"] = reasons[law["id"]] or "独立検証の抜き取りで不合格"
             law["demotedBasis"] = demoted_basis(law, covid_basis.get(law["id"], ""))
+            # 降格した額は影響の段階の裏付けを失う。向きは産業の差の符号だけになるので、外部の証拠がある
+            # コロナの費用便益を除き、向き未確定の印を付ける（設計決定0027・再査読 N2）
+            if not law["group"].startswith(COVID_BENEFIT_GROUP) and MACRO_DIRECTION_NOTE not in law["notes"]:
+                law["notes"] = [*law["notes"], MACRO_DIRECTION_NOTE]
             kept.append(law)
             continue
         key = None
@@ -521,6 +540,7 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
     demoted = {row["id"]: row["理由"] for row in outcomes if row["経路"] in DEMOTED_ROUTES}
     # 全法律の結果が「評価対象外」とした法律は、どの経路の額が残っていても laws に出さない（訂正表で制度・名称整備と決まった法律など）。
     excluded = {row["id"]: row["理由"] or row["経路"] or "評価対象外" for row in outcomes if row["結果"] == "評価対象外"}
+    ledger = {row["id"]: row for row in outcomes}
     laws, others = [], []
     for law_id, census_row in enacted.items():
         row = publish.get(law_id)
@@ -539,6 +559,8 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
                 others.append(_other(law_id, title, "amount_hold", demoted[law_id]))
             else:
                 other = _no_amount(law_id, title, publish, loss, impact, dated, triage)
+                if other["outcome"] == OUTCOMES["excluded"] and law_id in ledger:
+                    other = _ledger_other(law_id, title, ledger[law_id]) or other
                 if law_id in covid_ids:
                     other["reason"] = _short(f"{COVID_NO_AMOUNT}／{other['reason']}")
                 others.append(other)

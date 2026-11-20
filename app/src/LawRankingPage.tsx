@@ -136,7 +136,7 @@ export function LawRankingPage() {
           <summary>どこで止まったか（件数の絞り込み）</summary>
           <section aria-label="件数の絞り込み" className="law-funnel">
             <FunnelSteps caption="件数の絞り込み" steps={funnel.map(step => ({ key: step.key, label: step.label, count: data.counts[step.key] }))} />
-            {data.strict && <p className="fine-note">参考の額を除くと、測る指標が決まった{data.strict.evaluated.toLocaleString('ja-JP')}本・施行日が原文で確定{data.strict.dated.toLocaleString('ja-JP')}本・影響の段階が付いた{data.strict.staged.toLocaleString('ja-JP')}本です。ほかに、産業や経済全体の差で参考の額を付けた法律が{(data.counts.amounted - data.counts.published).toLocaleString('ja-JP')}本、額が出ていない法律（理由つき）が{(data.counts.enacted - data.counts.amounted).toLocaleString('ja-JP')}本あります。</p>}
+            {data.strict && <p className="fine-note">参考の額を除くと、測る指標が決まった{data.strict.evaluated.toLocaleString('ja-JP')}本・施行日が原文で確定{data.strict.dated.toLocaleString('ja-JP')}本・影響の段階が付いた{data.strict.staged.toLocaleString('ja-JP')}本です。ほかに、産業や経済全体の差で参考の額を付けた法律が{(data.counts.amounted - data.counts.published).toLocaleString('ja-JP')}本、共有額の参考が{sharedCount.toLocaleString('ja-JP')}本、額が出ていない法律（理由つき）が{(data.counts.enacted - data.counts.amounted - sharedCount).toLocaleString('ja-JP')}本あります。</p>}
             <p className="fine-note">途中で外れた法律は「影響なし」ではありません。資料や統計が足りず、まだ測れていないだけです。棒の長さは桁の違いが見えるよう対数でそろえています。</p>
           </section>
         </details>
