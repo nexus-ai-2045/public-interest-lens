@@ -4,8 +4,9 @@
 入力: data/acquired/bill-submitters/submitters.csv（fetch_bill_submitters.py）
       data/derived/person-ids/persons.csv（人物ID の台帳）、data/derived/allocation-v1/vote-parties.csv（会派名の既知一覧）
 出力: data/derived/unenacted-bills-v1/submitters.csv（1法案1行）
-  - 筆頭提出者を人物IDに結ぶ。衆法は衆議院議員、参法は参議院議員だけを候補にする（提出した院は法案の種別で確定する）。
-  - 結べない行は理由を残す（名簿に無い／同姓同名で決められない／提出者の記載なし）。推測で埋めない。
+  - 筆頭提出者を人物IDに結ぶ。結びは scripts/person_ids.py の resolve_person（氏名と在任期間。在任に院があれば、提出した院も見る）。
+    台帳の「今の院」だけでは決めない（院を移った人がいる）。
+  - 結べない行は理由を残す（名簿に無い／同姓同名で決められない／提出者の記載なし／在任で未結合）。推測で埋めない。
   - 提出者一覧・賛成者は載っている法案だけ人物IDに結ぶ（院は種別から。賛成者は他院でも署名できないので同じ院）。
   - 点数・額には使わない。表示用の「誰が出したか」だけ。
 使い方: python3 scripts/build_bill_submitters.py
@@ -23,7 +24,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.allocation_involvements import normalize_name  # noqa: E402
-from scripts.person_ids import canonical  # noqa: E402
+from scripts.person_ids import AMBIGUOUS, NOT_IN_LEDGER, UNRESOLVED, canonical, resolve_person  # noqa: E402
 
 SRC = ROOT / "data/acquired/bill-submitters/submitters.csv"
 PERSONS = ROOT / "data/derived/person-ids/persons.csv"
@@ -53,32 +54,21 @@ def kan(s: str) -> int | None:
 
 
 def main() -> None:
-    by_house: dict[str, dict[str, set[str]]] = {"衆議院": defaultdict(set), "参議院": defaultdict(set)}
-    for p in csv.DictReader(open(PERSONS, encoding="utf-8")):
-        if not p["人物ID"]:
-            continue
-        for n in [p["氏名"], *filter(None, re.split(r"[;／]", p["別表記"]))]:
-            if p["院"] in by_house:
-                by_house[p["院"]][canonical(n)].add(p["人物ID"])
-            else:  # 院が決まらない行（元職など）は両院の候補に入れる
-                for h in by_house:
-                    by_house[h][canonical(n)].add(p["人物ID"])
+    person_rows = list(csv.DictReader(open(PERSONS, encoding="utf-8")))
     known_parties = {r["会派"] for r in csv.DictReader(open(PARTIES, encoding="utf-8"))}
 
     def link(name: str, house: str) -> tuple[str, str]:
         c = canonical(KUN.sub("", normalize_name(name)))
         if c.endswith("委員長"):
             return "", "委員会の提出（提出者は委員長の役職名）"
-        ids = by_house[house].get(c, set())
-        if len(ids) == 1:
-            return next(iter(ids)), ""
-        if not ids:
-            # 院を移った人（台帳の院は今の院だけ）。ほかの院に同じ氏名がちょうど1人なら、その人とする。
-            other = by_house["参議院" if house == "衆議院" else "衆議院"].get(c, set())
-            if len(other) == 1:
-                return next(iter(other)), ""
+        pid, why = resolve_person(person_rows, c, house=house, missing="blank")
+        if not why:
+            return pid, ""
+        if why == NOT_IN_LEDGER:
             return "", "人物IDの台帳に無い（名簿の不足）"
-        return "", "同姓同名で決められない"
+        if why in (UNRESOLVED, AMBIGUOUS):
+            return "", "同姓同名で決められない"
+        return "", why
 
     rows = []
     for r in csv.DictReader(open(SRC, encoding="utf-8")):

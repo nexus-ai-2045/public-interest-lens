@@ -41,7 +41,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.allocation_involvements import HEADER  # noqa: E402
-from scripts.person_ids import UNRESOLVED, canonical  # noqa: E402
+from scripts.person_ids import UNRESOLVED, canonical, resolve_person  # noqa: E402
 
 DERIVED = ROOT / "data/derived"
 ACQUIRED = ROOT / "data/acquired"
@@ -171,17 +171,10 @@ def cabinets(enacted: list[dict[str, str]], cabinet: list[dict[str, str]]) -> di
 
 
 def build() -> tuple[list[dict[str, str]], list[dict[str, str]]]:
-    ids: dict[str, set[str]] = defaultdict(set)
-    for p in _read(PERSONS):
-        if p["人物ID"]:
-            for name in [p["氏名"], *filter(None, p.get("別表記", "").split(";"))]:
-                ids[canonical(name)].add(p["人物ID"])
+    person_rows = _read(PERSONS)
 
-    def person(name: str) -> tuple[str, str]:
-        found = ids.get(canonical(name), set())
-        if len(found) > 1:
-            return "", UNRESOLVED
-        return (next(iter(found)) if found else canonical(name)), ""
+    def person(name: str, on: str = "", house: str = "") -> tuple[str, str]:
+        return resolve_person(person_rows, name, on=on, house=house, missing="canonical")
 
     enacted = {f"{r['種別']}-{r['提出回次']}-{r['番号']}": r for r in _read(ENACTED)}
     by_day: dict[str, list[dict[str, str]]] = defaultdict(list)
@@ -221,7 +214,7 @@ def build() -> tuple[list[dict[str, str]], list[dict[str, str]]]:
         # 院は議案の種別で決まる提出者だけに書く。閣僚は参議院議員や民間人もいるので空にする（総理大臣だけは衆議院議員の慣行だが、名簿に院の列が無いので書かない）。
         house = "" if kind == "閣法" else "参議院" if kind == "参法" else "衆議院"
         for name, title, position in proposers:
-            pid, why = person(name)
+            pid, why = person(name, wareki(b["付託日_衆"]) or day, house)
             rows.append({**base, "氏名": name, "氏名_原表記": name, "院": house, "行動": "decide", "当時の肩書": title, "立場区分": position,
                          "日付": wareki(b["付託日_衆"]) or day, "証拠URL": b["経過URL"], "参院本会議の賛否": "",
                          "算入": "いいえ" if why else "はい", "除外理由": why, "人物ID": pid})
@@ -236,14 +229,14 @@ def build() -> tuple[list[dict[str, str]], list[dict[str, str]]]:
             name = names.get((session, r["議員ID"]))
             if not name:
                 raise ValueError(f"議員名がありません: {r['投票ID']} 議員ID={r['議員ID']}")
-            pid, why = person(name)
+            pid, why = person(name, vote["投票日"], "参議院")
             rows.append({**wanted[r["投票ID"]], "氏名": name, "氏名_原表記": name, "院": "参議院", "行動": "vote", "当時の肩書": "", "立場区分": "other",
                          "参院本会議の賛否": "Y", "算入": "いいえ" if why else "はい", "除外理由": why, "人物ID": pid})
     built = {v["法律ID"] for v in votes}
     for q in _read(QUESTIONS) if QUESTIONS.exists() else []:
         if q["法律ID"] not in built:
             continue
-        pid, why = person(q["氏名"])
+        pid, why = person(q["氏名"], q.get("日付") or "", q.get("院") or "")
         rows.append({**q, "算入": "いいえ" if why else q["算入"], "除外理由": why or q["除外理由"], "人物ID": pid})
     rows.sort(key=lambda r: (r["法律ID"], r["行動"], r["氏名"]))
     votes.sort(key=lambda r: r["法律ID"])

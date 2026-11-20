@@ -31,6 +31,7 @@ if str(ROOT) not in sys.path:
 
 from scripts.allocation_involvements import normalize_name  # noqa: E402
 from scripts.org_names import org_key  # noqa: E402
+from scripts.person_ids import resolve_person  # noqa: E402
 
 OUT = ROOT / 'data/derived/zoku-v1'
 CHAIRS = ROOT / 'data/acquired/office-holders/committee-chairs.csv'
@@ -246,13 +247,19 @@ def ambiguous_names() -> set[str]:
 
 
 def unique_person_ids() -> dict[str, str]:
-    """氏名（別表記を含む）が人物台帳でちょうど1つの人物IDに当たるものだけ。委員長だけで関与の行が無い議員にも人物IDを付けるのに使う。"""
-    seen: dict[str, set[str]] = defaultdict(set)
-    for r in read_csv(PERSONS):
-        if r['人物ID']:
-            for n in [r['氏名'], *filter(None, re.split(r'[;／]', r['別表記']))]:
-                seen[normalize_name(n)].add(r['人物ID'])
-    return {n: next(iter(ids)) for n, ids in seen.items() if len(ids) == 1}
+    """氏名（別表記を含む）が人物台帳でちょうど1人に当たるものだけ。委員長だけで関与の行が無い議員にも人物IDを付けるのに使う。
+    結びは resolve_person。候補が2人以上の氏名は入れない（並びの先頭を採らない）。"""
+    rows = [r for r in read_csv(PERSONS) if r.get('人物ID')]
+    out: dict[str, str] = {}
+    for r in rows:
+        for n in [r['氏名'], *filter(None, re.split(r'[;／]', r['別表記']))]:
+            key = normalize_name(n)
+            if not key or key in out:
+                continue
+            pid, why = resolve_person(rows, n, missing='blank')
+            if pid and not why:
+                out[key] = pid
+    return out
 
 
 def enacted_ids() -> set[str]:

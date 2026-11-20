@@ -198,7 +198,7 @@ def build(collect_dir: Path, stance_dir: Path, votes_dir: Path, cabinet_csv: Pat
             # 同姓同名で分けた名前は、対応表 (法律ID, 投票の出典URL) で決める。ただし同じ回次にその氏名の議員IDが2つ以上あると、
             # 対応表がどの議員IDの票を指すか分からないので決めない。
             mem = {m['議員ID']: ('' if ledger.is_split(norm(m['議員名'])) and seats[norm(m['議員名'])] > 1
-                                else ledger.resolve(norm(m['議員名']), law, vote_row['出典URL'], sangiin_vote=True)[0]) for m in same}
+                                else ledger.resolve(norm(m['議員名']), law, vote_row['出典URL'], sangiin_vote=True, on=vote_row['投票日'], house='参議院')[0]) for m in same}
             # 同じ回次で会派が変わると、同じ表記の議員IDが複数ある。この投票に記録のあるIDが1つだけなら同じ人とみなし、
             # 2つ以上あるとき（同姓同名の別人の可能性）は推測せず使わない。人物は人物IDで数える（参議院の名簿で分けた同姓同名は別人）。
             cast: dict[str, list[str]] = {}
@@ -215,12 +215,12 @@ def build(collect_dir: Path, stance_dir: Path, votes_dir: Path, cabinet_csv: Pat
             note(law, '参院本会議の投票', f'議案名で特定できない（候補{len(votes)}件）。採決の関与は作らない')
 
         collected_names = set()
-        chairs = {ledger.resolve(norm(v['氏名']), law, v.get('証拠URL') or '')[0] for v in d['involvements'] if v['行動'] == 'chair'} - {''}
+        chairs = {ledger.resolve(norm(v['氏名']), law, v.get('証拠URL') or '', on=v.get('日付') or '', house=v.get('院') or '')[0] for v in d['involvements'] if v['行動'] == 'chair'} - {''}
         for v in d['involvements']:
             n = norm(v['氏名'])
             collected_names.add(n)
-            pid, unresolved = ledger.resolve(n, law, v.get('証拠URL') or '')
             act, date, url = v['行動'], v.get('日付') or '', v.get('証拠URL') or ''
+            pid, unresolved = ledger.resolve(n, law, url, on=date, house=v.get('院') or '')
             # 同姓同名で分けた名前には役職を付けない（内閣名簿は院を持たず、どちらの人か決められない）。
             pos, why = cabinet.position_at(n, date) if date and not ledger.is_split(n) else ('other', '')
             title_at = v.get('当時の肩書') or ''
@@ -252,7 +252,7 @@ def build(collect_dir: Path, stance_dir: Path, votes_dir: Path, cabinet_csv: Pat
             # 収集の関与にあるが、参議院の名簿にも内閣名簿にも無い名前（ひらがな表記など）は、照合できなかったとして残す。
             for n in sorted(collected_names):
                 in_cab = any(r['_n'] == n for r in cabinet.rows)
-                if ledger.resolve(n, law, vote_row['出典URL'], sangiin_vote=True)[0] not in ballots and not in_cab and any(v['院'] == '参議院' and norm(v['氏名']) == n and v['行動'] == 'question' for v in d['involvements']):
+                if ledger.resolve(n, law, vote_row['出典URL'], sangiin_vote=True, on=vote_row['投票日'], house='参議院')[0] not in ballots and not in_cab and any(v['院'] == '参議院' and norm(v['氏名']) == n and v['行動'] == 'question' for v in d['involvements']):
                     note(law, '名寄せ（不一致）', f'参議院の会議で質疑した人が、第{vote_row["回次"]}回の参議院の投票記録に見つからない（衆議院議員か、表記の違い）：{n}')
             for pid, yn in sorted(ballots.items()):
                 if yn != 'Y':
@@ -281,11 +281,14 @@ def annotate(rows: list[dict], ledger, cabinet: 'Cabinet') -> tuple[int, list[di
     for r in rows:
         old, r = r, dict(r)
         canon = person_ids.canonical(r['氏名'])
-        pid, unresolved = ledger.resolve(r['氏名'], r['法律ID'], r['証拠URL'], person_ids._is_sangiin_vote(r))
+        pid, unresolved = ledger.resolve(r['氏名'], r['法律ID'], r['証拠URL'], person_ids._is_sangiin_vote(r), on=r.get('日付') or '', house=r.get('院') or '')
         r['人物ID'] = pid
-        if unresolved and r['算入'] == 'はい':
-            r['算入'], r['除外理由'] = 'いいえ', unresolved
-        elif not unresolved and r['除外理由'] == person_ids.UNRESOLVED:
+        # 立場や賛否で外した理由は残す。人物の結びで外した理由だけ、付け直しで更新する。
+        if unresolved and (r['算入'] == 'はい' or person_ids._is_link_reason(r['除外理由'])):
+            r['算入'] = 'いいえ'
+            if not r['除外理由'] or person_ids._is_link_reason(r['除外理由']):
+                r['除外理由'] = unresolved
+        elif not unresolved and person_ids._is_link_reason(r['除外理由']):
             r['算入'], r['除外理由'] = 'はい', ''
         if ledger.is_split(canon):
             if r['立場区分'] != 'other' and not r['立場の根拠'].startswith(chair_basis):

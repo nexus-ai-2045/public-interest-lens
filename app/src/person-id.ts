@@ -1,15 +1,21 @@
 /**
  * 人物ID（scripts/person_ids.py の台帳と同じ決め方）。議員を氏名の文字列ではなく人物IDで結ぶ。
  * canonical は Python 側と同じ正規化（NFKC・空白・敬称・脚注記号の除去と、同一人物の字体ゆれの寄せ）。
- * VARIANTS は scripts/person_ids.py の表と同じでなければならない（tests/test_person_ids.py が照らす）。
+ * VARIANTS と結びの理由の文言は scripts/person_ids.py と同じでなければならない（tests/test_person_ids.py が照らす）。
+ * 人物への結びは linkPerson だけが行う（Python の link_person と同じ決まり）。
  *
- * 方針：同姓同名の可能性がある名前は、一次資料で所属が決まる場合だけ人物IDに結び、それ以外は決めない（null）。
- * memberHouse は呼び出し側の院（議案の種別や参議院の投票記録）。台帳は今の院しか持たず、院を移った人がいるので、
- * 同姓同名を院で決めることはしない（overrides で結ぶまで配らない）。
+ * キーは氏名と在任期間。在任に院があれば院も見る。その日付に在任している人が1人ならその人。
+ * 在任の外と、候補が2人以上で1人に決まらないものは、並びの先頭に寄せず理由つきで未結合。
+ * 台帳の「今の院」だけでは決めない（院を移った人がいる）。在任が無く氏名が1人だけのときはその人物ID。
  */
 import { parseCsv } from './impact-batch';
 
 export const VARIANTS: Record<string, string> = { 髙: '高', 﨑: '崎', 德: '徳', 濵: '浜', 澤: '沢' };
+export const UNRESOLVED = '同姓同名で人物を決められない';
+export const OUTSIDE_TERM = '未結合：在任期間の外（その日付に在任している人がいない）';
+export const OUTSIDE_HOUSE = '未結合：その日付の在任は別の院で、この院には結べない';
+export const AMBIGUOUS = '未結合：候補が2人以上あり、在任期間で1人に決められない';
+export const NOT_IN_LEDGER = '未結合：人物台帳に無い';
 const HONORIFICS = ['君', '議員', '先生', 'さん', '氏', '殿', '様'];
 const FOOTNOTE_MARKS = /[*※†‡]+$/;
 
@@ -29,7 +35,51 @@ export function normalizeName(name: string): string {
 export const cleanName = (name: string): string => normalizeName(normalizeName(name).replace(FOOTNOTE_MARKS, ''));
 export const canonical = (name: string): string => [...cleanName(name)].map(c => VARIANTS[c] ?? c).join('');
 
-export type PersonRow = { id: string; name: string; reading: string; house: string; district: string };
+export type OfficeTerm = { start: string; end: string; house: string };
+export type PersonRow = { id: string; name: string; reading: string; house: string; district: string; terms: OfficeTerm[] };
+export type PersonLink = { id: string; reason: string };
+
+const dedupe = (candidates: readonly PersonRow[]): PersonRow[] => {
+  const seen = new Set<string>();
+  const out: PersonRow[] = [];
+  for (const person of candidates) {
+    if (seen.has(person.id)) continue;
+    seen.add(person.id);
+    out.push(person);
+  }
+  return out;
+};
+
+const termMatches = (term: OfficeTerm, day: string, house: string, useHouse: boolean): boolean => {
+  if (!term.start || !day || day < term.start) return false;
+  if (term.end && day > term.end) return false;
+  if (useHouse && house && term.house && term.house !== house) return false;
+  return true;
+};
+
+/** scripts/person_ids.py の link_person と同じ。候補が空なら id も reason も空。 */
+export function linkPerson(candidates: readonly PersonRow[], on = '', house = ''): PersonLink {
+  const people = dedupe(candidates);
+  if (people.length === 0) return { id: '', reason: '' };
+  if (people.length === 1 && people[0].terms.length === 0) return { id: people[0].id, reason: '' };
+  if (!on) return people.length === 1 ? { id: people[0].id, reason: '' } : { id: '', reason: UNRESOLVED };
+  const dated: PersonRow[] = [];
+  const housed: PersonRow[] = [];
+  for (const person of people) {
+    if (person.terms.length === 0) continue;
+    const dateHits = person.terms.filter(term => termMatches(term, on, house, false));
+    if (dateHits.length === 0) continue;
+    dated.push(person);
+    if (dateHits.some(term => termMatches(term, on, house, true))) housed.push(person);
+  }
+  const everyoneHasTerms = people.every(person => person.terms.length > 0);
+  if (housed.length === 1 && everyoneHasTerms) return { id: housed[0].id, reason: '' };
+  if (housed.length > 1) return { id: '', reason: AMBIGUOUS };
+  if (dated.length > 0 && housed.length === 0 && (everyoneHasTerms || people.length === 1)) return { id: '', reason: OUTSIDE_HOUSE };
+  if (everyoneHasTerms && dated.length === 0) return { id: '', reason: OUTSIDE_TERM };
+  if (people.length === 1) return { id: '', reason: OUTSIDE_TERM };
+  return { id: '', reason: people.some(person => person.terms.length > 0) ? AMBIGUOUS : UNRESOLVED };
+}
 
 export class PersonLedger {
   private byCanonical = new Map<string, PersonRow[]>();
@@ -41,7 +91,11 @@ export class PersonLedger {
   constructor(personsCsv: string, rosterCsv = '') {
     for (const r of parseCsv(personsCsv)) {
       if (!r['人物ID']) continue; // 人物ID が空の行（persons.csv の1行目は全列空）は台帳に入れない。
-      const p = { id: r['人物ID'], name: r['氏名'], reading: r['読み'], house: r['院'], district: r['選挙区'] };
+      const start = r['在任開始'] ?? '';
+      const p: PersonRow = {
+        id: r['人物ID'], name: r['氏名'], reading: r['読み'], house: r['院'], district: r['選挙区'],
+        terms: start ? [{ start, end: r['在任終了'] ?? '', house: r['在任の院'] ?? '' }] : [],
+      };
       this.byId.set(p.id, p);
       const key = canonical(p.name);
       this.byCanonical.set(key, [...(this.byCanonical.get(key) ?? []), p]);
@@ -69,14 +123,13 @@ export class PersonLedger {
     return undefined;
   }
 
-  /** 台帳に無い名前は canonical をそのまま人物IDにする。同姓同名で所属が決まらなければ null（配らない）。 */
-  resolve(name: string, memberHouse = ''): { id: string; person?: PersonRow } | null {
+  /** 台帳に無い名前は canonical をそのまま人物IDにする。決まらなければ id が空で、reason に未結合の理由。 */
+  resolve(name: string, memberHouse = '', on = ''): { id: string; person?: PersonRow; reason: string } {
     const canon = canonical(name);
     const found = this.byCanonical.get(canon) ?? (this.alias.has(canon) ? [this.alias.get(canon)!] : []);
-    if (found.length === 0) return { id: canon };
-    if (found.length === 1) return { id: found[0].id, person: found[0] };
-    // 台帳の院は今の院だけで、所属の履歴は持たない（院を移った人がいる）ので、同姓同名は院では決めない。
-    void memberHouse;
-    return null;
+    if (found.length === 0) return { id: canon, reason: '' };
+    const linked = linkPerson(found, on, memberHouse);
+    if (!linked.id) return { id: '', reason: linked.reason };
+    return { id: linked.id, person: found.find(person => person.id === linked.id), reason: '' };
   }
 }

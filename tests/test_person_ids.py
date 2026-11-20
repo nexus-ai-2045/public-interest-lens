@@ -311,6 +311,8 @@ class TypeScriptParityTest(unittest.TestCase):
         self.assertEqual(pairs, pi.VARIANTS)
         self.assertIn(pi.FOOTNOTE_MARKS.pattern, ts)
         self.assertEqual(re.search(r"HONORIFICS = \[(.*?)\]", ts).group(1).replace("'", '').replace(' ', '').split(','), list(ai.HONORIFICS))
+        for name in ("UNRESOLVED", "OUTSIDE_TERM", "OUTSIDE_HOUSE", "AMBIGUOUS", "NOT_IN_LEDGER"):
+            self.assertIn(f"export const {name} = '{getattr(pi, name)}'", ts)
 
 
 if __name__ == '__main__':
@@ -371,3 +373,68 @@ class EmptyRowTest(unittest.TestCase):
             rows = list(csv.DictReader(f))
         blank = [i + 2 for i, r in enumerate(rows) if not (r.get("人物ID") or "").strip()]
         self.assertEqual(blank, [], f"persons.csv に人物IDの空の行があります（行番号 {blank}）")
+
+
+class TermLinkTest(unittest.TestCase):
+    """同姓同名は氏名だけでは結ばない。在任期間（在任に院があれば院も）で、その日付に在任していた1人だけに結ぶ。"""
+
+    def people(self):
+        early = pi.Person("青木蓮（衆・東京1）", "青木蓮", house="衆議院", district="東京1",
+                          terms=[pi.OfficeTerm("1990-01-01", "1996-12-31", "衆議院")])
+        late = pi.Person("青木蓮（参・比例）", "青木蓮", house="参議院", district="比例",
+                         terms=[pi.OfficeTerm("2010-01-01", "2016-12-31", "参議院")])
+        return early, late
+
+    def test_nonoverlapping_terms_link_only_the_person_in_office(self):
+        early, late = self.people()
+        for candidates in ((early, late), (late, early)):
+            pid, why = pi.link_person(list(candidates), on="1992-06-01")
+            self.assertEqual((pid, why), (early.id, ""))
+            pid, why = pi.link_person(list(candidates), on="2012-06-01")
+            self.assertEqual((pid, why), (late.id, ""))
+            pid, why = pi.link_person(list(candidates), on="2000-06-01")
+            self.assertEqual(pid, "")
+            self.assertEqual(why, pi.OUTSIDE_TERM)
+            self.assertTrue(why.startswith("未結合"))
+
+    def test_two_candidates_in_office_are_not_given_to_the_first(self):
+        early, late = self.people()
+        overlap = pi.Person(early.id, early.name, house=early.house, district=early.district,
+                            terms=[pi.OfficeTerm("2010-01-01", "2016-12-31", "衆議院")])
+        for candidates in ((overlap, late), (late, overlap)):
+            pid, why = pi.link_person(list(candidates), on="2012-06-01")
+            self.assertEqual(pid, "")
+            self.assertEqual(why, pi.AMBIGUOUS)
+        pid, why = pi.link_person([late, overlap], on="2012-06-01", house="参議院")
+        self.assertEqual((pid, why), (late.id, ""))
+        pid, why = pi.link_person([early], on="1992-06-01", house="参議院")
+        self.assertEqual((pid, why), ("", pi.OUTSIDE_HOUSE))
+
+    def test_a_person_without_a_term_does_not_lose_to_the_one_who_has_one(self):
+        early, _ = self.people()
+        unknown = pi.Person("青木蓮", "青木蓮")
+        pid, why = pi.link_person([unknown, early], on="1992-06-01")
+        self.assertEqual(pid, "")
+        self.assertEqual(why, pi.AMBIGUOUS)
+        # 在任の記録が無い人は、日付があっても氏名が1人ならこれまでどおり結ぶ。今の院では分けない。
+        bare = [pi.Person("青木蓮（衆・東京1）", "青木蓮", house="衆議院"), pi.Person("青木蓮（参・比例）", "青木蓮", house="参議院")]
+        self.assertEqual(pi.link_person(bare, on="1992-06-01"), ("", pi.UNRESOLVED))
+        self.assertEqual(pi.link_person(list(reversed(bare))), ("", pi.UNRESOLVED))
+        self.assertEqual(pi.link_person([bare[0]], on="1992-06-01"), (bare[0].id, ""))
+
+    def test_date_outside_the_only_term_stays_unlinked(self):
+        early, _ = self.people()
+        pid, why = pi.link_person([early], on="2000-06-01")
+        self.assertEqual((pid, why), ("", pi.OUTSIDE_TERM))
+
+    def test_annotate_keeps_an_outside_term_unlinked_with_a_reason(self):
+        early, late = self.people()
+        ledger = pi.Ledger()
+        pi._add(ledger, early)
+        pi._add(ledger, late)
+        rows = [inv("L1", "青木蓮", "衆議院", date="1992-06-01"), inv("L1", "青木蓮", "参議院", date="2000-06-01")]
+        _, out = ai.annotate(rows, ledger, ai.Cabinet([]))
+        self.assertEqual((out[0]["人物ID"], out[0]["算入"], out[0]["除外理由"]), (early.id, "はい", ""))
+        self.assertEqual(out[1]["人物ID"], "")
+        self.assertEqual(out[1]["算入"], "いいえ")
+        self.assertEqual(out[1]["除外理由"], pi.OUTSIDE_TERM)

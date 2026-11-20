@@ -14,10 +14,11 @@
 - 人物IDは名簿のスナップショットから独立させる。既存の persons.csv を読み、一度付けた人物IDは変えない・消さない。
   一度分けた同姓同名は、片方が名簿から消えても分けたまま残す（院で決まらない行は決めきれない扱い）。新しい人だけを足す。
 - 斉藤・斎藤・齋藤・齊藤のように字が違えば別人の表記は寄せない（寄せるのは下の表に理由のある字体だけ）。
-- 方針：同姓同名の可能性がある名前は、一次資料で所属が決まる場合だけ人物IDに結び、それ以外は決めない（算入外）。
-  関与の行の「院」は発言した会議の院で議員の所属院ではないので、解決には使わない。解決できるのは
-  (1) 明示の対応表 overrides.csv（法律ID・証拠URL・人物ID・根拠URL）に載った行と、
-  (2) 参議院の押しボタン投票の記録（議員ID→名前）から作った vote 行（参議院議員と確定できる）だけ。
+- 人物への結びは link_person（app 側は person-id.ts の linkPerson）だけが行う。キーは氏名と在任期間で、在任に院があれば院も見る。
+  その日付に在任している人が1人ならその人。在任の外は誰にも結ばず理由つきで未結合。候補が2人以上で1人に決まらなければ、並びの先頭には寄せず未結合。
+  台帳の「今の院」だけでは決めない（院を移った人がいる。関与の行の院は発言した会議の院で、所属院ではない）。
+  在任期間が無く氏名が1人だけのときは、その人物IDに結ぶ。同姓同名で在任も日付も無いときは決めない。
+  明示の対応表 overrides.csv（法律ID・証拠URL・人物ID・根拠URL）は、その人がその日付に在任しているときだけ結ぶ（在任の記録が無ければ従来どおり結ぶ）。
   内閣名簿は院を持たないので、分けた名前には役職を付けない。
 
 出力：persons.csv（人物ID,氏名,読み,院,選挙区,別表記）と、決めきれない名前の一覧 undecided.csv。
@@ -62,6 +63,11 @@ VARIANTS = {
 }
 HOUSE_SHORT = {"衆議院": "衆", "参議院": "参"}
 UNRESOLVED = "同姓同名で人物を決められない"
+OUTSIDE_TERM = "未結合：在任期間の外（その日付に在任している人がいない）"
+OUTSIDE_HOUSE = "未結合：その日付の在任は別の院で、この院には結べない"
+AMBIGUOUS = "未結合：候補が2人以上あり、在任期間で1人に決められない"
+NOT_IN_LEDGER = "未結合：人物台帳に無い"
+ALIAS_SPLIT = re.compile(r"[;／|、,/]")
 
 
 # 内閣名簿の氏名の末尾に付く脚注の記号（小川 平二* など）。人名の一部ではない。
@@ -93,6 +99,16 @@ def read_csv(path: Path) -> list[dict]:
         return list(csv.DictReader(f))
 
 
+@dataclass(frozen=True)
+class OfficeTerm:
+    """在任期間。start と end は YYYY-MM-DD。end が空なら start 以降は在任中。端の日は在任に含む。
+    house が空でなければ、関与側の院と一致するときだけその在任を使う。"""
+
+    start: str
+    end: str = ""
+    house: str = ""
+
+
 @dataclass
 class Person:
     id: str
@@ -102,10 +118,124 @@ class Person:
     district: str = ""
     party: str = ""
     aliases: set[str] = field(default_factory=set)
+    terms: list[OfficeTerm] = field(default_factory=list)
+
+
+def _dedupe(candidates: list[Person]) -> list[Person]:
+    out: list[Person] = []
+    seen: set[str] = set()
+    for person in candidates:
+        if person.id in seen:
+            continue
+        seen.add(person.id)
+        out.append(person)
+    return out
+
+
+def _term_matches(term: OfficeTerm, day: str, house: str, *, use_house: bool) -> bool:
+    if not term.start or not day or day < term.start:
+        return False
+    if term.end and day > term.end:
+        return False
+    if use_house and house and term.house and term.house != house:
+        return False
+    return True
+
+
+def link_person(candidates: list[Person], *, on: str = "", house: str = "") -> tuple[str, str]:
+    """氏名で集めた候補を、在任期間（在任に院があれば院も）で1人に決める。
+
+    戻り値は (人物ID, 理由)。理由が空なら結んだ。人物IDが空なら未結合。
+    候補が空なら ("", "")。台帳に無い名前を人物IDにするかは呼び側が決める。
+    候補が2人以上で1人に決まらないときは、並びの先頭を採らない。
+    在任期間を持たない人は、その日付に在任していたとも外れていたとも言えない。
+    日付があるのに在任の無い候補が混ざるときは未結合にする。台帳の「今の院」だけでは決めない。
+    """
+    people = _dedupe(candidates)
+    if not people:
+        return "", ""
+    if len(people) == 1 and not people[0].terms:
+        return people[0].id, ""
+    if not on:
+        if len(people) == 1:
+            return people[0].id, ""
+        return "", UNRESOLVED
+    dated: list[Person] = []
+    housed: list[Person] = []
+    for person in people:
+        if not person.terms:
+            continue
+        date_hits = [term for term in person.terms if _term_matches(term, on, house, use_house=False)]
+        if not date_hits:
+            continue
+        dated.append(person)
+        if any(_term_matches(term, on, house, use_house=True) for term in date_hits):
+            housed.append(person)
+    everyone_has_terms = all(person.terms for person in people)
+    if len(housed) == 1 and everyone_has_terms:
+        return housed[0].id, ""
+    if len(housed) > 1:
+        return "", AMBIGUOUS
+    if dated and not housed and (everyone_has_terms or len(people) == 1):
+        return "", OUTSIDE_HOUSE
+    if everyone_has_terms and not dated:
+        return "", OUTSIDE_TERM
+    if len(people) == 1:
+        return "", OUTSIDE_TERM
+    return "", AMBIGUOUS if any(person.terms for person in people) else UNRESOLVED
+
+
+def matching_people(rows: list[dict], name: str) -> list[Person]:
+    """台帳の行のうち、氏名か別表記が canonical で一致する人。在任開始があれば在任期間を付ける。"""
+    canon = canonical(name)
+    out: list[Person] = []
+    seen: set[str] = set()
+    for row in rows:
+        pid = (row.get("人物ID") or "").strip()
+        if not pid or pid in seen:
+            continue
+        names = [row.get("氏名") or "", *ALIAS_SPLIT.split(row.get("別表記") or "")]
+        if canon not in {canonical(item) for item in names if item.strip()}:
+            continue
+        seen.add(pid)
+        terms: list[OfficeTerm] = []
+        start = (row.get("在任開始") or "").strip()
+        if start:
+            terms.append(OfficeTerm(start, (row.get("在任終了") or "").strip(), (row.get("在任の院") or "").strip()))
+        out.append(Person(pid, row.get("氏名") or "", row.get("読み") or "", row.get("院") or "", row.get("選挙区") or "", terms=terms))
+    return out
+
+
+def resolve_person(rows: list[dict], name: str, *, on: str = "", house: str = "", missing: str = "canonical") -> tuple[str, str]:
+    """台帳の行から人物を結ぶ入口。関与・提出者・政治資金・交付金はここを通す。
+
+    missing='canonical' は台帳に無い名前を、寄せた氏名の人物IDにする（関与の一覧）。
+    missing='blank' は結ばず、理由を未結合にする（提出者・政治資金・交付金）。
+    """
+    people = matching_people(rows, name)
+    if people:
+        return link_person(people, on=on, house=house)
+    if missing == "canonical":
+        return canonical(name), ""
+    if missing == "blank":
+        return "", NOT_IN_LEDGER
+    raise ValueError(f"missing の値が違います: {missing}")
+
+
+def _is_link_reason(text: str) -> bool:
+    """人物の結びで付けた除外理由か。立場や賛否の理由は含めない。"""
+    return text == UNRESOLVED or text.startswith("未結合：")
+
+
+def _override_ok(person: Person, on: str, house: str) -> bool:
+    """対応表は、その人がその日付に在任しているときだけ使う。在任の記録が無ければ日付では否定しない。"""
+    if not on or not person.terms:
+        return True
+    return any(_term_matches(term, on, house, use_house=True) for term in person.terms)
 
 
 class Ledger:
-    """人物の台帳。名簿で同じ canonical に複数いる名前（split）は、院で人物を決める。"""
+    """人物の台帳。同じ canonical が複数いるときは link_person（在任期間）で決め、決まらなければ未結合。"""
 
     def __init__(self) -> None:
         self.persons: dict[str, Person] = {}
@@ -116,19 +246,21 @@ class Ledger:
     def is_split(self, canon: str) -> bool:
         return len(self.by_canonical.get(canon, [])) > 1
 
-    def resolve(self, name: str, law: str = "", url: str = "", sangiin_vote: bool = False) -> tuple[str, str]:
-        """(人物ID, 決められない理由)。台帳に無い名前は canonical をそのまま人物IDにする。
-        同姓同名で分けた名前は、overrides に (法律ID, 証拠URL) がある行だけ決める（sangiin_vote は互換のために受けるが使わない）。
-        行の院は発言した会議の院で所属院ではないので、ここでは使わない。"""
-        canon = canonical(name)
-        found = self.by_canonical.get(canon, [])
-        if len(found) <= 1:
-            return (found[0].id if found else canon), ""
-        chosen = self.overrides.get((law, url))
-        if chosen and any(p.id == chosen for p in found):
-            return chosen, ""
-        # 台帳の院は今の院だけで、所属の履歴は持たない（院を移った人がいる）。参議院の投票記録でも、今の院では決めない。
-        return "", UNRESOLVED
+    def resolve(self, name: str, law: str = "", url: str = "", sangiin_vote: bool = False, *, on: str = "", house: str = "") -> tuple[str, str]:
+        """(人物ID, 決められない理由)。結び方は link_person。台帳に無い名前は canonical をそのまま人物IDにする。
+        sangiin_vote は互換のために受ける。今の院や投票の種別では決めない（在任期間に院があるときだけ院を見る）。"""
+        del sangiin_vote
+        people = _dedupe(self.by_canonical.get(canonical(name), []))
+        if not people:
+            return canonical(name), ""
+        pid, why = link_person(people, on=on, house=house)
+        if pid:
+            return pid, ""
+        chosen = self.overrides.get((law, url)) if law or url else None
+        target = self.persons.get(chosen) if chosen else None
+        if target is not None and any(person.id == target.id for person in people) and _override_ok(target, on, house):
+            return target.id, ""
+        return "", why or UNRESOLVED
 
     def display(self, pid: str, fallback: str = "") -> str:
         p = self.persons.get(pid)
@@ -157,12 +289,20 @@ def load_overrides(path: Path | None) -> dict[tuple[str, str], str]:
     return out
 
 
+def _terms_of(row: dict) -> list[OfficeTerm]:
+    """在任開始がある行だけ在任期間にする。列が無い台帳は空（公開の persons.csv はまだこの列を持たない）。"""
+    start = (row.get("在任開始") or "").strip()
+    if not start:
+        return []
+    return [OfficeTerm(start, (row.get("在任終了") or "").strip(), (row.get("在任の院") or "").strip())]
+
+
 def load_previous(ledger: Ledger, rows: list[dict]) -> None:
     """前に作った persons.csv の人物を、人物IDも院も選挙区もそのまま台帳に入れる（別表記は作り直す）。"""
     for r in rows:
         if FOOTNOTE_MARKS.search(r["人物ID"]):
             continue  # 脚注記号を除く前に付いた人物ID（小川平二* など）。人物ではなく表記の取りこぼしなので引き継がない
-        _add(ledger, Person(r["人物ID"], r["氏名"], r["読み"], r["院"], r["選挙区"]))
+        _add(ledger, Person(r["人物ID"], r["氏名"], r["読み"], r["院"], r["選挙区"], terms=_terms_of(r)))
 
 
 def _qualified(canon: str, r: dict) -> str:
