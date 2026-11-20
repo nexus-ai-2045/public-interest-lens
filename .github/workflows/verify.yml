@@ -26,7 +26,8 @@ jobs:
       - run: npm ci
         working-directory: app
       # 産業連関の試験（tests/test_io_ripple.py）が使う。無いとモジュールごと skip され、CI では1本も走らなかった（2026-11-19）
-      - run: python -m pip install --disable-pip-version-check numpy==2.2.6 openpyxl==3.1.5
+      # scipy は合成対照の二次計画（tests/test_synthetic_control.py）。取得の依存（requirements-fetch.txt）には入れない
+      - run: python -m pip install --disable-pip-version-check numpy==2.2.6 openpyxl==3.1.5 scipy==1.15.3
       # 今の世代の catalog.sqlite3 を、リポの中のデータだけから作る
       - run: python -m scripts.build_public_distribution --input-root data/distribution/sources/world-bank --case data/distribution/case-source.json --output-root data/distribution/generated --public-dir app/public/distribution
       # Git に置かない派生物（設計決定0022）を入力から作る（scripts/generate_artifacts.py の順）
