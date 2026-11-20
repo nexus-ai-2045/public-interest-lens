@@ -11,6 +11,16 @@ describe("calculateReferenceScore", () => {
     ).toBe(80);
   });
 
+  it("軸オブジェクトのキーの並びを変えても同じ整数になる", () => {
+    const values = { deliberation: 5.1, proposals: 55.2, transparency: 55.3 };
+    const weights = { deliberation: 3.5, proposals: 0.25, transparency: 5.125 };
+    const reversedValues = { transparency: 55.3, proposals: 55.2, deliberation: 5.1 };
+    const reversedWeights = { transparency: 5.125, proposals: 0.25, deliberation: 3.5 };
+    // 宣言順（deliberation, proposals, transparency）で足して四捨五入した値。
+    expect(calculateReferenceScore(values, weights)).toBe(35);
+    expect(calculateReferenceScore(reversedValues, reversedWeights)).toBe(35);
+  });
+
   it("重みがすべて0なら0を返す", () => {
     expect(
       calculateReferenceScore(

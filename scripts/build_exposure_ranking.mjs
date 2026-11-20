@@ -91,9 +91,11 @@ function checkTotals(label, t) {
 // 伏せるべきかを、公開用の出力からではなく集計結果（内部）から別に数える（toPublicExposureRanking の判定が壊れても出力を止めるため）。
 const sizeOf = r => Math.max(Math.abs(r.exposureYen.low), Math.abs(r.exposureYen.median), Math.abs(r.exposureYen.high));
 function mustWithhold(rows, restMin) {
-  const sizes = rows.filter(r => r.tier === null).map(sizeOf).sort((a, b) => b - a);
-  if (sizes.length === 0 || sizes[0] === 0) return false;
-  return sizes.slice(1).reduce((s, x) => s + x, 0) < restMin * sizes[0];
+  // dominatedByOne と同じ加算列（大きさの昇順）。降順の尾の和とは、非結合性で 1 ulp ずれて判定が割れうる。
+  const sizes = rows.filter(r => r.tier === null).map(sizeOf).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  if (sizes.length === 0 || sizes[sizes.length - 1] === 0) return false;
+  const top = sizes[sizes.length - 1];
+  return sizes.reduce((s, x) => s + x, 0) - top < restMin * top;
 }
 
 function checkPublic(label, p, minLaws, internal, restMin) {
