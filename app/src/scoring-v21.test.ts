@@ -40,6 +40,10 @@ describe('v2.1 の型：群の差は法律へ配れない', () => {
     expect(makeLawEffect({ lawId: 'x', amountYen: { low: 1, median: 2, high: 3 }, certainty: '低', evidence })).toBeNull();
     expect(makeLawEffect({ lawId: 'x', amountYen: { low: 1, median: 2, high: 3 }, certainty: '参考', evidence })).toBeNull();
   });
+  // 既知の不具合。因果の点の唯一の入口が、low≤median≤high を見ない。直すとこのテストは成功し、it.fails のままでは赤になる。
+  it.fails('幅が逆転した額は LawEffect にしない', () => {
+    expect(makeLawEffect({ lawId: 'x', amountYen: { low: 3, median: 2, high: 1 }, certainty: '高', evidence })).toBeNull();
+  });
   it('証拠と確かさ中以上がそろえば作れる', () => {
     const e = makeLawEffect({ lawId: 'x', amountYen: { low: 1, median: 2, high: 3 }, certainty: '中', evidence });
     expect(e?.kind).toBe('law-effect');

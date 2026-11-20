@@ -297,14 +297,6 @@ def merge_sample(rows: list[dict], conf: list[dict], res: list[dict]) -> tuple[l
             if k in index and SAMPLE_JUDGE not in index[k]["判定者"]:  # 手で置いた行は持ち越すので、書き足しは1回だけ
                 out[pos[k]] = index[k] = {**index[k], "判定者": f"{index[k]['判定者']}／{SAMPLE_JUDGE}"}
             continue
-        if prev is None and r and r.get("本法まで読んだ"):  # 本法・附則まで読んだ Opus の裁定：本法未読の規則（unread）を当てない
-            if k[1] != "経済に効くか" or r["値"] != v:
-                raise SystemExit(f"{k}：本法まで読んだ裁定（{r['値']}）は、経済に効くかで候補と同じ値（{v}）のときだけ使う。違うなら読み直しの記録で直す")
-            out.append({**cand, "直した値": r["値"], "理由": r["理由"], "引用": r["引用"], "出典URL": r["出典URL"],
-                        "判定者": f"{cand['判定者']}。本法・附則まで読んだ Opus が盲検で同じ値（{r['読んだ箇所']}）", "記録": SAMPLE_RECORD})
-            res.append({"id": k[0], "型": "抜き取り2回目", "項目": k[1], "サイトの値": cand["直す前の値"], "系統A": "", "系統B": "",
-                        "Sonnet": v, "Opus 裁定": r["値"], "決めた値": r["値"], "決め方": "裁定（本法まで読んだ）", "決着": "直した"})
-            continue
         if k[1] == "経済に効くか" and v == "制度":
             key = SAMPLE_KEY[k[1]]
             readers = [x for x in lines.get(k[0], []) if SITE_WORD.get(x.get(key, ""), x.get(key)) == "制度"]
