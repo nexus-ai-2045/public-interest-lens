@@ -14,6 +14,7 @@
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import re
@@ -155,4 +156,5 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_known_args()
     raise SystemExit(main(sys.argv[1:]))

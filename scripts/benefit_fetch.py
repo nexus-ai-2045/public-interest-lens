@@ -6,6 +6,7 @@ manifest: data/acquired/benefit-data/manifest.csv
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 import sys
@@ -91,6 +92,7 @@ def write_csv(path: Path, header: list[str], rows: list[list]) -> None:
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_known_args()
     if len(sys.argv) != 4:
         raise SystemExit("usage: benefit_fetch.py SOURCE URL FILENAME")
     p, s = fetch(*sys.argv[1:])

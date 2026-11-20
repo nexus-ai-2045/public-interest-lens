@@ -22,6 +22,7 @@ tests/test_public_sync.py が、公開データ同士の照合値（SHA-256）�
 """
 from __future__ import annotations
 
+import argparse
 import json
 import subprocess
 import sys
@@ -141,4 +142,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     sys.exit(main())

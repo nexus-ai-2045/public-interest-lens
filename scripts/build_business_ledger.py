@@ -14,6 +14,7 @@
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import re
@@ -253,4 +254,5 @@ def write(path: Path, rows: list[dict]) -> None:
 
 
 if __name__ == '__main__':
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     print(json.dumps(build(), ensure_ascii=False))

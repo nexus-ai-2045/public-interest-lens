@@ -1,0 +1,16 @@
+name: PR の題名と本文
+# 題名と本文の見出しが日本語であることを検査する。
+# 手元では同じスクリプトを --title / --body-file で回す（AGENTS.md のルール表）。
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+permissions:
+  contents: read
+jobs:
+  pr-text:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      # 題名と本文は env や式で展開せず、イベントの JSON から読む（シェルへの注入を避ける）
+      - run: python3 scripts/check_pr_text.py --from-event "$GITHUB_EVENT_PATH"
