@@ -160,5 +160,27 @@ class FetchAndRecord(unittest.TestCase):
         self.assertEqual((V2 / "verdicts.csv").read_bytes(), before)
 
 
+class ConfirmationRecord(unittest.TestCase):
+    """独立の確認（2026-11-20）：訂正候補の値は採った値（裁定か確認か2系統）から出し、覆された古い裁定の値を出さない。"""
+    def test_value_follows_the_chosen_value_not_the_overturned_ruling(self):
+        from scripts.resample_verification import _value
+        a = {"経済に効くか": "経済に効く", "経済の理由": "A の理由", "引用": ["A の引用"]}
+        ruling = {"値": {"経済に効くか": "経済に効く"},
+                  "裁定": [{"項目": "経済に効くか", "値": "制度のみ", "理由": "古い裁定", "引用": "x", "裁定者": "sonnet"}],
+                  "確認の記録": [{"項目": "経済に効くか", "値": "経済に効く", "理由": "盲検の理由", "引用": ["y"], "確認者": "opus"}]}
+        val, why, _, who = _value(a, a, ruling, "経済に効くか")
+        self.assertEqual((val, why), ("経済に効く", "盲検の理由"))
+        self.assertIn("opus", who)
+
+    def test_every_confirmation_is_recorded_blind_with_a_quote(self):
+        rulings = json.loads((V2 / "rulings.json").read_text(encoding="utf-8"))
+        for i, ru in rulings.items():
+            for c in ru.get("確認の記録", []):
+                self.assertIn("盲検", c["確認者"], i)
+                self.assertTrue(c["引用"] and c["出典URL"], i)
+            for item in ru.get("確認", []):
+                self.assertEqual(ru["値"][item], next(c["値"] for c in ru["確認の記録"] if c["項目"] == item), i)
+
+
 if __name__ == "__main__":
     unittest.main()
