@@ -124,8 +124,10 @@ def cmd_fetch() -> int:
 
 def overriding(a: dict, b: dict, ruling: dict | None, confirmed=()) -> list[str]:
     """裁定が、2系統の一致を覆している項目（独立の確認が無いもの）。設計決定0007：採るのは2系統が一致した値なので、
-    1つの裁定だけで一致を覆さない。覆すなら別の系統の独立の確認（rulings.json の「確認」）が要り、それまでは割れ（保留）。"""
-    return [k for k, v in (ruling or {}).items() if a.get(k) == b.get(k) and v != a.get(k) and k not in confirmed]
+    1つの裁定だけで一致を覆さない。覆すなら別の系統の独立の確認（rulings.json の「確認」）が要り、それまでは割れ（保留）。
+    2系統が割れた項目で、裁定がどちらの系統とも違う新しい値を出したときも同じ：その値に一致する読み手がいないので、
+    裁定者とは別の読み手の独立の確認（「確認」）が付くまで保留にする。"""
+    return [k for k, v in (ruling or {}).items() if k not in confirmed and v not in (a.get(k), b.get(k))]
 
 
 def judge(site: dict, a: dict, b: dict, ruling: dict | None = None, confirmed=()) -> tuple[str, list[str], list[str]]:
