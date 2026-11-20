@@ -49,6 +49,17 @@ class CorrectionsTest(unittest.TestCase):
                 continue
             self.assertIn(item, self.corr.get(i, {}), f"{i} {item}")
 
+    def test_ruling_read_through_the_main_law_beats_the_unread_rule(self):
+        """本法・附則まで読んだ Opus の裁定（「本法まで読んだ」）は、本法未読の規則で判定不能に戻さず、その値で表に入る。"""
+        found = 0
+        for i, items in self.sample_rulings.items():
+            for item, ruling in items.items():
+                if ruling.get("本法まで読んだ"):
+                    found += 1
+                    self.assertTrue(ruling["読んだ箇所"].strip(), f"{i} {item}")
+                    self.assertEqual(self.corr[i][item]["直した値"], ruling["値"], f"{i} {item}")
+        self.assertGreater(found, 0)
+
     def test_every_value_comes_from_the_recorded_reading(self):
         self.assertTrue(self.corr)
         ra, rb, rc, rr = reread.load_records()
