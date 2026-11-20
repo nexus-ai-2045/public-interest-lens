@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 from collections import Counter
 import hashlib
@@ -579,4 +580,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     raise SystemExit(main())

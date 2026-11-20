@@ -8,6 +8,7 @@
 - mapping.json の参照 ID が台帳に実在すること
 赤なら終了コード1。
 """
+import argparse
 import json
 import math
 import re
@@ -188,4 +189,5 @@ def main():
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     sys.exit(main())

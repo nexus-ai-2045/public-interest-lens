@@ -12,6 +12,7 @@
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import sys
@@ -86,5 +87,6 @@ def build() -> dict[str, int]:
 
 
 if __name__ == '__main__':
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     print(json.dumps({k: f'{v / 1e12:+.2f}兆円' for k, v in build().items()}, ensure_ascii=False))
     sys.exit(0)

@@ -13,6 +13,7 @@ labels.csv は施行日台帳の349本でも、全3,415本でもよい（出力�
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import re
 from pathlib import Path
@@ -274,5 +275,6 @@ def build(src: Path, dst: Path) -> int:
 
 
 if __name__ == "__main__":
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     n = build(Path("data/derived/bill-triage-v1-line2/labels.csv"), Path("data/derived/bill-triage-v2/labels-line2.csv"))
     print(f"bill-triage-v2 系統2: {n} 本")
