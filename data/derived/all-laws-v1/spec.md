@@ -1,8 +1,8 @@
 # all-laws-v1：成立した全ての法律の結果一覧
 
-成立した法律 3,415 本（`data/acquired/bill-census-full/enacted.csv`、並びは `data/derived/bill-triage-v1/triage.csv`）の1本ごとに、必ず1つの結果を付けた台帳です。評価の対象を絞らず、v2 の流れ（振り分け・影響・損失・便益・公開条件）に載らない法律にも「なぜ載らないか」を書き、黙って落とす法律をなくします。
+成立した法律 3,426 本（`data/acquired/bill-census-full/enacted.csv` の行数。種別・提出回次・番号で一意。第142〜222回。並びは `data/derived/bill-triage-v1/triage.csv`）の1本ごとに、必ず1つの結果を付けた台帳です。評価の対象を絞らず、v2 の流れ（振り分け・影響・損失・便益・公開条件）に載らない法律にも「なぜ載らないか」を書き、黙って落とす法律をなくします。3,415 本は #207 より前の同じファイルで、第222回の11本を含まない。
 
-生成：`python3 scripts/build_all_laws_outcomes.py` → `outcomes.csv`。確認：`tests/test_all_laws_outcomes.py`（3,415行・id の重複なし・額あり以外の理由が空でない・コミット済みの台帳が生成結果と同じ）。
+生成：`python3 scripts/build_all_laws_outcomes.py` → `outcomes.csv`。確認：`tests/test_all_laws_outcomes.py`（3,426行・id の重複なし・額あり以外の理由が空でない・コミット済みの台帳が生成結果と同じ）。
 
 ## 列
 
@@ -83,6 +83,6 @@
 - 日付の入った行は、`run-triage-v2-line1.mjs`（triage.csv の id なら自動）と `triage_v2_line2.py`（`bill-triage-v1-line2/labels.csv` の行）を通り、系統2のラベルがまだ無い行は影響の段で「系統2の振り分けが無い」として保留になる。ラベルが揃えば通常の一致判定に進む。
 - 台帳や後段を更新したら `python3 scripts/build_all_laws_outcomes.py` を再実行して outcomes.csv を作り直す。
 
-## 系統2のラベル（全3,415本）
+## 系統2のラベル（全3,426本）
 
-`bill-triage-v1-line2/labels.csv` は全3,415本に付けてよい（`tests/test_line2_labels.py` は、triage.csv の順、または台帳の行が台帳順で先に並ぶ順を受け付ける）。`triage_v2_line2.py` は labels.csv の全行に指標の規則を当てるので、`bill-triage-v2/labels-line2.csv` も同じ行数になる。振り分けの一致の表・影響の表は施行日のある行だけを扱う。
+`bill-triage-v1-line2/labels.csv` は全3,426本に付けてよい（#207 より前は 3,415本。`tests/test_line2_labels.py` は、triage.csv の順、または台帳の行が台帳順で先に並ぶ順を受け付ける）。`triage_v2_line2.py` は labels.csv の全行に指標の規則を当てるので、`bill-triage-v2/labels-line2.csv` も同じ行数になる。振り分けの一致の表・影響の表は施行日のある行だけを扱う。

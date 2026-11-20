@@ -17,7 +17,7 @@
 
 ## 全法律への拡張
 
-全3,415本の結果の一覧は `data/derived/all-laws-v1/`（`spec.md`）。この版の振り分け・影響・損失・便益の対象は、これまでどおり施行日台帳に施行日が入っている行です。台帳に行が足されると系統1は自動で載り、系統2のラベルが無い行は影響の段で保留になります。`bill-triage-v1-line2/labels.csv` が全3,415本を持っていても、この版は受け付けます（`labels-line2.csv` は labels.csv と同じ行数になります）。
+全3,426本の結果の一覧は `data/derived/all-laws-v1/`（`spec.md`）。3,415本は #207 より前の同じ一覧で、第222回の11本を含まない。この版の振り分け・影響・損失・便益の対象は、これまでどおり施行日台帳に施行日が入っている行です。台帳に行が足されると系統1は自動で載り、系統2のラベルが無い行は影響の段で保留になります。`bill-triage-v1-line2/labels.csv` が全3,426本を持っていても、この版は受け付けます（`labels-line2.csv` は labels.csv と同じ行数になります）。
 
 ## 出力と保留
 
@@ -94,7 +94,7 @@ node app/scripts/run-benefit-v1.mjs --triage v2
 
 ## 新分野（field-expansion-v1）の取り込み
 
-`docs/提案/分野の拡張-v1.md` の10分野の提案のうち、承認項目 B1・B2・B3・B4 の推奨を、`bill-triage-v2` の規則として足しました（`app/src/indicator-pick.ts` の `NEW_FIELD_WORDS` と `scripts/triage_v2_line2.py` の `_NEW_FIELDS`。同じ文書から別に書き起こした2実装で、`tests/test_triage_v2.py` が全3,415題名で出力の一致を確かめます）。
+`docs/提案/分野の拡張-v1.md` の10分野の提案のうち、承認項目 B1・B2・B3・B4 の推奨を、`bill-triage-v2` の規則として足しました（`app/src/indicator-pick.ts` の `NEW_FIELD_WORDS` と `scripts/triage_v2_line2.py` の `_NEW_FIELDS`。同じ文書から別に書き起こした2実装で、`tests/test_triage_v2.py` が enacted.csv の全題名（いま 3,426本）で出力の一致を確かめます）。
 
 - **既存優先（B2）**：既存8分野の語が題名に1つでもあれば、これまでの規則（D1・D5）のまま。新分野の語は、既存の規則で「対応表なし」になる題名にだけ当てます。したがって既存の結果は、もとが「対応表なし」だった行を除いて変わりません（`tests/test_triage_v2.py` が全題名・全種類で、新分野の語を無効にした結果と比べます）。
 - **新分野の決め方**：題名の最初の位置にある新分野の語の分野。同じ位置の語が別の語の一部（建築／建築士、土地／土地改良）なら長い語を採り、別々の分野の語が重なれば保留（D5）。D2（設置法・整備法を除く）は既存と同じ。
