@@ -191,7 +191,7 @@ def cmd_build(args) -> None:
             out.append({"年分": year, "名称": r["団体名"], "採用": how, "PDF_URL": r["PDF_URL"]})
             continue
         # 代表者 → 人物ID（氏名が1人に決まるときだけ）。支部の名称は索引の名前と読み手の名称が一致したときだけ使う
-        pid, why = resolve_person(person_rows, c["代表者"], missing="blank")
+        pid, why = resolve_person(person_rows, c["代表者"], on=f"{year}-01-01", missing="blank")
         matched = next((p for p in person_rows if p["人物ID"] == pid), None) if pid else None
         dist = district_of(r["団体名"])
         sure = why if why else ("氏名と選挙区が一致" if dist and matched and matched.get("選挙区") == dist else "氏名のみ一致")

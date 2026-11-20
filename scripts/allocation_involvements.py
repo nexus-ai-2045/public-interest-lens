@@ -165,9 +165,11 @@ def build(collect_dir: Path, stance_dir: Path, votes_dir: Path, cabinet_csv: Pat
         return person_ids.canonical(plain(name))
 
     cabinet_rows = read_csv(cabinet_csv)
-    ledger = person_ids.build_ledger(read_csv(roster_csv) if roster_csv else [], cabinet_rows,
+    roster_rows = read_csv(roster_csv) if roster_csv else []
+    ledger = person_ids.build_ledger(roster_rows, cabinet_rows,
                                      previous=read_csv(persons_csv) if persons_csv and persons_csv.exists() else None,
                                      overrides=person_ids.load_overrides(overrides_csv))
+    person_ids.apply_terms(ledger, read_csv(votes_dir / 'members.csv'), read_csv(votes_dir / 'votes_index.csv'), roster_rows, cabinet_rows)
     cabinet = Cabinet(cabinet_rows, norm)
     index = read_csv(votes_dir / 'votes_index.csv')
     members = read_csv(votes_dir / 'members.csv')

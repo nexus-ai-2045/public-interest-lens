@@ -256,7 +256,7 @@ def unique_person_ids() -> dict[str, str]:
             key = normalize_name(n)
             if not key or key in out:
                 continue
-            pid, why = resolve_person(rows, n, missing='blank')
+            pid, why = resolve_person(rows, n, house=r.get('院') or '', missing='blank')
             if pid and not why:
                 out[key] = pid
     return out

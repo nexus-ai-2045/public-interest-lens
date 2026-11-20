@@ -6,7 +6,8 @@
  *
  * キーは氏名と在任期間。在任に院があれば院も見る。その日付に在任している人が1人ならその人。
  * 在任の外と、候補が2人以上で1人に決まらないものは、並びの先頭に寄せず理由つきで未結合。
- * 台帳の「今の院」だけでは決めない（院を移った人がいる）。在任が無く氏名が1人だけのときはその人物ID。
+ * 台帳の「今の院」だけでは決めない（院を移った人がいる）。在任が無い人は氏名が1人でも結ばない。
+ * 院を指定したときは、その院の在任がある人だけに結ぶ。院が空の在任は、院を指定した結びには使わない。
  */
 import { parseCsv } from './impact-batch';
 
@@ -16,6 +17,7 @@ export const OUTSIDE_TERM = '未結合：在任期間の外（その日付に在
 export const OUTSIDE_HOUSE = '未結合：その日付の在任は別の院で、この院には結べない';
 export const AMBIGUOUS = '未結合：候補が2人以上あり、在任期間で1人に決められない';
 export const NOT_IN_LEDGER = '未結合：人物台帳に無い';
+export const NO_TERM = '未結合：在任期間が分からない';
 const HONORIFICS = ['君', '議員', '先生', 'さん', '氏', '殿', '様'];
 const FOOTNOTE_MARKS = /[*※†‡]+$/;
 
@@ -50,10 +52,9 @@ const dedupe = (candidates: readonly PersonRow[]): PersonRow[] => {
   return out;
 };
 
-const termMatches = (term: OfficeTerm, day: string, house: string, useHouse: boolean): boolean => {
-  if (!term.start || !day || day < term.start) return false;
-  if (term.end && day > term.end) return false;
-  if (useHouse && house && term.house && term.house !== house) return false;
+const covers = (term: OfficeTerm, on: string, house: string): boolean => {
+  if (on && (!term.start || on < term.start || (term.end && on > term.end))) return false;
+  if (house && term.house !== house) return false;
   return true;
 };
 
@@ -61,24 +62,16 @@ const termMatches = (term: OfficeTerm, day: string, house: string, useHouse: boo
 export function linkPerson(candidates: readonly PersonRow[], on = '', house = ''): PersonLink {
   const people = dedupe(candidates);
   if (people.length === 0) return { id: '', reason: '' };
-  if (people.length === 1 && people[0].terms.length === 0) return { id: people[0].id, reason: '' };
-  if (!on) return people.length === 1 ? { id: people[0].id, reason: '' } : { id: '', reason: UNRESOLVED };
-  const dated: PersonRow[] = [];
-  const housed: PersonRow[] = [];
-  for (const person of people) {
-    if (person.terms.length === 0) continue;
-    const dateHits = person.terms.filter(term => termMatches(term, on, house, false));
-    if (dateHits.length === 0) continue;
-    dated.push(person);
-    if (dateHits.some(term => termMatches(term, on, house, true))) housed.push(person);
-  }
-  const everyoneHasTerms = people.every(person => person.terms.length > 0);
-  if (housed.length === 1 && everyoneHasTerms) return { id: housed[0].id, reason: '' };
-  if (housed.length > 1) return { id: '', reason: AMBIGUOUS };
-  if (dated.length > 0 && housed.length === 0 && (everyoneHasTerms || people.length === 1)) return { id: '', reason: OUTSIDE_HOUSE };
-  if (everyoneHasTerms && dated.length === 0) return { id: '', reason: OUTSIDE_TERM };
-  if (people.length === 1) return { id: '', reason: OUTSIDE_TERM };
-  return { id: '', reason: people.some(person => person.terms.length > 0) ? AMBIGUOUS : UNRESOLVED };
+  if (!on && !house) return { id: '', reason: people.length === 1 ? NO_TERM : UNRESOLVED };
+  if (!people.some(person => person.terms.length > 0)) return { id: '', reason: people.length === 1 ? NO_TERM : UNRESOLVED };
+  if (people.some(person => person.terms.length === 0)) return { id: '', reason: AMBIGUOUS };
+  const hits = people.filter(person => person.terms.some(term => covers(term, on, house)));
+  if (hits.length === 1) return { id: hits[0].id, reason: '' };
+  if (hits.length > 1) return { id: '', reason: AMBIGUOUS };
+  const otherHouse = house && people.some(person => person.terms.some(term => covers(term, on, '') && term.house !== '' && term.house !== house));
+  if (otherHouse) return { id: '', reason: OUTSIDE_HOUSE };
+  if (on) return { id: '', reason: OUTSIDE_TERM };
+  return { id: '', reason: people.length === 1 ? NO_TERM : UNRESOLVED };
 }
 
 export class PersonLedger {
@@ -91,10 +84,12 @@ export class PersonLedger {
   constructor(personsCsv: string, rosterCsv = '') {
     for (const r of parseCsv(personsCsv)) {
       if (!r['人物ID']) continue; // 人物ID が空の行（persons.csv の1行目は全列空）は台帳に入れない。
-      const start = r['在任開始'] ?? '';
+      const starts = (r['在任開始'] ?? '').split(';');
+      const ends = (r['在任終了'] ?? '').split(';');
+      const houses = (r['在任の院'] ?? '').split(';');
       const p: PersonRow = {
         id: r['人物ID'], name: r['氏名'], reading: r['読み'], house: r['院'], district: r['選挙区'],
-        terms: start ? [{ start, end: r['在任終了'] ?? '', house: r['在任の院'] ?? '' }] : [],
+        terms: starts.flatMap((start, index) => start ? [{ start, end: ends[index] ?? '', house: houses[index] ?? '' }] : []),
       };
       this.byId.set(p.id, p);
       const key = canonical(p.name);
