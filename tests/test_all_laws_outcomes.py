@@ -5,6 +5,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from scripts import build_all_laws_outcomes as ol
+from scripts import primary_source_corrections as psc
 from scripts.evaluation_rules import DEMOTED_ROUTES
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -87,6 +88,9 @@ class LedgerTest(unittest.TestCase):
         fiscal = {r["id"] for r in read(ROOT / "data" / "derived" / "tax-impact-v1" / "fiscal.csv") if r["平年度_億円"] != ""}
         market = {r["id"] for r in self.rows if r["結果"] == "額あり" and r["経路"] != "財政（税収見込み）"}
         inst = {r["id"] for r in loss if ol.institutional_title(r["題名"])}
+        # 一次資料の読み直しで制度と分かった法律は、額があっても評価対象外にする（primary-source-corrections-v1）
+        corr = psc.load()
+        inst |= {i for i in corr if psc.value(corr, i, "経済に効くか") == psc.INSTITUTIONAL}
         # 向きと額の符号が逆・関与の出典なしの額は、法律の額にしない（evaluation_rules、論理検査 L1・L3）
         no_amount = {r["id"] for r in self.rows if r["経路"] in DEMOTED_ROUTES}
         self.assertTrue(no_amount <= with_amount)
@@ -222,7 +226,11 @@ class InstitutionalTitleTest(unittest.TestCase):
 
     def test_ledger_has_no_institutional_title_outside_excluded(self):
         covid = {r["id"] for r in read(ROOT / "data" / "derived" / "covid-response-v1" / "labels.csv") if r.get("コロナ対応") == "はい"}
+        # 一次資料の読み直しで「経済に効く」と直した法律は題名の型（整備法など）に当てない（primary-source-corrections-v1）
+        corr = psc.load()
         for r in read(ROOT / "data" / "derived" / "all-laws-v1" / "outcomes.csv"):
+            if psc.value(corr, r["id"], "経済に効くか") == psc.ECON:
+                continue
             if ol.institutional_title(r["題名"]) and r["経路"] != "財政（税収見込み）" and r["id"] not in covid:
                 self.assertEqual(r["結果"], "評価対象外", r["id"])
 

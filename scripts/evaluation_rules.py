@@ -21,7 +21,9 @@ SIDE_MEDIAN = re.compile(r"(便益|損失)：中央値=(-?\d+)")
 # 作る側が額を付けなかった行の経路。公開ランキングも同じ行を額なしにする（outcomes.csv が唯一の判断元）
 ROUTE_SIGN_CONFLICT = "市場（向きと額の符号が逆）"
 ROUTE_NO_CHAIN = "市場（議員の関与の出典なし）"
-DEMOTED_ROUTES = frozenset({ROUTE_SIGN_CONFLICT, ROUTE_NO_CHAIN})
+# 一次資料で分野を直した法律：額は振り分けの分野の産業で計算してあるので、直した分野で計算し直すまで付けない
+ROUTE_SOURCE_FIELD = "市場（一次資料で分野を直した）"
+DEMOTED_ROUTES = frozenset({ROUTE_SIGN_CONFLICT, ROUTE_NO_CHAIN, ROUTE_SOURCE_FIELD})
 
 
 def narrow_whole_economy(title: str, industry: str, field: str) -> bool:
@@ -55,8 +57,46 @@ def involved_law_ids(path: Path) -> set[str] | None:
 VERDICT_FAIL = "不合格"
 STATE_FAILED = "抜き取り検証で不合格"
 STATE_DEMOTED = "参考に下げた"
+# 抜き取り検証の2回目（新しい標本、data/derived/evaluation-ledger-v1/sample-v2/）。初回（sample-verdicts.csv）とは別に数える。
+# 判定は scripts/resample_verification.py が2系統の独立判定と裁定から機械的に出す（verdicts.csv）。サイトの値が直れば判定し直して合格に戻る。
+SAMPLE2_VERDICTS = Path(__file__).resolve().parents[1] / "data" / "derived" / "evaluation-ledger-v1" / "sample-v2" / "verdicts.csv"
+SAMPLE2_REASON_PREFIX = "抜き取り2回目で不合格（サイトの値の訂正まで参考）："
+# サイトの主張を到達点で読む：この到達点なら「制度だけ（経済の量は動かない）」、それ以外は「経済に効く」
+INSTITUTIONAL_REACHES = ("評価対象外", "効果なし（定例）")
+
+
+def site_is_institutional(site: dict) -> bool:
+    """サイトが「制度だけ（経済の量は動かない）」と扱っているか。到達点で読む（振り分けの分類では読まない）。"""
+    return site["到達点"] in INSTITUTIONAL_REACHES
+
+
+def sample2_failures(path: Path = SAMPLE2_VERDICTS) -> dict[str, str]:
+    """抜き取り2回目で今も合格していない法律と、その食い違い（id → 食い違い）。記録が無いときは空。
+    台帳と同じ関数（build_evaluation_ledger.sample2_states）で、今のサイトの値から判定し直す。
+    ledger.csv も verdicts.csv の判定欄も読まないので、公開ランキングが台帳より先に作られても、
+    記録のあとでサイトの値が変わっても、台帳と食い違わない。"""
+    if not path.exists():
+        return {}
+    try:
+        from scripts import build_evaluation_ledger as bel
+        from scripts.resample_verification import MEMO, STATE_PASS
+    except ModuleNotFoundError:
+        import build_evaluation_ledger as bel
+        from resample_verification import MEMO, STATE_PASS
+    return {i: memo.removeprefix(MEMO) for i, (state, memo) in bel.sample2_states().items() if state != STATE_PASS}
+
+
 # 台帳の到達点が、額を順位・議員配分に使わない（参考額）か、そもそも評価対象外（額が出ていれば順位に混ざる）のもの
 DEMOTE_REACH_PREFIXES = ("参考額", "評価対象外", "額（個別")
+
+
+NO_AMOUNT_DEMOTED_REACH = "評価対象外"  # is_demoted の到達点に入っているが、額が無い到達点
+
+
+def amount_demoted(verdict: str, reach: str, certainty: str = "") -> bool:
+    """台帳で、不合格の額を自動で参考に下げるか（参考額・個別の額）。評価対象外は額が無いので下げず、不合格のまま数える。
+    標本1（build_evaluation_ledger）と標本2（resample_verification）が同じ規則を使う。"""
+    return is_demoted(verdict, reach, certainty) and reach != NO_AMOUNT_DEMOTED_REACH
 
 
 def is_demoted(verdict: str, reach: str = "", certainty: str = "", in_ranking: bool = False) -> bool:

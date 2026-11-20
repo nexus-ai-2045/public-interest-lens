@@ -23,11 +23,23 @@ from pathlib import Path
 
 try:
     from scripts.build_all_laws_outcomes import crowded_ids, narrow_measure
-    from scripts.evaluation_rules import DEMOTED_ROUTES, VERDICT_FAIL, is_demoted
+    from scripts.evaluation_rules import (
+        DEMOTED_ROUTES,
+        SAMPLE2_REASON_PREFIX,
+        VERDICT_FAIL,
+        is_demoted,
+        sample2_failures,
+    )
     from scripts.generation_provenance import generation_metadata
 except ModuleNotFoundError:
     from build_all_laws_outcomes import crowded_ids, narrow_measure
-    from evaluation_rules import DEMOTED_ROUTES, VERDICT_FAIL, is_demoted
+    from evaluation_rules import (
+        DEMOTED_ROUTES,
+        SAMPLE2_REASON_PREFIX,
+        VERDICT_FAIL,
+        is_demoted,
+        sample2_failures,
+    )
     from generation_provenance import generation_metadata
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -265,6 +277,12 @@ def _law(row: dict[str, str], loss_row: dict[str, str], sources: list[str], enfo
     }
 
 
+# macro.csv の「分野の由来」→ 指標の欄に出す文言。由来を足したら、ここにも足す（知らない由来は分かる文で止める）。
+FIELD_ORIGINS = {"振り分け": "振り分けの分野", "AI 2系統": "AI 2系統の分野", "対応表なし": "対応表なしのため全産業", "同じ題名にそろえた": "同じ法律の改正の分野にそろえた",
+                 COVID_ORIGIN: "", "AI 3段の再判定": "AI 3段の再判定による産業", "一次資料の読み直し": "一次資料の読み直しで直した分野",
+                 "一次資料の当て直し": "一次資料の当て直し（議案本文と会議録）で決めた分野"}
+
+
 def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
     """macro-v1 の行。元の値は正が損失・負が便益なので、中央値の符号を side に写し、側ごとの大きさで出す。
 
@@ -283,7 +301,9 @@ def _macro_law(row: dict[str, str], sources: list[str]) -> dict:
         notes.append(f"施行日は{ESTIMATED}")
     if int(row["施行日"][:4]) >= 2020:
         notes.append("コロナ期と重なる")
-    origin = {"振り分け": "振り分けの分野", "AI 2系統": "AI 2系統の分野", "対応表なし": "対応表なしのため全産業", "同じ題名にそろえた": "同じ法律の改正の分野にそろえた", COVID_ORIGIN: "", "AI 3段の再判定": "AI 3段の再判定による産業"}[row["分野の由来"]]
+    if row["分野の由来"] not in FIELD_ORIGINS:
+        raise ValueError(f"{row['id']}：分野の由来「{row['分野の由来']}」を知らない。FIELD_ORIGINS に表示の文言を足す")
+    origin = FIELD_ORIGINS[row["分野の由来"]]
     return {
         "id": row["id"],
         "title": row["題名"],
@@ -368,11 +388,15 @@ def japan_value_added_max(raw: bytes | None = None) -> int:
 
 def verification_failed() -> dict[str, str]:
     """独立検証（抜き取り）で不合格と判定された法律と、その理由。判定表が無いときは空。
-    台帳の検証状態ではなく判定表（sample-verdicts.csv）を引く（台帳は降格後「参考に下げた」に変わるため）。"""
-    if not SAMPLE_VERDICTS.exists():
-        return {}
-    with SAMPLE_VERDICTS.open(encoding="utf-8", newline="") as f:
-        return {row["id"]: (row.get("食い違い") or "").strip() for row in csv.DictReader(f) if row["判定"] == VERDICT_FAIL}
+    台帳の検証状態ではなく判定表（sample-verdicts.csv）を引く（台帳は降格後「参考に下げた」に変わるため）。
+    抜き取り2回目（sample-v2/verdicts.csv）の不合格も、理由の頭に印を付けて加える（サイトの値が直って判定し直せば外れる）。"""
+    failed: dict[str, str] = {}
+    if SAMPLE_VERDICTS.exists():
+        with SAMPLE_VERDICTS.open(encoding="utf-8", newline="") as f:
+            failed = {row["id"]: (row.get("食い違い") or "").strip() for row in csv.DictReader(f) if row["判定"] == VERDICT_FAIL}
+    for law_id, reason in sample2_failures().items():
+        failed.setdefault(law_id, f"{SAMPLE2_REASON_PREFIX}{reason}")
+    return failed
 
 
 def demoted_basis(law: dict, covid_basis: str = "") -> str:
@@ -493,11 +517,17 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
     covid_params = _rows("covidParams", captured)
     crowded = crowded_ids(loss.values())
     # 全法律の結果（outcomes.csv）が、向きと額の符号が逆・関与の出典なしで額を付けないとした法律。同じ判断を使う（論理検査 L1・L3）
-    demoted = {row["id"]: row["理由"] for row in _rows("outcomes", captured) if row["経路"] in DEMOTED_ROUTES}
+    outcomes = _rows("outcomes", captured)
+    demoted = {row["id"]: row["理由"] for row in outcomes if row["経路"] in DEMOTED_ROUTES}
+    # 全法律の結果が「評価対象外」とした法律は、どの経路の額が残っていても laws に出さない（訂正表で制度・名称整備と決まった法律など）。
+    excluded = {row["id"]: row["理由"] or row["経路"] or "評価対象外" for row in outcomes if row["結果"] == "評価対象外"}
     laws, others = [], []
     for law_id, census_row in enacted.items():
         row = publish.get(law_id)
         title = census_row["題名"]
+        if law_id in excluded:
+            others.append(_other(law_id, title, "excluded", excluded[law_id]))
+            continue
         # コロナ対応の法律は、市場の損失の額が付いていても使わず、費用便益（covid-benefit-v1）か規模つきの理由で出す（全法律の結果と同じ扱い）
         if not row or row["損失または便益"] == "保留" or law_id in covid_ids or law_id in crowded or law_id in demoted or (narrow_measure(title) and loss.get(law_id, {}).get("段階") == "段階1"):
             if approve_all and law_id in macro and law_id not in held_by_check:

@@ -34,6 +34,7 @@ try:
     from scripts.evaluation_rules import (
         ROUTE_NO_CHAIN,
         ROUTE_SIGN_CONFLICT,
+        ROUTE_SOURCE_FIELD,
         involved_law_ids,
         sign_conflict,
     )
@@ -42,6 +43,7 @@ except ImportError:  # python3 scripts/build_all_laws_outcomes.py（scripts/ が
     from evaluation_rules import (
         ROUTE_NO_CHAIN,
         ROUTE_SIGN_CONFLICT,
+        ROUTE_SOURCE_FIELD,
         involved_law_ids,
         sign_conflict,
     )
@@ -191,7 +193,7 @@ class Stages:
         self.covid = {r["id"] for r in read_csv(covid) if r.get("コロナ対応") == "はい"} if covid.exists() else set()
         self.involved = involved_law_ids(derived / "allocation-v1" / "involvements.csv")
         # 一次資料の読み直しで直した類型・経済に効くか（振り分けの記録は書き換えず、ここで上書きする）
-        self.corrections = corrections.load(derived / "primary-source-corrections-v1" / "corrections.csv")
+        self.corrections = corrections.load_layered(derived / "primary-source-corrections-v1" / "corrections.csv", derived / "primary-triage-v1" / "labels.csv")
 
 
 def no_market(t: dict[str, str]) -> bool:
@@ -245,6 +247,21 @@ def crowded_ids(loss_rows) -> set[str]:
 
 
 def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dict[str, str]:
+    """1本の結果。一次資料で直した分野（primary-source-corrections-v1）があれば、分野をその値にする。
+    個別の額は振り分けの分野の産業で計算してあるので、分野が変わった法律には、直した分野で計算し直すまで額を付けない。"""
+    out = decide_by_triage(law, t, date, st)
+    field = corrections.value(getattr(st, "corrections", {}), t["id"], "分野")
+    if not field:
+        return out
+    shown = NO_FIELD if field.startswith("経済全体") else field
+    if out["結果"] == "額あり" and out["経路"].startswith("市場") and out["分野"] != shown:  # 税収見込みの額は産業に依らない
+        out.update(結果="保留", 経路=ROUTE_SOURCE_FIELD, 損失または便益の額="", 単位="", 確かさ="", 公開可否="公開不可",
+                   理由=f"{corrections.method(getattr(st, 'corrections', {}), t['id'], '分野')}で、主な産業は「{field}」と分かった（振り分けは「{out['分野']}」）。額は振り分けの分野の産業で計算してあるので、直した分野で計算し直すまで付けない")
+    out["分野"] = shown
+    return out
+
+
+def decide_by_triage(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dict[str, str]:
     """1本の結果。law は enacted の行、t は triage の行、date は施行日（無ければ空）。"""
     title = law["題名"]
     ag = st.agreement.get(t["id"]) if date else None
@@ -281,8 +298,10 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
     if source_econ == corrections.INSTITUTIONAL:
         why = source[t["id"]]["経済に効くか"]["理由"]
         out.update(結果="評価対象外", 経路=ROUTE_SOURCE_INSTITUTIONAL, 公開可否="公開不可",
-                   理由=f"一次資料の読み直しで、民間の売上・費用・給付・税・規制の負担を直接は変えない制度の法律と分かった（{why}）。経済に絞る方針の外")
+                   理由=f"{corrections.method(source, t['id'], '経済に効くか')}で、民間の売上・費用・給付・税・規制の負担を直接は変えない制度の法律と分かった（{why}）。経済に絞る方針の外")
         return out
+    # 判定不能（読み直しでも決められない）：定例の規則だけに当てない（効果なしへ確定させず、不確かさを残す）
+    source_undecided = source_econ == corrections.UNDECIDED
     source_econ = source_econ == corrections.ECON
 
     # 00) 毎年の税制改正の法律：政府（財務省）の国税の増減収見込み。GDP への損失とは別の量なので、順位・合計・議員への配分には入れない
@@ -337,7 +356,7 @@ def decide(law: dict[str, str], t: dict[str, str], date: str, st: Stages) -> dic
 
     # 2) 定例の改正（題名の語）
     # 期限の延長でも、続けなければ止まる補助や特例があれば経済の量が動く（読み直しの指示文 prompt-v1 の定義）
-    rt = None if source_econ else routine_rule(title, kinds)
+    rt = None if source_econ or source_undecided else routine_rule(title, kinds)
     if rt:
         out.update(結果="効果なし（定例）", 経路=rt[0], 分野=out["分野"] or NO_FIELD,
                    理由=f"{rt[1]}。毎年・毎回の定例の改正で、市場の産業への新たな効果を測る対象にしない")

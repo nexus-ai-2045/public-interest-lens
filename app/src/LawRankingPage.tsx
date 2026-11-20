@@ -11,6 +11,8 @@ import { UnenactedBills } from './UnenactedBills';
 import { LensFilterBar, MultiSelect } from './LensFilterBar';
 import { BLOCS, blocStance, parseVotes, distributionVotesUrl, type Bloc, type VoteLaw } from './votes';
 import { CHARACTERS, CHARACTER_LABEL, characterOf, type Character } from './law-character';
+import { InterimNotice } from './InterimNotice';
+import { rankingPaused } from './interim-display';
 import './laws.css';
 
 const TOP = 15;
@@ -85,6 +87,8 @@ export function LawRankingPage() {
   const viewConfirmed = (view?.laws ?? []).filter((law): law is CatalogItem & { side: 'loss' | 'benefit' } => !!law.amount && law.step === 'published' && (law.side === 'loss' || law.side === 'benefit'));
   const sideTop = viewConfirmed.filter(law => law.side === toneSide);
   // 同じ観測（同じ額）は代表の1本だけを棒にする。
+  // 振り分けの当て直し中は、額の順位（棒）を出さない（interim-display.ts の切り替え）。額は下の一覧に残す。
+  const paused = rankingPaused();
   const topList = collapseObservations((sideTop.length ? sideTop : viewConfirmed).slice().sort((a, b) => b.amount!.median - a.amount!.median)).slice(0, TOP);
   return <SiteShell active="/ranking" label="法律・政策ランキング（実データ）" className="law-ranking">
     
@@ -95,6 +99,7 @@ export function LawRankingPage() {
       </LensFilterBar>
       <h1>法律と政策ごとの損失と便益</h1>
       <p className="laws-lead">成立した全部の法律を、一次資料（国会の議案情報・e-Gov 法令）と公的統計（OECD 国民経済計算など）で同じルールに通しました。額は比べた国との差から出した推計で、必ず幅と確かさの印を付けています。額が出ない法律も、止まった理由を付けて全部載せています。観測された結果の差の推計で、誰かの責任の認定や、提出者や賛成者の意図や予見の評価ではありません。</p>
+      <InterimNotice />
       <nav className="prov-mode" aria-label="ランキングの種類">
         <a href="/ranking" aria-current={!provisional}>国賊ランキング（確定）</a>
         <a href="/ranking?mode=provisional#provisional" aria-current={provisional}>暫定国賊ランキング（他国の実績）</a>
@@ -104,17 +109,22 @@ export function LawRankingPage() {
       {!provisional && data && <>
         <section className="laws-stats" aria-label="ひと目で">
           <a href="#list" className="laws-stat"><span>載せている件数</span><strong>{(data.laws.length + data.policies.length).toLocaleString('ja-JP')}件</strong><small>法律{data.laws.length.toLocaleString('ja-JP')}本＋政策{data.policies.length}件</small></a>
-          <a href="?side=confirmed#list" className="laws-stat hit"><span>確かな額</span><strong>{confirmed.length}本</strong><small>国賊側{loss}本・国士側{confirmed.length - loss}本（影響の段階まで確認）</small></a>
+          <a href="?side=confirmed#list" className="laws-stat hit"><span>確かな額</span><strong>{confirmed.length}本</strong><small>{paused ? '当て直しが済むまで順位に使いません' : `国賊側${loss}本・国士側${confirmed.length - loss}本（影響の段階まで確認）`}</small></a>
           <a href="?side=amount#list" className="laws-stat"><span>参考の額</span><strong>{(amounted.length - confirmed.length).toLocaleString('ja-JP')}本</strong><small>産業・経済全体の差など。確かな額と足さない</small></a>
           <a href="?side=shared#list" className="laws-stat"><span>共有額の参考</span><strong>{sharedCount.toLocaleString('ja-JP')}本</strong><small>同じ額を共有する{(data.shared?.groups ?? 0).toLocaleString('ja-JP')}群。1本ごとの額は出さず、合計の一部として見せる。足さない</small></a>
           <a href="?side=none#list" className="laws-stat"><span>額なし（理由つき）</span><strong>{noAmount.toLocaleString('ja-JP')}件</strong><small>法律{(data.laws.length - amounted.length - sharedCount).toLocaleString('ja-JP')}本＋政策{data.policies.filter(policy => !policy.amount).length}件。測れていないだけで「影響なし」ではない</small></a>
         </section>
-        {viewConfirmed.length === 0 && confirmed.length === 0 && <section aria-label={toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順'} id="top-amounts">
+        {paused && <section aria-label="額の順位（一時停止中）" id="top-amounts">
+          <h3>額の順位は一時停止中です</h3>
+          <p className="empty-state">振り分けの当て直しが済むまで、法律の額を大きい順に並べた棒は出しません。抜き取り検証で不合格だった個別の額は参考に下げ、理由と根拠を付けて下の一覧に残しています（順位・議員別の額には使いません）。当て直しのあと、新しい抜き取りで確かめてから順位を戻します。</p>
+          <p className="fine-note">参考の額（確かな額とは足さない。下の一覧では既定で畳んでいます）：<a href="?side=undetermined#list">向き未確定 {refUndetermined}本</a>・<a href="?side=loss#list">国賊側 {refLoss}本</a>・<a href="?side=benefit#list">国士側 {refBenefit}本</a>。</p>
+        </section>}
+        {!paused && viewConfirmed.length === 0 && confirmed.length === 0 && <section aria-label={toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順'} id="top-amounts">
           <h3>{toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順'}</h3>
           <p className="empty-state">確かな額がまだ無いため、{toneSide === 'loss' ? '国賊側（損失）' : '国士側（便益）'}の棒は出していません。国賊側・国士側のどちらも0本なので、切り替えても棒の中身は同じです。検証で参考に下げた法律の額は、参考値として下の一覧に残しています（順位・議員別の額には使いません）。</p>
           <p className="fine-note">参考の額（確かな額とは足さない）：<a href="?side=undetermined#list">向き未確定 {refUndetermined}本</a>（損失か便益かは産業と比較国の差の符号だけで決まり、法律の効果の向きの証拠が無いので、国賊側・国士側に分けません）・<a href="?side=loss#list">国賊側 {refLoss}本</a>・<a href="?side=benefit#list">国士側 {refBenefit}本</a>。</p>
         </section>}
-        {viewConfirmed.length > 0 && <section aria-label="額の大きい順" id="top-amounts">
+        {!paused && viewConfirmed.length > 0 && <section aria-label="額の大きい順" id="top-amounts">
           <h3>{sideTop.length ? (toneSide === 'loss' ? '国賊側：損失の大きい順' : '国士側：便益の大きい順') : '額の大きい順'}（確かな額の上位{topList.length}本）</h3>
           <p className="fine-note">赤は国賊側（損失）、緑は国士側（便益）。太い棒が中央値、細い線が幅です。棒を押すと、下の一覧でその法律の詳しい中身が開きます。</p>
           <RankBars caption="額が出た法律の額の大きい順" format={formatYen} items={topList.map(law => ({ id: law.id, label: law.what ? plainLawName(law.what) : law.title, value: law.amount!.median, low: law.amount!.low, high: law.amount!.high, side: law.side as 'loss' | 'benefit', note: `${law.what ? `名前はAI要約・正式名：${law.title}・` : ''}${law.side === 'loss' ? '国賊側（損失）' : '国士側（便益）'}・${law.field}${law.marks.length ? `・${law.marks.filter(mark => !mark.startsWith('同じ')).join('・') || '印なし'}` : ''}`, href: `#${encodeURIComponent(law.id)}` }))} />

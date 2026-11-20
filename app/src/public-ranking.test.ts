@@ -69,7 +69,11 @@ describe('公開ランキングの配布データ', () => {
   });
   it('コロナ期と重なる法律と便益側が未測定の法律に注記がある', () => {
     const byId = new Map(parsePublicRanking(committed).laws.map(item => [item.id, item]));
-    for (const id of ['衆法-189-20', '閣法-196-2']) expect(byId.get(id).notes).toContain('コロナ期と重なる');
+    expect(byId.get('衆法-185-2').notes).toContain('コロナ期と重なる');
+    // 衆法-189-20 は訂正表で制度（評価対象外）と決まり、法律ごとの額は出さない
+    expect(byId.has('衆法-189-20')).toBe(false);
+    // 閣法-196-2 は一次資料で分野を直した（宿泊・観光→交通・移動）。旧い分野の個別の額を外し、法律ごとの額は出さない
+    expect(byId.has('閣法-196-2')).toBe(false);
     // 閣法-189-27 は向きと額の符号が逆で法律の額を付けない（noAmount）。損失表の額を元にした注記は付かない
     expect(byId.get('閣法-189-27').notes).not.toContain('便益側の一部が未測定');
   });

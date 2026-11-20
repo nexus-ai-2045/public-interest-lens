@@ -68,7 +68,7 @@ def line_kinds(i: str, v1: dict, l1: dict, l2: dict) -> list[str]:
 
 
 def find(outcomes: list[dict], ledger: dict[str, dict], v1: dict, l1: dict, l2: dict, fixed: dict | None = None) -> list[dict]:
-    """fixed：一次資料で直した法律（{id: {項目: 行}}）。直した項目の型（類型→K、経済に効くか→C）には数えない。"""
+    """fixed：一次資料で直した、または正しいと確かめた法律（{id: {項目: 行}}）。その項目の型（類型→K、経済に効くか→C）には数えない。"""
     fixed = fixed or {}
     rows = []
     for o in outcomes:
@@ -97,7 +97,9 @@ def find(outcomes: list[dict], ledger: dict[str, dict], v1: dict, l1: dict, l2: 
         if g.get("分類") == "評価対象外" and measured:
             hits.append(("R1", f"分類「評価対象外」・到達点「{reach}」・経済の区分「{econ or '（空）'}」"))
         skip = {"K"} if "類型" in fixed.get(i, {}) else set()
-        skip |= {"C"} if "経済に効くか" in fixed.get(i, {}) else set()
+        econ_fix = fixed.get(i, {}).get("経済に効くか")
+        # 読み直しでも決められなかった（判定不能）項目は確定していないので、型には数え続ける
+        skip |= {"C"} if econ_fix and econ_fix.get("直した値") != corrections.UNDECIDED else set()
         rows += [{"id": i, "題名": title, "型": c, "根拠": w} for c, w in hits if c[0] not in skip]
     return rows
 
@@ -118,7 +120,11 @@ def build(root: Path = ROOT) -> tuple[list[dict], dict]:
     v1 = {r["id"]: r for r in read(d / "bill-triage-v1" / "triage.csv")}
     l1 = {r["id"]: r for r in read(d / "bill-triage-v2" / "labels-line1.csv")}
     l2 = {r["id"]: r for r in read(d / "bill-triage-v2" / "labels-line2.csv")}
-    rows = find(outcomes, ledger, v1, l1, l2, corrections.load(d / "primary-source-corrections-v1" / "corrections.csv"))
+    fixed = corrections.load(d / "primary-source-corrections-v1" / "corrections.csv")
+    # 一次資料で読み直してサイトの値が正しいと確かめた項目（confirmed.csv）も、その型には数えない
+    for r in read(d / "primary-source-corrections-v1" / "confirmed.csv"):
+        fixed.setdefault(r["id"], {})[r["項目"]] = r
+    rows = find(outcomes, ledger, v1, l1, l2, fixed)
     return rows, counts(rows, len(outcomes))
 
 

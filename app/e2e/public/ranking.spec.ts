@@ -11,10 +11,12 @@ test.describe('/ranking（法律ランキング）', () => {
     const rows = page.locator('.laws-list > li');
     await expect(rows.first()).toBeVisible();
     expect(leadingNumber(await page.locator('.laws-count').textContent())).toBeGreaterThan(0);
-    // 検証を通った確かな額が無い間は、棒の代わりに空状態の説明を出す。確かな額が戻れば棒が出る。
-    const top = page.getByRole('region', { name: /^国賊側：損失の大きい順$/ });
-    await expect(top.locator('svg, [role="img"], ol, ul, .empty-state').first()).toBeVisible();
-    await expect(top.getByText('確かな額がまだ無いため、国賊側（損失）の棒は出していません。', { exact: false })).toBeVisible();
+    // 振り分けの当て直し中（app/src/interim-display.ts）は、額の順位（棒）を止め、注記を出す。切り替えを切れば元の棒・空状態に戻る。
+    await expect(page.getByRole('note', { name: '振り分けの当て直し中' })).toContainText('額の順位を止め');
+    const top = page.getByRole('region', { name: '額の順位（一時停止中）' });
+    await expect(top.getByRole('heading', { name: '額の順位は一時停止中です' })).toBeVisible();
+    await expect(top.locator('svg')).toHaveCount(0);
+    await expect(page.getByRole('region', { name: /損失の大きい順|便益の大きい順|額の大きい順/ })).toHaveCount(0);
     expect(watch.dataUrls.some(url => url.endsWith('/distribution/laws.json'))).toBe(true);
     watch.expectClean();
   });
@@ -81,25 +83,45 @@ test.describe('/ranking（法律ランキング）', () => {
     await expect(head).toHaveAttribute('aria-expanded', 'false');
     watch.expectClean();
   });
-  test('共有額の参考：既定では経済全体の分を畳み、押すと出る。1本ごとの額は出さず、合計の一部として見せる', async ({ page }) => {
+  test('振り分けの当て直し中は、参考の額と共有額の参考（産業ごとの分も）を既定で畳み、押すと出る。1本ごとの額は出さず、合計の一部として見せる', async ({ page }) => {
     const watch = watchPage(page);
     await page.goto('/ranking');
-    const fold = page.locator('.laws-fold', { hasText: '経済全体の共有額の参考が付いた法律' });
-    await expect(fold).toBeVisible();
+    await expect(page.locator('.laws-list > li').first()).toBeVisible();
     // 本数は配布データ（laws.json）から、画面と同じ数え方で数える。試験に数字を写して持たない（データが変わると古くなる）。
-    // 画面（LawCatalog）は、参考の額の畳み（step が amounted）に入った行を除いてから、経済全体の共有額の行を数える。
     type Row = { step: string; shared?: { whole?: boolean } | null };
     const catalog = await (await page.request.get('/distribution/laws.json')).json() as { laws: Row[]; policies: Row[] };
-    const whole = [...catalog.laws, ...catalog.policies].filter(row => row.shared?.whole && row.step !== 'amounted').length;
-    expect(whole).toBeGreaterThan(0);
-    await expect(fold).toContainText(`${whole.toLocaleString('ja-JP')}本は畳んでいます`);
+    const rows = [...catalog.laws, ...catalog.policies];
+    const reference = rows.filter(row => row.step === 'amounted').length;
+    const shared = rows.filter(row => row.shared && row.step !== 'amounted').length;
+    expect(reference).toBeGreaterThan(0);
+    expect(shared).toBeGreaterThan(0);
+    const refFold = page.locator('.laws-fold', { hasText: '参考の額が付いた法律' });
+    await expect(refFold).toContainText(`振り分けの当て直し中のため、参考の額が付いた法律${reference.toLocaleString('ja-JP')}本は畳んでいます`);
+    const fold = page.locator('.laws-fold', { hasText: '共有額の参考が付いた法律' });
+    await expect(fold).toContainText(`振り分けの当て直し中のため、共有額の参考が付いた法律${shared.toLocaleString('ja-JP')}本は畳んでいます`);
+    await expect(page.locator('.laws-row.is-shared')).toHaveCount(0);
+    await expect(page.locator('.laws-row.has-amount')).toHaveCount(0);
+    await fold.getByRole('button', { name: '共有額の参考も表示' }).click();
     const sharedRows = page.locator('.laws-row.is-shared');
     await expect(sharedRows.first()).toBeVisible();
     await expect(sharedRows.first().locator('.laws-row-amount')).toContainText('共有額の参考');
     await expect(sharedRows.first().locator('.laws-row-amount')).toContainText('0〜');
     await expect(sharedRows.first().getByRole('note', { name: '共有額の参考値の注意' })).toContainText('この法律だけの効果ではない');
-    await fold.getByRole('button', { name: '経済全体の共有額も表示' }).click();
-    await expect(page.locator('.laws-fold', { hasText: '経済全体（産業コード _T）' })).toContainText('経済全体（産業コード _T）の共有額も並べています');
+    await expect(page.locator('.laws-fold', { hasText: '共有額の参考も並べています' })).toBeVisible();
+    await refFold.getByRole('button', { name: '参考の額も表示' }).click();
+    await expect(page.locator('.laws-row.has-amount').first()).toBeVisible();
+    watch.expectClean();
+  });
+
+  test('抜き取り2回目で不合格のまま訂正待ちの額は参考に下げ、理由を出す', async ({ page }) => {
+    // 個別の額の3本（衆法-189-20・閣法-193-61・閣法-196-2）は訂正表で値が直り、標本2を判定し直すと合格になった（衆法-189-20 は評価対象外として額の行から外れる）。
+    // 衆法-201-10 は訂正候補を退けたので、標本2の判定では訂正待ちのまま参考に下げる
+    const watch = watchPage(page);
+    await page.goto('/ranking#%E8%A1%86%E6%B3%95-201-10');
+    const row = page.locator('[id="law-衆法-201-10"]');
+    await expect(row).toBeVisible();
+    await expect(row.locator('.laws-row-amount')).toContainText('参考値（検証で降格）');
+    await expect(row.getByRole('note', { name: '参考値の理由と根拠' })).toContainText('抜き取り2回目で不合格');
     watch.expectClean();
   });
 

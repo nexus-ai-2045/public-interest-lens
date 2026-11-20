@@ -23,7 +23,7 @@ ${USAGE}
   --help                この説明を出して終了する
 
 書き出す JSON は公開用：階層に入らない人・会派の額と、本数が下限に満たない内訳の額は出さない（法律1本ぶんの額が読めないように）。
-額を出さない人・会派が合わせて1つだけのときは、額を出さない人・会派の合計、totals の全部、未配分の内訳の額も伏せる。
+人か会派のどちらかで「額を出さない行」の合計がほぼ1つの行の額になる（2番目以下の和が1割未満）ときは、人と会派の両方の合計、totals の全部、未配分の内訳の額も伏せる。
 標準出力に counts と totals（公開用）を JSON で1行出す。内部の検算（人＋会派＋未配分＝期待値、相対誤差 1e-9）が合わない、
 公開用に額が残っている、または出力に法律の ID が混ざっているときは、書かずに終了コード1で止まる。
 未知の引数、値の無い --out・--sensitivity、値が -- で始まる --out・--sensitivity は終了コード2で止まる。`);
@@ -57,6 +57,8 @@ const inputs = {
   cabinet: join(root, 'data/acquired/office-holders/cabinet.csv'),
   persons: join(root, 'data/derived/person-ids/persons.csv'),
   roster: join(root, 'data/acquired/diet-roster/current.csv'),
+  // 台帳に読みが無い人の読みの補い（国会会議録の発言者の読み。scripts/fetch_person_readings.py）。並びだけに使う。
+  readingsKokkai: join(root, 'data/acquired/diet-roster/readings-kokkai.csv'),
   // 賛成・反対は投票の一次資料から取る（参議院は個人票、衆議院は enacted.csv の会派）。
   votesIndex: join(root, 'data/acquired/sangiin-votes/votes_index.csv'),
   sangiinMembers: join(root, 'data/acquired/sangiin-votes/members.csv'),
@@ -86,7 +88,15 @@ function checkTotals(label, t) {
 
 // 公開用の検査：階層に入らない行に額が無い／本数が下限に満たない内訳に額が無い／階層に入った行には額がある。破れたら終了コード1。
 // 額を出さない行の数と、額を消した内訳の数を返す。
-function checkPublic(label, p, minLaws) {
+// 伏せるべきかを、公開用の出力からではなく集計結果（内部）から別に数える（toPublicExposureRanking の判定が壊れても出力を止めるため）。
+const sizeOf = r => Math.max(Math.abs(r.exposureYen.low), Math.abs(r.exposureYen.median), Math.abs(r.exposureYen.high));
+function mustWithhold(rows, restMin) {
+  const sizes = rows.filter(r => r.tier === null).map(sizeOf).sort((a, b) => b - a);
+  if (sizes.length === 0 || sizes[0] === 0) return false;
+  return sizes.slice(1).reduce((s, x) => s + x, 0) < restMin * sizes[0];
+}
+
+function checkPublic(label, p, minLaws, internal, restMin) {
   const stats = { hiddenPeople: 0, hiddenParties: 0, hiddenCells: 0 };
   const fail = msg => { console.error(`公開用の検査に失敗（${label}）：${msg}`); process.exit(1); };
   for (const [kind, rows] of [['人', p.people], ['会派', p.parties]]) {
@@ -102,11 +112,33 @@ function checkPublic(label, p, minLaws) {
       }
     }
   }
-  const withheld = stats.hiddenPeople + stats.hiddenParties === 1;
-  if (withheld && (Object.values(p.totals).some(v => v !== null) || p.unallocated.some(u => u.exposureYen !== null) || p.hidden.people.exposureYen !== null || p.hidden.parties.exposureYen !== null)) fail('額を出さない行が1つだけなのに合計が伏せられていない');
-  if (!withheld && (p.totals.people === null || p.totals.parties === null)) fail('額を出さない行が1つだけでないのに合計が伏せられている');
+  // 伏せるとき（人か会派のどちらかで1つの行が合計のほとんど）は、両方の hidden・totals の全部・未配分の額を伏せる（引き算で読めるため）。
+  const required = mustWithhold(internal.people, restMin) || mustWithhold(internal.parties, restMin);
+  const withheld = p.hidden.people.exposureYen === null || p.hidden.parties.exposureYen === null;
+  if (required && !withheld) fail('額を出さない行の合計がほぼ1つの行の額なのに、合計が出ている');
+  if (withheld && !required) fail('伏せる必要が無いのに合計が伏せられている');
+  if (withheld && (p.hidden.people.exposureYen !== null || p.hidden.parties.exposureYen !== null)) fail('伏せるのに人か会派の合計の片方が出ている');
+  // 期待値は群の差から誰でも作れる。伏せた1つを隠すのは未配分の枠だけなので、未配分（0円でない枠）が無いなら引き算で読める。
+  if (withheld && !internal.unallocated.some(u => sizeOf(u) > 0)) fail('伏せた合計があるのに未配分の枠が無い（期待値 − 出ている額 で1つの額が読める）');
+  if (withheld && (Object.values(p.totals).some(v => v !== null) || p.unallocated.some(u => u.exposureYen !== null))) fail('伏せた合計があるのに totals か未配分の額が出ている');
+  if (!withheld && Object.values(p.totals).some(v => v === null)) fail('伏せた合計が無いのに totals が伏せられている');
   if (p.hidden.people.count !== stats.hiddenPeople || p.hidden.parties.count !== stats.hiddenParties) fail('額を出さない行の件数が合わない');
   return stats;
+}
+
+// 人物ID → 読み。本体に載る人で、読みが分かる人だけ。人物台帳の読みを先に使い、空なら国会会議録の発言者の読み（readings-kokkai.csv）で補う。
+function personReadings(personsRows, kokkaiRows, people) {
+  const ids = new Set(people.map(p => p.actorId));
+  const kokkai = new Map(kokkaiRows.filter(r => r['人物ID'] && r['読み']).map(r => [r['人物ID'], r['読み']]));
+  const out = {};
+  for (const r of personsRows) {
+    if (!ids.has(r['人物ID'])) continue;
+    // 台帳の読みは姓と名の間に空白がある（会議録の読みには無い）。混ぜて並べるので空白を除いてそろえる。
+    const squash = v => (v || '').replace(/\s+/g, '');
+    const reading = squash(r['読み']) || squash(kokkai.get(r['人物ID']));
+    if (reading) out[r['人物ID']] = reading;
+  }
+  return Object.fromEntries(Object.entries(out).sort(([a], [b]) => a.localeCompare(b)));
 }
 
 // 順位相関（同順位は平均順位）。
@@ -132,8 +164,9 @@ function spearman(a, b) {
 
 try {
   const { buildExposureInputs, withLedgerPeople } = await server.ssrLoadModule('/src/exposure-inputs.ts');
-  const { buildExposureRanking, toPublicExposureRanking, DEFAULT_ROLE_RATIO } = await server.ssrLoadModule('/src/exposure-ranking.ts');
+  const { buildExposureRanking, toPublicExposureRanking, DEFAULT_ROLE_RATIO, HIDDEN_DOMINANCE_REST_MIN } = await server.ssrLoadModule('/src/exposure-ranking.ts');
   const { SCORING_CONSTANTS } = await server.ssrLoadModule('/src/scoring-constants.ts');
+  const { parseCsv } = await server.ssrLoadModule('/src/impact-batch.ts');
   const text = Object.fromEntries(Object.entries(inputs).map(([k, p]) => [k, readFileSync(p, 'utf8')]));
   const ballotFiles = readdirSync(ballotsDir).filter(f => f.endsWith('.csv')).sort();
   const ballots = ballotFiles.map(f => readFileSync(join(ballotsDir, f), 'utf8'));
@@ -159,8 +192,8 @@ try {
   const minLaws = SCORING_CONSTANTS.minContributingLaws;
   const pub = toPublicExposureRanking(ranking, minLaws);
   const pubWhole = toPublicExposureRanking(whole, minLaws);
-  const publicStats = checkPublic('産業別', pub, minLaws);
-  const publicStatsWhole = checkPublic('全産業', pubWhole, minLaws);
+  const publicStats = checkPublic('産業別', pub, minLaws, ranking, HIDDEN_DOMINANCE_REST_MIN);
+  const publicStatsWhole = checkPublic('全産業', pubWhole, minLaws, whole, HIDDEN_DOMINANCE_REST_MIN);
 
   const groupRow = bucket => {
     const lawsWithRecord = new Map();
@@ -173,6 +206,8 @@ try {
     groups: groupRow(built.industry),
     counts: built.counts,
     coverage,
+    // 階層の中の並び（五十音）に使う読み。人物台帳（persons.csv）の「読み」、空なら会議録の発言者の読み（readings-kokkai.csv）を、本体に載る人のうち読みの分かる人だけ出す。
+    personReadings: personReadings(parseCsv(text.persons), parseCsv(text.readingsKokkai), pub.people),
   };
   payload.generatedFrom = await generationMetadata(server, root, ['app/src/exposure-inputs.ts', 'app/src/exposure-ranking.ts', 'app/src/scoring-constants.ts'], ['scripts/build_exposure_ranking.mjs']);
   payload.inputs = Object.fromEntries(Object.entries(text).map(([k, v]) => [k, createHash('sha256').update(v).digest('hex')]));

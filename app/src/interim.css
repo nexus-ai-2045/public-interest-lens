@@ -1,0 +1,4 @@
+.interim-notice{display:flex;gap:8px;align-items:flex-start;margin:12px 0 16px;padding:10px 14px;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;background:var(--soft);font-size:14px;line-height:1.7;color:var(--text,inherit)}
+.interim-notice svg{flex:none;margin-top:3px;color:var(--accent)}
+.interim-notice span{min-width:0}
+@media(max-width:600px){.interim-notice{padding:8px 10px;font-size:13px}}
