@@ -50,13 +50,14 @@ describe('便益の状態（measureBenefit は impact-rule-v1 をそのまま使
     expect(m.state).toBe('円換算済み');
     expect(m.yen!.median).toBe(-60000);
   });
-  // 既知の不具合。段階の効果は開始後2〜5年目なのに、円は1年目から足す。直すとこのテストは成功し、it.fails のままでは赤になる。
-  it.fails('円に足す年は、段階の判定に使った開始後2年目以降だけ', () => {
+  it('円は開始後1年目から、損失額と同じ年数だけ足す', () => {
+    // 段階の判定は開始後1年目を除く（impact-rule）。累積額は損失額と同じく開始年を1年目に含める（便益ルール-v1 の 3-1）。
     const input = series([200, 110, 110, 110, 110], { yen: 1, source: '人工' }, 'higher');
     input.maxYears = 5;
     const measured = measureBenefit(input);
-    // 2〜5年目は各10件。1年目の100件は判定の窓に入らない。
-    expect(measured.yen?.median).toBe(40);
+    // 1年目100件 + 2〜5年目各10件。単価1円。
+    expect(measured.state).toBe('円換算済み');
+    expect(measured.yen?.median).toBe(140);
   });
 });
 
