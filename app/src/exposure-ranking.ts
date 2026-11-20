@@ -16,6 +16,7 @@
  *    関与の記録が1つも無い法律のぶん（lawCount − 記録のある法律数）は、全役割ぶんの枠を role: null で未配分に積む。
  * 6. 幅（low・median・high）は端どうしを足す。群どうしの相関を仮定しない広めの幅になる。反対は端が入れ替わるので、
  *    検算の合計（totals.expected）も役割ごとに幅を作ってから足す。
+ *    足す順は入力の並びではなく、群 ID・法律 ID・役割・院・配り先・重みの符号点順（同じ関与集合なら加算列は一つ）。
  * 7. 階層は、額の中央値の大きい順に並べ、幅が階層の先頭の人と重なる間は同じ階層とする。
  *    群の額の幅をそのまま使った記述の階層で、統計的な同時信頼集合ではない。
  * 8. 関与した法律が下限（minLaws）に満たない人・会派は階層に入れず、額と本数だけを出す。
@@ -105,6 +106,24 @@ const add = (a: Range, b: Range): Range => ({ low: a.low + b.low, median: a.medi
 const scale = (r: Range, x: number): Range => (x >= 0
   ? { low: r.low * x, median: r.median * x, high: r.high * x }
   : { low: r.high * x, median: r.median * x, high: r.low * x });
+
+/** 符号点（UTF-16 符号単位）の順。実行環境の照合規則に依らない。 */
+const cmpText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+const cmpNum = (a: number, b: number): number => (a < b ? -1 : a > b ? 1 : 0);
+/**
+ * 関与の全順序。加算はこの順で行う。
+ * 原因：入力順のまま足すと、浮動小数点の非結合性で同じ関与集合の中央値がずれ、同点付近の leaderLow が変わる。
+ */
+function cmpInvolvement(a: Involvement, b: Involvement): number {
+  return cmpText(a.groupId, b.groupId)
+    || cmpText(a.lawId, b.lawId)
+    || cmpText(a.role, b.role)
+    || cmpText(a.house ?? '', b.house ?? '')
+    || cmpText(a.actorKind, b.actorKind)
+    || cmpText(a.actorId, b.actorId)
+    || cmpNum(a.weight, b.weight)
+    || cmpText(a.noneReason ?? '', b.noneReason ?? '');
+}
 
 const EPS = 1e-9;
 /** 占有率の比較の許容誤差。ちょうど上限の人が浮動小数点の丸めで弾かれないようにする。 */
@@ -207,8 +226,10 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
   const MISSING_REASON = { lower: '衆議院の賛否の記録が無い法律の枠', upper: '参議院の賛否の記録が無い法律の枠' } as const;
   // 群の額を全役割へ配り切ったときの合計。反対は端が入れ替わるので、役割ごとに幅を作ってから足す（先に比率を足し引きすると幅が合わない）。
   const allRoles = (s: Range): Range => EXPOSURE_ROLES.reduce((acc, r) => add(acc, scale(s, SIGN[r] * params.roleRatio[r])), zero());
+  // 群・法律・枠の中の関与を符号点順に足す（入力の並びでは足さない）。
+  const orderedGroups = [...groupById.values()].sort((a, b) => cmpText(a.id, b.id));
   let expected = zero();
-  for (const g of groups) {
+  for (const g of orderedGroups) {
     expected = add(expected, allRoles(g.diff));
     const laws = tree.get(g.id) ?? new Map<string, Map<string, Involvement[]>>();
     if (g.lawCount < laws.size) throw new Error(`群の法律の本数が関与の記録がある法律の本数より小さい：${g.id} ${g.lawCount}<${laws.size}`);
@@ -217,13 +238,14 @@ export function buildExposureRanking(groups: readonly ExposureGroup[], involveme
     if (noRecord > 0) {
       unallocated.push({ groupId: g.id, role: null, laws: noRecord, exposureYen: scale(allRoles(g.diff), perLaw * noRecord), reason: 'この群の法律のうち関与の記録が無い法律の枠' });
     }
-    for (const [lawId, slots] of laws) {
+    for (const [lawId, slots] of [...laws.entries()].sort((a, b) => cmpText(a[0], b[0]))) {
       for (const role of EXPOSURE_ROLES) {
         if (params.roleRatio[role] === 0) continue;
         for (const { house, share } of slotsOf(role)) {
           const slot = scale(g.diff, perLaw * SIGN[role] * params.roleRatio[role] * share);
-          const list = slots.get(slotKey(role, house));
-          if (!list) { pend(g.id, role, house, house ? MISSING_REASON[house] : 'この役割の関与の記録が無い法律の枠', lawId, slot); continue; }
+          const raw = slots.get(slotKey(role, house));
+          if (!raw) { pend(g.id, role, house, house ? MISSING_REASON[house] : 'この役割の関与の記録が無い法律の枠', lawId, slot); continue; }
+          const list = [...raw].sort(cmpInvolvement);
           const totalWeight = list.reduce((x, y) => x + y.weight, 0);
           if (!Number.isFinite(totalWeight)) throw new Error(`重みの合計が有限でない：${g.id}`);
           for (const inv of list) {
@@ -307,9 +329,19 @@ export type PublicUnallocated = UnallocatedSummary;
  * 群×役割の本数は、束ねる前の行（院・理由ごと）の本数の最大で見る。和集合は最大以上なので、下限を満たすと判定した行は必ず満たす（逆は少なめに見て役割ごとの1行へ回す）。
  */
 export function summarizeUnallocated(rows: readonly Unallocated[], minLaws: number): UnallocatedSummary[] {
+  const order = (r: ExposureRole | null) => (r === null ? -1 : EXPOSURE_ROLES.indexOf(r));
+  // 同じ行の集合なら、足す順を符号点順に固定する（入力の並びで額を変えない）。
+  const ordered = [...rows].sort((a, b) => cmpText(a.groupId, b.groupId)
+    || order(a.role) - order(b.role)
+    || cmpText(a.house ?? '', b.house ?? '')
+    || cmpText(a.reason, b.reason)
+    || cmpNum(a.laws, b.laws)
+    || cmpNum(a.exposureYen.low, b.exposureYen.low)
+    || cmpNum(a.exposureYen.median, b.exposureYen.median)
+    || cmpNum(a.exposureYen.high, b.exposureYen.high));
   type Acc = { groupId: string; role: ExposureRole | null; laws: number; reasons: Set<string>; exposureYen: Range };
   const byCell = new Map<string, Acc>();
-  for (const u of rows) {
+  for (const u of ordered) {
     const key = `${u.groupId}\u0000${u.role ?? ''}`;
     const a = byCell.get(key) ?? { groupId: u.groupId, role: u.role, laws: 0, reasons: new Set<string>(), exposureYen: zero() };
     a.laws = Math.max(a.laws, u.laws);
@@ -325,7 +357,6 @@ export function summarizeUnallocated(rows: readonly Unallocated[], minLaws: numb
     a.reasons.forEach(r => few.reasons.add(r));
     few.exposureYen = add(few.exposureYen, a.exposureYen);
   }
-  const order = (r: ExposureRole | null) => (r === null ? -1 : EXPOSURE_ROLES.indexOf(r));
   shown.sort((x, y) => (x.groupId ?? '').localeCompare(y.groupId ?? '') || order(x.role) - order(y.role));
   if (few.cells === 0) return shown;
   return [...shown, { groupId: null, role: null, reasons: [`本数の少ない群×役割（${few.cells}件）をまとめた合計`, ...[...few.reasons].sort()], exposureYen: few.cells > 1 ? few.exposureYen : null }];
@@ -355,8 +386,9 @@ export const HIDDEN_DOMINANCE_REST_MIN = 0.1;
 const magnitude = (r: { exposureYen: Range }): number => Math.max(Math.abs(r.exposureYen.low), Math.abs(r.exposureYen.median), Math.abs(r.exposureYen.high));
 /** その行の集まりの合計が、1つの行の額とほぼ同じになるか（HIDDEN_DOMINANCE_REST_MIN）。行が無い・全部0円なら false。 */
 export function dominatedByOne(rows: readonly { exposureYen: Range }[]): boolean {
-  const sizes = rows.map(magnitude);
-  const top = Math.max(0, ...sizes);
+  // 大きさは識別子が無い数の集合。昇順に足すと、行の並びに依らず和が一つに決まる。
+  const sizes = rows.map(magnitude).sort(cmpNum);
+  const top = sizes.length === 0 ? 0 : sizes[sizes.length - 1];
   if (top === 0) return false;
   return sizes.reduce((s, x) => s + x, 0) - top < HIDDEN_DOMINANCE_REST_MIN * top;
 }
@@ -385,7 +417,8 @@ export function toPublicExposureRanking(ranking: ExposureRanking, minLaws: numbe
     };
   };
   const hiddenRows = (rows: readonly ExposureRow[]) => rows.filter(r => r.tier === null);
-  const sumOf = (rows: readonly ExposureRow[]): Range => rows.reduce((s, r) => add(s, r.exposureYen), zero());
+  const sumOf = (rows: readonly ExposureRow[]): Range =>
+    [...rows].sort((a, b) => cmpText(a.actorId, b.actorId)).reduce((s, r) => add(s, r.exposureYen), zero());
   const hp = hiddenRows(ranking.people);
   const pp = hiddenRows(ranking.parties);
   // 件数ではなく大きさで決める（関与なしの0円の行は何件あっても合計を薄めない）。どちらかの種類で1つの行が合計のほとんどなら、

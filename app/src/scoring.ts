@@ -1,4 +1,6 @@
 export type AxisKey = "deliberation" | "proposals" | "transparency";
+/** 加算の順。オブジェクトのキーの並びには依らない。 */
+const AXIS_ORDER: readonly AxisKey[] = ["deliberation", "proposals", "transparency"];
 export type AxisValues = Record<AxisKey, number>;
 export type EvidenceKind = "verified" | "computed" | "ai" | "unknown";
 
@@ -6,10 +8,9 @@ export function calculateReferenceScore(
   values: AxisValues,
   weights: AxisValues,
 ): number {
-  const keys = Object.keys(values) as AxisKey[];
-  const weightTotal = keys.reduce((sum, key) => sum + weights[key], 0);
+  const weightTotal = AXIS_ORDER.reduce((sum, key) => sum + weights[key], 0);
   if (weightTotal === 0) return 0;
-  const total = keys.reduce(
+  const total = AXIS_ORDER.reduce(
     (sum, key) => sum + values[key] * weights[key],
     0,
   );
