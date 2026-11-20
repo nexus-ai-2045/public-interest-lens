@@ -17,19 +17,25 @@ def _help_guard() -> None:
     if _sys.argv[:1] != ["-m"] or not {"-h", "--help"} & set(_sys.argv[1:]):
         return
     orig = getattr(_sys, "orig_argv", [])
-    if "-m" not in orig[:-1]:
+    # `-m scripts.X` と、間を空けない `-mscripts.X` の両方
+    at = next((i for i, a in enumerate(orig) if a.startswith("-m")), None)
+    if at is None:
         return
-    name = orig[orig.index("-m") + 1]
+    name = orig[at][2:] or (orig[at + 1] if at + 1 < len(orig) else "")
     if not name.startswith(__name__ + "."):
         return
     parts = name.split(".")[1:]
     path = Path(__file__).parent.joinpath(*parts[:-1], parts[-1] + ".py")
     if not path.is_file():
         return
-    text = path.read_text(encoding="utf-8")
-    if "ArgumentParser" in text:
-        return
-    print(ast.get_docstring(ast.parse(text)) or f"{name}：説明はありません")
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    # 文字列や注釈に書いてあるだけでなく、実際に ArgumentParser を呼んでいる入口だけ、その入口の説明に任せる
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            f = node.func
+            if (f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", None)) == "ArgumentParser":
+                return
+    print(ast.get_docstring(tree) or f"{name}：説明はありません")
     raise SystemExit(0)
 
 

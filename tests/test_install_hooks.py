@@ -19,7 +19,10 @@ class InstallHooksTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             d = Path(t)
             (d / "prepare-commit-msg").write_text(install_hooks.HEADER + "python3 old.py\n")
-            install_hooks.install(d)
+            # 古いフックが残っていると、検査（--check）は「足りない」と言い、install は消したことを返す
+            self.assertIn("prepare-commit-msg", install_hooks.missing(d))
+            self.assertIn("prepare-commit-msg", install_hooks.install(d))
+            self.assertNotIn("prepare-commit-msg", install_hooks.missing(d))
             self.assertFalse((d / "prepare-commit-msg").exists())
             (d / "prepare-commit-msg").write_text("#!/bin/sh\n# 人が書いたフック\n")
             install_hooks.install(d)

@@ -14,8 +14,9 @@ SCRIPTS = ROOT / "scripts"
 
 
 class HelpGuardTest(unittest.TestCase):
-    def run_m(self, name: str, *args: str) -> subprocess.CompletedProcess:
-        return subprocess.run([sys.executable, "-m", f"scripts.{name}", *args], cwd=ROOT, capture_output=True, text=True, timeout=60, check=False)
+    def run_m(self, name: str, *args: str, joined: bool = False) -> subprocess.CompletedProcess:
+        head = [f"-mscripts.{name}"] if joined else ["-m", f"scripts.{name}"]
+        return subprocess.run([sys.executable, *head, *args], cwd=ROOT, capture_output=True, text=True, timeout=60, check=False)
 
     def test_entry_without_parser_does_not_run_on_help(self):
         # #234 の直前の parse_cabinet.py と同じ形：argparse なしで、実行すると書き込む入口
@@ -24,12 +25,16 @@ class HelpGuardTest(unittest.TestCase):
         probe = sub / "entry.py"
         name = f"{sub.name}.entry"
         marker = sub / "書かれた.txt"
-        probe.write_text(f'"""試験用の入口。"""\nfrom pathlib import Path\n\nif __name__ == "__main__":\n    Path({str(marker)!r}).write_text("x")\n', encoding="utf-8")
+        # 説明に ArgumentParser と書いてあるだけの入口も守る（文字列ではなく、実際の呼び出しを見る）
+        probe.write_text(f'"""試験用の入口。ArgumentParser は使わない。"""\nfrom pathlib import Path\n\nif __name__ == "__main__":\n    Path({str(marker)!r}).write_text("x")\n', encoding="utf-8")
         try:
             p = self.run_m(name, "--help")
             self.assertEqual(p.returncode, 0, p.stderr)
             self.assertIn("試験用の入口", p.stdout)
             self.assertFalse(marker.exists(), "--help で本番の処理が走った")
+            p = self.run_m(name, "--help", joined=True)
+            self.assertEqual(p.returncode, 0, p.stderr)
+            self.assertFalse(marker.exists(), "-mscripts.X（間を空けない形）の --help で本番の処理が走った")
             self.run_m(name)
             self.assertTrue(marker.exists(), "--help の無いときは普通に走る")
         finally:

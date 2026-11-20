@@ -54,20 +54,25 @@ def bodies() -> dict[str, str]:
 def missing(directory: Path | None = None) -> list[str]:
     d = directory or hooks_dir()
     # 実行権限が無いフックは git が呼ばない（検査が黙って飛ぶ）ので、内容が同じでも足りない扱いにする
-    return [n for n, body in bodies().items()
+    todo = [n for n, body in bodies().items()
             if not (d / n).is_file() or (d / n).read_text(encoding="utf-8") != body or not os.access(d / n, os.X_OK)]
+    # このスクリプトが前に書いた、もう使わないフックが残っていれば、消す作業が要る
+    return todo + [n for n in OBSOLETE if obsolete_left(d / n)]
+
+
+def obsolete_left(path: Path) -> bool:
+    return path.is_file() and path.read_text(encoding="utf-8").startswith(HEADER)
 
 
 def install(directory: Path | None = None) -> list[str]:
     d = directory or hooks_dir()
     d.mkdir(parents=True, exist_ok=True)
     # このスクリプトが前に書いた、もう使わないフックを消す（人が書いたフックには触らない）
-    for name in OBSOLETE:
-        old = d / name
-        if old.is_file() and old.read_text(encoding="utf-8").startswith(HEADER):
-            old.unlink()
     todo = missing(d)
     for name in todo:
+        if name in OBSOLETE:
+            (d / name).unlink()
+            continue
         (d / name).write_text(bodies()[name], encoding="utf-8")
         (d / name).chmod(0o755)
     return todo
