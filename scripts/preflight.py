@@ -6,7 +6,7 @@
 - 通信先：一次資料のサイトと公開サイトに届くか（届かない取得元は注意。毎朝はその取得を飛ばす）。
 - 権限：GitHub のリポジトリを読めるか（push 前提の作業の前に）。
 - Vercel の枠：main の最新コミットの Vercel の状態が「上限」になっていないか（注意だけ。マージは止めない）。
-- フック：commit 時に自動付与の行を取り除くフック（scripts/install_hooks.py）が入っているか。
+- フック：共通検査のフック（scripts/install_hooks.py）が入っているか。
 - 個人名義：repo-preflight の個人名義検査（push 前の必須検査と同じもの）。
   環境変数 REPO_PREFLIGHT_ROOT があるときは、その直下の scripts/local_identity_guard.py だけを使う。
   未設定のときは、これまでどおりこのリポジトリの隣の repo-preflight を使う。
@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts import daily_update  # noqa: E402
+from scripts import daily_update
 
 REPO = "nexus-ai-2045/public-interest-lens"
 PUBLIC_SITE = "kokuzoku.nexusai2045.com"
@@ -76,7 +76,7 @@ def pipeline_scripts() -> list[Path]:
     """
     text = REBUILD.read_text(encoding="utf-8")
     # rebuild_public を import すると、構文エラーのとき事前チェック自体が落ちる。本文から RULES の中の名前だけ拾う。
-    rules = re.search(r"^RULES = \[(.*?)^\]", text, re.S | re.M)
+    rules = re.search(r"^RULES = \[(.*?)^\]", text, re.DOTALL | re.MULTILINE)
     app_scripts = set(re.findall(r"scripts/[\w./-]+\.(?:py|mjs)", rules.group(1))) if rules else set()
     found = [REBUILD]
     for name in re.findall(r"scripts/[\w./-]+\.(?:py|mjs)", text):
@@ -195,7 +195,7 @@ def commit_identity() -> list[Item]:
 
 
 def git_hooks() -> list[Item]:
-    """commit 時の自動除去と共通検査のフックが入っているか。入っていないと Claude の共著者行などがそのまま残り、名義検査で赤になる。"""
+    """共通検査のフック（個人名義・秘密情報）が入っているか。"""
     result = _run([sys.executable, "scripts/install_hooks.py", "--check"])
     return [Item("フック", "合格" if result.returncode == 0 else "失敗",
                  (result.stdout + result.stderr).strip().splitlines()[-1][:200] if (result.stdout + result.stderr).strip() else "")]
