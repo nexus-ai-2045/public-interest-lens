@@ -8,6 +8,7 @@
 | `01_依頼文_Opus.md` | リポを読める査読者への依頼文 |
 | `02_依頼文_ChatGPT_Codex.md` | ChatGPT／Codex に貼る依頼文（単体で読める）。**未実行** |
 | `10_全件実行の結果_2026-11-20.md` | `scripts/release_check.py` の全件の結果、K1〜K10 と論点5つの判定、残りの一覧 |
+| `11_再査読_Opus_2026-11-20.md` | main 25d47d8 の Opus 再査読。止める指摘0。直してから出す N1〜N4 は #254、後でよい N5〜N8 は #255 |
 
 ## 続きのやり方
 1. `python3 scripts/install_hooks.py`、`git fetch --unshallow origin`（クラウドの浅い clone のとき）。
