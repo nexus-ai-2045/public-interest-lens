@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.person_ids import EXPOSURE, canonical, ranked_people  # noqa: E402
+from scripts.person_ids import AMBIGUOUS, EXPOSURE, NO_TERM, Person, UNRESOLVED, canonical, link_person, ranked_people  # noqa: E402
 
 SOURCE = ROOT / "data" / "derived" / "member-activity-v1"
 OUTPUT = ROOT / "app" / "public" / "distribution" / "member-activity.json"
@@ -52,16 +52,17 @@ def build(fetched_at: str) -> dict:
 
     def person_of(key: str) -> str | None:
         found = by_name.get(canonical(key), [])
-        split = len(found) > 1 or in_ledger.get(canonical(key), 0) > 1
-        # 同姓同名の名前は、院・選挙区付きの人物IDで書いたキーだけ受ける。氏名と同じ文字列のキーは、前からいる人の人物IDと
-        # 同じでも、同姓同名になる前に氏名で取った分かもしれないので受けない。
-        if split and (key == canonical(key) or key not in ids):
+        # この入力に日付は無い。在任が分からない1人（NO_TERM）は氏名のキーをその人物IDにする。
+        # 候補が2人、または台帳で同姓同名に分かれている氏名は、院・選挙区付きの人物IDで書いたキーだけ受ける。
+        pid, why = link_person([Person(item, canonical(key)) for item in found])
+        namesake = why in (UNRESOLVED, AMBIGUOUS) or in_ledger.get(canonical(key), 0) > 1
+        if namesake and (key == canonical(key) or key not in ids):
             raise ValueError(f"同じ氏名の人物が複数いて決められません（院・選挙区付きの人物IDで書き直してください）: {key} → {found}")
         if key in ids:
             return key
-        if len(found) > 1:
+        if why and why != NO_TERM:
             raise ValueError(f"同じ氏名の人物が複数いて決められません（人物IDで書き直してください）: {key} → {found}")
-        return found[0] if found else None
+        return found[0] if len(found) == 1 else pid or None
 
     diet_raw = json.loads((SOURCE / "diet.json").read_text(encoding="utf-8"))
     roles_raw = json.loads((SOURCE / "roles.json").read_text(encoding="utf-8"))

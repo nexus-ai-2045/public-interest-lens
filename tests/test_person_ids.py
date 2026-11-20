@@ -1,4 +1,5 @@
-"""scripts/person_ids.py の人物ID を、架空の名前と架空の名簿で確かめる。実在の人物は使わない。"""
+"""scripts/person_ids.py の人物ID を、架空の名前と架空の名簿で確かめる。
+別院に結ばれる件数の試験だけ実在の名簿を数える。氏名は出さず、件数だけを見る。"""
 import csv
 import json
 import tempfile
@@ -36,6 +37,8 @@ class PersonIdsTest(unittest.TestCase):
         self.cabinet = [{'内閣名簿': '', '内閣名': '架空内閣', '区分': '大臣政務官', '氏名': '髙瀬 真琴', '役職': '架空政務官',
                          '就任日_西暦': '2019-01-01', '退任日_西暦': '2021-01-01'}]
         self.ledger = pi.build_ledger(ROSTER, self.cabinet)
+        # 在任が分かる人だけ結ぶ。高瀬真琴の関与の日付は、この在任の中にある。
+        self.ledger.persons['高瀬真琴'].terms.append(pi.OfficeTerm('2010-01-01', '2030-12-31', '衆議院'))
 
     def test_canonical_merges_only_font_variants_of_the_same_person(self):
         self.assertEqual(pi.canonical('髙瀬 真琴君'), '高瀬真琴')
@@ -46,8 +49,11 @@ class PersonIdsTest(unittest.TestCase):
         # 斉・斎・齋・齊は別の姓なので寄せない。
         names = ['斉木花', '斎木花', '齋木花', '齊木花']
         self.assertEqual(len({pi.canonical(n) for n in names}), 4)
-        self.assertEqual(self.ledger.resolve('斉木花')[0], '斉木花')
-        self.assertEqual(self.ledger.resolve('斎木花')[0], '斎木花')
+        self.assertIn('斉木花', self.ledger.persons)
+        self.assertIn('斎木花', self.ledger.persons)
+        # 在任が無いので、氏名が1人でも結ばない。
+        self.assertEqual(self.ledger.resolve('斉木花'), ('', pi.NO_TERM))
+        self.assertEqual(self.ledger.resolve('斎木花'), ('', pi.NO_TERM))
         self.assertFalse(self.ledger.is_split('斉木花'))
 
     def test_same_name_in_both_houses_is_split_and_only_primary_sources_decide(self):
@@ -131,9 +137,12 @@ class PersonIdsTest(unittest.TestCase):
             write(root / 'votes' / 'members.csv', ['議員ID', '回次', '議員名', '会派'], [])
             write(root / 'cabinet.csv', ['内閣名', '区分', '氏名', '役職', '就任日_西暦', '退任日_西暦'], [['架空内閣', '大臣政務官', '髙瀬 真琴', '架空政務官', '2019-01-01', '2021-01-01']])
             write(root / 'roster.csv', ROSTER_HEADER, [[r[h] for h in ROSTER_HEADER] for r in ROSTER])
+            # 在任がこの関与の日付を覆う人だけ結ぶ。在任の無い氏名だけでは結ばない。
+            write(root / 'persons.csv', pi.PERSON_HEADER, [['高瀬真琴', '高瀬真琴', 'たかせ まこと', '衆議院', '東京1', '', '衆議院', '2010-01-01', '2030-12-31', '架空の在任']])
             write(root / 'overrides.csv', pi.OVERRIDES_HEADER, [['閣法-151-9', URL + '1', '山川誠（衆・福島2）', 'https://example.test/member/1']])
-            rows, _ = ai.build(root / 'collect', root / 'stance', root / 'votes', root / 'cabinet.csv', roster_csv=root / 'roster.csv', overrides_csv=root / 'overrides.csv')
-            plain, _ = ai.build(root / 'collect', root / 'stance', root / 'votes', root / 'cabinet.csv', roster_csv=root / 'roster.csv')
+            built = dict(roster_csv=root / 'roster.csv', persons_csv=root / 'persons.csv')
+            rows, _ = ai.build(root / 'collect', root / 'stance', root / 'votes', root / 'cabinet.csv', overrides_csv=root / 'overrides.csv', **built)
+            plain, _ = ai.build(root / 'collect', root / 'stance', root / 'votes', root / 'cabinet.csv', **built)
         # 会議の院が衆議院でも、対応表に載せた行だけが人物IDに結ばれる。
         self.assertEqual([r['人物ID'] for r in plain], ['', '', '高瀬真琴'])
         self.assertEqual([r['人物ID'] for r in rows], ['山川誠（衆・福島2）', '', '高瀬真琴'])
@@ -194,7 +203,9 @@ class StablePersonIdsTest(unittest.TestCase):
         self.assertTrue(later.is_split('山川誠'))
         # 名簿だけから作ると分離が消える（だから前の台帳を引き継ぐ）。
         alone = pi.build_ledger(later_roster)
-        self.assertEqual(alone.resolve('山川誠', 'L1', URL + '1')[0], '山川誠')
+        self.assertIn('山川誠', alone.persons)
+        self.assertNotIn('山川誠（衆・福島2）', alone.persons)
+        self.assertEqual(alone.resolve('山川誠', 'L1', URL + '1'), ('', pi.NO_TERM))
 
     def test_existing_id_is_kept_and_new_namesake_gets_a_qualified_id(self):
         first = pi.build_ledger([ROSTER[0]])
@@ -311,6 +322,8 @@ class TypeScriptParityTest(unittest.TestCase):
         self.assertEqual(pairs, pi.VARIANTS)
         self.assertIn(pi.FOOTNOTE_MARKS.pattern, ts)
         self.assertEqual(re.search(r"HONORIFICS = \[(.*?)\]", ts).group(1).replace("'", '').replace(' ', '').split(','), list(ai.HONORIFICS))
+        for name in ("UNRESOLVED", "OUTSIDE_TERM", "OUTSIDE_HOUSE", "AMBIGUOUS", "NOT_IN_LEDGER", "NO_TERM"):
+            self.assertIn(f"export const {name} = '{getattr(pi, name)}'", ts)
 
 
 if __name__ == '__main__':
@@ -371,3 +384,158 @@ class EmptyRowTest(unittest.TestCase):
             rows = list(csv.DictReader(f))
         blank = [i + 2 for i, r in enumerate(rows) if not (r.get("人物ID") or "").strip()]
         self.assertEqual(blank, [], f"persons.csv に人物IDの空の行があります（行番号 {blank}）")
+
+
+class TermLinkTest(unittest.TestCase):
+    """同姓同名は氏名だけでは結ばない。在任期間（在任に院があれば院も）で、その日付に在任していた1人だけに結ぶ。"""
+
+    def people(self):
+        early = pi.Person("青木蓮（衆・東京1）", "青木蓮", house="衆議院", district="東京1",
+                          terms=[pi.OfficeTerm("1990-01-01", "1996-12-31", "衆議院")])
+        late = pi.Person("青木蓮（参・比例）", "青木蓮", house="参議院", district="比例",
+                         terms=[pi.OfficeTerm("2010-01-01", "2016-12-31", "参議院")])
+        return early, late
+
+    def test_nonoverlapping_terms_link_only_the_person_in_office(self):
+        early, late = self.people()
+        for candidates in ((early, late), (late, early)):
+            pid, why = pi.link_person(list(candidates), on="1992-06-01")
+            self.assertEqual((pid, why), (early.id, ""))
+            pid, why = pi.link_person(list(candidates), on="2012-06-01")
+            self.assertEqual((pid, why), (late.id, ""))
+            pid, why = pi.link_person(list(candidates), on="2000-06-01")
+            self.assertEqual(pid, "")
+            self.assertEqual(why, pi.OUTSIDE_TERM)
+            self.assertTrue(why.startswith("未結合"))
+
+    def test_two_candidates_in_office_are_not_given_to_the_first(self):
+        early, late = self.people()
+        overlap = pi.Person(early.id, early.name, house=early.house, district=early.district,
+                            terms=[pi.OfficeTerm("2010-01-01", "2016-12-31", "衆議院")])
+        for candidates in ((overlap, late), (late, overlap)):
+            pid, why = pi.link_person(list(candidates), on="2012-06-01")
+            self.assertEqual(pid, "")
+            self.assertEqual(why, pi.AMBIGUOUS)
+        pid, why = pi.link_person([late, overlap], on="2012-06-01", house="参議院")
+        self.assertEqual((pid, why), (late.id, ""))
+        pid, why = pi.link_person([early], on="1992-06-01", house="参議院")
+        self.assertEqual((pid, why), ("", pi.OUTSIDE_HOUSE))
+
+    def test_a_person_without_a_term_does_not_lose_to_the_one_who_has_one(self):
+        early, _ = self.people()
+        unknown = pi.Person("青木蓮", "青木蓮")
+        pid, why = pi.link_person([unknown, early], on="1992-06-01")
+        self.assertEqual(pid, "")
+        self.assertEqual(why, pi.AMBIGUOUS)
+        # 在任の記録が無い人は、氏名が1人でも結ばない。今の院では分けない。
+        bare = [pi.Person("青木蓮（衆・東京1）", "青木蓮", house="衆議院"), pi.Person("青木蓮（参・比例）", "青木蓮", house="参議院")]
+        self.assertEqual(pi.link_person(bare, on="1992-06-01"), ("", pi.UNRESOLVED))
+        self.assertEqual(pi.link_person(list(reversed(bare))), ("", pi.UNRESOLVED))
+        self.assertEqual(pi.link_person([bare[0]], on="1992-06-01"), ("", pi.NO_TERM))
+
+    def test_date_outside_the_only_term_stays_unlinked(self):
+        early, _ = self.people()
+        pid, why = pi.link_person([early], on="2000-06-01")
+        self.assertEqual((pid, why), ("", pi.OUTSIDE_TERM))
+
+    def test_annotate_keeps_an_outside_term_unlinked_with_a_reason(self):
+        early, late = self.people()
+        ledger = pi.Ledger()
+        pi._add(ledger, early)
+        pi._add(ledger, late)
+        rows = [inv("L1", "青木蓮", "衆議院", date="1992-06-01"), inv("L1", "青木蓮", "参議院", date="2000-06-01")]
+        _, out = ai.annotate(rows, ledger, ai.Cabinet([]))
+        self.assertEqual((out[0]["人物ID"], out[0]["算入"], out[0]["除外理由"]), (early.id, "はい", ""))
+        self.assertEqual(out[1]["人物ID"], "")
+        self.assertEqual(out[1]["算入"], "いいえ")
+        self.assertEqual(out[1]["除外理由"], pi.OUTSIDE_TERM)
+
+    def test_upper_house_vote_is_not_linked_to_a_lower_house_only_person(self):
+        # 台帳にあるのは衆議院の在任だけ。参議院の票は、氏名が1人でもその人には結ばない。
+        person = pi.Person("架空蓮（衆・東京1）", "架空蓮", house="衆議院", terms=[pi.OfficeTerm("1990-01-01", "1996-12-31", "衆議院")])
+        pid, why = pi.link_person([person], on="1992-06-01", house="参議院")
+        self.assertEqual(pid, "")
+        self.assertTrue(why.startswith("未結合"))
+        bare = pi.Person("架空蓮（衆・東京1）", "架空蓮", house="衆議院")
+        pid, why = pi.link_person([bare], on="1992-06-01", house="参議院")
+        self.assertEqual(pid, "")
+        self.assertTrue(why.startswith("未結合"))
+
+    def test_a_person_who_moved_houses_links_by_the_overlapping_term(self):
+        mover = pi.Person("架空蓮", "架空蓮", house="参議院", terms=[
+            pi.OfficeTerm("1990-01-01", "1996-12-31", "衆議院"),
+            pi.OfficeTerm("2010-01-01", "2016-12-31", "参議院"),
+        ])
+        self.assertEqual(pi.link_person([mover], on="1992-06-01", house="衆議院"), (mover.id, ""))
+        self.assertEqual(pi.link_person([mover], on="2012-06-01", house="参議院"), (mover.id, ""))
+        self.assertEqual(pi.link_person([mover], on="2012-06-01", house="衆議院")[0], "")
+        self.assertEqual(pi.link_person([mover], on="2000-06-01", house="参議院")[0], "")
+
+
+class OfficeTermSourceTest(unittest.TestCase):
+    """在任の列は名簿から作る。氏名が同じだけの別院の人には、参議院の在任を付けない。"""
+
+    def test_session_and_statutory_terms_cite_their_roster_and_skip_the_other_house(self):
+        rows = [
+            {"人物ID": "架空蓮（衆・東京1）", "氏名": "架空蓮", "院": "衆議院"},
+            {"人物ID": "架空菊", "氏名": "架空菊", "院": "参議院"},
+            {"人物ID": "架空空", "氏名": "架空空", "院": ""},
+        ]
+        members = [
+            {"回次": "1", "議員名": "架空蓮", "議員ID": "1", "会派": ""},
+            {"回次": "1", "議員名": "架空菊", "議員ID": "2", "会派": ""},
+            {"回次": "2", "議員名": "架空菊", "議員ID": "2", "会派": ""},
+            {"回次": "1", "議員名": "架空空", "議員ID": "3", "会派": ""},
+        ]
+        votes = [
+            {"回次": "1", "投票日": "2000-01-10"}, {"回次": "1", "投票日": "2000-06-01"},
+            {"回次": "2", "投票日": "2001-03-01"},
+        ]
+        roster = [{"院": "参議院", "氏名": "架空菊", "任期満了": "令和10年7月25日"}, {"院": "衆議院", "氏名": "架空蓮", "任期満了": ""}]
+        cabinet = [{"氏名": "架空蓮", "就任日_西暦": "2019-01-01", "退任日_西暦": "2021-01-01"}]
+        pi.fill_term_columns(rows, members, votes, roster, cabinet)
+        shu, san, bare = rows
+        self.assertEqual(shu["在任の院"], "")
+        self.assertEqual(shu["在任開始"], "2019-01-01")
+        self.assertEqual(shu["在任終了"], "2020-12-31")
+        self.assertIn("cabinet.csv", shu["在任の出典"])
+        self.assertNotIn("members.csv", shu["在任の出典"])
+        self.assertEqual(san["在任の院"], "参議院;参議院")
+        self.assertEqual(san["在任開始"], "2000-01-10;2022-07-26")
+        self.assertEqual(san["在任終了"], "2001-03-01;2028-07-25")
+        self.assertIn("members.csv", san["在任の出典"].split(";")[0])
+        self.assertIn("current.csv", san["在任の出典"].split(";")[1])
+        self.assertEqual(bare["在任開始"], "2000-01-10")
+        self.assertEqual(bare["在任の院"], "参議院")
+        self.assertIn("members.csv", bare["在任の出典"])
+
+
+class OtherHouseNameLinkTest(unittest.TestCase):
+    """実在の参議院投票名簿を、今の人物台帳へ院を指定して結んだ件数。氏名は出さない。"""
+
+    def test_member_names_are_not_linked_to_the_other_house_by_name_alone(self):
+        ledger = pi.Ledger()
+        pi.load_previous(ledger, pi.read_csv(pi.OUT_DIR / "persons.csv"))
+        names = {pi.canonical(r["議員名"]) for r in pi.read_csv(pi.ROOT / "data/acquired/sangiin-votes/members.csv") if r.get("議員名")}
+        cross = unlinked = 0
+        for name in names:
+            pid, _why = ledger.resolve(name, house="参議院")
+            person = ledger.persons.get(pid)
+            if person is not None and person.house == "衆議院":
+                cross += 1
+            if not pid:
+                unlinked += 1
+        # 氏名だけで別の院（台帳の今の院が衆議院）に結ばれる件数。在任で結べば 0。未結合は在任を付けられなかった名前。
+        self.assertEqual((cross, unlinked), (0, 29))
+
+    def test_term_columns_cite_the_roster_they_came_from(self):
+        with (pi.OUT_DIR / "persons.csv").open(encoding="utf-8", newline="") as f:
+            rows = list(csv.DictReader(f))
+        self.assertIn("在任の出典", rows[0])
+        cited = [r for r in rows if (r.get("在任開始") or "").strip()]
+        self.assertGreater(len(cited), 0)
+        for row in cited:
+            starts = [s for s in row["在任開始"].split(";") if s]
+            sources = [s for s in row["在任の出典"].split(";") if s]
+            self.assertEqual(len(sources), len(starts))
+            self.assertTrue(all(s.startswith("data/acquired/") for s in sources))

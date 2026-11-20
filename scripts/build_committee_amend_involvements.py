@@ -7,8 +7,8 @@
   （法律ID・院・氏名・系統A・系統B。両方が「確認」のときだけ採用）から読む。否決・採否不明も記録は残すが算入=いいえ。
 - 提出者は、委員長が読み上げた筆頭提出者と、趣旨説明をした提出者代表。「外N名」の残りは会議録に名前が出ないので足さない。
 - 委員長提出の修正案は、その委員会の委員長の名前（出席委員の役職欄）を提出者にする。
-- 足すのは、関与の一覧（involvements.csv / involvements-auto.csv）に既にある法律だけ。人物IDは台帳で1人に決まるときだけ付け、
-  複数に当たる同姓同名は算入=いいえ。すでに同じ法律・同じ人・同じ行動の行があれば足さない。
+- 足すのは、関与の一覧（involvements.csv / involvements-auto.csv）に既にある法律だけ。人物IDは氏名と、その日付が在任期間に入るかで1人に決まるときだけ付け、
+  在任の外や候補が2人以上は算入=いいえ。すでに同じ法律・同じ人・同じ行動の行があれば足さない。
 出力：data/derived/allocation-v1/involvements-auto.csv に追記する（前回この表が足した行は先に外すので、何度流しても同じ。
   順番は build_auto_involvements.py → このスクリプト → scripts/build_opposing_votes.py）。
 使い方：python3 scripts/build_committee_amend_involvements.py
@@ -18,7 +18,6 @@ from __future__ import annotations
 import argparse
 import csv
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,7 +25,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.allocation_involvements import HEADER  # noqa: E402
-from scripts.person_ids import UNRESOLVED, canonical  # noqa: E402
+from scripts.person_ids import canonical, resolve_person  # noqa: E402
 
 DERIVED = ROOT / 'data/derived'
 AMENDMENTS = ROOT / 'data/acquired/committee-deliberation/amendments.csv'
@@ -43,17 +42,10 @@ def _read(path: Path) -> list[dict]:
 
 
 def build() -> list[dict]:
-    ids: dict[str, set[str]] = defaultdict(set)
-    for p in _read(PERSONS):
-        if p['人物ID']:
-            for name in [p['氏名'], *filter(None, p.get('別表記', '').split(';'))]:
-                ids[canonical(name)].add(p['人物ID'])
+    person_rows = _read(PERSONS)
 
-    def person(name: str) -> tuple[str, str]:
-        found = ids.get(canonical(name), set())
-        if len(found) > 1:
-            return '', UNRESOLVED
-        return (next(iter(found)) if found else canonical(name)), ''
+    def person(name: str, on: str = '', house: str = '') -> tuple[str, str]:
+        return resolve_person(person_rows, name, on=on, house=house, missing='canonical')
 
     covered = set()
     existing = set()
@@ -85,7 +77,7 @@ def build() -> list[dict]:
             rank = (0 if adopted else 1 if a['修正案の結果'] == '否決' else 2, a['日付'])
             if key in best and best[key][0] <= rank:
                 continue
-            pid, unresolved = person(name)
+            pid, unresolved = person(name, a.get('日付') or '', a.get('院') or '')
             ca, cb = confirmed.get((a['法律ID'], a['院'], canonical(name)), ('', ''))
             reason = why or ('' if unresolved or (ca == '確認' and cb == '確認') else '会議録から機械で抽出した候補（個人への帰属を2系統で確認するまで数えない。AGENTS.md）')
             best[key] = (rank, {'法律ID': a['法律ID'], '題名': a['題名'], '氏名': name, '氏名_原表記': name, '院': a['院'], '行動': 'amend',

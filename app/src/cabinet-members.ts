@@ -23,7 +23,7 @@ const NOT_MINISTER = /副長官|法制局長官/;
  * 成立法の行（enacted.csv の1行）→ 提出時の閣僚の氏名と、同じ答えになる単位の鍵（回次か付託日。呼ぶ側のキャッシュ用）。
  * 決められない法律は key が空で names も空。enactedRows は会期（付託日の最初と最後）を数えるための全行。
  */
-export function cabinetForBill(enactedRows: readonly Row[], cabinetCsvRows: readonly Row[]): (bill: Row) => { key: string; names: string[] } {
+export function cabinetForBill(enactedRows: readonly Row[], cabinetCsvRows: readonly Row[]): (bill: Row) => { key: string; names: string[]; on: string } {
   const ministers = cabinetCsvRows.filter(r => r['区分'] === '閣僚' && r['就任日_西暦'] && !NOT_MINISTER.test(r['役職']));
   const servingOn = (date: string, rows: readonly Row[]) => rows.filter(r => r['就任日_西暦'] <= date && (!r['退任日_西暦'] || date < r['退任日_西暦']));
   // 氏名は字体のゆれも寄せてから比べる（寄せないと、同じ人が別人になり、通して在任した閣僚が落ちる）。出す名前は名簿の表記（印と空白を取ったもの）。
@@ -44,7 +44,7 @@ export function cabinetForBill(enactedRows: readonly Row[], cabinetCsvRows: read
     const stable = !!x && !!pmOn(x.first) && pmOn(x.first) === pmOn(x.last);
     const referred = referredOn(bill);
     const key = stable ? `回次:${bill['提出回次']}` : x && referred && pmOn(referred) && pmOn(referred) === pmOn(x.first) ? `付託日:${referred}` : '';
-    if (!key) return { key, names: [] };
+    if (!key) return { key, names: [], on: '' };
     let names = cache.get(key);
     if (!names) {
       const first = servingNames(stable ? x!.first : referred);
@@ -52,6 +52,6 @@ export function cabinetForBill(enactedRows: readonly Row[], cabinetCsvRows: read
       names = [...first].filter(([k]) => last.has(k)).map(([, name]) => name);
       cache.set(key, names);
     }
-    return { key, names };
+    return { key, names, on: stable ? x!.first : referred };
   };
 }

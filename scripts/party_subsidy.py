@@ -11,7 +11,8 @@
 読み手の結果は .local/party-subsidy/line-{a,b,c}/<PDF のファイル名の幹>.json（形は docs/政党交付金の使途等報告書.md）。
 
 個人の扱い：事務所の住所・会計責任者・事務担当者は読まず、出力にも残さない。
-代表者の氏名は、人物ID（議員）に結べたときだけ出す。結べなければ「（未照合）」。
+代表者の氏名は、人物ID（議員）に結べたときだけ出す。結びは scripts/person_ids.py の resolve_person。
+結べなければ「（未照合）」にし、理由を結びの確度に残す。
 """
 from __future__ import annotations
 
@@ -25,6 +26,10 @@ import unicodedata
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.person_ids import resolve_person  # noqa: E402
 INDEX = ROOT / "data/acquired/political-funds/index.csv"
 PERSONS = ROOT / "data/derived/person-ids/persons.csv"
 WORK = ROOT / ".local/party-subsidy"
@@ -163,22 +168,15 @@ def district_of(branch_name: str):
     return f"{m.group(1)}{n}" if n else None
 
 
-def load_persons() -> dict[str, list[dict]]:
-    by: dict[str, list[dict]] = {}
+def load_person_rows() -> list[dict]:
     with PERSONS.open(encoding="utf-8") as fh:
-        for r in csv.DictReader(fh):
-            if not r.get("人物ID"):
-                continue
-            for n in {r["氏名"], *(r.get("別表記") or "").split("|")}:
-                if n:
-                    by.setdefault(norm_name(n), []).append(r)
-    return by
+        return [r for r in csv.DictReader(fh) if r.get("人物ID")]
 
 
 def cmd_build(args) -> None:
     year = YEAR_OF_PAGE[args.page]
     rows = {stem_of(r["PDF_URL"]): r for r in rows_for(args.page)}
-    persons = load_persons()
+    person_rows = load_person_rows()
     out, stats = [], {}
     for stem, r in rows.items():
         got = [_read(WORK / line / f"{stem}.json") for line in ("line-a", "line-b", "line-c")]
@@ -193,10 +191,10 @@ def cmd_build(args) -> None:
             out.append({"年分": year, "名称": r["団体名"], "採用": how, "PDF_URL": r["PDF_URL"]})
             continue
         # 代表者 → 人物ID（氏名が1人に決まるときだけ）。支部の名称は索引の名前と読み手の名称が一致したときだけ使う
-        hit = persons.get(c["代表者"], [])
-        pid = hit[0]["人物ID"] if len(hit) == 1 else ""
+        pid, why = resolve_person(person_rows, c["代表者"], on=f"{year}-01-01", missing="blank")
+        matched = next((p for p in person_rows if p["人物ID"] == pid), None) if pid else None
         dist = district_of(r["団体名"])
-        sure = "氏名と選挙区が一致" if pid and dist and hit[0]["選挙区"] == dist else ("氏名のみ一致" if pid else "")
+        sure = why if why else ("氏名と選挙区が一致" if dist and matched and matched.get("選挙区") == dist else "氏名のみ一致")
         out.append({
             "年分": year, "名称": r["団体名"], "区分": c["区分"], "代表者": c["代表者"] if pid else "（未照合）", "人物ID": pid, "結びの確度": sure,
             **{k: c[k] for k in NUMS},

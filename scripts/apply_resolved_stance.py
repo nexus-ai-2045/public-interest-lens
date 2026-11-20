@@ -40,7 +40,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from allocation_involvements import HEADER, Cabinet, find_plenary_votes, load_aliases, normalize_name, read_csv  # noqa: E402
-from person_ids import canonical  # noqa: E402
+from person_ids import Person, canonical, link_person  # noqa: E402
 
 REPLACEABLE = ('2系統の立場が一致しない', '立場の判定に本人の記録が無い', '立場の判定ファイルが無い')
 DATE = re.compile(r"/txt/\d{9}X\d{3}(\d{8})/")
@@ -94,7 +94,10 @@ def apply(inv: list[dict], resolved: list[dict], votes_dir: Path, aliases: dict[
     for r in resolved:
         if r['法案ID'] in laws and r['区分'] == '議員' and r['立場'] in ('支持', '反対', '中立'):
             if canonical(norm(r['氏名'])) in split:
-                c['使わない:同姓同名で人物を決められない'] += 1
+                # 在任の無い同姓同名を2人渡す。link_person が未結合の理由を返す（並びの先頭には寄せない）。
+                _, why = link_person([Person(f'{canonical(norm(r["氏名"]))}:0', canonical(norm(r['氏名']))),
+                                      Person(f'{canonical(norm(r["氏名"]))}:1', canonical(norm(r['氏名'])))])
+                c[f'使わない:{why}'] += 1
                 continue
             res[(r['法案ID'], norm(r['氏名']))] = r
     out = []

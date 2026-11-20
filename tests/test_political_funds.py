@@ -128,10 +128,11 @@ class CompareAndLinkTests(unittest.TestCase):
         self.assertEqual(sorted(r["照合"] for r in disagreed), ["Aだけ", "Bだけ"])
 
     def test_link_needs_a_single_candidate(self):
-        persons = [{"人物ID": "山田一郎", "氏名": "山田一郎"}, {"人物ID": "鈴木（衆）", "氏名": "鈴木二郎"}, {"人物ID": "鈴木（参）", "氏名": "鈴木二郎"}]
+        persons = [{"人物ID": "山田一郎", "氏名": "山田一郎", "在任開始": "2010-01-01", "在任終了": "2030-12-31", "在任の院": ""},
+                   {"人物ID": "鈴木（衆）", "氏名": "鈴木二郎"}, {"人物ID": "鈴木（参）", "氏名": "鈴木二郎"}]
         index = {"u1": {"関係議員名": "山田 一郎", "団体名": "一郎会"}, "u2": {"関係議員名": "鈴木二郎", "団体名": "二郎会"}}
-        rows = pf.link([{"sha256": "s1", "PDF_URL": "u1", "相手方": "日本テスト医師連盟", "相手方種別": "政治団体"},
-                        {"sha256": "s2", "PDF_URL": "u2", "相手方": "宗教法人テスト教団", "相手方種別": "法人その他の団体"}], index, persons,
+        rows = pf.link([{"sha256": "s1", "PDF_URL": "u1", "年分": "2020", "相手方": "日本テスト医師連盟", "相手方種別": "政治団体"},
+                        {"sha256": "s2", "PDF_URL": "u2", "年分": "2020", "相手方": "宗教法人テスト教団", "相手方種別": "法人その他の団体"}], index, persons,
                        {"s1": "山田一郎", "s2": "鈴木二郎"},
                        cover_a={"s1": "山田 一郎", "s2": "鈴木 二郎"})
         self.assertEqual([r["人物ID"] for r in rows], ["山田一郎", ""])
@@ -146,9 +147,9 @@ class CompareAndLinkTests(unittest.TestCase):
         self.assertEqual(org_key(""), "")
 
     def test_link_needs_both_readers_to_agree_on_the_member(self):
-        persons = [{"人物ID": "山田一郎", "氏名": "山田一郎"}]
+        persons = [{"人物ID": "山田一郎", "氏名": "山田一郎", "在任開始": "2010-01-01", "在任終了": "2030-12-31", "在任の院": ""}]
         index = {"u1": {"関係議員名": "山田一郎", "団体名": "一郎会"}}
-        row = {"sha256": "s1", "PDF_URL": "u1", "相手方": "株式会社A", "相手方種別": "法人その他の団体"}
+        row = {"sha256": "s1", "PDF_URL": "u1", "年分": "2020", "相手方": "株式会社A", "相手方種別": "法人その他の団体"}
         got = [pf.link([row], index, persons, att, cover_a={"s1": "山田一郎"})[0]
                for att in ({"s1": "山田一郎"}, {"s1": "佐藤三郎"}, {})]
         self.assertEqual([r["人物ID"] for r in got], ["山田一郎", "", ""])
@@ -227,8 +228,9 @@ class CompareAndLinkTests(unittest.TestCase):
                 self.assertNotIn(linked["帰属の照合"], pf.LINKED_CHECKS)
 
     def test_link_accepts_both_readers_only_with_a_unique_person(self):
-        rows = [{"PDF_URL": "report", "sha256": "report-hash"}]
-        persons = [{"人物ID": "person-1", "氏名": "山田一郎", "別表記": ""}]
+        # 年分の元日がその人の在任に入るときだけ結ぶ。在任が無ければ、氏名が1人でも結ばない。
+        rows = [{"PDF_URL": "report", "sha256": "report-hash", "年分": "2020"}]
+        persons = [{"人物ID": "person-1", "氏名": "山田一郎", "別表記": "", "在任開始": "2010-01-01", "在任終了": "2030-12-31", "在任の院": ""}]
         for index in ({}, {"report": {"関係議員名": "山田一郎"}}):
             with self.subTest(index=index):
                 linked = pf.link(

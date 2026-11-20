@@ -8,8 +8,8 @@
   data/acquired/sangiin-votes/ballots/ballots_<回次>.csv  投票ID・議員ID・賛否（Y/N）
   data/acquired/sangiin-votes/members.csv         回次・議員ID → 議員名
   data/derived/person-ids/persons.csv             人物ID の台帳（氏名・別表記）
-人物ID の決め方は scripts/person_ids.py の Ledger.resolve と同じ：台帳で1人に決まればその人物ID、台帳に無ければ正規化した氏名、
-同姓同名で複数いれば決めずに「算入=いいえ」にする（院では決めない）。
+人物ID の決め方は scripts/person_ids.py の resolve_person：氏名と、その投票日が在任期間に入るか。1人に決まればその人物ID、
+台帳に無ければ正規化した氏名、在任の外や候補が2人以上なら決めずに「算入=いいえ」にする（今の院だけでは決めない）。
 
 出力：data/derived/allocation-v1/opposing.csv
 使い方：python3 scripts/build_opposing_votes.py
@@ -19,14 +19,13 @@ from __future__ import annotations
 import argparse
 import csv
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.person_ids import UNRESOLVED, canonical  # noqa: E402
+from scripts.person_ids import resolve_person  # noqa: E402
 
 VOTES = ROOT / "data/derived/allocation-v1/votes.csv"
 AUTO_VOTES = ROOT / "data/derived/allocation-v1/votes-auto.csv"  # scripts/build_auto_involvements.py
@@ -43,12 +42,7 @@ def _read(path: Path) -> list[dict[str, str]]:
 
 
 def build() -> list[dict[str, str]]:
-    ids: dict[str, set[str]] = defaultdict(set)
-    for p in _read(PERSONS):
-        if not p["人物ID"]:
-            continue
-        for name in [p["氏名"], *filter(None, p.get("別表記", "").split(";"))]:
-            ids[canonical(name)].add(p["人物ID"])
+    person_rows = _read(PERSONS)
     names = {(m["回次"], m["議員ID"]): m["議員名"] for m in _read(MEMBERS)}
     ballots: dict[str, list[dict[str, str]]] = {}
     out = []
@@ -63,8 +57,7 @@ def build() -> list[dict[str, str]]:
             name = names.get((session, b["議員ID"]))
             if not name:
                 raise ValueError(f"議員名がありません: {v['投票ID']} 議員ID={b['議員ID']}")
-            found = ids.get(canonical(name), set())
-            pid, why = (next(iter(found)) if found else canonical(name), "") if len(found) <= 1 else ("", UNRESOLVED)
+            pid, why = resolve_person(person_rows, name, on=v.get("日付") or "", house="参議院", missing="canonical")
             out.append({"法律ID": v["法律ID"], "投票ID": v["投票ID"], "氏名": name, "人物ID": pid, "証拠URL": v["URL"],
                         "算入": "いいえ" if why else "はい", "除外理由": why})
     return out
