@@ -3,7 +3,9 @@ D=sys.argv[1]
 rows=list(csv.DictReader(open(os.path.join(D,'enacted.csv'))))
 cache_p=os.path.join(D,'cache.jsonl'); cache={}
 if os.path.exists(cache_p):
-    for l in open(cache_p): o=json.loads(l); cache[o['k']]=o['v']
+    for l in open(cache_p):
+        o=json.loads(l)
+        if '_err' not in o['v']: cache[o['k']]=o['v']  # 一時的な失敗は次の実行で取り直す
 cf=open(cache_p,'a')
 def get(url):
     if url in cache: return cache[url]
@@ -16,6 +18,7 @@ def get(url):
             time.sleep(2**i); v={'_err':str(e)}
         except Exception as e:
             time.sleep(2**i); v={'_err':str(e)}
+    if '_err' in v: return v
     cache[url]=v; cf.write(json.dumps({'k':url,'v':v},ensure_ascii=False)+'\n'); cf.flush(); time.sleep(0.15)
     return v
 ERA={'平成':'4','令和':'5'}

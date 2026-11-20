@@ -34,7 +34,7 @@ for i in s1ids:
             cur=tri.get(i,{}).get('種類','') if it=='類型' else normE(econ.get(i,{}).get('区分',''))
             if cur: gold[it][i]=(cur,cur,'合格')
 # 本文
-cache_p=S+'honbun.json'; hc=json.load(open(cache_p))
+cache_p=S+'honbun.json'; hc=json.load(open(cache_p)) if os.path.exists(cache_p) else {}
 TC={'閣法':'09','衆法':'05','参法':'06'}
 def honbun(i):
     if i in hc: return hc[i]
