@@ -13,7 +13,7 @@
 - コミットの名義は nexus_ai（nexus-ai-2045 の GitHub noreply）。push の前に `python3 scripts/preflight.py` を通す（repo-preflight をこのリポジトリの隣に clone しておく）。
 - PR 本文・issue・コミットに、会話の場のリンク、セッションの行、`Co-Authored-By` 行を入れない。PR の題名と見出しは日本語。
 - 本番配信は、所有者の「リリース」の合図で1回だけ。手順は docs/引き継ぎ.md 1章。
-- テストは CI と同じ順で回す：`cd app && npm ci`、配布物の生成（`.github/workflows/verify.yml` の手順）、`python3 scripts/generate_artifacts.py`、`python3 scripts/run_tests_parallel.py`。生成物を作らずに `pytest` を全部回すと、`app/public/distribution/*.json` が無くて失敗・エラーが出る（2026-11-20 に確認。CI の順では 1,517件・失敗0）。
+- テストは `python3 scripts/local_verify.py` で回す（`.github/workflows/verify.yml` の `run:` をそのまま読むので、CI と順番が食い違わない）。生成物を作らずに `pytest` を全部回すと、`app/public/distribution/*.json` が無くて失敗・エラーが出る（2026-11-20 に確認）。
 
 ## 共通の指示
 
@@ -32,6 +32,23 @@
 - 新規 GitHub リポジトリは private を既定とする。
 - 完了前に `npm test`、`npm run build`、`npm audit --audit-level=moderate` を実行する。
 - 外部資料登録処理を変更した場合は `python -m unittest discover -s tests -v` も実行する。
+
+## ルールと、それを強制する仕組み
+
+くり返したミスは、文書ではなく検査で止める。訂正されたら、ここに行を足し、同じ変更の中で検査を足す。強制が「なし」の行は、判断が要るもの。
+
+| ルール | 強制する仕組み | 落ちる場所 |
+|---|---|---|
+| コミットの名義は nexus_ai（GitHub noreply）、個人名義を出さない | repo-preflight の `local_identity_guard.py`（commit-msg・pre-commit・pre-push のフック）と preflight の workflow | 手元のコミット・push、CI |
+| コミットにセッション行・共著者行を入れない | `scripts/strip_commit_trace.py`（prepare-commit-msg で自動で外す）と repo-preflight の名義検査 | 手元のコミット、CI |
+| PR の題名と本文の見出しは日本語 | `scripts/check_pr_text.py`（`.github/workflows/pr-text.yml`）、dependabot は `commit-message.prefix` で日本語から始める | CI。手元は `python3 scripts/check_pr_text.py --title "…" --body-file 本文.md` |
+| scripts の入口は `--help` を解釈する（渡すと本番の処理が走るのを防ぐ） | `tests/test_scripts_parse_help.py`（例外の一覧は持たない） | pytest |
+| 試験の skip は一覧にあるものだけ | `tests/allowed_skips.txt` と `tests/test_run_tests_parallel_skips.py` | pytest |
+| 固定定数・撤回した方式・完了の条件が文書と実装でそろう | `scripts/check_design_consistency.py --strict` | CI の verify |
+| CI と同じ順で検査する | `scripts/local_verify.py`（verify.yml を読む） | 手元 |
+| 本番配信は所有者の「リリース」で1回 | `vercel.json` の `git.deploymentEnabled: false`（Git からの自動配信を止めてある） | 配信されない |
+| open PR は8本まで、同じ作業の PR を2本出さない | なし（同じ題名の PR が #257/#260、#259/#262 で2本ずつ出た。強制のしかたは所有者の判断待ち） | — |
+| PR 本文に道具の自動フッターを残さない（進め方 3章10） | なし（直近40本中17本に残る。サーバーが付け直すかを確かめてから決める） | — |
 
 ## 個人名義を出さない（絶対）
 
