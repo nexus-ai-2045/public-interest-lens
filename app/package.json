@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit -p tsconfig.app.json && vite build",
+    "build": "tsc --noEmit -p tsconfig.app.json && vite build && python3 ../scripts/check_public_pii.py dist",
     "pretest": "python3 ../scripts/generate_artifacts.py",
-    "test": "vitest run src",
+    "test": "python3 ../scripts/check_public_pii.py public && vitest run src",
     "test:e2e": "playwright test",
     "test:e2e:public": "playwright test -c playwright.public.config.ts",
     "preview:check": "node scripts/local-preview-check.mjs",
