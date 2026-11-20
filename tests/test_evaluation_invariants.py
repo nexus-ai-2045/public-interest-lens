@@ -1,8 +1,8 @@
 """評価エンジンの数え方の不変条件（性質テスト）。
 
 hypothesis は依存に無いので、規則の直積・固定種の乱数・現行データ照合で網羅する。
-挙動は変えない。発見した反例の修正は別 PR（docs/reports/評価エンジン_不変条件と性質テスト_2026-11-20.md）。
-C2 の根本直しは別 PR。その PR が expectedFailure を通常の試験に変える。
+C1・C3 の修正は別 PR（docs/reports/評価エンジン_不変条件と性質テスト_2026-11-20.md）。
+C2 は額の種類から印を出す関数で直し、expectedFailure を通常の試験にした。保存済みの台帳は再生成しない。
 """
 from __future__ import annotations
 
@@ -13,8 +13,16 @@ from itertools import product
 from pathlib import Path
 
 from scripts.evaluation_rules import (
+    CERTAINTY_MARKS,
+    KIND_CONFIRMED,
+    KIND_FISCAL,
+    KIND_NONE,
+    KIND_REFERENCE,
+    STAGE_TO_MARK,
     VERDICT_FAIL,
     amount_demoted,
+    amount_kind_of,
+    certainty_mark,
     is_demoted,
     narrow_whole_economy,
     sign_conflict,
@@ -131,20 +139,19 @@ class DataInvariantsTest(unittest.TestCase):
 
 
 class CounterexampleC2DesiredPropertyTest(unittest.TestCase):
-    """C2：なぜ壊れるか — site_values が outcomes の確かさ（段階*）を優先し、参考額でも『参考』に正規化しない。
+    """C2：参考額の印は、outcomes の確かさ欄（段階語・代理の注記）ではなく額の種類から決める。"""
 
-    不具合があることを要求する試験は置かない。望ましい性質だけを expectedFailure で1本残す。
-    """
-
-    def _site(self, certainty: str):
+    def _site(self, certainty: str, *, result: str = "保留", stage: str = "", route: str = "市場",
+              amount: str = "", macro: bool = True):
         o = {
             "id": "閣法-0-0",
             "確かさ": certainty,
+            "段階": stage,
             "種類": "実質改正",
             "分野": "",
-            "結果": "保留",
-            "経路": "市場",
-            "損失または便益の額": "",
+            "結果": result,
+            "経路": route,
+            "損失または便益の額": amount,
         }
         m = {
             "結果": "額",
@@ -155,19 +162,86 @@ class CounterexampleC2DesiredPropertyTest(unittest.TestCase):
         src = {
             "agree": {},
             "tie": {},
-            "macro": {o["id"]: m},
+            "macro": {o["id"]: m} if macro else {},
             "econ": {},
             "field": {},
             "corr": {},
         }
         return site_values(o, src)
 
-    @unittest.expectedFailure  # 直しは別 PR。正規化が入ったら decorator を外す
+    def test_c2_reference_amount_mark_is_reference_for_every_non_mark(self) -> None:
+        # 原因は段階1だけの特別扱いではない。空でない outcomes の確かさが参考額の印を上書きしていた。
+        for word in ("段階1", "段階2", "段階3", "段階1・参考", "低（マクロ指標で代理）", "高（段階3）"):
+            v = self._site(word)
+            self.assertEqual(v["到達点"], "参考額（産業の付加価値の差）", word)
+            self.assertEqual(v["確かさ"], "参考", word)
+            self.assertIn(v["確かさ"], ADR0008_CERTAINTY, word)
+
     def test_c2_desired_reference_amount_certainty_is_adr0008_vocabulary(self) -> None:
         v = self._site("段階1")
         self.assertEqual(v["到達点"], "参考額（産業の付加価値の差）")
         self.assertEqual(v["確かさ"], "参考")
         self.assertIn(v["確かさ"], ADR0008_CERTAINTY)
+
+    def test_confirmed_amount_mark_follows_stage(self) -> None:
+        for stage, mark in STAGE_TO_MARK.items():
+            v = self._site(stage, result="額あり", stage=stage, route="市場（v2の後段）",
+                           amount="損失：中央値=1", macro=False)
+            self.assertEqual(v["到達点"], "額（個別の因果の鎖）", stage)
+            self.assertEqual(v["確かさ"], mark, stage)
+
+    def test_no_amount_does_not_keep_a_stage_word(self) -> None:
+        v = self._site("段階1", macro=False)
+        self.assertEqual(v["到達点"], "保留")
+        self.assertEqual(v["確かさ"], "")
+
+    def test_fiscal_amount_mark_is_high(self) -> None:
+        v = self._site("高", result="額あり", route="財政（税収見込み）", amount="1", macro=False)
+        self.assertEqual(v["到達点"], "国の収支の額（GDP とは別欄）")
+        self.assertEqual(v["確かさ"], "高")
+
+
+class CertaintyMarkVocabularyTest(unittest.TestCase):
+    """印は ADR 0008 の高・中・低・参考だけ。段階語は印にならない。"""
+
+    def test_amount_kind_follows_reach(self) -> None:
+        self.assertEqual(amount_kind_of("参考額（産業の付加価値の差）"), KIND_REFERENCE)
+        self.assertEqual(amount_kind_of("額（個別の因果の鎖）"), KIND_CONFIRMED)
+        self.assertEqual(amount_kind_of("国の収支の額（GDP とは別欄）"), KIND_FISCAL)
+        for reach in ("保留", "測定できない", "効果なし（定例）", "評価対象外", ""):
+            self.assertEqual(amount_kind_of(reach), KIND_NONE, reach)
+
+    def test_function_vocabulary_matches_adr_0008(self) -> None:
+        self.assertEqual(frozenset(CERTAINTY_MARKS), ADR0008_CERTAINTY)
+
+    def test_marks_stay_inside_adr_0008(self) -> None:
+        cases = [
+            (KIND_REFERENCE, "段階1", "参考"),
+            (KIND_REFERENCE, "段階2", "参考"),
+            (KIND_REFERENCE, "段階3", "参考"),
+            (KIND_REFERENCE, "", "参考"),
+            (KIND_CONFIRMED, "段階3", "高"),
+            (KIND_CONFIRMED, "段階2", "中"),
+            (KIND_CONFIRMED, "段階1", "低"),
+            (KIND_FISCAL, "", "高"),
+            (KIND_FISCAL, "段階1", "高"),
+            (KIND_NONE, "段階1", ""),
+            (KIND_NONE, "低（マクロ指標で代理）", ""),
+        ]
+        for kind, stage, expected in cases:
+            got = certainty_mark(kind, stage)
+            self.assertEqual(got, expected, f"{kind}|{stage}")
+            if got:
+                self.assertIn(got, CERTAINTY_MARKS, f"{kind}|{stage}")
+            self.assertFalse(str(got).startswith("段階"), f"{kind}|{stage}")
+
+    def test_unknown_stage_or_kind_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            certainty_mark(KIND_CONFIRMED, "段階4")
+        with self.assertRaises(ValueError):
+            certainty_mark(KIND_CONFIRMED, "高（段階3）")
+        with self.assertRaises(ValueError):
+            certainty_mark("段階1")
 
 
 class DeterministicRulesSmokeTest(unittest.TestCase):
