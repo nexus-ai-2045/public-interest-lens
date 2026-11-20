@@ -14,7 +14,7 @@
 - roster：総務省の「現職国会議員の資金管理団体一覧」「国会議員関係政治団体一覧」（議員と団体の対応表、文字の PDF）を
   表として読み、member-groups.csv にする。索引ページに関係議員名が無い団体は、この対応表で団体名から議員を引く。
 - link：報告団体を議員の人物ID（data/derived/person-ids/persons.csv）に結ぶ。索引の「関係議員名」（無ければ対応表）を
-  根拠にし、同姓同名で決まらないものは結ばない（person_ids の方針と同じ）。
+  根拠にし、結びは resolve_person（氏名と在任期間）。決まらないものは結ばず、理由を帰属の照合に残す。
 
 個人の寄附者・個人のパーティー券購入者は氏名・住所・職業を出力に残さない（「（個人）」と金額だけ）。
 支払先（支出・寄附の支出先）は個人でも報告書の公表どおりに名前を出す（住所は出さない、原本 PDF へのリンクつき）。
@@ -44,6 +44,8 @@ from urllib.parse import quote, urljoin, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+from scripts.person_ids import ALIAS_SPLIT, resolve_person  # noqa: E402
 
 ACQUIRED = ROOT / "data" / "acquired" / "political-funds"
 DERIVED = ROOT / "data" / "derived" / "political-funds"
@@ -1073,11 +1075,14 @@ def link(rows: list[dict[str, str]], index_by_url: dict[str, dict[str, str]], pe
          attribution: dict[str, str] | None = None, members: list[dict[str, str]] | None = None,
          cover_a: dict[str, str] | None = None) -> list[dict[str, str]]:
     """報告団体の関係議員名を人物IDに結ぶ。2系統の読み手が一致し、索引があればそれとも一致し、候補が1人のときだけ結ぶ。
-    一致しない・判定が無い・候補が0人か2人以上のものは空のまま（算入外、「帰属の照合」に理由）。"""
+    一致しない・判定が無い・候補が0人か2人以上のものは空のまま（算入外、「帰属の照合」に理由）。
+    人物の選び方は resolve_person。報告書の異体字は両側を fold してから渡す。並びの先頭は採らない。"""
     from scripts.org_names import org_key
-    from scripts.person_ids import canonical
 
-    by_name = person_index(persons)
+    folded = []
+    for person in persons:
+        aliases = [fold_name(n) for n in ALIAS_SPLIT.split(person.get("別表記") or "") if n.strip()]
+        folded.append({**person, "氏名": fold_name(person.get("氏名") or ""), "別表記": "／".join(aliases)})
     attribution = attribution or {}
     lookup = roster_lookup(members or [])
     out = []
@@ -1088,10 +1093,16 @@ def link(rows: list[dict[str, str]], index_by_url: dict[str, dict[str, str]], pe
         check = attribution_check(member, attribution.get(sha), (cover_a or {}).get(sha))
         if check == "読み手A・B一致":
             member = attribution[sha]
-        ids = by_name.get(canonical(fold_name(member)), []) if check in LINKED_CHECKS else []
+        pid = ""
+        if check in LINKED_CHECKS:
+            year = row.get("年分") or ""
+            on = f"{year}-01-01" if len(year) == 4 and year.isdigit() else ""
+            pid, why = resolve_person(folded, fold_name(member), on=on, missing="blank")
+            if why:
+                pid, check = "", why
         out.append({**row, "相手方": public_name(row), "支払先キー": payee_key(row),
                     "団体名キー": "" if row.get("相手方種別") == "個人" else org_key(row.get("相手方", "")), "報告団体": row.get("報告団体") or meta.get("団体名", ""), "関係議員名": member,
-                    "人物ID": ids[0] if len(ids) == 1 else "", "帰属の照合": check,
+                    "人物ID": pid, "帰属の照合": check,
                     "団体の種類": org_type(row.get("相手方", ""), row.get("相手方種別", ""))})
     return out
 
