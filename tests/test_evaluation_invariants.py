@@ -2,6 +2,7 @@
 
 hypothesis は依存に無いので、規則の直積・固定種の乱数・現行データ照合で網羅する。
 挙動は変えない。発見した反例の修正は別 PR（docs/reports/評価エンジン_不変条件と性質テスト_2026-11-20.md）。
+C2 の根本直しは別 PR。その PR が expectedFailure を通常の試験に変える。
 """
 from __future__ import annotations
 
@@ -19,9 +20,13 @@ from scripts.evaluation_rules import (
     sign_conflict,
 )
 from scripts import build_macro_amounts as macro
+from scripts.build_evaluation_ledger import site_values
 
 ROOT = Path(__file__).resolve().parents[1]
 D = ROOT / "data" / "derived"
+
+# ADR 0008 の確かさ印の語彙（公開方針の正本）
+ADR0008_CERTAINTY = frozenset({"高", "中", "低", "参考"})
 
 
 def _read(path: Path) -> list[dict]:
@@ -91,7 +96,7 @@ class SignAndNarrowBoundaryTest(unittest.TestCase):
 
 
 class DataInvariantsTest(unittest.TestCase):
-    """I2：評価対象外が額の行に入らない（現行データ）。I3 の語彙ずれは C2 として数えるだけ。"""
+    """I2：評価対象外が額の行に入らない（現行データ）。"""
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -124,22 +129,14 @@ class DataInvariantsTest(unittest.TestCase):
         macro_amt = {r["id"] for r in self.macro if r["結果"] == "額"}
         self.assertEqual(individual & macro_amt, set())
 
-    def test_c2_live_ledger_still_has_stage_certainty_on_reference_amounts(self) -> None:
-        # 現行データに C2 が残っていること（件数の決め打ちはしない。0 なら解消を疑う）
-        n = sum(
-            1
-            for r in self.ledger
-            if r["到達点"].startswith("参考額") and str(r.get("確かさ", "")).startswith("段階")
-        )
-        self.assertGreater(n, 0, "C2 が消えた。正規化が入ったかデータを確認する")
 
+class CounterexampleC2DesiredPropertyTest(unittest.TestCase):
+    """C2：なぜ壊れるか — site_values が outcomes の確かさ（段階*）を優先し、参考額でも『参考』に正規化しない。
 
-class CounterexampleC2RootCauseTest(unittest.TestCase):
-    """C2：なぜ壊れるか — site_values が outcomes の確かさ（段階*）を優先し、参考額でも『参考』に正規化しない。"""
+    不具合があることを要求する試験は置かない。望ましい性質だけを expectedFailure で1本残す。
+    """
 
     def _site(self, certainty: str):
-        from scripts.build_evaluation_ledger import site_values
-
         o = {
             "id": "閣法-0-0",
             "確かさ": certainty,
@@ -165,16 +162,12 @@ class CounterexampleC2RootCauseTest(unittest.TestCase):
         }
         return site_values(o, src)
 
-    def test_c2_root_cause_site_values_keeps_stage_over_reference(self) -> None:
-        v = self._site("段階1")
-        self.assertEqual(v["到達点"], "参考額（産業の付加価値の差）")
-        self.assertEqual(v["確かさ"], "段階1")  # 原因：o['確かさ'] が空でないと『参考』に落ちない
-
     @unittest.expectedFailure  # 直しは別 PR。正規化が入ったら decorator を外す
-    def test_c2_desired_reference_amount_certainty_is_reference(self) -> None:
+    def test_c2_desired_reference_amount_certainty_is_adr0008_vocabulary(self) -> None:
         v = self._site("段階1")
         self.assertEqual(v["到達点"], "参考額（産業の付加価値の差）")
         self.assertEqual(v["確かさ"], "参考")
+        self.assertIn(v["確かさ"], ADR0008_CERTAINTY)
 
 
 class DeterministicRulesSmokeTest(unittest.TestCase):

@@ -2,8 +2,9 @@
  * 曝露ランキング集計の性質テスト（境界・乱数・反例）。
  * 依存に fast-check は無いので、固定種の LCG で網羅する。
  * 反例 C1 は直さず it.fails で残す（docs/reports/評価エンジン_不変条件と性質テスト_2026-11-20.md）。
+ * C1 の根本直しは別 PR。その PR が it.fails を通常の試験に変える。
  */
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import {
   DEFAULT_ROLE_RATIO,
   assignTiers,
@@ -67,6 +68,7 @@ function lcg(seed: number) {
   };
 }
 
+/** 有効入力だけを返す。lawCount を記録本数未満にしない。例外を握りつぶすための逃げ道は持たない。 */
 function randomCase(seed: number): { groups: ExposureGroup[]; invs: Involvement[] } {
   const rnd = lcg(seed);
   const roles: Involvement['role'][] = ['proposer', 'yes', 'no', 'cabinet'];
@@ -98,32 +100,45 @@ function randomCase(seed: number): { groups: ExposureGroup[]; invs: Involvement[
   return { groups: fixed, invs };
 }
 
+/** 失敗時に種を報告する。例外は握りつぶさず再送出する。 */
+function withSeed<T>(seed: number, run: () => T): T {
+  try {
+    return run();
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : String(e);
+    throw new Error(`種 ${seed} で失敗: ${detail}`, { cause: e });
+  }
+}
+
 describe('曝露ランキングの性質（I1・I4・I5・境界）', () => {
   it('乱数800種：合計の保存・決定論・幅の順序・期待値の式', () => {
-    // randomCase は lawCount を記録本数以上に直した有効入力だけを返す。例外は握りつぶさず失敗にする。
     for (let seed = 0; seed < 800; seed++) {
-      const { groups, invs } = randomCase(seed);
-      const out = buildExposureRanking(groups, invs, P);
-      conserved(out);
-      const again = buildExposureRanking(groups, invs, P);
-      expect(JSON.stringify(again)).toBe(JSON.stringify(out));
-      for (const row of out.people.concat(out.parties)) {
-        expect(row.exposureYen.low).toBeLessThanOrEqual(row.exposureYen.median + 1e-9);
-        expect(row.exposureYen.median).toBeLessThanOrEqual(row.exposureYen.high + 1e-9);
-      }
-      const signed = 0.4 + 0.2 - 0.2 + 0.2;
-      const want = groups.reduce((s, g) => s + g.diff.median * signed, 0);
-      expect(out.totals.expected.median).toBeCloseTo(want, 6);
+      withSeed(seed, () => {
+        const { groups, invs } = randomCase(seed);
+        const out = buildExposureRanking(groups, invs, P);
+        conserved(out);
+        const again = buildExposureRanking(groups, invs, P);
+        expect(JSON.stringify(again)).toBe(JSON.stringify(out));
+        for (const row of out.people.concat(out.parties)) {
+          expect(row.exposureYen.low).toBeLessThanOrEqual(row.exposureYen.median + 1e-9);
+          expect(row.exposureYen.median).toBeLessThanOrEqual(row.exposureYen.high + 1e-9);
+        }
+        const signed = 0.4 + 0.2 - 0.2 + 0.2;
+        const want = groups.reduce((s, g) => s + g.diff.median * signed, 0);
+        expect(out.totals.expected.median).toBeCloseTo(want, 6);
+      });
     }
   });
 
   it('乱数800種：額（中央値を丸めた鍵）は入力順に依らない', () => {
     for (let seed = 0; seed < 800; seed++) {
-      const { groups, invs } = randomCase(seed);
-      const a = buildExposureRanking(groups, invs, P);
-      const b = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
-      expect(amountKey(b)).toBe(amountKey(a));
-      conserved(b);
+      withSeed(seed, () => {
+        const { groups, invs } = randomCase(seed);
+        const a = buildExposureRanking(groups, invs, P);
+        const b = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
+        expect(amountKey(b)).toBe(amountKey(a));
+        conserved(b);
+      });
     }
   });
 
@@ -167,12 +182,19 @@ describe('見つかった反例 C1（階層の入力順依存・未修正）', (
     inv('A1', 'Lg0-3', 'yes', 0.12505898475646973, 'g0', 'party', 'lower'),
   ];
 
+  let forward: ExposureRanking;
+  let reversed: ExposureRanking;
+
+  // 集計の例外は it.fails の「期待失敗」に数えない。ここで投げれば通常の失敗になる。
+  beforeAll(() => {
+    forward = buildExposureRanking(groups, invs, P);
+    reversed = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
+  });
+
   it('額の合計は順でも逆でも保存される（I1は維持）', () => {
-    const a = buildExposureRanking(groups, invs, P);
-    const b = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
-    conserved(a);
-    conserved(b);
-    expect(amountKey(a)).toBe(amountKey(b));
+    conserved(forward);
+    conserved(reversed);
+    expect(amountKey(forward)).toBe(amountKey(reversed));
   });
 
   it('原因：中央値が 1e-14 ずれて先頭が変わると、leaderLow の差で後続の tier が入れ替わる', () => {
@@ -192,9 +214,8 @@ describe('見つかった反例 C1（階層の入力順依存・未修正）', (
   });
 
   // 意図する不変条件 I5：パイプライン全体で tier を含む鍵も一致すべき。現状は一致しない。
+  // it.fails の中では階層鍵の不一致だけを見る（計算例外は beforeAll 側で通常失敗にする）。
   it.fails('階層（tier）も入力順に依らない（C1：直すまで fails のまま残す）', () => {
-    const a = buildExposureRanking(groups, invs, P);
-    const b = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
-    expect(actorKey(b)).toBe(actorKey(a));
+    expect(actorKey(reversed)).toBe(actorKey(forward));
   });
 });
