@@ -2,6 +2,7 @@
 import importlib.util
 import math
 import statistics
+import sys
 import unittest
 from pathlib import Path
 
@@ -85,3 +86,52 @@ class SyntheticControlPrototypeTests(unittest.TestCase):
         self.assertGreater(old, 0)
         self.assertGreater(expected, 0)
         self.assertFalse(self.proto.same_direction(old, expected))
+
+    def test_pre_rmse_at_or_below_floor_is_undetermined_for_target_and_placebo(self):
+        # 下限は float64 の eps の平方根。値ごとの特別扱いではない。
+        floor = self.proto.PRE_RMSE_FLOOR
+        self.assertEqual(floor, math.sqrt(sys.float_info.epsilon))
+        # 0 と、下限ちょうどと、その直前は、比を計算しない。
+        for pre in (0.0, floor, math.nextafter(floor, 0.0), 1e-18):
+            judged = self.proto.rmspe_ratio(pre, 0.4)
+            self.assertEqual(judged.status, "判定できない")
+            self.assertIsNone(judged.ratio)
+            self.assertIn("処置前のRMSE", judged.reason)
+        # 同じ関数をプラセボ側の事前 RMSE にも使う。戻り方は同じ。
+        target = self.proto.rmspe_ratio(0.0, 0.2)
+        placebo = self.proto.rmspe_ratio(1e-18, 5.0)
+        self.assertEqual(placebo.status, target.status)
+        self.assertEqual(placebo.reason, target.reason)
+        self.assertIsNone(placebo.ratio)
+        # 下限のすぐ上は、事後/事前の比になる。
+        above = math.nextafter(floor, math.inf)
+        finite = self.proto.rmspe_ratio(above, above * 3)
+        self.assertEqual(finite.status, "計算した")
+        self.assertEqual(finite.reason, "")
+        self.assertAlmostEqual(finite.ratio, 3.0)
+        # 実測の桁（1e-4）は下限より大きく、比は出る。
+        real_fit = self.proto.rmspe_ratio(1e-4, 2e-4)
+        self.assertEqual(real_fit.status, "計算した")
+        self.assertAlmostEqual(real_fit.ratio, 2.0)
+
+    def test_undetermined_pre_rmse_is_not_a_small_permutation_p(self):
+        # 比較国12。事前が下限以下のとき、旧式は比を巨大数にして p=1/13 を返す。
+        # 1/13 は 0.1 より小さいが、比が決まらないので p 値にしない。
+        placebos = [(0.2, 0.02)] * 12
+        judged = self.proto.permutation_p(0.0, 0.5, placebos)
+        self.assertEqual(judged["比の判定"], "判定できない")
+        self.assertEqual(judged["置換のp値"], "判定できない")
+        self.assertNotIsInstance(judged["置換のp値"], (int, float))
+        self.assertIn("処置前のRMSE", judged["判定の理由"])
+        for item in judged["プラセボ"]:
+            self.assertEqual(item["比の判定"], "計算した")
+        # プラセボ側の事前が下限以下のときも比は無い。無限大として分子へ入れ、
+        # 分母からは落とさない（落とすと p が 1/12 に小さくなる）。
+        mixed = [(0.0, 5.0)] + [(0.2, 0.02)] * 11
+        mixed_p = self.proto.permutation_p(0.2, 0.2, mixed)
+        self.assertEqual(mixed_p["比の判定"], "計算した")
+        self.assertEqual(mixed_p["プラセボ"][0]["比の判定"], "判定できない")
+        self.assertIsNone(mixed_p["プラセボ"][0]["比"])
+        self.assertEqual(mixed_p["プラセボ"][0]["判定の理由"], judged["判定の理由"])
+        self.assertAlmostEqual(mixed_p["置換のp値"], 2 / 13)
+        self.assertGreater(mixed_p["置換のp値"], 1 / 12)

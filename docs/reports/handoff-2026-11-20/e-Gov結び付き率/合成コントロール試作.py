@@ -4,6 +4,10 @@
 合成対照との差は、期末の対数差（日本−合成）。正は日本の方が伸びた。
 中央値との差は scripts/source_check.recompute の median（円、累積。正は伸び損ね）。
 符号が同じは、この2つを「日本が基準より高いか」に揃えた向きが一致するか。
+置換の p 値は、比較国を1つずつ処置国にした RMSPE の比（事後の RMSE / 事前の RMSE）の順位。
+事前の RMSE が float64 の eps の平方根以下のときは、比を計算せず「判定できない」とする。
+日本と比較国で同じ規則。比が決まらない比較国は、日本の比の方が大きいとは数えない
+（分子に残し、分母からは外さない。外すと p が小さくなる）。
 
 使い方（リポジトリのルートで）:
   python3 docs/reports/handoff-2026-11-20/e-Gov結び付き率/合成コントロール試作.py \\
@@ -18,6 +22,7 @@ import math
 import statistics
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
@@ -26,9 +31,58 @@ from scripts.source_check import Oecd, recompute  # noqa: E402
 
 FIELDS = [
     "窓の始め", "窓の終わり", "産業", "比較国の数", "合成対照との差", "中央値との差",
-    "符号が同じ", "処置前のRMSE", "置換のp値", "重み上位",
+    "符号が同じ", "処置前のRMSE", "比の判定", "判定の理由", "置換のp値",
+    "プラセボの比が判定できない数", "重み上位",
 ]
 WINDOWS = (2000, 2005, 2010, 2015)
+# 対数差はおおよそ 1 の桁。これ以下の処置前 RMSE は丸めの残差と区別できず、
+# 事後との比は割り算として決まらない（無限大にも NaN にもしない）。
+PRE_RMSE_FLOOR = math.sqrt(sys.float_info.epsilon)
+UNDETERMINED = "判定できない"
+UNDETERMINED_REASON = "処置前のRMSEが数値の下限以下で、事後を事前で割る比が決まらない"
+
+
+class RatioJudgment(NamedTuple):
+    ratio: float | None
+    status: str
+    reason: str
+
+
+def rmspe_ratio(pre_rmse: float, post_rmse: float) -> RatioJudgment:
+    """事後/事前の比。下限以下の事前 RMSE は比にしない。日本とプラセボで同じ。"""
+    if not math.isfinite(pre_rmse) or pre_rmse <= PRE_RMSE_FLOOR:
+        return RatioJudgment(None, UNDETERMINED, UNDETERMINED_REASON)
+    return RatioJudgment(post_rmse / pre_rmse, "計算した", "")
+
+
+def permutation_p(pre_rmse: float, post_rmse: float, placebo: list[tuple[float, float]]) -> dict:
+    """置換の p 値。日本の比が決まらなければ p 値も「判定できない」。
+    比が決まらない比較国は、日本の比がそれより大きいとは言えないので分子に残す。
+    分母は比較国の数のまま（外すと p が小さくなる）。"""
+    japan = rmspe_ratio(pre_rmse, post_rmse)
+    judged = [rmspe_ratio(pre, post) for pre, post in placebo]
+    rows = [{"比": item.ratio, "比の判定": item.status, "判定の理由": item.reason} for item in judged]
+    undetermined = sum(item.status != "計算した" for item in judged)
+    if japan.status != "計算した":
+        return {
+            "比": None,
+            "比の判定": japan.status,
+            "判定の理由": japan.reason,
+            "置換のp値": UNDETERMINED,
+            "プラセボ": rows,
+            "プラセボの比が判定できない数": undetermined,
+        }
+    as_extreme = sum(
+        item.status != "計算した" or item.ratio >= japan.ratio for item in judged
+    )
+    return {
+        "比": japan.ratio,
+        "比の判定": japan.status,
+        "判定の理由": "",
+        "置換のp値": (1 + as_extreme) / (1 + len(judged)),
+        "プラセボ": rows,
+        "プラセボの比が判定できない数": undetermined,
+    }
 
 
 def _solve_linear(matrix: list[list[float]], rhs: list[float], pivot_tol: float = 1e-12):
@@ -215,13 +269,15 @@ def build_rows(oecd: Oecd) -> list[dict]:
             median = production_median_yen(oecd, industry, f"{start_year}-01-01", post[-1], names)
             if median is None:
                 raise SystemExit(f"本番の中央値を計算できない: {industry} {start_year}")
-            ratio = post_rmse / pre_rmse if pre_rmse > 0 else float("inf")
-            placebo = []
+            placebo_pairs = []
             for index in range(len(names)):
                 others = [pool[k] for k in range(len(names)) if k != index] + [japan]
                 _, _, pre_p, post_p = fit_gap(pool[index], others, npre)
-                placebo.append(post_p / pre_p if pre_p > 0 else float("inf"))
-            p_value = (1 + sum(1 for value in placebo if value >= ratio)) / (1 + len(placebo))
+                placebo_pairs.append((pre_p, post_p))
+            judged = permutation_p(pre_rmse, post_rmse, placebo_pairs)
+            p_value = judged["置換のp値"]
+            if isinstance(p_value, float):
+                p_value = round(p_value, 3)
             top = sorted(range(len(names)), key=lambda j: -weights[j])[:3]
             rows.append({
                 "窓の始め": start_year,
@@ -232,21 +288,34 @@ def build_rows(oecd: Oecd) -> list[dict]:
                 "中央値との差": median,
                 "符号が同じ": same_direction(gap, median),
                 "処置前のRMSE": round(pre_rmse, 4),
-                "置換のp値": round(p_value, 3),
+                "比の判定": judged["比の判定"],
+                "判定の理由": judged["判定の理由"],
+                "置換のp値": p_value,
+                "プラセボの比が判定できない数": judged["プラセボの比が判定できない数"],
                 "重み上位": ";".join(f"{names[j]}:{weights[j]:.2f}" for j in top),
             })
     return rows
 
 
+def _p_at_most(row: dict, threshold: float) -> bool:
+    p_value = row["置換のp値"]
+    return isinstance(p_value, (int, float)) and not isinstance(p_value, bool) and p_value <= threshold
+
+
 def summarize(rows: list[dict]) -> dict:
     disagree = [f"{row['窓の始め']} {row['産業']}" for row in rows if not row["符号が同じ"]]
+    undetermined = [row for row in rows if row["比の判定"] != "計算した"]
+    small = [row for row in rows if _p_at_most(row, 0.1)]
     return {
         "産業×窓": len(rows),
         "向きが本番の中央値と同じ": sum(bool(row["符号が同じ"]) for row in rows),
         "向きが違う組": disagree,
-        "置換のp値0.1以下": sum(1 for row in rows if row["置換のp値"] <= 0.1),
-        "置換のp値0.1以下の組": [f"{row['窓の始め']} {row['産業']}" for row in rows if row["置換のp値"] <= 0.1],
-        "処置前RMSEが0の組": [f"{row['窓の始め']} {row['産業']}" for row in rows if row["処置前のRMSE"] == 0],
+        "置換のp値0.1以下": len(small),
+        "置換のp値0.1以下の組": [f"{row['窓の始め']} {row['産業']}" for row in small],
+        "比が判定できない": len(undetermined),
+        "比が判定できない組": [f"{row['窓の始め']} {row['産業']}" for row in undetermined],
+        "比が判定できない理由": sorted({row["判定の理由"] for row in undetermined}),
+        "プラセボで比が判定できない": sum(row["プラセボの比が判定できない数"] for row in rows),
         "処置前RMSE0.02以下": sum(1 for row in rows if row["処置前のRMSE"] <= 0.02),
         "差の中央値（合成・期末の対数。正は日本の方が伸びた）": round(
             statistics.median(row["合成対照との差"] for row in rows), 4
