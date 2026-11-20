@@ -100,16 +100,10 @@ function randomCase(seed: number): { groups: ExposureGroup[]; invs: Involvement[
 
 describe('曝露ランキングの性質（I1・I4・I5・境界）', () => {
   it('乱数800種：合計の保存・決定論・幅の順序・期待値の式', () => {
-    let ran = 0;
+    // randomCase は lawCount を記録本数以上に直した有効入力だけを返す。例外は握りつぶさず失敗にする。
     for (let seed = 0; seed < 800; seed++) {
       const { groups, invs } = randomCase(seed);
-      let out: ExposureRanking;
-      try {
-        out = buildExposureRanking(groups, invs, P);
-      } catch {
-        continue;
-      }
-      ran++;
+      const out = buildExposureRanking(groups, invs, P);
       conserved(out);
       const again = buildExposureRanking(groups, invs, P);
       expect(JSON.stringify(again)).toBe(JSON.stringify(out));
@@ -121,18 +115,12 @@ describe('曝露ランキングの性質（I1・I4・I5・境界）', () => {
       const want = groups.reduce((s, g) => s + g.diff.median * signed, 0);
       expect(out.totals.expected.median).toBeCloseTo(want, 6);
     }
-    expect(ran).toBeGreaterThan(700);
   });
 
   it('乱数800種：額（中央値を丸めた鍵）は入力順に依らない', () => {
     for (let seed = 0; seed < 800; seed++) {
       const { groups, invs } = randomCase(seed);
-      let a: ExposureRanking;
-      try {
-        a = buildExposureRanking(groups, invs, P);
-      } catch {
-        continue;
-      }
+      const a = buildExposureRanking(groups, invs, P);
       const b = buildExposureRanking([...groups].reverse(), [...invs].reverse(), P);
       expect(amountKey(b)).toBe(amountKey(a));
       conserved(b);
