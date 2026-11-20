@@ -19,4 +19,4 @@
 
 抜き取り2回目の2系統目待ち23本の一覧は `data/derived/primary-triage-v1/extra-ids-sample2.csv`（`primary_triage.py targets --extra` の入力）。
 
-写さなかったもの（台本で作り直せる、または大きい）：`e-Gov結び付き率/` の `照会結果.csv`（約0.8MB、`measure_egov.py` で作る）、`改正法の本文_標本.json`、許認可等現況表の写し。`e-Gov結び付き率/` の台本は、入力（`econ_labels.csv`・`honbun.json`・許認可等現況表など、同梱していないもの）を置いた作業フォルダを環境変数 `EGOV_WORKDIR` で指す。類型の照合の正式な実装は `scripts/type_crosscheck.py`（PR #243）で、ここの台本は測定の記録。
+写さなかったもの（台本で作り直せる、または大きい）：`e-Gov結び付き率/` の `照会結果.csv`（約0.8MB、`measure_egov.py` で作る）、`改正法の本文_標本.json`、許認可等現況表の写し。`e-Gov結び付き率/` の台本は、入力（`econ_labels.csv`・`honbun.json`・許認可等現況表など、同梱していないもの）を置いた作業フォルダを環境変数 `EGOV_WORKDIR` で指す。`EGOV_WORKDIR` が無いときは空の結果を出さず止まる。類型の照合の正式な実装は `scripts/type_crosscheck.py`（PR #243）で、ここの台本は測定の記録。

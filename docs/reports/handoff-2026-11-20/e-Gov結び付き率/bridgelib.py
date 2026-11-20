@@ -1,7 +1,17 @@
-import csv,json,re,collections,sys
-import os
-# 元は作業用の一時フォルダ。照会結果.csv などの大きな中間ファイルは measure_egov.py で作り直す
-D = os.environ.get('EGOV_WORKDIR', os.path.dirname(os.path.abspath(__file__))) + '/'
+import csv, json, re, collections, sys, os
+# 同梱していない入力（cache.jsonl など）は作業フォルダから読む。フォルダが無いときは空の結果を出さず止める。
+
+def require_egov_workdir():
+    raw = os.environ.get("EGOV_WORKDIR", "").strip()
+    if not raw:
+        sys.stderr.write(
+            "EGOV_WORKDIR が無い。この台本はリポジトリに同梱していない入力"
+            "（cache.jsonl、result.csv、fallback.csv、econ_labels.csv など）を"
+            "作業フォルダから読む。環境変数が無いので、空の結果は出さずここで止める。\n"
+        )
+        raise SystemExit(2)
+    return raw if raw.endswith(os.sep) else raw + os.sep
+
 BR={'農業':'A','林業':'A','水産業':'A','鉱業':'B','工業':'C','道路':'F','河川':'F','国土開発':'F','商業':'G',
  '陸運':'H','海運':'H','航空':'H','貨物運送':'H','郵務':'H','観光':'I','電気通信':'J','金融・保険':'K',
  '建築・住宅':'L','土地':'L','都市計画':'L','教育':'P','厚生':'Q','社会福祉':'Q','文化':'R+S'}
@@ -11,13 +21,19 @@ def ind(cat,title):
     i=BR.get(cat)
     if i=='C' and ENERGY.search(title or ''): return 'D'
     return i  # None = 未定
-# law_id -> (title,category)
-meta={}
-for l in open(D+'cache.jsonl'):
-    for L in json.loads(l)['v'].get('laws',[]):
-        ri=L.get('revision_info') or {}; meta[L['law_info']['law_id']]=(ri.get('law_title'),ri.get('category'))
-res={x['id']:x for x in csv.DictReader(open(D+'result.csv'))}
-fb={x['id']:x for x in csv.DictReader(open(D+'fallback.csv'))}
+D = ""
+meta = {}
+res = {}
+fb = {}
+def load():
+    global D, meta, res, fb
+    D = require_egov_workdir()
+    meta = {}
+    for l in open(D+'cache.jsonl'):
+        for L in json.loads(l)['v'].get('laws',[]):
+            ri=L.get('revision_info') or {}; meta[L['law_info']['law_id']]=(ri.get('law_title'),ri.get('category'))
+    res={x['id']:x for x in csv.DictReader(open(D+'result.csv'))}
+    fb={x['id']:x for x in csv.DictReader(open(D+'fallback.csv'))}
 def firstname(t):
     t=re.sub(r'案$','',t); m=re.match(r'^(.+?)(等)?の一部を改正する法律$',t)
     return re.split(r'及び|並びに|、',m.group(1))[0] if m else None
@@ -45,3 +61,6 @@ def rule(i,r):
         return k if n*2>len(inds) else None
     if r=='R3':
         return inds[0] if len(set(inds))==1 else None
+
+if __name__ == "__main__":
+    load()

@@ -1,5 +1,7 @@
 import csv,json,re,sys,time,os,urllib.request,urllib.parse
-D=sys.argv[1]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import bridgelib
+D = bridgelib.require_egov_workdir().rstrip(os.sep)
 rows=list(csv.DictReader(open(os.path.join(D,'enacted.csv'))))
 cache_p=os.path.join(D,'cache.jsonl'); cache={}
 if os.path.exists(cache_p):
