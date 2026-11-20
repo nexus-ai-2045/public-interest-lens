@@ -38,6 +38,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts import primary_source_corrections as corrections
+from scripts.durable_write import write_text as atomic_write_text
 from scripts import resample_verification as resample
 from scripts.evaluation_rules import (
     STATE_DEMOTED,
@@ -385,7 +386,7 @@ def write_docs(s: dict, path: Path) -> None:
     lines += [f"| 国の収支（税収見込み） | {tc['国の収支（億円）']:,} | 別表。足さない・使わない |",
               f"| 採算（付加価値÷国の支出） | {tc['採算']:,} | 参考。国の支出が一次資料で分かる法律だけ |",
               "", f"全{tc['合計']:,}本のうち、どの欄にも値が無い法律は理由つきの『保留・測定できない・評価対象外』のいずれか（`outcomes.csv`）。表は `data/derived/three-columns-v1/columns.csv`。"]
-    path.write_text("\n".join(lines), encoding="utf-8")
+    atomic_write_text(path, "\n".join(lines))
 
 
 def main() -> int:
@@ -406,8 +407,10 @@ def main() -> int:
         w.writeheader()
         w.writerows(rows)
     s = summarize(rows, {i: v["判定"] for i, v in src["sample"].items()})
-    (ROOT / "app" / "public" / "distribution" / "ledger-summary.json").write_text(
-        json.dumps(s, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    atomic_write_text(
+        ROOT / "app" / "public" / "distribution" / "ledger-summary.json",
+        json.dumps(s, ensure_ascii=False, indent=1) + "\n",
+    )
     write_docs(s, ROOT / "docs" / "評価台帳.md")
     print(json.dumps(s["by_reach"], ensure_ascii=False))
     print(s["by_verify_state"])

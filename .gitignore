@@ -39,11 +39,13 @@ app/public/distribution/members.json
 app/public/distribution/price-index.json
 # 公開ランキング（設計決定0022）。source_check.py --generate-ranking が入力から作る
 app/public/distribution/ranking.json
+app/public/distribution/ranking.json.publish-hash.json
 # 賛否・グラフ用の集計（全議員の表 members-reference.json と members.json は撤回したが、古い出力を誤って載せないよう残す）（設計決定0022。scripts/generate_artifacts.py が入力から作る）
 app/public/distribution/votes.json
 app/public/distribution/members-reference.json
 # 曝露ランキング（案B）の集計結果。scripts/build_exposure_ranking.mjs が作る（画面表示は別の変更。ビルドには乗せない）
 data/derived/exposure-v1/exposure-ranking.json
+data/db/.generate-artifacts.lock
 app/public/distribution/charts.json
 app/public/distribution/laws.json
 app/public/distribution/laws-detail/

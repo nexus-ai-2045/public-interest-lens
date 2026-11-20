@@ -5,7 +5,9 @@
   derived：曝露ランキング（議員の側。設計決定0027・0028）data/derived/exposure-v1/exposure-ranking.json（公開ディレクトリには置かない）→ 法律の一覧 laws.json・laws-detail/・law-names.json
            → 暫定評価 provisional.json → グラフ用の集計 charts.json
 既定は、出力が無い・入力（data/ と scripts/）より古い・前の出力を作り直したものだけ作る（--force で全部作り直す）。
+ranking.json だけは、入力と出典チェックの結果と中身を結んだ公開ハッシュが一致するときだけ飛ばす。
 CI・アプリの prebuild/pretest・sync_main から呼ぶ。環境変数 KOKUZOKU_SKIP_GENERATE=1 なら何もしない（架空入力の検査用）。
+公開版のビルド（VITE_PUBLIC_SITE=true の --public-build）はこの変数を無視し、出典チェックから ranking.json を作り直す。
 入力は Git の中のファイルだけ。会議録の全文（speeches.csv）は要らない（法律の一覧は表 speech-facts.csv から作る）。
 
 使い方（リポジトリのルートで）：python3 scripts/generate_artifacts.py [--stage inputs|derived] [--force]
@@ -13,15 +15,22 @@ CI・アプリの prebuild/pretest・sync_main から呼ぶ。環境変数 KOKUZ
 from __future__ import annotations
 
 import argparse
+import fcntl
 import os
 import re
 import subprocess
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from scripts.publish_fingerprint import ranking_is_fresh  # noqa: E402
+
 DIST = ROOT / "app" / "public" / "distribution"
 PY = sys.executable
+LOCK_PATH = ROOT / "data" / "db" / ".generate-artifacts.lock"
 
 # (段, 出力, コマンド)
 STEPS = [
@@ -64,28 +73,60 @@ def newest_input() -> float:
     return newest
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--stage", choices=["inputs", "derived"], help="この段だけ作る（既定は両方）")
-    parser.add_argument("--force", action="store_true", help="出力があっても作り直す")
-    args = parser.parse_args(argv)
-    if os.environ.get("KOKUZOKU_SKIP_GENERATE") == "1":
-        return 0
+@contextmanager
+def exclusive_generation():
+    """原因: 共有の sqlite を同時に開き直すと disk I/O error になる。生成は1本ずつにする。"""
+    LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with LOCK_PATH.open("a") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def _generate(args: argparse.Namespace, public: bool) -> int:
     newest = newest_input()
-    rebuilt = False  # 前の出力を作り直したら、後ろは入力が変わったことになる
+    rebuilt = False  # 前の出力の中身が変わったら、後ろは入力が変わったことになる
     for stage, output, command in STEPS:
-        if args.stage and stage != args.stage:
+        if args.stage and stage != args.stage and not public:
             continue
-        stale = not output.exists() or output.stat().st_mtime < newest
+        if output.name == "ranking.json":
+            # 原因: mtime が新しければ ranking.json を作り直さないので、確かさを手で「高」にしても dist に入る。
+            stale = public or not ranking_is_fresh(output)
+        else:
+            stale = not output.exists() or output.stat().st_mtime < newest
         if not (args.force or stale or rebuilt):
             continue
-        rebuilt = True
         print(f"作る: {output.name}", flush=True)
+        before = output.read_bytes() if output.is_file() else None
         done = subprocess.run(command, cwd=ROOT, stdout=subprocess.DEVNULL)
         if done.returncode != 0:
             print(f"失敗: {output.name}（{' '.join(command)}）", file=sys.stderr)
             return done.returncode
+        after = output.read_bytes() if output.is_file() else None
+        if before != after:
+            rebuilt = True
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--stage", choices=["inputs", "derived"], help="この段だけ作る（既定は両方）")
+    parser.add_argument("--force", action="store_true", help="出力があっても作り直す")
+    parser.add_argument("--public-build", action="store_true", help="公開版のビルドから呼ぶ。出典チェックの公開ハッシュを確かめる")
+    args = parser.parse_args(argv)
+    public = args.public_build and os.environ.get("VITE_PUBLIC_SITE") == "true"
+    if args.public_build and not public:
+        return 0
+    # 公開版では prebuild が先に同じ入口を呼ぶ。ビルド本体の --public-build が生成を引き受ける。
+    if os.environ.get("VITE_PUBLIC_SITE") == "true" and not args.public_build:
+        return 0
+    # 原因: KOKUZOKU_SKIP_GENERATE=1 は公開版のビルドでも生成と出典チェックを即 return で飛ばす。
+    if os.environ.get("KOKUZOKU_SKIP_GENERATE") == "1" and not public:
+        return 0
+    with exclusive_generation():
+        return _generate(args, public)
 
 
 if __name__ == "__main__":

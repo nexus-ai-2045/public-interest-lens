@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit -p tsconfig.app.json && vite build",
+    "build": "python3 ../scripts/generate_artifacts.py --public-build && tsc --noEmit -p tsconfig.app.json && vite build",
     "pretest": "python3 ../scripts/generate_artifacts.py",
     "test": "vitest run src",
     "test:e2e": "playwright test",

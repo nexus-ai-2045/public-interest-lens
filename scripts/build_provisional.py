@@ -25,6 +25,11 @@ import statistics
 import sys
 from pathlib import Path
 
+try:
+    from scripts.durable_write import write_text as atomic_write_text
+except ImportError:
+    from durable_write import write_text as atomic_write_text
+
 ROOT = Path(__file__).resolve().parents[1]
 CARDS = ROOT / "data" / "foreign-policy-v1" / "cards.json"
 ACQ = ROOT / "data" / "acquired" / "foreign-policy-v1"
@@ -208,7 +213,7 @@ def main() -> int:
         "counts": {"recent": len(recent), "provisional": len(items), "unmeasured": len(recent) - len(items)},
         "cards": cards, "sizes": sizes, "items": items, "nearMisses": near,
     }
-    OUTPUT.write_text(json.dumps(output, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    atomic_write_text(OUTPUT, json.dumps(output, ensure_ascii=False, indent=1) + "\n")
     print(f"cards={len(cards)} measured={sum(c['status'] == 'measured' for c in cards)} recent={len(recent)} provisional={len(items)}")
     return 0
 

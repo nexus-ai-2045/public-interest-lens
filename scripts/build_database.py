@@ -15,9 +15,11 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import re
 import sqlite3
 import sys
+import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -27,6 +29,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.build_public_ranking import direction_undetermined  # noqa: E402
+from scripts.durable_write import write_text as atomic_write_text  # noqa: E402
 DIST = ROOT / "app" / "public" / "distribution"
 ACQ = ROOT / "data" / "acquired"
 DERIVED = ROOT / "data" / "derived"
@@ -80,10 +83,13 @@ def number(text: str) -> float | None:
 
 class Db:
     def __init__(self, path: Path):
-        if path.exists():
-            path.unlink()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        self.con = sqlite3.connect(path)
+        # 原因: 共有の sqlite を消してから開くと、もう一つの生成が開いているファイルを壊し、disk I/O error になる。
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        descriptor, name = tempfile.mkstemp(prefix=f".{self.path.name}.", suffix=".tmp", dir=self.path.parent)
+        os.close(descriptor)
+        self._tmp = Path(name)
+        self.con = sqlite3.connect(self._tmp)
         self.con.executescript(SCHEMA.read_text(encoding="utf-8"))
         self._sources: dict[str, int] = {}
         self.counts: Counter[str] = Counter()
@@ -660,6 +666,18 @@ def charts(con: sqlite3.Connection, spec_version: str) -> dict:
 def build(out: Path, write_charts: bool) -> dict:
     READ_FILES.clear()
     db = Db(out)
+    try:
+        return _fill(db, out, write_charts)
+    finally:
+        if db._tmp is not None:
+            try:
+                db.con.close()
+            except sqlite3.Error:
+                pass
+            db._tmp.unlink(missing_ok=True)
+
+
+def _fill(db: Db, out: Path, write_charts: bool) -> dict:
     spec_version = load_spec(db)
     load_registry(db)
     load_laws(db)
@@ -683,8 +701,10 @@ def build(out: Path, write_charts: bool) -> dict:
     if write_charts:
         payload = charts(db.con, spec_version)
         payload["inputs"] = inputs_digest(CHART_INPUTS)
-        CHARTS.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+        atomic_write_text(CHARTS, json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
     db.con.close()
+    os.replace(db._tmp, out)
+    db._tmp = None
     return summary
 
 

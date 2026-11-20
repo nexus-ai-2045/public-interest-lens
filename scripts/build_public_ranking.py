@@ -4,7 +4,7 @@
 非公開フォルダ（議員への配分）は読まない。人物の名前・配分額はこのファイルに入れない。
 
 額のある法律は全件を `laws` に載せる（2026-10-17 のユーザー承認、法律単位だけ。議員の実名は別承認）。
-承認は `--approve-all-laws --approved-at YYYY-MM-DD` で渡し、承認の記録（日付・範囲・メモ）を `approval` に残す。
+ファイルを書く入口は出典チェック（scripts/source_check.py）。build は承認の記録（日付・範囲・メモ）を approval に残す。
 承認を渡さないと額は載せず、すべて「公開承認待ち」として `others` に入れる。
 額のない法律も `others` に結果と理由つきで全件載せる（成立した法律の全件が画面で見える）。
 各法律の 確かさ（高・中・低・参考）は CSV に 確かさ 列があればそれを使い、無ければ 段階 と 参考フラグ から決める。
@@ -18,6 +18,7 @@ import hashlib
 import io
 import json
 import re
+import sys
 from collections import Counter
 from pathlib import Path
 
@@ -595,11 +596,20 @@ def build(approve_all: bool, approved_at: str, held_by_check: set[str] | None = 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--approve-all-laws", action="store_true", help="法律単位の結果を全件公開する承認を記録する（議員の実名は含まない）")
-    parser.add_argument("--approved-at", default="", help="承認日（YYYY-MM-DD）")
+    parser.add_argument("--approved-at", default="", help="承認日（YYYY-MM-DD）。書く中身の承認日は出典チェック付きの生成が使う記録済みの日付")
     parser.add_argument("--output", type=Path, default=OUTPUT)
     args = parser.parse_args()
-    payload = build(args.approve_all_laws, args.approved_at)
-    args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # 原因: このコマンドが今の出典チェックを通さずに ranking.json を書くと、そのファイルが公開版の dist に入る。
+    if not args.approve_all_laws:
+        print("公開ランキングは出典チェックを通した経路だけが書く。python3 scripts/generate_artifacts.py", file=sys.stderr)
+        return 1
+    # source_check は build を呼ぶ。モジュール先頭で読むと循環になる。
+    try:
+        from scripts import source_check as source_checker
+    except ImportError:
+        import source_check as source_checker
+    source_checker.write_generated_ranking(args.output)
+    payload = json.loads(args.output.read_text(encoding="utf-8"))
     print(json.dumps(payload["counts"], ensure_ascii=False))
     return 0
 

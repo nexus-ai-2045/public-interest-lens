@@ -21,6 +21,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.build_public_ranking import OUTCOMES, direction_undetermined  # noqa: E402
+from scripts.durable_write import write_text as atomic_write_text  # noqa: E402
 
 RANKING = ROOT / "app" / "public" / "distribution" / "ranking.json"
 WITHHELD = "1本ごとの額は公開ランキングで出していない（{outcome}）。法律ランキングで見る。全法律の台帳の結果は「{ledger}」"
@@ -90,7 +91,7 @@ def main() -> int:
     lines = [json.dumps(item, ensure_ascii=False, separators=(",", ":")) for item in data["items"]]
     head = {key: data[key] for key in ("schema", "counts")}
     text = json.dumps(head, ensure_ascii=False, separators=(",", ":"))[:-1] + ',"items":[\n' + ",\n".join(lines) + "\n]}\n"
-    OUTPUT.write_text(text, encoding="utf-8")
+    atomic_write_text(OUTPUT, text)
     print(f"{OUTPUT.name}: {len(data['items'])} 行")
     return 0
 
