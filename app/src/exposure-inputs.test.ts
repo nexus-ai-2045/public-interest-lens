@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { parseCsv } from './impact-batch';
 import { buildExposureInputs, withLedgerPeople, type ExposureSources } from './exposure-inputs';
-import { buildExposureRanking, DEFAULT_ROLE_RATIO, type ExposureRanking, type Involvement } from './exposure-ranking';
+import { buildExposureRanking, DEFAULT_ROLE_RATIO, toPublicExposureRanking, type ExposureRanking, type Involvement } from './exposure-ranking';
 import { SCORING_CONSTANTS } from './scoring-constants';
 
 const csv = (head: string[], rows: Record<string, string>[]) =>
@@ -528,5 +528,37 @@ describe('曝露ランキングの入力（実データの性質）', { timeout:
     expect(JSON.stringify(again.ranking)).toBe(JSON.stringify(ranking));
     expect(JSON.stringify(again.whole)).toBe(JSON.stringify(whole));
     expect(JSON.stringify(again.built)).toBe(JSON.stringify(built));
+  });
+});
+
+describe('曝露の公開用の額と確かさの下限', () => {
+  // 設計決定0027 の確かさの下限は中。低は順位にも配分にも使わない。
+  // 今の buildExposureInputs は macro の「結果=額」だけを見て、確かさの列を読まない。
+  // 画面は MEMBER_RANKING_HIDDEN で止めてある。公開用の形を作る段には下限が無い。
+  it.fails('確かさが中未満の法律は、公開用の曝露の額に入らない', () => {
+    const personsLow = csv(['人物ID', '氏名', '読み', '院', '選挙区', '別表記'], [
+      { 人物ID: 'p-low', 氏名: '検証一郎', 院: '衆議院', 選挙区: '東京1' },
+    ]);
+    const enactedLow = csv(ENACTED_HEAD, [
+      { 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '11', 題名: '低の法案一', 提出者一覧: '検証一郎' },
+      { 回次: '1', 種別: '衆法', 提出回次: '1', 番号: '12', 題名: '低の法案二', 提出者一覧: '検証一郎' },
+    ]);
+    const head = [...MACRO_HEAD, '確かさ'];
+    const row = (id: string) => ({ ...macroRow(id, 'B', '1998〜1998年'), 確かさ: '低' });
+    const built = buildExposureInputs(base({
+      macro: csv(head, [row('衆法-1-11'), row('衆法-1-12')]),
+      enacted: enactedLow,
+      persons: personsLow,
+      industryYear: csv(IY_HEAD, [iy('B', 1998, 1000, 900, 1100)]),
+    }));
+    const ranking = buildExposureRanking(
+      built.industry.groups,
+      built.industry.involvements,
+      { roleRatio: DEFAULT_ROLE_RATIO, minLaws: 1, topThreeShareCap: 1 },
+    );
+    const pub = toPublicExposureRanking(ranking, 1);
+    const person = pub.people.find(p => p.actorId === 'p-low');
+    expect(person).toBeTruthy();
+    expect(person.exposureYen).toBeNull();
   });
 });
