@@ -88,6 +88,10 @@ class PublicSyncTest(unittest.TestCase):
         amounted = [law for law in self.laws["laws"] if law["amount"]]
         self.assertEqual(len(amounted), r["published"])
         self.assertEqual(len(self.laws["laws"]) - len(amounted), r["others"])
+        # 共有額の参考は「成立」で止まった扱いにしない（再査読 N3）。/ranking の注の「額が出ていない法律」は札の「額なし」とそろう
+        shared = [law for law in self.laws["laws"] if law.get("shared")]
+        self.assertEqual(len(shared), r["shared"])
+        self.assertFalse([law["id"] for law in shared if law["step"] == "enacted"])
 
     def test_laws_catalog_has_no_member_allocation(self) -> None:
         """議員への配分は撤回した（設計決定0027）。一覧にも詳細にも、配った額・関わった議員の欄を持たない。"""

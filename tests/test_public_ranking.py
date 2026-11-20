@@ -142,10 +142,11 @@ class PublicRankingTests(unittest.TestCase):
         self.assertNotIn("people", payload)
 
     def test_direction_is_not_taken_from_the_industry_gap_sign(self):
-        """全体指標の行の side は産業の差の符号を写しただけ。向きは未確定と印で明示する（設計確定 v2.1）。段階を経た行とコロナの費用便益には付けない。"""
+        """全体指標の行の side は産業の差の符号を写しただけ。向きは未確定と印で明示する（設計確定 v2.1）。
+        段階を経た行も、降格して段階の裏付けを失えば未確定に入れる（再査読 N2）。コロナの費用便益には付けない。"""
         marked = 0
         for law in self.payload["laws"]:
-            gap_only = law["group"].startswith(builder.MACRO_GROUP) and not law["group"].startswith(builder.COVID_BENEFIT_GROUP)
+            gap_only = (law["group"].startswith(builder.MACRO_GROUP) or "demotedReason" in law) and not law["group"].startswith(builder.COVID_BENEFIT_GROUP)
             self.assertEqual(builder.MACRO_DIRECTION_NOTE in law["notes"], gap_only, law["id"])
             marked += gap_only
         self.assertGreater(marked, 0)

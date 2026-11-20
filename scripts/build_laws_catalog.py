@@ -68,7 +68,8 @@ CERTAINTY = {
     "参考": "参考の額",
 }
 # 額が出ない法律の結果 → どこまで進んだか
-OUTCOME_STEP = {"評価対象外": "enacted", "保留（振り分け）": "enacted", "施行日が未確定": "evaluated", "保留（影響の判定）": "dated", "未測定（系列・比較群が足りない）": "staged", "額は未計算（コロナ対応・規模のみ記録）": "dated"}
+OUTCOME_STEP = {"評価対象外": "enacted", "保留（振り分け）": "enacted", "施行日が未確定": "evaluated", "保留（影響の判定）": "dated", "未測定（系列・比較群が足りない）": "staged", "額は未計算（コロナ対応・規模のみ記録）": "dated",
+                "効果なし（定例）": "staged", "測定できない": "staged", "保留": "dated", "国の収支の額（順位に入れない）": "staged"}
 STEPS = ["enacted", "evaluated", "dated", "staged", "amounted", "published"]
 
 
@@ -382,7 +383,9 @@ def build() -> dict:
             # 共有額の参考：1本ごとの額は持たない（amount は None のまま）。順位・合計に入れない。降格（検証で不合格）とは別の印
             ref, group = shared_laws[law_id], shared_groups[shared_laws[law_id]["key"]]
             shared = shared_fields(group, value_added, direction_undetermined(ref["notes"]))
-            item["step"] = OUTCOME_STEP.get(other["outcome"], "enacted")
+            # 共有額の参考は1本ごとの額を持たないので amounted にはしないが、成立の段で止まった扱いにもしない（再査読 N3）。
+            # 共有している行（ref）が持つ段階・施行日まで進んだと数える
+            item["step"] = "staged" if ref.get("stage") else "dated" if ref.get("enforcedOn") else "evaluated"
             item["field"] = ref["field"].replace("（既存の規則で）", "").strip() or item["field"]
             item["shared"] = shared
             item["marks"] += SHARED_MARKS + [mark for mark in ref["notes"] if mark not in item["marks"]]
