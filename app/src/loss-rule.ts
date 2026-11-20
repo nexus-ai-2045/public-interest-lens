@@ -85,7 +85,7 @@ export function estimateLoss(input: LossInput): LossResult {
       sums[key] += (counterfactual - p.value) / jpBase * input.baseNominalYen;
     }
   }
-  // 1円未満の差は浮動小数点の誤差として0とみなす。
+  // 四捨五入して0になったら向き不定として保留（0.5未満→0、0.5以上→±1）。
   const sign = Math.sign(round(sums.median));
   if (sign === 0 || (sign > 0) !== (direction === 'harm')) return none('損失額の向きが影響段階の向きと一致しないため保留', post.length);
   const offset = input.regulationBenefitYen ?? 0;
@@ -105,7 +105,7 @@ export type Allocation = { personId: string; weight: number; shareYen: { low: nu
 /**
  * 損失額 × 帰属率 を、確認できた行動の重み × 立場の重みで按分する。
  * 1人が複数の行動をした場合は最大の行動だけを数える。一次資料（URL）の無い行動は数えない。
- * 個人の配分の合計は、損失額 × 帰属率 を超えない（残りは組織・未帰属）。
+ * 各人の額は独立に四捨五入する。丸め前の理論配分の合計は損失額 × 帰属率だが、丸め後の合計は超えうる（残りは組織・未帰属の想定。docs/hyoka-engine-suuchi-setsumei.md の P1）。
  */
 export function allocateLoss(lossYen: NonNullable<LossResult['lossYen']>, involvements: Involvement[], attributionRate = 0.5): Allocation[] {
   if (!(attributionRate >= 0 && attributionRate <= 1)) throw new Error('帰属率は0〜1です');
