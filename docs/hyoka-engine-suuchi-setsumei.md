@@ -94,8 +94,10 @@
 
 \[
 \Delta=\bar d_Q-\bar d_P,\quad
-\sigma=\mathrm{sd}_{t\in P}(d_t)
+\sigma=\sqrt{\frac{1}{|P|-1}\sum_{t\in P}(d_t-\bar d_P)^2}
 \]
+
+\(\sigma\) は不偏（標本）標準偏差。割るのは点数 \(|P|-1\)（`impact-rule.ts` の `sampleSd`、L39）。母標準偏差（\(n\) で割る）ではない。
 
 | 名前 | 値 | 入力 | 式・条件 | 単位・範囲 | 境界 | 参照 | 根拠 |
 |---|---|---|---|---|---|---|---|
@@ -120,7 +122,13 @@
 
 正本：`app/src/loss-rule.ts`。段階2以上かつ向きありのときだけ額を出す。
 
-開始前の年平均伸び（対数）\(g=\frac{1}{L}\ln(Y_b/Y_f)\)。日本と比較国中央値の差 \(\delta\) を開始後も続く傾きとして反実仮想に織り込む。開始後最大10年：
+開始前の年平均伸び（対数）：開始前の観測を昇順に並べ、末尾から最大5点を取る（`loss-rule.ts` L63）。\(Y_f\)＝その両端の早い方、\(Y_b\)＝遅い方（開始前最後）。\(L\)＝両端の暦年の差（`yearOf(baseAsOf)-yearOf(firstAsOf)`。L64 に直書き。定数 `MIN_PRE_YEARS`＝L37 は最低年数の検査だけで、\(L\) の式ではない）。
+
+\[
+g=\frac{1}{L}\ln\frac{Y_b}{Y_f},\qquad \delta=g^{\mathrm{JP}}-\operatorname{med}_c g^{c}
+\]
+
+\(\delta\) を開始後も続く傾きとして反実仮想に織り込む（L72–75）。開始後最大10年：
 
 \[
 \text{反実仮想}_{t}=Y^{\mathrm{JP}}_{\mathrm{base}}\cdot q_{\alpha}\!\left(\frac{Y^{c}_{t}}{Y^{c}_{\mathrm{base}}}\right)\cdot e^{\delta k},\quad
@@ -136,10 +144,10 @@
 | `MIN_CONTROLS` | 3 | 比較国 | 未満は保留 | か国 | — | L38 | §3 と同じ |
 | 四分位 | 0.25 / 0.5 / 0.75 | 比較国の伸び比 | low/median/high | 無次元 | 国が3なら線形補間 | L83 | 統計の定番 |
 | 中央値 | 0.5 | 開始前の伸び | 比較国 g の中央値 | 対数／年 | — | L74 | 統計の定番 |
-| 向き一致 | — | median の符号と direction | harm ⇔ median&gt;0。不一致や0は保留 | 円 | 1円未満は0扱い | L88–90 | 規則の定義 |
+| 向き一致 | — | `round(sums.median)` の符号と direction | `Math.round` したうえで符号0なら保留（null）。harm ⇔ 正。不一致も保留 | 円 | **四捨五入して0になったら保留**（「1円未満は0扱い」ではない。0.4→0で保留、0.5→1で向き判定へ） | L46, L88–90 | 規則の定義 |
 | `ACTION_WEIGHT` | decide5…vote1 | 行動の種類 | 個人配分の行動重み | 無次元 | URL 無しは無視。同一人は最大のみ | L100 | 根拠なし（要出典） |
 | `POSITION_WEIGHT` | 首相3…その他1（政務1.5） | 立場 | 行動重み×立場重み | 無次元 | — | L101 | 根拠なし（要出典） |
-| `attributionRate` 既定 | 0.5 | 損失額・関与 | 各人の share は独立に四捨五入。**丸め前**の理論配分の合計は損失×0.5。丸め後の合計は超えうる（P1） | [0,1] | 範囲外は例外 | L110–120 | 根拠なし（要出典） |
+| `attributionRate` 既定 | 0.5 | 損失額・関与 | 各人の share は独立に四捨五入。丸め前の理論配分の和は損失×帰属率。丸め後の和に上限は掛けない（P1） | [0,1] | 範囲外は例外 | L110–120 | 根拠なし（要出典） |
 
 個人配分：
 
@@ -148,7 +156,7 @@ w_p=\max_a(\mathrm{ACTION}[a]\cdot\mathrm{POSITION}[p]),\quad
 \text{share}_p= \mathrm{round}\!\left(\mathrm{loss}\cdot 0.5\cdot w_p/\sum w\right)
 \]
 
-**P1（実装の丸め。挙動は変えない）**：`share_p` を人ごとに `Math.round` するため、\(\sum_p \mathrm{share}_p\) が \(\mathrm{loss}\times 0.5\) を超えることがある。反例：損失 median=2・帰属率0.5・同じ重みの2人 → 各人 `round(0.5)=1`、合計2（理論上限1を超える）。合計上限を保証する丸めにはしていない（特性テストで固定）。
+**P1（既知の挙動。実装は変えない）**：人ごとに `Math.round` するため、\(\sum_p\mathrm{share}_p\) が \(\mathrm{loss}\times 0.5\) を超えうる。反例1：損失2・帰属0.5・同重み2人 → 各1、合計2（上限1を超える）。反例2：損失中央値10・帰属0.5・重み1の3人 → 各 `round(10/3×0.5)=round(1.666…)=2`、合計6（上限5を超える）。「合計≦損失×0.5」という不等式は成り立たない（特性テストで固定）。
 
 ---
 
@@ -163,7 +171,7 @@ w_p=\max_a(\mathrm{ACTION}[a]\cdot\mathrm{POSITION}[p]),\quad
 | `COVID_YEARS` | 2020–2022 | 損失の窓 | 重なればコロナ規則を適用 | 年 | 暦年 | L171 | 事実（パンデミック期の扱いの取り決め） |
 | `COVID_CUTOFF_YEAR` | 2019 | 系列 | 2019-12-31 より後を切る | 年 | 2020以降をつながない | L172–176 | 取り決め（系列接続禁止と同型） |
 | `MIN_POST_YEARS_AFTER_CUT` | 2 | 切った後の開始後年数 | 未満なら分離不能（R3） | 年 | — | L173, L197 | 根拠なし（要出典） |
-| 純額の幅 | — | 損失幅・便益幅 | low=損失low−便益high、high=損失high−便益low | 円 | 0をまたげば R5 で非公開 | L238, L267 | 費用便益の向きの保守的な組み合わせ（学術：CBA の感度。幅の式は独自の取り決め） |
+| 純額の幅 | — | 損失幅・便益幅 | low=損失low−便益high、high=損失high−便益low | 円 | **R5**：`low ≤ 0` かつ `high ≥ 0`（等号を含む）のとき向き不定で非公開 | L238, L267 | 費用便益の向きの保守的な組み合わせ（学術：CBA の感度。幅の式は独自の取り決め） |
 | R1–R6 | 行の優先順 | 公開入力 | 上から最初に当たった行 | — | R6 のみ公開候補 | L241–270 | 規則表（提案・設計）。閾値そのものではない |
 
 未測定の符号表（`UNMEASURED_SIGN`）は種類ごとの取り決め（L136–144）。表の当てはめは AI 解釈で人の確認が要る（弱い：分類の事前固定）。
@@ -180,10 +188,10 @@ w_p=\max_a(\mathrm{ACTION}[a]\cdot\mathrm{POSITION}[p]),\quad
 | `ROLE_FACTOR.coauthor` | 0.5 | 同上 | 同上 | 同上 | — | L17 | 同上 |
 | `ROLE_FACTOR.vote` | 0.25 | 同上 | 同上 | 同上 | — | L17 | 同上 |
 | `ROLE_FACTOR.context` | 0 | 同上 | 点に入らない | 同上 | 0は資格外 | L17 | 同上 |
-| 分野重み | 0〜100 | options.weights | overall 時は economy/technology の加重平均 | 無次元 | 合計0で overall は保留 | evidence-evaluation L56, L127 | 呼び出し側の入力。固定定数ではない |
+| 分野重み | 0〜100 | options.weights | overall 時は economy/technology の加重平均 | 無次元 | 合計0で overall は保留 | evidence-evaluation.ts:114、ranking.ts:101 | 呼び出し側の入力。固定定数ではない |
 | impact | 1\|2\|3 | 立場別影響分析 | 離散の大きさ | 段階 | — | 入力契約 | 人／AI の判定入力（機械計算の閾値ではない） |
 | 丸め | 小数2桁 | 寄与の和 | `round(sum*100)/100` | — | 寄与0件は null | ranking L23 | 実装の丸め |
-| 比較期間 | 2,4,8,30,40年など | asOf と period | asOf から年数を引く | 年 | 列挙以外は不正 | ranking L7, L32–37 | 表示条件の選択肢（評価閾値ではない） |
+| 比較期間 | 2,4,8,30,40年など | asOf と period | asOf から年数を引く | 年 | 列挙以外は不正 | ranking.ts:7, L32–37, **L50**（許可一覧の検査） | 表示条件の選択肢（評価閾値ではない） |
 
 ---
 
@@ -206,28 +214,33 @@ w_p=\max_a(\mathrm{ACTION}[a]\cdot\mathrm{POSITION}[p]),\quad
 |---|---|---|---|---|
 | 1 | `minContributingLaws` | 5 | scoring-constants.ts:14 | 設計文の理由のみ |
 | 2 | `topThreeShareCap` | 0.5 | scoring-constants.ts:16 | 同上 |
-| 3 | `DEFAULT_ROLE_RATIO` | 0.4/0.2/0.2/0.2 | exposure-ranking.ts:44 | 取り決め。感度表は ADR 0028 にあるが出典ではない |
-| 4 | `HOUSE_SPLIT` | 0.5 | exposure-ranking.ts:54 | 取り決め |
-| 5 | `HIDDEN_DOMINANCE_REST_MIN` | 0.1 | exposure-ranking.ts:354 | 取り決め |
-| 6 | `MIN_PRE_YEARS` / `MAX_PRE_YEARS` | 3 / 5 | impact-rule.ts:32–33、loss-rule.ts:37 | 窓の長さ |
-| 7 | 開始後窓（1年目除外・2〜5年目） | — | impact-rule.ts:51–52 | 立ち上がり除外 |
-| 8 | `SPREAD_MULTIPLIER` | 2 | impact-rule.ts:34 | 2σ慣用。文献対応は弱い |
-| 9 | `MIN_PERSISTENT_YEARS` | 2 | impact-rule.ts:35 | |
-| 10 | `MIN_SECTOR_GDP_SHARE` | 0.01 | impact-rule.ts:36 | |
-| 11 | `MIN_CONTROL_COUNTRIES` | 3 | impact-rule.ts:107 | |
-| 12 | `AGREEMENT_SHARE` | 2/3 | impact-rule.ts:108 | |
-| 13 | 国際比較のドリフト閾値 | \|効果\|/2 | impact-rule.ts:126 | |
-| 14 | `MAX_LOSS_YEARS` | 10 | loss-rule.ts:36 | |
-| 15 | `ACTION_WEIGHT` | 5…1 | loss-rule.ts:100 | 個人配分。現行の曝露本線とは別経路 |
-| 16 | `POSITION_WEIGHT` | 3…1 | loss-rule.ts:101 | 同上 |
-| 17 | `attributionRate` 既定 | 0.5 | loss-rule.ts:110 | 同上 |
-| 18 | `MIN_POST_YEARS_AFTER_CUT` | 2 | benefit-rule.ts:173 | |
-| 19 | `ROLE_FACTOR` | 1 / 0.5 / 0.25 / 0 | ranking.ts:17 | 製品仮定 |
-| 20 | `hitRateFloor` / `TARGET` | 0.8 | scoring-constants / backtest | 運用で 95%→80%。学術の最適値ではない |
-| 21 | `MIN_N` | 10 | backtest.py:43 | 設計書の既定 |
-| 22 | `MIN_GROUPS` | 5 | backtest_transplant.py:23 | |
+| 3 | `certaintyFloor` | `'中'` | scoring-constants.ts:18 | 取り決め（低・参考は順位に使わない） |
+| 4 | `DEFAULT_ROLE_RATIO` | 0.4/0.2/0.2/0.2 | exposure-ranking.ts:44 | 取り決め。感度表は ADR 0028 にあるが出典ではない |
+| 5 | `HOUSE_SPLIT` | 0.5 | exposure-ranking.ts:54 | 取り決め |
+| 6 | `HIDDEN_DOMINANCE_REST_MIN` | 0.1 | exposure-ranking.ts:354 | 取り決め |
+| 7 | `MIN_PRE_YEARS` / `MAX_PRE_YEARS`（影響） | 3 / 5 | impact-rule.ts:32–33 | 影響段階の窓 |
+| 8 | `MIN_PRE_YEARS`（損失） | 3 | loss-rule.ts:37 | 損失の開始前最低年数 |
+| 9 | 開始前伸びの両端（損失） | 末尾最大5観測 | loss-rule.ts:63–65 | 名前付き定数ではない。\(L\) は暦年差 |
+| 10 | `MAX_PRE_YEARS`（便益の円換算） | 5 | benefit-rule.ts:73 | 開始前差の平均に使う直近点数 |
+| 11 | 開始後窓（1年目除外・2〜5年目） | — | impact-rule.ts:51–52 | 立ち上がり除外 |
+| 12 | `SPREAD_MULTIPLIER` | 2 | impact-rule.ts:34 | 2σ慣用。文献対応は弱い |
+| 13 | `MIN_PERSISTENT_YEARS` | 2 | impact-rule.ts:35 | |
+| 14 | `MIN_SECTOR_GDP_SHARE` | 0.01 | impact-rule.ts:36 | |
+| 15 | `MIN_CONTROL_COUNTRIES` | 3 | impact-rule.ts:107 | 国際比較の比較国数 |
+| 16 | `MIN_CONTROLS`（損失） | 3 | loss-rule.ts:38 | 損失額の比較国数 |
+| 17 | `AGREEMENT_SHARE` | 2/3 | impact-rule.ts:108 | |
+| 18 | 国際比較のドリフト閾値 | \|効果\|/2 | impact-rule.ts:126 | |
+| 19 | `MAX_LOSS_YEARS` | 10 | loss-rule.ts:36 | |
+| 20 | `ACTION_WEIGHT` | 5…1 | loss-rule.ts:100 | 個人配分。現行の曝露本線とは別経路 |
+| 21 | `POSITION_WEIGHT` | 3…1 | loss-rule.ts:101 | 同上 |
+| 22 | `attributionRate` 既定 | 0.5 | loss-rule.ts:110 | 同上 |
+| 23 | `MIN_POST_YEARS_AFTER_CUT` | 2 | benefit-rule.ts:173 | |
+| 24 | `ROLE_FACTOR` | 1 / 0.5 / 0.25 / 0 | ranking.ts:17 | 製品仮定 |
+| 25 | `hitRateFloor` / `TARGET` | 0.8 | scoring-constants / backtest | 運用で 95%→80%。学術の最適値ではない |
+| 26 | `MIN_N` | 10 | backtest.py:43 | 設計書の既定 |
+| 27 | `MIN_GROUPS` | 5 | backtest_transplant.py:23 | |
 
-件数：**22**（上表の行数）。実装上の EPS／丸め／COVID の暦年そのものは、閾値の出典問題とは別に扱った。
+件数：**27**（上表の行数）。実装上の EPS／丸め／COVID の暦年そのものは、閾値の出典問題とは別に扱った。
 
 ---
 

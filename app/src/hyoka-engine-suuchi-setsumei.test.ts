@@ -27,8 +27,12 @@ describe('数値説明ドキュメントと定数の一致', () => {
       topThreeShareCap: 0.5,
       certaintyFloor: '中',
     });
+    expect(meetsCertaintyFloor('高')).toBe(true);
     expect(meetsCertaintyFloor('中')).toBe(true);
     expect(meetsCertaintyFloor('低')).toBe(false);
+    expect(meetsCertaintyFloor('参考')).toBe(false);
+    expect(meetsCertaintyFloor('')).toBe(false);
+    expect(meetsCertaintyFloor('未知')).toBe(false);
   });
 
   it('曝露の役割比率・院分割・伏せ閾値は文書どおり（合計1）', () => {
@@ -64,9 +68,8 @@ describe('文書の計算境界（挙動を変えない特性）', () => {
     expect(out.totals.expected.median).toBeCloseTo(600);
   });
 
-  it('影響段階：|Δ|=2σ ちょうどは保留、|Δ|>2σ かつ2年連続なら段階1', () => {
-    // 開始前の差 [1,2,3] → 平均2・標本σ=1。2σ=2。
-    // 開始後（1年目除外）の差の平均が4なら Δ=2 で等号→保留。平均が5なら Δ=3→段階1。
+  it('影響段階：|Δ|=2σ ちょうどは保留、すぐ上と持続の境界を分ける', () => {
+    // 開始前の差 [1,2,3] → 平均2・標本σ=1（n−1）。2σ=2。
     const pts = (gaps: number[], from: number): ImpactPoint[] =>
       gaps.map((g, i) => ({ asOf: `${from + i}-12-31`, treated: 10 + g, control: 10 }));
     const base = (postGaps: number[]): ImpactSeries => ({
@@ -77,8 +80,15 @@ describe('文書の計算境界（挙動を変えない特性）', () => {
       economy: null,
       sectorGdpShare: null,
     });
+    // 等号 |Δ|=2σ → 保留（持続年を3にしても落ちない＝σ側で落ちる）
     expect(judgeImpact(base([4, 4, 4]))).toMatchObject({ stage: null, effect: 2, spread: 1 });
+    // 2σ のすぐ上：Δ=2.1、3年連続同符号 → 段階1
+    expect(judgeImpact(base([4.1, 4.1, 4.1]))).toMatchObject({ stage: 1, effect: 2.1, spread: 1 });
+    // ばらつき倍率 2〜3：Δ=3 でも通る（倍率だけの下限は無い）
     expect(judgeImpact(base([5, 5, 5]))).toMatchObject({ stage: 1, effect: 3, spread: 1 });
+    // 最長連続2年（[7,7,0]：効果と同符号が2年→段階1）と1年（[7,0,7]：最長1→保留）の組
+    expect(judgeImpact(base([7, 7, 0]))).toMatchObject({ stage: 1, spread: 1 });
+    expect(judgeImpact(base([7, 0, 7]))).toMatchObject({ stage: null, spread: 1 });
   });
 
   it('個人配分の既定帰属率0.5：decide×大臣=10 と vote×other=1 で按分', () => {
@@ -95,13 +105,22 @@ describe('文書の計算境界（挙動を変えない特性）', () => {
 
   it('個人配分は各人を独立に丸めるため、合計が損失×帰属率を超えうる（P1）', () => {
     // 損失2・帰属0.5・同じ重み2人 → 各人 round(2*0.5*0.5)=round(0.5)=1、合計2 > 理論上限1
-    const a = allocateLoss({ low: 2, median: 2, high: 2 }, [
+    const two = allocateLoss({ low: 2, median: 2, high: 2 }, [
       { personId: 'A', action: 'vote', position: 'other', evidenceUrl: 'https://example.go.jp/a' },
       { personId: 'B', action: 'vote', position: 'other', evidenceUrl: 'https://example.go.jp/b' },
     ]);
-    expect(a.map(x => x.shareYen.median)).toEqual([1, 1]);
-    const cap = 2 * 0.5;
-    expect(a.reduce((s, x) => s + x.shareYen.median, 0)).toBeGreaterThan(cap);
+    expect(two.map(x => x.shareYen.median)).toEqual([1, 1]);
+    expect(two.reduce((s, x) => s + x.shareYen.median, 0)).toBeGreaterThan(2 * 0.5);
+
+    // 中央値10・帰属0.5・重み1の3人 → 各 round(10*0.5/3)=round(1.666…)=2、合計6 > 上限5
+    const three = allocateLoss({ low: 10, median: 10, high: 10 }, [
+      { personId: 'A', action: 'vote', position: 'other', evidenceUrl: 'https://example.go.jp/a' },
+      { personId: 'B', action: 'vote', position: 'other', evidenceUrl: 'https://example.go.jp/b' },
+      { personId: 'C', action: 'vote', position: 'other', evidenceUrl: 'https://example.go.jp/c' },
+    ]);
+    expect(three.map(x => x.shareYen.median)).toEqual([2, 2, 2]);
+    expect(three.reduce((s, x) => s + x.shareYen.median, 0)).toBe(6);
+    expect(6).toBeGreaterThan(10 * 0.5);
   });
 
   it('影響段階の分岐は排他：経済全体通過後、傾きか規模が欠ければ段階2、そろえば段階3', () => {

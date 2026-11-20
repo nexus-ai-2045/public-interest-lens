@@ -85,7 +85,7 @@ export function estimateLoss(input: LossInput): LossResult {
       sums[key] += (counterfactual - p.value) / jpBase * input.baseNominalYen;
     }
   }
-  // 1円未満の差は浮動小数点の誤差として0とみなす。
+  // 四捨五入して0になったら向き不定として保留（0.5未満→0、0.5以上→±1）。
   const sign = Math.sign(round(sums.median));
   if (sign === 0 || (sign > 0) !== (direction === 'harm')) return none('損失額の向きが影響段階の向きと一致しないため保留', post.length);
   const offset = input.regulationBenefitYen ?? 0;
