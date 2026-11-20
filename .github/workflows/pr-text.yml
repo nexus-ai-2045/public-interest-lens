@@ -1,11 +1,13 @@
 name: PR の題名と本文
-# 題名と本文の見出しが日本語であることを検査する。
+# 作成のときにサーバーが付ける自動フッターを本文から外し（--fix）、題名と本文の見出しが日本語であることを検査する。
+# GITHUB_TOKEN での更新は workflow を起こし直さないので、外したあとの本文をそのまま同じ手順で検査する。
 # 手元では同じスクリプトを --title / --body-file で回す（AGENTS.md のルール表）。
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
 permissions:
   contents: read
+  pull-requests: write
 jobs:
   pr-text:
     runs-on: ubuntu-latest
@@ -13,4 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       # 題名と本文は env や式で展開せず、イベントの JSON から読む（シェルへの注入を避ける）
-      - run: python3 scripts/check_pr_text.py --from-event "$GITHUB_EVENT_PATH"
+      # fork や dependabot の PR は書き込みの権限が無いので直さず、検査だけする
+      - if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/check_pr_text.py --from-event "$GITHUB_EVENT_PATH" --fix
+      - if: github.event.pull_request.head.repo.full_name != github.repository || github.actor == 'dependabot[bot]'
+        run: python3 scripts/check_pr_text.py --from-event "$GITHUB_EVENT_PATH"
