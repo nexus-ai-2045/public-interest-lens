@@ -1,7 +1,7 @@
 import sys,os,csv,re,json,time,collections,urllib.request
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from bridgelib import *
-S=os.path.dirname(os.path.abspath(__file__))+'/'
+S=os.environ.get('EGOV_WORKDIR',os.path.dirname(os.path.abspath(__file__)))+'/'  # 入力（econ_labels.csv・honbun.json など）を置く作業フォルダ
 # ---- 正解（bridge.py と同じ作り方）
 macro=list(csv.DictReader(open(D+'macro.csv'))); mf={x['id']:x for x in macro}
 gold={}
