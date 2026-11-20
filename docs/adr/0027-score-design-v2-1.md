@@ -132,7 +132,7 @@
 | SC-01 | Abadie & Gardeazabal (2003), American Economic Review 93(1) |
 | SC-02 | Abadie, Diamond & Hainmueller (2010), Journal of the American Statistical Association 105(490) |
 | SC-03 | Abadie, Diamond & Hainmueller (2015), American Journal of Political Science 59(2) |
-| SC-04 | Abadie (2021), Journal of Economic Literature 59(2) |
+| SC-04 | Abadie (2021), Journal of Economic Literature 59(2)。使ってよい条件は第5節（p.408）と第6節（p.413）。確かめ方は第7節（p.414） |
 | SC-06 | Kaul, Klößner, Pfeifer & Schieler (2022), Journal of Business & Economic Statistics 40(3) |
 | SC-08 | Ferman, Pinto & Possebom (2020), Journal of Policy Analysis and Management 39(2) |
 | SC-09 | Ferman & Pinto (2021), Quantitative Economics 12(4) |
@@ -140,11 +140,14 @@
 | SC-12 | Ben-Michael, Feller & Rothstein (2021), Journal of the American Statistical Association 116(536) |
 | SC-13 | Abadie & L'Hour (2021), Journal of the American Statistical Association 116(536) |
 | SC-17 | Billmeier & Nannicini (2013), The Review of Economics and Statistics 95(3) |
+| SC-22 | Matti (2024), The Long-Term Economic Impact of Abenomics: Evidence from the Synthetic Control Method, Economic Papers 43(1), pp.10–33. doi 10.1111/1759-3441.12408 |
 
-定義は SC-02 と SC-03 に従う。重みは非負で合計 1、予測変数の距離を最小にする。効果は処置後の、実績と重みつき平均との差。確かさは、国を入れ替えたプラセボの、事後と事前の RMSPE の比で出す（SC-03）。
+定義は SC-02 と SC-03 に従う。重みは非負で合計 1、予測変数の距離を最小にする。効果は処置後の、実績と重みつき平均との差。確かさは、国を入れ替えたプラセボの、事後と事前の RMSPE の比で出す（SC-03）。J=12 のとき、この p 値の下限は 1/13 であり、0.05 を下回らない。出力にその下限を書く。有意とは書かない。使ってよいかの条件と、確かめる手順は SC-04 の第5節（p.408）・第6節（p.413）と第7節（p.414）に従う。
+
+この改訂の実装は synthdid を依存にしない。依存として書くときは、配布元は GitHub であり、CRAN には無い。
 
 ### 日本に当てはめるときの限界
 
 - 日本には単一の処置時点が無い。法律群ごと、産業ごと、固定年など、政策ごとに処置時点を入力する。コード側で日本全体の年を一つに決めない。
 - 日本は、比べる国の凸包の外に出やすい。そのときは額を出さず、理由を返す。拡張版（SC-12）は、この改訂では入れない。
-- 日本を処置単位にした、国単位の合成対照の査読論文は、この改訂の時点では見つかっていない。
+- 国を処置単位にした査読つきの先例として、SC-22（Matti 2024, Economic Papers）を引く。日本のアベノミクスを合成対照で見ている。J-02 は査読つきの論文だが、単位は都道府県である。
