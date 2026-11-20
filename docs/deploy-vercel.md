@@ -6,7 +6,7 @@
 
 - 公開版ビルド（`VITE_PUBLIC_SITE=true`）は、端末専用の入口を出しません。試作版の注記と訂正窓口を全画面に出します。
 - 実名の人物の点数は、金融再生プログラム1件（`/policies`、公開はユーザー承認済み）だけに出ます。それ以外の人物の点数や配分額は出しません。
-- `/ranking` は実データの法律ランキングです。`app/public/distribution/ranking.json`（`scripts/build_public_ranking.py` で生成）を読みます。額のある法律は全件を、確かさ（高・中・低・参考）つきで載せます。参考の額は確かな額と別の区画に分けます。額のない法律も、結果と理由を全件（成立した法律の全数）一覧に載せます。法律単位の結果の全件公開は 2026-10-17 のユーザー承認で、承認の記録（日付・範囲・メモ）を `ranking.json` の `approval` に残します（`--approve-all-laws --approved-at` で渡す）。議員の実名はこのファイルに入れません（別承認）。
+- `/ranking` は実データの法律ランキングです。`app/public/distribution/ranking.json` を読みます。このファイルを書く経路は1本で、公開版のビルド（`VITE_PUBLIC_SITE=true npm run build`）が `python3 scripts/generate_artifacts.py --public-build` を呼び、出典チェック（`scripts/source_check.py --generate-ranking`）の結果まで含んだ公開ハッシュが一致するときだけ作り直します。額のある法律は全件を、確かさ（高・中・低・参考）つきで載せます。参考の額は確かな額と別の区画に分けます。額のない法律も、結果と理由を全件（成立した法律の全数）一覧に載せます。法律単位の結果の全件公開は 2026-10-17 のユーザー承認で、承認の記録（日付・範囲・メモ）を `ranking.json` の `approval` に残します。議員の実名はこのファイルに入れません（別承認）。
 - 架空データのデモは `/demo` に移しました。
 - 訂正・異議は[訂正・異議の手順](corrections.md)で受け付けます。
 
@@ -48,7 +48,7 @@
 
 ## 法律ランキングの更新
 
-1. 派生データ（`data/derived/*-triage-v2/`）が変わったら、`python3 -m scripts.build_public_ranking --approve-all-laws --approved-at 2026-10-17` を流し直します（承認日は承認の記録のとおり）。
+1. 派生データ（`data/derived/*-triage-v2/`）が変わったら、`python3 scripts/generate_artifacts.py` を流し直します。公開版のビルドも同じ入口を呼び、出典チェックの公開ハッシュが違う ranking.json は dist に入りません。
 2. `tests/test_public_ranking.py` が、コミットした `ranking.json` と入力の一致を確かめます。`app/src/public-bundle.test.ts` が、公開ビルドに承認外の額・人物の欄・非公開フォルダの文字列が無いことを確かめます。
 
 ## プレビューのデプロイを止める（2026-10-17）

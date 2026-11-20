@@ -13,6 +13,11 @@ import json
 from collections import Counter
 from pathlib import Path
 
+try:
+    from scripts.durable_write import write_text as atomic_write_text
+except ImportError:
+    from durable_write import write_text as atomic_write_text
+
 ROOT = Path(__file__).resolve().parents[1]
 SCALE = ROOT / "data" / "derived" / "unenacted-bills-v1" / "scale.csv"
 LISTING = ROOT / "data" / "acquired" / "bill-census-full" / "listing.csv"
@@ -49,7 +54,7 @@ def main() -> None:
         "bills": bills,
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    atomic_write_text(OUTPUT, json.dumps(out, ensure_ascii=False, separators=(",", ":")) + "\n")
     print(f"unenacted.json: 点つき {len(bills)} 本 / 全 {len(rows)} 本")
 
 

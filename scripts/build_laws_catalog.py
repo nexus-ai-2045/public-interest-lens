@@ -24,6 +24,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.build_public_ranking import direction_undetermined  # noqa: E402
+from scripts.durable_write import write_text as atomic_write_text  # noqa: E402
 
 # 向き未確定の額（産業と比較国の差の符号しか無い）の表し方。side は国賊側・国士側に分けず undetermined にする（リリース前レビュー指摘1・4）。
 UNDETERMINED = "undetermined"
@@ -567,14 +568,14 @@ def dump_bundle_one_per_line(bundle: dict) -> str:
 
 def main() -> int:
     index, bundles = split(build())
-    OUTPUT.write_text(dump_one_per_line(index), encoding="utf-8")
+    atomic_write_text(OUTPUT, dump_one_per_line(index))
     DETAIL_DIR.mkdir(exist_ok=True)
     for stale in DETAIL_DIR.glob("*.json"):
         if stale.stem not in bundles:
             stale.unlink()
     for name, bundle in bundles.items():
-        (DETAIL_DIR / f"{name}.json").write_text(dump_bundle_one_per_line(bundle), encoding="utf-8")
-    NAMES_OUTPUT.write_text(json.dumps(law_names(index), ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+        atomic_write_text(DETAIL_DIR / f"{name}.json", dump_bundle_one_per_line(bundle))
+    atomic_write_text(NAMES_OUTPUT, json.dumps(law_names(index), ensure_ascii=False, separators=(",", ":")) + "\n")
     print(json.dumps(index["counts"], ensure_ascii=False))
     return 0
 

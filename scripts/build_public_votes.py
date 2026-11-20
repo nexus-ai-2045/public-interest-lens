@@ -19,6 +19,11 @@ import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
+try:
+    from scripts.durable_write import write_text as atomic_write_text
+except ImportError:
+    from durable_write import write_text as atomic_write_text
+
 ROOT = Path(__file__).resolve().parents[1]
 CENSUS = ROOT / "data/acquired/bill-census-full/enacted.csv"
 TREATIES = ROOT / "data/acquired/treaty-census/treaties.csv"
@@ -131,7 +136,7 @@ def build() -> dict:
 
 def main() -> int:
     data = build()
-    OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    atomic_write_text(OUT, json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n")
     print(data["counts"], f"{OUT.stat().st_size // 1024}KB")
     return 0
 

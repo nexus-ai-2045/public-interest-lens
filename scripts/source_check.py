@@ -31,7 +31,9 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+from scripts.durable_write import write_text as atomic_write_text  # noqa: E402
 from scripts.fetch_oecd_industry import load_sources, source_url  # noqa: E402
+from scripts.publish_fingerprint import hash_path, record  # noqa: E402
 DERIVED = ROOT / "data" / "derived"
 ACQUIRED = ROOT / "data" / "acquired"
 # e-Gov の記録（改正履歴・施行期日政令）から施行日を取った行。附則の原文は取っていないので、原文の有無では判定しない。
@@ -398,20 +400,43 @@ def write_report(rows: list[dict[str, str]], summary: dict, report_dir: Path = R
         writer.writerows(rows)
     stable = {key: value for key, value in summary.items() if key != "rawFilesPresent"}
     stable.update(items=len(rows), match=sum(r["結果"] == OK for r in rows))
-    (report_dir / "summary.json").write_text(json.dumps(stable, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # 原因: write_text は開いた瞬間に summary.json を空にするので、途中で切れると切れた JSON が残る。
+    atomic_write_text(report_dir / "summary.json", json.dumps(stable, ensure_ascii=False, indent=2) + "\n")
 
 
 # 公開ランキングを Git に置かず入力から作るときの承認日（記録済みの承認日と同じ。設計決定0022）
 GENERATED_APPROVED_AT = "2026-10-17"
+# 原因: 案内が generate_artifacts を指しても、mtime が新しければ作り直さないので、案内どおりに実行しても確かさは戻らない。
+STALE_GUIDANCE = "python3 scripts/generate_artifacts.py で作り直す"
 
 
-def generate_ranking() -> dict:
-    """公開ランキング ranking.json の中身を、リポジトリ内の入力だけから作る（全法律の承認・出典チェック込み）。報告の CSV は書かない。"""
+def generate_checked() -> tuple[dict, dict]:
+    """出典チェックを通した公開ランキングと、その照合結果。書く経路はこれだけ。"""
     from scripts import build_public_ranking as ranking_builder
 
     candidate = ranking_builder.build(True, GENERATED_APPROVED_AT, held_by_check=set())
     _rows, summary = check(candidate, context())
-    return ranking_builder.build(True, GENERATED_APPROVED_AT, held_by_check=set(summary["heldOut"]))
+    payload = ranking_builder.build(True, GENERATED_APPROVED_AT, held_by_check=set(summary["heldOut"]))
+    return payload, summary
+
+
+def generate_ranking() -> dict:
+    """公開ランキング ranking.json の中身を、リポジトリ内の入力だけから作る（全法律の承認・出典チェック込み）。報告の CSV は書かない。"""
+    payload, _summary = generate_checked()
+    return payload
+
+
+def write_checked_ranking(path: Path, payload: dict, summary: dict) -> None:
+    """照合済みの中身と、出典チェックの結果を含んだ公開ハッシュを、rename で置く。"""
+    atomic_write_text(path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    atomic_write_text(hash_path(path), json.dumps(record(payload, summary), ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def write_generated_ranking(path: Path = RANKING) -> dict:
+    """公開ランキングを書く唯一の入口。今の出典チェックを通してから書く。"""
+    payload, summary = generate_checked()
+    write_checked_ranking(path, payload, summary)
+    return payload
 
 
 def rebuild(approve_all: bool, approved_at: str, ranking_path: Path = RANKING, write: bool = True) -> dict:
@@ -423,7 +448,8 @@ def rebuild(approve_all: bool, approved_at: str, ranking_path: Path = RANKING, w
     payload = ranking_builder.build(approve_all, approved_at, held_by_check=set(summary["heldOut"]))
     if write:
         write_report(rows, summary)
-        ranking_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        # 原因: write_text は開いた瞬間に ranking.json を空にするので、途中で切れると切れた JSON が残る。
+        write_checked_ranking(ranking_path, payload, summary)
     else:
         # 書き換えないときは、手元の ranking.json が入力から作り直したものと同じかも確かめる（書き換えられた公開データを合格にしない）
         on_disk = json.loads(ranking_path.read_text(encoding="utf-8")) if ranking_path.is_file() else None
@@ -438,7 +464,7 @@ def main() -> int:
     parser.add_argument("--generate-ranking", action="store_true", help="入力だけから ranking.json を作る（Git に置かない派生物。報告は書かない）")
     args = parser.parse_args()
     if args.generate_ranking:
-        args.ranking.write_text(json.dumps(generate_ranking(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        write_generated_ranking(args.ranking)
         print(f"書きました: {args.ranking}")
         return 0
     current = json.loads(args.ranking.read_text(encoding="utf-8"))
@@ -448,7 +474,7 @@ def main() -> int:
     summary = rebuild(approve_all, approved_at, args.ranking, write=not args.dry_run)
     print(json.dumps(summary, ensure_ascii=False))
     if summary.get("rankingStale"):
-        print(f"失敗: {args.ranking} が入力から作り直したものと違う（古いか、手で書き換えられている）。python3 scripts/generate_artifacts.py で作り直す", file=sys.stderr)
+        print(f"失敗: {args.ranking} の公開ハッシュが、入力と出典チェックの結果から計算した値と違う。{STALE_GUIDANCE}", file=sys.stderr)
         return 1
     return 1 if summary["mismatch"] else 0
 

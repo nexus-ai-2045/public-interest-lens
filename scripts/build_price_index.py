@@ -16,6 +16,11 @@ import json
 import sys
 from pathlib import Path
 
+try:
+    from scripts.durable_write import write_text as atomic_write_text
+except ImportError:
+    from durable_write import write_text as atomic_write_text
+
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / "data" / "acquired" / "oecd-industry" / "industry_va.csv"
 OUTPUT = ROOT / "app" / "public" / "distribution" / "price-index.json"
@@ -65,7 +70,7 @@ def main() -> int:
             return 1
         print("price-index.json は入力と一致")
         return 0
-    OUTPUT.write_text(text, encoding="utf-8")
+    atomic_write_text(OUTPUT, text)
     print(f"書きました: {OUTPUT.relative_to(ROOT)}（{len(json.loads(text)['deflator'])}年分）")
     return 0
 

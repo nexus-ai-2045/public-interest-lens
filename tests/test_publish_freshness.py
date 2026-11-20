@@ -289,20 +289,23 @@ class PublishFreshnessTests(unittest.TestCase):
 
             def run() -> None:
                 try:
-                    with mock.patch.object(generate_artifacts, "STEPS", steps), \
-                         mock.patch.object(generate_artifacts, "newest_input", return_value=0.0), \
-                         mock.patch.object(generate_artifacts.subprocess, "run", fake_run):
-                        code = generate_artifacts.main(["--force"])
+                    code = generate_artifacts.main(["--force"])
                     if code != 0:
                         errors.append(RuntimeError(f"exit {code}"))
                 except BaseException as exc:
                     errors.append(exc)
 
-            threads = [threading.Thread(target=run) for _ in range(2)]
-            for thread in threads:
-                thread.start()
-            for thread in threads:
-                thread.join(10)
+            # パッチはスレッドの外に置く。スレッドごとに付け外しすると、片方が戻した瞬間にもう片方が本物の生成を走らせる。
+            with mock.patch.object(generate_artifacts, "STEPS", steps), \
+                 mock.patch.object(generate_artifacts, "newest_input", return_value=0.0), \
+                 mock.patch.object(generate_artifacts.subprocess, "run", fake_run):
+                threads = [threading.Thread(target=run) for _ in range(2)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join(10)
+                alive = [thread.name for thread in threads if thread.is_alive()]
+        self.assertEqual(alive, [])
         self.assertEqual(errors, [])
         self.assertEqual(overlap["max"], 1)
 
