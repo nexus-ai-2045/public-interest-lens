@@ -4,6 +4,9 @@ updates:
     directory: /app
     schedule:
       interval: weekly
+    # 題名を日本語で始める（scripts/check_pr_text.py が英語だけの題名を落とす）
+    commit-message:
+      prefix: "依存の更新"
     open-pull-requests-limit: 3
     groups:
       react-runtime-and-types:
@@ -16,6 +19,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: "依存の更新"
     open-pull-requests-limit: 2
     # nexus-ai-2045 の自前 workflow（preflight-gate など）は固定先を人が上げるので、ここでは上げない。
     ignore:
