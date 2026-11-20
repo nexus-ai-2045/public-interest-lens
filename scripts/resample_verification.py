@@ -239,7 +239,10 @@ def _value(a: dict, b: dict, ruling: dict, item: str) -> tuple[str, str, str, st
             return r["値"], r["理由"], r["引用"], r.get("裁定者", ruling.get("裁定者", ""))
     for r in ruling.get("確認の記録", []):
         if r["項目"] == item and r["値"] == chosen:
-            return r["値"], r["理由"], (r.get("引用") or [""])[0], f"{r['確認者']}と Haiku 2系統が一致"
+            agreed = a.get(item) == b.get(item) == chosen
+            return r["値"], r["理由"], (r.get("引用") or [""])[0], f"{r['確認者']}" + ("と Haiku 2系統が一致" if agreed else "（2系統は割れた）")
+    if chosen is not None and chosen != a.get(item):
+        raise ValueError(f"{item}：採った値「{chosen}」を出した裁定も独立の確認も記録に無い")
     reason = {"類型": a.get("類型の理由", ""), "経済に効くか": a.get("経済の理由", "")}.get(item, "")  # 分野の理由は読み手が書かない
     return a[item], reason, (a.get("引用") or [""])[0], "Haiku 2系統（系統A 議案本文から・系統B 会議録から）が一致"
 

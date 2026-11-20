@@ -298,6 +298,8 @@ def merge_sample(rows: list[dict], conf: list[dict], res: list[dict]) -> tuple[l
                 out[pos[k]] = index[k] = {**index[k], "判定者": f"{index[k]['判定者']}／{SAMPLE_JUDGE}"}
             continue
         if prev is None and r and r.get("本法まで読んだ"):  # 本法・附則まで読んだ Opus の裁定：本法未読の規則（unread）を当てない
+            if k[1] != "経済に効くか" or r["値"] != v:
+                raise SystemExit(f"{k}：本法まで読んだ裁定（{r['値']}）は、経済に効くかで候補と同じ値（{v}）のときだけ使う。違うなら読み直しの記録で直す")
             out.append({**cand, "直した値": r["値"], "理由": r["理由"], "引用": r["引用"], "出典URL": r["出典URL"],
                         "判定者": f"{cand['判定者']}。本法・附則まで読んだ Opus が盲検で同じ値（{r['読んだ箇所']}）", "記録": SAMPLE_RECORD})
             res.append({"id": k[0], "型": "抜き取り2回目", "項目": k[1], "サイトの値": cand["直す前の値"], "系統A": "", "系統B": "",
